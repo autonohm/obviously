@@ -162,7 +162,7 @@ void NormalsEstimator::estimateNormalsReverseMapping(gsl_matrix* coords, gsl_mat
 
       double u[3];
       double v[3];
-      double c[3];
+      double cr[3];
       double n[3] = {0, 0, 0};
 
       if(isValid1)
@@ -174,9 +174,9 @@ void NormalsEstimator::estimateNormalsReverseMapping(gsl_matrix* coords, gsl_mat
         v[1]            = gsl_matrix_get(coords, idx, 1)    - gsl_matrix_get(coords, idx_lt, 1);
         v[2]            = gsl_matrix_get(coords, idx, 2)    - gsl_matrix_get(coords, idx_lt, 2);
 
-        cross3<double>(c, u, v);
-        norm3<double>(c);
-        memcpy(n, c, 3*sizeof(*c));
+        cross3<double>(cr, u, v);
+        norm3<double>(cr);
+        memcpy(n, cr, 3*sizeof(*cr));
       }
 
       if(isValid2)
@@ -188,12 +188,12 @@ void NormalsEstimator::estimateNormalsReverseMapping(gsl_matrix* coords, gsl_mat
         v[1]            = gsl_matrix_get(coords, idx_rt, 1) - gsl_matrix_get(coords, idx, 1);
         v[2]            = gsl_matrix_get(coords, idx_rt, 2) - gsl_matrix_get(coords, idx, 2);
 
-        cross3<double>(c, u, v);
-        norm3<double>(c);
+        cross3<double>(cr, u, v);
+        norm3<double>(cr);
 
-        n[0] += c[0];
-        n[1] += c[1];
-        n[2] += c[2];
+        n[0] += cr[0];
+        n[1] += cr[1];
+        n[2] += cr[2];
       }
 
       // Normalize
