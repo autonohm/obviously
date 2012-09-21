@@ -36,9 +36,7 @@ Matrix&  Matrix::operator =  (const Matrix &M)
 
 Matrix&  Matrix::operator *=  (const Matrix &M)
 {
-  gsl_matrix_fprintf(stdout, _M, "%2.2f");
   gsl_matrix_memcpy(_work, _M);
-  gsl_matrix_fprintf(stdout, M._M, "%2.2f");
   gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, _work, M._M, 0.0, _M);
   return *this;
 }
