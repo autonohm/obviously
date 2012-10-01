@@ -66,6 +66,8 @@ namespace obvious
 
     for(int i=0; i<TEXTMAX; i++)
       _text[i].text[0] = '\0';
+
+    _textCnt = 0;
   }
 
   Obvious2D::~Obvious2D()
