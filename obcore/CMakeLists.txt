@@ -14,6 +14,7 @@ add_library(obcore
 	base/CartesianCloud.cpp
 	base/CartesianCloudFactory.cpp
 	base/Timer.cpp
+	base/Logger.cpp
 	base/tools.cpp
 	math/geometry.cpp
 	math/Matrix.cpp
