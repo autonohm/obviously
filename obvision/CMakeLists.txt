@@ -8,7 +8,7 @@ PROJECT(OBVISION)
 SET(OBVISION_VERSION_MAJOR 0)
 SET(OBVISION_VERSION_MINOR 1)
 
-INCLUDE_DIRECTORIES(.. ../.. /opt/ros/electric/stacks/perception_pcl/flann/include/)
+INCLUDE_DIRECTORIES(..)
 
 add_library(obvision
 	icp/assign/PairAssignment.cpp
@@ -27,4 +27,7 @@ add_library(obvision
 	icp/Icp.cpp
 	normals/NormalsEstimator.cpp
 	mesh/TriangleMesh.cpp
+	reconstruct/TsdSpace.cpp
+	reconstruct/Projection.cpp
+	reconstruct/TsdSpace_utils.cpp
 	)

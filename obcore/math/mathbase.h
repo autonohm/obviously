@@ -50,6 +50,17 @@ namespace obvious {
     return ( (a <= b) ? a : b );
   }
 
+  template <class T>
+  static inline T abs3D(T* a)
+  {
+    T abs=0;
+    for(unsigned int i=0; i<3; i++)
+    {
+        abs+=a[i]*a[i];
+    }
+    return(sqrt(abs));
+  }
+
   /**
    * @function Dist2_2D
    * @return Squared distance between two points in 2D space
@@ -261,12 +272,13 @@ namespace obvious {
    * @param size size of coordinate vectors (must both be equally sized)
    * @return Euklidean distance
    */
-  inline float euklideanDistance(float* coords1, float* coords2, int size)
+  template <class T>
+  inline float euklideanDistance(T* coords1, T* coords2, int size)
   {
-    float sqr = 0.0f;
+    T sqr = 0.0f;
     for(int i=0; i<size; i++)
       {
-        float tmp = coords1[i] - coords2[i];
+        T tmp = coords1[i] - coords2[i];
         sqr += tmp * tmp;
       }
     return sqrt(sqr);
