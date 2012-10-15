@@ -98,6 +98,16 @@ int main(void)
 
 	my_space->push(distZ);
 
+	/**
+	 * ToDo: check why generated clouds are completely wrong when applying the following test.
+	 */
+	for(int u=0; u<cols; u++)
+		for(int v=0; v<rows; v++)
+		{
+			distZ[v*640+u] -= v * 0.0004;
+		}
+	my_space->push(distZ);
+
 	my_space->gen_pcl(&pcl, &cl_ctr);
 	cout<<"\nPCL generated! Generated cloud with "<<cl_ctr<<" Points!\n";
 
