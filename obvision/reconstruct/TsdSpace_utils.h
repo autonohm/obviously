@@ -63,14 +63,6 @@ double abs3D(obvious::Matrix *foot_point,obvious::Matrix *ref_point);
 */
 void z_img_to_gysc(const double max_depth,const char *path,const double *z_bfr,const unsigned int width,const unsigned int height,bool trace_on);
 
-/**
-* get_kin_img
-* function to get a Kinect pointcloud from Kinect Server Process
-* @param coords pointer to store cloud in. Has to be allocated by calling function
-*/
-void get_kin_img(double *coords);
-
-void get_kin_z(double *coords);
 
 }
 
