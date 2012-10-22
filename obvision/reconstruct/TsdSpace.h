@@ -11,7 +11,7 @@ namespace obvious
   class TsdSpace
   {
   public:
-	  bool _debug_on;
+
     /**
      * Standard constructor
      * Allocates and initializes space and matrices
@@ -136,17 +136,17 @@ namespace obvious
      */
     MSG interpolate_trilineary(double **coordinates, double *tsdf);
 
-    unsigned int _x_nbr;
+    int _x_nbr;
 
-    unsigned int _y_nbr;
+    int _y_nbr;
 
-    unsigned int _z_nbr;
+    int _z_nbr;
 
-    unsigned int _height;
+    int _height;
 
-    unsigned int _width;
+    int _width;
 
-    unsigned int _depth;
+    int _depth;
 
     TsdVoxel ***_space;
 

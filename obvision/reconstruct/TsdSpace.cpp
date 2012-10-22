@@ -34,7 +34,7 @@ namespace obvious
 {
 
 TsdSpace::TsdSpace(const unsigned int height, const unsigned int width,
-		const unsigned int depth, const double vxldimension, double* perspective)
+		           const unsigned int depth,  const double vxldimension, double* perspective)
 {
 	//Variables and Pointers
 	_x_nbr = round(width / vxldimension); //determine nbr of voxels in each dimension
@@ -57,7 +57,7 @@ TsdSpace::TsdSpace(const unsigned int height, const unsigned int width,
 			for (unsigned int x = 0; x < _x_nbr; x++)
 			{
 				_space[z][y][x].tsdf = 1.0;
-				_space[z][y][x].weight = 1.0;
+				_space[z][y][x].weight = 0.0;
 			}
 		}
 	}
@@ -111,8 +111,7 @@ TsdSpace::~TsdSpace(void)
 
 /*****************************************************************************************************************************/
 
-MSG
-TsdSpace::push(double *depth_image)
+MSG TsdSpace::push(double *depth_image)
 {
 	//store current depth image in member variable
 	cout << "\nPUSH: Store current depth image...\n";
@@ -132,8 +131,7 @@ TsdSpace::push(double *depth_image)
 
 /*****************************************************************************************************************************/
 
-MSG
-TsdSpace::depth_slice(const unsigned int depth)
+MSG TsdSpace::depth_slice(const unsigned int depth)
 {
 	//Variables and Pointers
 	double coordVoxel[4];
@@ -197,13 +195,13 @@ TsdSpace::depth_slice(const unsigned int depth)
 			distance = euklideanDistance<double>((double*) t, (double*) coordVoxel, 3);
 
 			//calculate signed distance function
-			//sdf=distance-((_act_depth_image[((ROW_MAX-1)-v)*COL_MAX+u]));     //sdf(i)=abs(t(i)-v(g))-D(i)(p) /Kinect Z-Image = millimeters!FUCK!!
+			sdf=distance-((_act_depth_image[((ROW_MAX-1)-v)*COL_MAX+u]));     //sdf(i)=abs(t(i)-v(g))-D(i)(p) /Kinect Z-Image = millimeters!FUCK!!
 
-			float xl = (u - (*_projection)[0][2]) / (*_projection)[0][0];
+			/*float xl = (u - (*_projection)[0][2]) / (*_projection)[0][0];
 			float yl = (v - (*_projection)[1][2]) / (*_projection)[1][1];
 			float lambda_inv = 1. / sqrt(xl * xl + yl * yl + 1.);
 
-			sdf = distance * lambda_inv	- ((_act_depth_image[((ROW_MAX - 1) - v) * COL_MAX + u])); //mm
+			sdf = distance * lambda_inv	- ((_act_depth_image[((ROW_MAX - 1) - v) * COL_MAX + u])); //mm*/
 			sdf *= -1.0;
 
 			if(sdf >= -_max_truncation)
@@ -222,13 +220,6 @@ TsdSpace::depth_slice(const unsigned int depth)
 				//if(!(tsdf > -1.0))
 				//	continue;
 
-				bool p = false;
-				if (fabs(voxel->tsdf - tsdf)>10e-6 && _debug_on)
-					p = true;
-
-
-				if(p) cout << " sdf: " << sdf << " tsdf:" << tsdf << " vtsdf:" << voxel->tsdf;
-
 	            voxel->tsdf = (voxel->tsdf * voxel->weight + 1.0 * tsdf) / (voxel->weight + 1.0);
 	            voxel->weight += 1.0;
 				//weight it with depth of the voxel
@@ -242,7 +233,6 @@ TsdSpace::depth_slice(const unsigned int depth)
 						*weight_var += 1.0;
 					voxel->tsdf = (voxel->tsdf * (*weight_var - 1.0) + tsdf) / (*weight_var);
 				}*/
-				if(p) cout << " " << voxel->tsdf << endl;
 			}
 		}
 	}
@@ -252,8 +242,7 @@ TsdSpace::depth_slice(const unsigned int depth)
 
 /*****************************************************************************************************************************/
 
-MSG
-TsdSpace::buildSliceImage(const unsigned int depthIndex, unsigned char* image)
+MSG TsdSpace::buildSliceImage(const unsigned int depthIndex, unsigned char* image)
 {
 	//Variables and Pointers
 	char path[90];
@@ -332,8 +321,7 @@ unsigned int TsdSpace::getZDimension()
 	return _z_nbr;
 }
 
-MSG
-TsdSpace::set_transformation(double *transM_data)
+MSG TsdSpace::set_transformation(double *transM_data)
 {
 	//Variables and Pointers
 	obvious::Matrix var_M(4, 4);
@@ -351,8 +339,7 @@ TsdSpace::set_transformation(double *transM_data)
 
 /*****************************************************************************************************************************/
 
-MSG
-TsdSpace::peak(unsigned int row, unsigned int col, unsigned int *nbr, double **coordinates)
+MSG TsdSpace::peak(unsigned int row, unsigned int col, unsigned int *nbr, double **coordinates)
 {
 	//Variables and pointers
 	double c_tsdf = 0.0;
@@ -368,19 +355,16 @@ TsdSpace::peak(unsigned int row, unsigned int col, unsigned int *nbr, double **c
 	//Iterate through peak
 	for (unsigned int i = 0; i < Z_MAX; i++)
 	{
-
 		//compare the signs
 		c_tsdf = _space[i][Y_IND][col].tsdf;
 		n_tsdf = _space[i + 1][Y_IND][col].tsdf;
 
-		if ((c_tsdf < 0 && c_tsdf > M_UNUSED)
-				&& (n_tsdf > 0 && n_tsdf < UNUSED))
+		if ((c_tsdf > 0 && c_tsdf < UNUSED) && (n_tsdf < 0 && n_tsdf > M_UNUSED))
 		{
 			//Store coordinates
 			(*coordinates)[(*nbr)++] = X_POS;
 			(*coordinates)[(*nbr)++] = Y_POS;
 			(*coordinates)[(*nbr)++] = ((double) i + 0.5) * _voxeldimension;
-			//cout << X_POS << " "  << Y_POS << " " << ((double)i+0.5)*_voxeldimension << " " << c_tsdf << endl;
 		}
 	}
 	return (OK);
@@ -474,7 +458,6 @@ TsdSpace::get_model(double **model_pcl, unsigned int *ctr)
 	/*
 	 * Room for Multithreading shall use up to 12 Threads which calculate a ray each
 	 */
-	double zmax = 0.0;
 	for (unsigned int row = 0; row < ROW_MAX; row++)
 	{
 		for (unsigned int col = 0; col < COL_MAX; col++)
@@ -484,26 +467,123 @@ TsdSpace::get_model(double **model_pcl, unsigned int *ctr)
 				found = 1;
 				for (unsigned int i = 0; i < 3; i++)
 					(*model_pcl)[(*ctr)++] = p_var[i];
-
-				if(zmax < p_var[2])
-				{
-					//cout << row << " " << col << endl;
-					zmax = p_var[2];
-				}
-				//if(zmax >= 2.35927) cout << row << " " << col << endl;
 			}
 		}
 	}
 	if (found)
 		--(*ctr);
 	std::cout << "\nGET_MODEL: Raytracing finished! Found " << *ctr << " coordinates.\n";
-	cout << "zmax: " << zmax << endl;
 	delete p_var;
 	return (OK);
 }
 
 /*****************************************************************************************************************************/
 
+MSG
+TsdSpace::ray_trace(const unsigned int row, const unsigned int col, double **coordinates, double *depth)
+{
+	//Variables and Pointers
+	double *dir_vec = new double[3];
+	double *foot_point = new double[4];
+	double *position = new double[3];
+	double *position_prev = new double[3];
+	int x_idx = 0;
+	int y_idx = 0;
+	int z_idx = 0;
+	unsigned int ctr = 0;
+
+	//initialize
+	//homogeneous coordinates
+	foot_point[3] = 1.0;
+	//calc direction vector
+	if (calc_ray(row, col, &dir_vec, &foot_point) != OK)
+	{
+		std::cout << "\nRAY_TRACE: Error calculating ray (row/col) (" << row << "/" << col << ")\n";
+		delete dir_vec;
+		delete foot_point;
+		return (ERROR);
+	}
+
+	//cout << "Ray dir: " << dir_vec[0] << " " << dir_vec[1] << " " << dir_vec[2] << endl;
+	// Interpolation weight
+	double interp;
+
+	/*
+	 * Main loop
+	 */
+	while (1)
+	{
+		//calculate current position
+		memcpy(position_prev, position, 3 * sizeof(*position));
+
+		for (unsigned int i = 0; i < 3; i++)
+			position[i] = foot_point[i] + ((double) ctr) * (dir_vec[i]);
+
+		//calculate current indices
+		x_idx = (int) (position[0] / _voxeldimension);
+		y_idx = (_y_nbr - 1) - (int) (position[1] / _voxeldimension);
+		z_idx = (int) (position[2] / _voxeldimension);
+
+		//check whether tracer is in space or not
+		if ((x_idx >= _x_nbr) || (x_idx < 0) || (y_idx >= _y_nbr) || (y_idx < 0) || (z_idx >= _z_nbr)) //ratraycer reached edge of space
+		{
+			delete dir_vec;
+			delete foot_point;
+			delete position;
+			return EDGE;
+		}
+
+		if(z_idx < 0) //ratraycer reached edge of space
+		{
+			ctr++;
+			continue;
+		}
+
+		if(ctr>100)
+		{
+			delete dir_vec;
+			delete foot_point;
+			delete position;
+			return EDGE;
+		}
+
+		double tsdf;
+		if (interpolate_trilineary(&position, &tsdf) != OK)
+		{
+			ctr++;
+			continue;
+		}
+
+		double tsdf_prev;
+		if (interpolate_trilineary(&position_prev, &tsdf_prev) != OK)
+		{
+			ctr++;
+			continue;
+		}
+
+
+		//check sign change
+		if(tsdf_prev > 0 && tsdf < 0)
+		{
+			interp = tsdf_prev / (tsdf_prev - tsdf);
+			break;
+		}
+
+		//increment counter
+		ctr++;
+	}
+
+	// interpolate between voxels when sign change happened
+	for (unsigned int i = 0; i < 3; i++)
+		(*coordinates)[i] = position_prev[i] + dir_vec[i] * interp;
+
+	delete dir_vec;
+	delete foot_point;
+	delete position;
+	return (OK);
+}
+
+#if 0
 MSG
 TsdSpace::ray_trace(const unsigned int row, const unsigned int col, double **coordinates, double *depth)
 {
@@ -531,6 +611,7 @@ TsdSpace::ray_trace(const unsigned int row, const unsigned int col, double **coo
 		return (ERROR);
 	}
 
+	//cout << "Ray dir: " << dir_vec[0] << " " << dir_vec[1] << " " << dir_vec[2] << endl;
 	// Interpolation weight
 	double interp;
 
@@ -552,7 +633,7 @@ TsdSpace::ray_trace(const unsigned int row, const unsigned int col, double **coo
 
 		if(row==334 && col==336)
 		{
-			cout << x_idx << " " << y_idx << " " << z_idx << endl;
+		//	cout << x_idx << " " << y_idx << " " << z_idx << endl;
 		}
 
 		//check whether tracer is in space or not
@@ -567,8 +648,11 @@ TsdSpace::ray_trace(const unsigned int row, const unsigned int col, double **coo
 		//get current tsdf
 		c_tsdf = _space[z_idx][y_idx][x_idx].tsdf;
 
+		if(l_tsdf < 0 && c_tsdf > 0) return (EDGE);
+
 		//check sign change
-		if ((l_tsdf > 0 && l_tsdf < UNUSED)	&& (c_tsdf < 0 && c_tsdf > M_UNUSED))
+		//if ((l_tsdf > 0 && l_tsdf < UNUSED)	&& (c_tsdf < 0 && c_tsdf > M_UNUSED))
+		if(l_tsdf > 0 && c_tsdf < 0)
 		{
 			double tsdf;
 			if (interpolate_trilineary(&position, &tsdf) != OK)
@@ -585,10 +669,26 @@ TsdSpace::ray_trace(const unsigned int row, const unsigned int col, double **coo
 				delete dir_vec;
 				delete foot_point;
 				delete position;
-				return (ERROR);
+				return ERROR;
 			}
 
-			//if((tsdf > 0 && tsdf_prev > 0) || (tsdf < 0 && tsdf_prev < 0)) return ERROR;
+			if(tsdf > 0 && tsdf_prev > 0)
+			{
+				//interp = tsdf_prev / (tsdf_prev + tsdf);
+				//interp = tsdf + tsdf_prev;//(tsdf_prev + tsdf) / 2;
+				//break;
+				l_tsdf = tsdf;
+				ctr++;
+				continue;
+				//return ERROR;
+			}
+
+			if(tsdf < 0 && tsdf_prev < 0)
+			{
+				return ERROR;
+				//interp = tsdf_prev / (tsdf_prev + tsdf);
+				//break;
+			}
 
 			interp = tsdf_prev / (tsdf_prev - tsdf);
 
@@ -610,7 +710,7 @@ TsdSpace::ray_trace(const unsigned int row, const unsigned int col, double **coo
 	delete position;
 	return (OK);
 }
-
+#endif
 /*****************************************************************************************************************************/
 
 /*****************************************************************************************************************************/

@@ -15,19 +15,33 @@
 using namespace std;
 using namespace obvious;
 
+double     _distZ[640*480];
+TsdSpace*  _my_space;
+Obvious3D* _viewer;
+VtkCloud*  _cloud;
+
+void cbPushScene()
+{
+	double *pcl=NULL;
+	unsigned int cl_ctr=0;
+   _my_space->push(_distZ);
+   _my_space->get_model(&pcl,&cl_ctr);
+   _cloud->setCoords(pcl, cl_ctr/3, 3);
+   _viewer->update();
+}
+
 int main(void)
 {
 	LOGMSG_CONF("tsd_test.log", Logger::file_off|Logger::screen_on, DBG_DEBUG, DBG_WARN);
-	//Variables and Pointers
-	const char *path={"pics/z_img/zpic.pgm"};
-	double *depth_bfr;//[640*480];
-	double *pcl=NULL;
-	int rows,cols,size;
+
+	const char *path = {"pics/z_img/zpic.pgm"};
+	double     *pcl  = NULL;
+	int         rows, cols, size;
 
 	// translation of sensor
 	double tx = 0.5;
 	double ty = 0.5;
-	double tz = 0.0;
+	double tz = 0;
 
 	// rotation about y-axis of sensor
 	double theta = -10 * M_PI / 180;
@@ -37,17 +51,10 @@ int main(void)
 			-sin(theta), 0, cos(theta), tz,
 			0,           0, 0,          1};
 
-	VtkCloud *pre_cube,*post_cube;
-	Obvious3D* viewer;
 	unsigned int cl_ctr=0;
-	double *inters=new double[3];
-	double depth=0.0;
 
-	double distZ[640*480];
+	_cloud = new VtkCloud();
 
-	post_cube=new VtkCloud();
-
-	//get data from kinect
 	rows = 480;
 	cols = 640;
 	size = rows * cols;
@@ -62,11 +69,9 @@ int main(void)
 	double tv = 240;
 	double perspective[12]  = {su, 0, tu, 0, 0, sv, tv, 0, 0, 0, 1, 0};
 
-	TsdSpace *my_space=new TsdSpace(1, 1, 1, 0.01, perspective);
-
-	my_space->set_transformation(tf);
-
-	my_space->set_max_truncation(0.1);
+	_my_space=new TsdSpace(1, 1, 1, 0.02, perspective);
+	_my_space->set_transformation(tf);
+	_my_space->set_max_truncation(0.1);
 
 	// Background with distance = 0.8m -> s=0.8
 	for(int u=0; u<cols; u++)
@@ -79,7 +84,7 @@ int main(void)
 			buf[u][v][0] = x;
 			buf[u][v][1] = y;
 			buf[u][v][2] = z;
-			distZ[v*640+u] = z;
+			_distZ[v*640+u] = sqrt(x*x+y*y+z*z);
 		}
 
 	// Centered square with distance = 0.5m -> s=0.5
@@ -93,52 +98,46 @@ int main(void)
 			buf[u][v][0] = x;
 			buf[u][v][1] = y;
 			buf[u][v][2] = z;
-			distZ[v*640+u] = z;
+			_distZ[v*640+u] = sqrt(x*x+y*y+z*z);;
 		}
 
-	my_space->_debug_on = false;
-	my_space->push(distZ);
+	_my_space->push(_distZ);
 
 	//my_space->_debug_on = true;
 	/**
 	 * ToDo: check why generated clouds are completely wrong when applying the following test.
 	 */
-	//for(int u=160; u<180; u++)
-		for(int u=0; u<640; u++)
-			for(int v=50; v<150; v++)
-		//for(int v=201; v<202; v++)
-		{
-			distZ[v*640+u] -= v * 0.0004;
-		}
-	my_space->push(distZ);
+	for(int u=0; u<cols; u++)
+	   for(int v=0; v<rows; v++)
+	   {
+	      _distZ[v*cols+u] -= v * 0.0004;
+	   }
 
-	my_space->gen_pcl(&pcl, &cl_ctr);
-	cout<<"\nPCL generated! Generated cloud with "<<cl_ctr<<" Points!\n";
+	/*_my_space->gen_pcl(&pcl, &cl_ctr);
+	cout<<"\nPCL generated! Generated cloud with "<<cl_ctr<<" Points!\n";*/
 
-	unsigned char* buffer = new unsigned char[my_space->getXDimension()*my_space->getYDimension()*3];
-	for(unsigned int i=0; i<my_space->getZDimension(); i++)
+	unsigned char* buffer = new unsigned char[_my_space->getXDimension()*_my_space->getYDimension()*3];
+	for(unsigned int i=0; i<_my_space->getZDimension(); i++)
 	{
 		char path[64];
 		sprintf(path, "/tmp/slice%04d.ppm", i);
-		my_space->buildSliceImage(i, buffer);
-		serializePPM(path, buffer, my_space->getXDimension(), my_space->getYDimension(), 0);
+		_my_space->buildSliceImage(i, buffer);
+		serializePPM(path, buffer, _my_space->getXDimension(), _my_space->getYDimension(), 0);
 	}
 	delete[] buffer;
 
-	my_space->get_model(&pcl,&cl_ctr);
+	_my_space->get_model(&pcl,&cl_ctr);
 	cout<<"\nGetmodel returned with "<<cl_ctr<<" coordinates\n";
 
-	post_cube->setCoords(pcl, cl_ctr/3, 3);
+	_cloud->setCoords(pcl, cl_ctr/3, 3);
 
-	//	viewer = new Obvious3D("TSD Cloud!");
-	viewer = new Obvious3D("Model!");
-	viewer->addCloud(post_cube);
-	viewer->startRendering();
+	_viewer = new Obvious3D("TSD Cloud");
+	_viewer->addCloud(_cloud);
+	_viewer->registerKeyboardCallback("space", cbPushScene);
+	_viewer->startRendering();
 
-	delete post_cube;
-	delete viewer;
-	delete inters;
-
+	delete _cloud;
+	delete _viewer;
 }
 
 
