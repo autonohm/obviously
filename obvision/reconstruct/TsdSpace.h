@@ -11,7 +11,7 @@ namespace obvious
   class TsdSpace
   {
   public:
-
+	  bool _debug_on;
     /**
      * Standard constructor
      * Allocates and initializes space and matrices

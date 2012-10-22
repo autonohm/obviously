@@ -96,13 +96,17 @@ int main(void)
 			distZ[v*640+u] = z;
 		}
 
+	my_space->_debug_on = false;
 	my_space->push(distZ);
 
+	//my_space->_debug_on = true;
 	/**
 	 * ToDo: check why generated clouds are completely wrong when applying the following test.
 	 */
-	for(int u=0; u<cols; u++)
-		for(int v=0; v<rows; v++)
+	//for(int u=160; u<180; u++)
+		for(int u=0; u<640; u++)
+			for(int v=50; v<150; v++)
+		//for(int v=201; v<202; v++)
 		{
 			distZ[v*640+u] -= v * 0.0004;
 		}

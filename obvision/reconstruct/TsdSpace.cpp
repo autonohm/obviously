@@ -194,8 +194,7 @@ TsdSpace::depth_slice(const unsigned int depth)
 				t[i] = (*_transformation)[i][3];
 
 			//calculate distance of current voxel to kinect
-			distance = euklideanDistance<double>((double*) t,
-					(double*) coordVoxel, 3);
+			distance = euklideanDistance<double>((double*) t, (double*) coordVoxel, 3);
 
 			//calculate signed distance function
 			//sdf=distance-((_act_depth_image[((ROW_MAX-1)-v)*COL_MAX+u]));     //sdf(i)=abs(t(i)-v(g))-D(i)(p) /Kinect Z-Image = millimeters!FUCK!!
@@ -204,33 +203,47 @@ TsdSpace::depth_slice(const unsigned int depth)
 			float yl = (v - (*_projection)[1][2]) / (*_projection)[1][1];
 			float lambda_inv = 1. / sqrt(xl * xl + yl * yl + 1.);
 
-			sdf = distance * lambda_inv
-					- ((_act_depth_image[((ROW_MAX - 1) - v) * COL_MAX + u])); //mm
-					sdf *= -1.0;
+			sdf = distance * lambda_inv	- ((_act_depth_image[((ROW_MAX - 1) - v) * COL_MAX + u])); //mm
+			sdf *= -1.0;
 
-					//calculate truncated sdf
-					//get ptr to current TsdVoxel
-					voxel = &_space[depth][(_y_nbr - 1) - row][col]; //turn row idx bsp. _y_nbr=480, row =0 -> y_idx=479-0 = 479
+			if(sdf >= -_max_truncation)
+			{
+				//calculate truncated sdf
+				//get ptr to current TsdVoxel
+				voxel = &_space[depth][(_y_nbr - 1) - row][col]; //turn row idx bsp. _y_nbr=480, row =0 -> y_idx=479-0 = 479
 
-					//truncate
-					tsdf = sdf / _max_truncation; //determine whether sdf/max_truncation = ]-1;1[ otherwise continue
+				//truncate
+				tsdf = sdf / _max_truncation; //determine whether sdf/max_truncation = ]-1;1[ otherwise continue
 
-					if ((tsdf < -1.0) || (tsdf > 1.0))
-						continue;
+				if(tsdf > 1.0) tsdf = 1.0;
+				//if ((tsdf < -1.0) || (tsdf > 1.0))
+					//continue;
 
-					//weight it with depth of the voxel
-					//increment weight
-					if (voxel->tsdf > UNUSED) //First hit? no need to weight it
-						voxel->tsdf = tsdf;
-					else
-					{
-						weight_var = &voxel->weight;
-						if (*weight_var < MAXWEIGHT)
-							*weight_var += 1.0;
-						voxel->tsdf = (voxel->tsdf * (*weight_var - 1.0) + tsdf)
-                    		/ (*weight_var);
-					}
+				//if(!(tsdf > -1.0))
+				//	continue;
 
+				bool p = false;
+				if (fabs(voxel->tsdf - tsdf)>10e-6 && _debug_on)
+					p = true;
+
+
+				if(p) cout << " sdf: " << sdf << " tsdf:" << tsdf << " vtsdf:" << voxel->tsdf;
+
+	            voxel->tsdf = (voxel->tsdf * voxel->weight + 1.0 * tsdf) / (voxel->weight + 1.0);
+	            voxel->weight += 1.0;
+				//weight it with depth of the voxel
+				//increment weight
+				/*if (voxel->tsdf > UNUSED) //First hit? no need to weight it
+					voxel->tsdf = tsdf;
+				else
+				{
+					weight_var = &voxel->weight;
+					if (*weight_var < MAXWEIGHT)
+						*weight_var += 1.0;
+					voxel->tsdf = (voxel->tsdf * (*weight_var - 1.0) + tsdf) / (*weight_var);
+				}*/
+				if(p) cout << " " << voxel->tsdf << endl;
+			}
 		}
 	}
 
@@ -339,8 +352,7 @@ TsdSpace::set_transformation(double *transM_data)
 /*****************************************************************************************************************************/
 
 MSG
-TsdSpace::peak(unsigned int row, unsigned int col, unsigned int *nbr,
-		double **coordinates)
+TsdSpace::peak(unsigned int row, unsigned int col, unsigned int *nbr, double **coordinates)
 {
 	//Variables and pointers
 	double c_tsdf = 0.0;
@@ -398,8 +410,7 @@ TsdSpace::gen_pcl(double **cloud, unsigned int *nbr)
 		{
 			if ((peak(row, col, nbr, cloud)) != OK)
 			{
-				std::cout << "\nError Peak in : (row/col) (" << row << "/"
-						<< col << ")\n";
+				std::cout << "\nError Peak in : (row/col) (" << row << "/" << col << ")\n";
 				continue;
 			}
 		}
@@ -410,8 +421,7 @@ TsdSpace::gen_pcl(double **cloud, unsigned int *nbr)
 /*****************************************************************************************************************************/
 
 MSG
-TsdSpace::calc_ray(const unsigned int row, const unsigned int col,
-		double **dir_vec, double **foot_point)
+TsdSpace::calc_ray(const unsigned int row, const unsigned int col, double **dir_vec, double **foot_point)
 {
 	//Variables and pointers
 	obvious::Matrix dirp_vecM(4, 1);
@@ -464,7 +474,7 @@ TsdSpace::get_model(double **model_pcl, unsigned int *ctr)
 	/*
 	 * Room for Multithreading shall use up to 12 Threads which calculate a ray each
 	 */
-
+	double zmax = 0.0;
 	for (unsigned int row = 0; row < ROW_MAX; row++)
 	{
 		for (unsigned int col = 0; col < COL_MAX; col++)
@@ -474,14 +484,20 @@ TsdSpace::get_model(double **model_pcl, unsigned int *ctr)
 				found = 1;
 				for (unsigned int i = 0; i < 3; i++)
 					(*model_pcl)[(*ctr)++] = p_var[i];
+
+				if(zmax < p_var[2])
+				{
+					//cout << row << " " << col << endl;
+					zmax = p_var[2];
+				}
+				//if(zmax >= 2.35927) cout << row << " " << col << endl;
 			}
 		}
 	}
 	if (found)
 		--(*ctr);
-	std::cout << "\nGET_MODEL: Raytracing finished! Found " << *ctr
-			<< " coordinates.\n";
-
+	std::cout << "\nGET_MODEL: Raytracing finished! Found " << *ctr << " coordinates.\n";
+	cout << "zmax: " << zmax << endl;
 	delete p_var;
 	return (OK);
 }
@@ -489,8 +505,7 @@ TsdSpace::get_model(double **model_pcl, unsigned int *ctr)
 /*****************************************************************************************************************************/
 
 MSG
-TsdSpace::ray_trace(const unsigned int row, const unsigned int col,
-		double **coordinates, double *depth)
+TsdSpace::ray_trace(const unsigned int row, const unsigned int col, double **coordinates, double *depth)
 {
 	//Variables and Pointers
 	double *dir_vec = new double[3];
@@ -510,8 +525,7 @@ TsdSpace::ray_trace(const unsigned int row, const unsigned int col,
 	//calc direction vector
 	if (calc_ray(row, col, &dir_vec, &foot_point) != OK)
 	{
-		std::cout << "\nRAY_TRACE: Error calculating ray (row/col) (" << row
-				<< "/" << col << ")\n";
+		std::cout << "\nRAY_TRACE: Error calculating ray (row/col) (" << row << "/" << col << ")\n";
 		delete dir_vec;
 		delete foot_point;
 		return (ERROR);
@@ -536,9 +550,13 @@ TsdSpace::ray_trace(const unsigned int row, const unsigned int col,
 		y_idx = (_y_nbr - 1) - (int) (position[1] / _voxeldimension);
 		z_idx = (int) (position[2] / _voxeldimension);
 
+		if(row==334 && col==336)
+		{
+			cout << x_idx << " " << y_idx << " " << z_idx << endl;
+		}
+
 		//check whether tracer is in space or not
-		if ((x_idx >= _x_nbr) || (x_idx < 0) || (y_idx >= _y_nbr) || (y_idx < 0)
-				|| (z_idx >= _z_nbr) || (z_idx < 0)) //ratraycer reached edge of space
+		if ((x_idx >= _x_nbr) || (x_idx < 0) || (y_idx >= _y_nbr) || (y_idx < 0) || (z_idx >= _z_nbr) || (z_idx < 0)) //ratraycer reached edge of space
 		{
 			delete dir_vec;
 			delete foot_point;
@@ -569,6 +587,8 @@ TsdSpace::ray_trace(const unsigned int row, const unsigned int col,
 				delete position;
 				return (ERROR);
 			}
+
+			//if((tsdf > 0 && tsdf_prev > 0) || (tsdf < 0 && tsdf_prev < 0)) return ERROR;
 
 			interp = tsdf_prev / (tsdf_prev - tsdf);
 
@@ -617,8 +637,7 @@ TsdSpace::interpolate_trilineary(double **coordinates, double *tsdf)
 	z_idx = (int) (((*coordinates)[2] / _voxeldimension));
 
 	//check edges / 0 is edge because of voxelfinetuning
-	if ((x_idx >= (_x_nbr - 2)) || (x_idx < 1) || (y_idx >= (_y_nbr - 2))
-			|| (y_idx < 1) || (z_idx >= (_z_nbr - 2)) || (z_idx < 1))
+	if ((x_idx >= (_x_nbr - 2)) || (x_idx < 1) || (y_idx >= (_y_nbr - 2)) || (y_idx < 1) || (z_idx >= (_z_nbr - 2)) || (z_idx < 1))
 		return (EDGE);
 
 	//get current voxel middlepoint
