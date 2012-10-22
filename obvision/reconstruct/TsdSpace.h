@@ -83,13 +83,13 @@ namespace obvious
   private:
 
     /**
-     * depth_slice
+     * zSlice
      * Subfunction of push
      * Checks one x,y slice of the space and updates the tsdf
      * Function will be called in multithreading
      * @param depth grows in z+ direction
      */
-    MSG depthSlice(const unsigned int depth);
+    MSG zSlice(const unsigned int z);
 
     /**
      * peak
@@ -128,7 +128,9 @@ namespace obvious
      * @param coordinates pointer to coordinates of intersection
      * @param[out] tsdf interpolated TSD value
      */
-    MSG interpolateTrilineary(double **coordinates, double *tsdf);
+    MSG interpolateTrilinear(double **coordinates, double *tsdf);
+
+    double interpolateBilinear(double u, double v);
 
     int _xDim;
 
