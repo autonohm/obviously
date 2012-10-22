@@ -25,7 +25,7 @@ void cbPushScene()
 	double *pcl=NULL;
 	unsigned int cl_ctr=0;
    _my_space->push(_distZ);
-   _my_space->get_model(&pcl,&cl_ctr);
+   _my_space->getModel(&pcl,&cl_ctr);
    _cloud->setCoords(pcl, cl_ctr/3, 3);
    _viewer->update();
 }
@@ -41,7 +41,7 @@ int main(void)
 	// translation of sensor
 	double tx = 0.5;
 	double ty = 0.5;
-	double tz = 0;
+	double tz = -0.1;
 
 	// rotation about y-axis of sensor
 	double theta = -10 * M_PI / 180;
@@ -70,8 +70,8 @@ int main(void)
 	double perspective[12]  = {su, 0, tu, 0, 0, sv, tv, 0, 0, 0, 1, 0};
 
 	_my_space=new TsdSpace(1, 1, 1, 0.02, perspective);
-	_my_space->set_transformation(tf);
-	_my_space->set_max_truncation(0.1);
+	_my_space->setTransformation(tf);
+	_my_space->setMaxTruncation(0.08);
 
 	// Background with distance = 0.8m -> s=0.8
 	for(int u=0; u<cols; u++)
@@ -103,7 +103,6 @@ int main(void)
 
 	_my_space->push(_distZ);
 
-	//my_space->_debug_on = true;
 	/**
 	 * ToDo: check why generated clouds are completely wrong when applying the following test.
 	 */
@@ -126,8 +125,9 @@ int main(void)
 	}
 	delete[] buffer;
 
-	_my_space->get_model(&pcl,&cl_ctr);
-	cout<<"\nGetmodel returned with "<<cl_ctr<<" coordinates\n";
+	_my_space->getModel(&pcl,&cl_ctr);
+
+	cout << "\nGetmodel returned with " << cl_ctr << " coordinates\n";
 
 	_cloud->setCoords(pcl, cl_ctr/3, 3);
 

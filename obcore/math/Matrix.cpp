@@ -110,13 +110,17 @@ unsigned int Matrix::getCols()
   return _M->size2;
 }
 
-Matrix Matrix::identity()
+void Matrix::setIdentity()
 {
   gsl_matrix_set_identity(_M);
-  return *this;
 }
 
-Matrix Matrix::inverse()
+void Matrix::setZero()
+{
+  gsl_matrix_set_zero(_M);
+}
+
+Matrix Matrix::getInverse()
 {
   Matrix Mi(*this);
   Mi.invert();
@@ -266,7 +270,7 @@ Matrix* Matrix::pcaAnalysis()
 Matrix* Matrix::TranslationMatrix44(double tx, double ty, double tz)
 {
   Matrix* M = new Matrix(4, 4);
-  M->identity();
+  M->setIdentity();
   gsl_matrix* buf = M->getBuffer();
   gsl_matrix_set(buf, 0, 3, tx);
   gsl_matrix_set(buf, 1, 3, ty);

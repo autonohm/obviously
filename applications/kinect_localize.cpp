@@ -45,7 +45,7 @@ public:
       if(_icp)
       {
 
-        _icp->getFinalTransformation()->identity();
+        _icp->getFinalTransformation()->setIdentity();
         _nestimator->estimateNormals3DGrid(cols, rows, coords, mask, _normals);
         CartesianCloud3D*  scene = new CartesianCloud3D(size, coords, rgb,  _normals);
         scene->maskPoints(mask);

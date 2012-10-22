@@ -24,8 +24,8 @@ Icp::Icp(PairAssignment* assigner, IRigidEstimator* estimator)
 
   _Tfinal              = new Matrix(4, 4);
   _Tlast               = new Matrix(4, 4);
-  _Tfinal->identity();
-  _Tlast->identity();
+  _Tfinal->setIdentity();
+  _Tlast->setIdentity();
 
   this->reset();
 }
@@ -143,7 +143,7 @@ void Icp::checkMemory(unsigned int rows, unsigned int cols, unsigned int &memsiz
 
 void Icp::reset()
 {
-  _Tfinal->identity();
+  _Tfinal->setIdentity();
   _assigner->reset();
 }
 

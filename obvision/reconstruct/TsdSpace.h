@@ -18,7 +18,7 @@ namespace obvious
      * @param height,width,depth dimension of the allocated space in meters
      * @param vxldimension edge length of the Tsd_voxels
      */
-    TsdSpace(const unsigned int height = 0, const unsigned int width = 0, const unsigned int depth = 0, const double vxldimension = 0, double *perspective = NULL);
+    TsdSpace(const unsigned int height = 0, const unsigned int width = 0, const unsigned int depth = 0, const double voxelDim = 0, double *perspective = NULL);
 
     /**
      * Destructor
@@ -31,34 +31,28 @@ namespace obvious
      * @param depth_image contains depth image as 2D Array
      * @return value MSG contains exit status
      */
-    MSG push(double *depth_image);
+    MSG push(double *depthImage);
 
     /**
-     * set_max_truncation
+     * setMaxTruncation
      * Function to set the max truncation
      * @param new value new  max_truncation
      */
-    inline void set_max_truncation(const double new_value) {_max_truncation=new_value;};
-
-    /**
-     * view_all
-     * Writes colored images of all slices of the space to files
-     */
-    MSG view_all(void );
+    void setMaxTruncation(const double new_value);
 
     /**
      * set_transformation
      * Function to set the current transformation matrix to the given values
      * @param transM_data content of the new transformation matrix
      */
-    MSG set_transformation(double *transM_data);
+    MSG setTransformation(double *transM_data);
 
     /**
      * gen_pcl
      * Function to generate pointcloud out of the tsd_space data
      * @param cloud space will be allocated by function and coordinates will be stored in
      */
-    MSG gen_pcl(double **cloud, unsigned int *nbr);
+    MSG generatePointcloud(double **cloud, unsigned int *nbr);
 
     /**
      * get_model
@@ -66,12 +60,12 @@ namespace obvious
      * sends rays through space
      * @param depth_image pointer to depth image. Will be allocated by function
      */
-    MSG get_model(double **model_pcl, unsigned int *ctr);
+    MSG getModel(double **model_pcl, unsigned int *ctr);
 
     /**
      *
      */
-    inline Matrix *get_transformation(void){return(_transformation);}
+    Matrix *getTransformation();
 
     /**
      * buildSliceImage
@@ -95,7 +89,7 @@ namespace obvious
      * Function will be called in multithreading
      * @param depth grows in z+ direction
      */
-    MSG depth_slice(const unsigned int depth);
+    MSG depthSlice(const unsigned int depth);
 
     /**
      * peak
@@ -114,7 +108,7 @@ namespace obvious
      * @param coordinates pointer to store intersection coordinates in
      * Has to be allocated by calling function
      */
-    MSG ray_trace(const unsigned int row, const unsigned int col, double **coordinates, double *depth);
+    MSG rayTrace(const unsigned int row, const unsigned int col, double **coordinates, double *depth);
 
     /**
      * calc_ray
@@ -126,7 +120,7 @@ namespace obvious
      * @param foot_point pointer to store footpoint in has to be allocated by calling function (4-values)
      *
      */
-    MSG calc_ray(const unsigned int row, const unsigned int col, double **dir_vec, double **foot_point);
+    MSG calcRay(const unsigned int row, const unsigned int col, double **dir_vec, double **foot_point);
 
     /**
      * interpolate_trilineary
@@ -134,13 +128,13 @@ namespace obvious
      * @param coordinates pointer to coordinates of intersection
      * @param[out] tsdf interpolated TSD value
      */
-    MSG interpolate_trilineary(double **coordinates, double *tsdf);
+    MSG interpolateTrilineary(double **coordinates, double *tsdf);
 
-    int _x_nbr;
+    int _xDim;
 
-    int _y_nbr;
+    int _yDim;
 
-    int _z_nbr;
+    int _zDim;
 
     int _height;
 
@@ -150,15 +144,15 @@ namespace obvious
 
     TsdVoxel ***_space;
 
-    double _voxeldimension;
+    double _voxelDim;
 
-    obvious::Matrix *_transformation;
+    obvious::Matrix *_T;
 
-    obvious::Matrix *_inv_transformation;
+    obvious::Matrix *_Tinv;
 
-    double _max_truncation;
+    double _maxTruncation;
 
-    double *_act_depth_image;
+    double *_depthImage;
 
     obvious::Matrix *_zero_h;
 

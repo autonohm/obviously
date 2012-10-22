@@ -29,7 +29,7 @@ int main(int argc, char *argv[])
     inc = atol(argv[2]);
 
   Matrix T(4, 4);
-  T.identity();
+  T.setIdentity();
 
   int cnt = 0;
 

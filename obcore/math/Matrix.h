@@ -50,9 +50,11 @@ public:
 
   unsigned int getCols();
 
-  Matrix identity();
+  void setIdentity();
 
-  Matrix inverse();
+  void setZero();
+
+  Matrix getInverse();
 
   void invert();
 

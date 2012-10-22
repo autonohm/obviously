@@ -43,7 +43,7 @@ int main(int argc, char* argv[])
   int post      = atoi(argv[4]);
   int est       = atoi(argv[5]);
 
-  _Tfinal.identity();
+  _Tfinal.setIdentity();
 
   _vmodel       = VtkCloud::load(argv[1], VTKCloud_AUTO);
   _vscene       = VtkCloud::load(argv[2], VTKCloud_AUTO);
