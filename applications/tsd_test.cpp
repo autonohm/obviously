@@ -34,7 +34,6 @@ int main(void)
 {
 	LOGMSG_CONF("tsd_test.log", Logger::file_off|Logger::screen_on, DBG_DEBUG, DBG_WARN);
 
-	const char *path = {"pics/z_img/zpic.pgm"};
 	double     *pcl  = NULL;
 	int         rows, cols, size;
 
