@@ -68,6 +68,11 @@ namespace obvious
     Matrix *getTransformation();
 
     /**
+ 	   *
+	   */
+    Matrix *getinvTransformation();
+
+    /**
      * buildSliceImage
      * @brief Subfunction of view all
      * Checks one x,y slice of the space and writes the content to a file

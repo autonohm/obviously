@@ -450,6 +450,12 @@ Matrix* TsdSpace::getTransformation()
 	return(_T);
 }
 
+Matrix* TsdSpace::getinvTransformation()
+{
+	return(_Tinv);
+}
+
+
 #if CORRECT_SIGN_CHANGE
 MSG TsdSpace::rayCast(const unsigned int row, const unsigned int col, double **coordinates, double *depth)
 {
