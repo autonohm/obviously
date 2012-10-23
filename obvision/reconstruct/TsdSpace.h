@@ -101,18 +101,18 @@ namespace obvious
     MSG peak(unsigned int row, unsigned int col, unsigned int *nbr, double **coordinates);
 
     /**
-     * ray_trace
+     * rayCast
      * Subfunction of get_model
      * sends ray through space to calculate virtual depth-image
      * @param row,col position of the pixel in virtual kinect-view
      * @param coordinates pointer to store intersection coordinates in
      * Has to be allocated by calling function
      */
-    MSG rayTrace(const unsigned int row, const unsigned int col, double **coordinates, double *depth);
+    MSG rayCast(const unsigned int row, const unsigned int col, double **coordinates, double *depth);
 
     /**
-     * calc_ray
-     * Subfunction of ray_trace
+     * calcRay
+     * Subfunction of rayCast
      * Calculates direction vector and footpoint of the ray
      * @param row,col position of the pixel in virtual kinect-view
      * @param dir_vec pointer to store normalized direction vector in

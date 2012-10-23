@@ -429,7 +429,7 @@ MSG TsdSpace::getModel(double **model_pcl, unsigned int *ctr)
 	{
 		for (unsigned int col = 0; col < COL_MAX; col++)
 		{
-			if (rayTrace(row, col, &p_var, &depth_var) == OK) //Ray returned with coordinates
+			if (rayCast(row, col, &p_var, &depth_var) == OK) //Ray returned with coordinates
 			{
 				found = 1;
 				for (unsigned int i = 0; i < 3; i++)
@@ -451,7 +451,7 @@ Matrix* TsdSpace::getTransformation()
 }
 
 #if CORRECT_SIGN_CHANGE
-MSG TsdSpace::rayTrace(const unsigned int row, const unsigned int col, double **coordinates, double *depth)
+MSG TsdSpace::rayCast(const unsigned int row, const unsigned int col, double **coordinates, double *depth)
 {
 	double *dir_vec = new double[3];
 	double *foot_point = new double[4];
@@ -487,8 +487,8 @@ MSG TsdSpace::rayTrace(const unsigned int row, const unsigned int col, double **
 		y_idx = (_yDim - 1) - (int) (position[1] / _voxelDim);
 		z_idx = (int) (position[2] / _voxelDim);
 
-		// check whether tracer is in space or not
-		if ((x_idx >= _xDim) || (x_idx < 0) || (y_idx >= _yDim) || (y_idx < 0) || (z_idx >= _zDim)) // raytracer reached edge of space
+		// check whether RayCaster is in space or not
+		if ((x_idx >= _xDim) || (x_idx < 0) || (y_idx >= _yDim) || (y_idx < 0) || (z_idx >= _zDim)) // rayCaster reached edge of space
 		{
 			delete dir_vec;
 			delete foot_point;
@@ -496,7 +496,7 @@ MSG TsdSpace::rayTrace(const unsigned int row, const unsigned int col, double **
 			return EDGE;
 		}
 
-		if(z_idx < 0) // raytracer is not in space
+		if(z_idx < 0) // RayCaster is not in space
 		{
 			ctr++;
 			continue;
@@ -546,7 +546,7 @@ MSG TsdSpace::rayTrace(const unsigned int row, const unsigned int col, double **
 }
 
 #else
-MSG TsdSpace::rayTrace(const unsigned int row, const unsigned int col, double **coordinates, double *depth)
+MSG TsdSpace::rayCast(const unsigned int row, const unsigned int col, double **coordinates, double *depth)
 {
 	double *dir_vec = new double[3];
 	double *foot_point = new double[4];
@@ -587,7 +587,7 @@ MSG TsdSpace::rayTrace(const unsigned int row, const unsigned int col, double **
 		y_idx = (_yDim - 1) - (int) (position[1] / _voxelDim);
 		z_idx = (int) (position[2] / _voxelDim);
 
-		//check whether tracer is in space or not
+		//check whether RayCaster is in space or not
 		if ((x_idx >= _xDim) || (x_idx < 0) || (y_idx >= _yDim) || (y_idx < 0) || (z_idx >= _zDim) || (z_idx < 0)) //ratraycer reached edge of space
 		{
 			delete dir_vec;
