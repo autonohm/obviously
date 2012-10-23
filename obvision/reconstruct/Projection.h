@@ -14,7 +14,7 @@ class Projection {
 	  * Konstruktor
 	  * @param proj_data double poiner to parameters
 	  */
-    Projection(double *proj_data);
+    Projection(double* proj_data);
 
     inline ~Projection() {delete _projection;};
 
@@ -27,15 +27,16 @@ class Projection {
 	  * @param point3 point with homogenous coordinates (x,y,z,1) has to be allocated by calling function
 	  */
 
-    MSG get_point3(const unsigned int col, const unsigned int row, const double depth, obvious::Matrix * point3);
+    MSG get_point3(const unsigned int col, const unsigned int row, const double depth, Matrix* point3);
 
     /**
     * get_pxl
     * @param point3 Vector that contains the point
     * @param col, row int-ptr to store the gained data in it
     */
-    MSG get_pxl(const obvious::Matrix * point3, unsigned int * col, unsigned int * row);
+    MSG get_pxl(const Matrix* point3, unsigned int* col, unsigned int* row);
 
+    MSG project2Plane(const Matrix* point3, double* col, double* row);
 
   private:
     obvious::Matrix * _projection;

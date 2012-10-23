@@ -32,6 +32,7 @@
 
 #define KINFU_WEIGHTING 1
 #define CORRECT_SIGN_CHANGE 1
+#define INTERPOLATEDEPTH 0
 
 namespace obvious
 {
@@ -111,7 +112,7 @@ MSG TsdSpace::push(double *depthImage)
 	 */
 	for (unsigned int i = 0; i < _zDim; i++)
 	{
-		if (depthSlice(i) != OK)
+		if (zSlice(i) != OK)
 			LOGMSG(DBG_ERROR, "Error slice nr. " << i);
 	}
 
@@ -128,7 +129,7 @@ void TsdSpace::setMaxTruncation(double val)
 	_maxTruncation = val;
 }
 
-MSG TsdSpace::depthSlice(const unsigned int depth)
+MSG TsdSpace::zSlice(const unsigned int z)
 {
 	//Variables and Pointers
 	double coordVoxel[4];
@@ -136,7 +137,7 @@ MSG TsdSpace::depthSlice(const unsigned int depth)
 	TsdVoxel *voxel;
 
 	// center point of all voxels in given z-slice
-	coordVoxel[2] = ((double) depth + 0.5) * _voxelDim;
+	coordVoxel[2] = ((double) z + 0.5) * _voxelDim;
 	coordVoxel[3] = 1.0;
 
 	// Loop over the z-slice given in depth
@@ -152,6 +153,21 @@ MSG TsdSpace::depthSlice(const unsigned int depth)
 			// Transform coordinates of current voxel in sensor coordinate system
 			mCoordVoxel = *_Tinv * mCoordVoxel;
 
+
+#if INTERPOLATEDEPTH
+			// Get current Pixel
+			double u;
+			double v;
+			_projection->project2Plane(&mCoordVoxel, &u, &v);
+
+			if((v <= 0) || (v >= (ROW_MAX-1))) continue;
+			if((u <= 0) || (u >= (COL_MAX-1))) continue;
+
+			double depth = interpolateBilinear(u, v);
+
+			//invalid point-->test?
+			if (depth < 0.001) continue;
+#else
 			// Get current Pixel
 			unsigned int u;
 			unsigned int v;
@@ -160,8 +176,11 @@ MSG TsdSpace::depthSlice(const unsigned int depth)
 			if((v < 0) || (v >= ROW_MAX)) continue;
 			if((u < 0) || (u >= COL_MAX)) continue;
 
+			double depth = _depthImage[((ROW_MAX-1)-v)*COL_MAX+u];
+
 			//invalid point-->test?
-			if (_depthImage[((ROW_MAX - 1) - v) * COL_MAX + u] < 0.001) continue;
+			if (depth < 0.001) continue;
+#endif
 
 			// current voxel in Kinect frustrum -> Calculate TSDF
 			// get current translation_vector to kinect
@@ -173,7 +192,7 @@ MSG TsdSpace::depthSlice(const unsigned int depth)
 			double distance = euklideanDistance<double>((double*) t, (double*) coordVoxel, 3);
 
 			// calculate signed distance function
-			double sdf=distance-((_depthImage[((ROW_MAX-1)-v)*COL_MAX+u]));     //sdf(i)=abs(t(i)-v(g))-D(i)(p) /Kinect Z-Image = millimeters!FUCK!!
+			double sdf = distance - depth;     //sdf(i)=abs(t(i)-v(g))-D(i)(p) /Kinect Z-Image = millimeters!FUCK!!
 
 			/*float xl = (u - (*_projection)[0][2]) / (*_projection)[0][0];
 			float yl = (v - (*_projection)[1][2]) / (*_projection)[1][1];
@@ -186,7 +205,7 @@ MSG TsdSpace::depthSlice(const unsigned int depth)
 			{
 				//calculate truncated sdf
 				//get ptr to current TsdVoxel
-				voxel = &_space[depth][(_yDim - 1) - row][col]; //turn row idx bsp. _yDim=480, row =0 -> y_idx=479-0 = 479
+				voxel = &_space[z][(_yDim - 1) - row][col]; //turn row idx bsp. _yDim=480, row =0 -> y_idx=479-0 = 479
 
 				//truncate
 				double tsdf = sdf / _maxTruncation; //determine whether sdf/max_truncation = ]-1;1[ otherwise continue
@@ -492,14 +511,14 @@ MSG TsdSpace::rayTrace(const unsigned int row, const unsigned int col, double **
 		}
 
 		double tsdf;
-		if (interpolateTrilineary(&position, &tsdf) != OK)
+		if (interpolateTrilinear(&position, &tsdf) != OK)
 		{
 			ctr++;
 			continue;
 		}
 
 		double tsdf_prev;
-		if (interpolateTrilineary(&position_prev, &tsdf_prev) != OK)
+		if (interpolateTrilinear(&position_prev, &tsdf_prev) != OK)
 		{
 			ctr++;
 			continue;
@@ -586,17 +605,8 @@ MSG TsdSpace::rayTrace(const unsigned int row, const unsigned int col, double **
 		//if ((l_tsdf > 0 && l_tsdf < UNUSED)	&& (c_tsdf < 0 && c_tsdf > M_UNUSED))
 		if(l_tsdf > 0 && c_tsdf < 0)
 		{
-			double tsdf;
-			if (interpolateTrilineary(&position, &tsdf) != OK)
-			{
-				delete dir_vec;
-				delete foot_point;
-				delete position;
-				return ERROR;
-			}
-
 			double tsdf_prev;
-			if (interpolateTrilineary(&position_prev, &tsdf_prev) != OK)
+			if (interpolateTrilinear(&position_prev, &tsdf_prev) != OK)
 			{
 				delete dir_vec;
 				delete foot_point;
@@ -604,22 +614,18 @@ MSG TsdSpace::rayTrace(const unsigned int row, const unsigned int col, double **
 				return ERROR;
 			}
 
-			/*if(tsdf > 0 && tsdf_prev > 0)
+			double tsdf;
+			if (interpolateTrilinear(&position, &tsdf) != OK)
 			{
-				l_tsdf = tsdf;
-				ctr++;
-				continue;
-				//return ERROR;
-			}
-
-			if(tsdf < 0 && tsdf_prev < 0)
-			{
+				delete dir_vec;
+				delete foot_point;
+				delete position;
 				return ERROR;
-				//interp = tsdf_prev / (tsdf_prev + tsdf);
-				//break;
-			}*/
+			}
 
 			interp = tsdf_prev / (tsdf_prev - tsdf);
+
+			//interp = tsdf_prev;
 
 			break;
 		}
@@ -641,7 +647,7 @@ MSG TsdSpace::rayTrace(const unsigned int row, const unsigned int col, double **
 }
 #endif
 
-MSG TsdSpace::interpolateTrilineary(double **coordinates, double *tsdf)
+MSG TsdSpace::interpolateTrilinear(double **coordinates, double *tsdf)
 {
 	int x_idx = 0;
 	int y_idx = 0;
@@ -722,6 +728,22 @@ MSG TsdSpace::interpolateTrilineary(double **coordinates, double *tsdf)
         	+ _space[z_idx + 1][y_idx - 1][x_idx + 1].tsdf * w_x * w_y * w_z;
 
 	return (OK);
+}
+
+double TsdSpace::interpolateBilinear(double u, double v)
+{
+	v = ((double)ROW_MAX-1) - v;
+	unsigned int nu = (unsigned int)u;
+	unsigned int nv = (unsigned int)v;
+
+	double du = u - (double)nu;
+	double dv = v - (double)nv;
+
+	//cout << u << " " << du << " " << v << " " << dv << endl;
+	return _depthImage[nv*COL_MAX + nu]         * (1.-du)* (1.-dv) +
+		   _depthImage[nv*COL_MAX + nu + 1]     *     du * (1.-dv) +
+		   _depthImage[(nv+1)*COL_MAX + nu]     * (1.-du)*     dv  +
+		   _depthImage[(nv+1)*COL_MAX + nu + 1] *     du *     dv;
 }
 
 } // end namespace

@@ -40,7 +40,7 @@ int main(void)
 	// translation of sensor
 	double tx = 0.5;
 	double ty = 0.5;
-	double tz = -0.1;
+	double tz = 0.0;
 
 	// rotation about y-axis of sensor
 	double theta = -10 * M_PI / 180;
