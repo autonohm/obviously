@@ -11,7 +11,7 @@ SET(APPLICATIONS_VERSION_MINOR 1)
 FIND_PACKAGE(VTK REQUIRED)
 INCLUDE(${VTK_USE_FILE})
 
-INCLUDE_DIRECTORIES(/usr/include/openni $ENV{OBVIOUSLY_ROOT} /usr/include/qt4/ /usr/include/lua5.1 /opt/ros/electric/stacks/perception_pcl/flann/include/)
+INCLUDE_DIRECTORIES(/usr/include/openni /usr/include/ni $ENV{OBVIOUSLY_ROOT} /usr/include/qt4/ /usr/include/lua5.1 /opt/ros/electric/stacks/perception_pcl/flann/include/)
 LINK_DIRECTORIES(/opt/ros/electric/stacks/perception_pcl/flann/lib64/)
 
 ADD_EXECUTABLE(obvious3D_show obvious3D_show.cpp)
@@ -43,7 +43,7 @@ TARGET_LINK_LIBRARIES(kinect_playback vtkHybrid obgraphic obdevice obcore glut g
 TARGET_LINK_LIBRARIES(kinect_localize vtkHybrid obvision obgraphic obdevice obcore glut gsl gslcblas flann ann OpenNI)
 TARGET_LINK_LIBRARIES(uvccam_serialize obdevice obcore v4l2)
 TARGET_LINK_LIBRARIES(uvcvirtualcam_serialize obdevice obcore v4l2)
-TARGET_LINK_LIBRARIES(uvccam_stream obgraphic obdevice obcore v4l2 glut)
+TARGET_LINK_LIBRARIES(uvccam_stream obgraphic obdevice obcore v4l2 glut GL)
 TARGET_LINK_LIBRARIES(uvccam_querycapabilities obdevice obcore v4l2)
 TARGET_LINK_LIBRARIES(synthetic_pointcloud obgraphic obcore vtkHybrid gsl gslcblas)
 TARGET_LINK_LIBRARIES(read_lua_config lua5.1)
