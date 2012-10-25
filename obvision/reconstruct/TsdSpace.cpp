@@ -31,7 +31,7 @@
 #define SCALE 1.//0.25        // fixed scale for raycaster
 
 #define KINFU_WEIGHTING 1
-#define CORRECT_SIGN_CHANGE 1
+#define CORRECT_SIGN_CHANGE 0
 #define INTERPOLATEDEPTH 0
 
 namespace obvious
@@ -192,12 +192,12 @@ MSG TsdSpace::zSlice(const unsigned int z)
 			double distance = euklideanDistance<double>((double*) t, (double*) coordVoxel, 3);
 
 			// calculate signed distance function
-			double sdf = distance - depth;     //sdf(i)=abs(t(i)-v(g))-D(i)(p) /Kinect Z-Image = millimeters!FUCK!!
+		//	double sdf = distance - depth;     //sdf(i)=abs(t(i)-v(g))-D(i)(p) /Kinect Z-Image = millimeters!FUCK!!
 
-			/*float xl = (u - (*_projection)[0][2]) / (*_projection)[0][0];
+			float xl = (u - (*_projection)[0][2]) / (*_projection)[0][0];
 			float yl = (v - (*_projection)[1][2]) / (*_projection)[1][1];
 			float lambda_inv = 1. / sqrt(xl * xl + yl * yl + 1.);
-			sdf = distance * lambda_inv	- ((_depthImage[((ROW_MAX - 1) - v) * COL_MAX + u])); //mm*/
+			double sdf = distance * lambda_inv	- ((_depthImage[((ROW_MAX - 1) - v) * COL_MAX + u])); //mm
 
 			sdf *= -1.0;
 
@@ -414,6 +414,7 @@ MSG TsdSpace::getModel(double **model_pcl, unsigned int *ctr)
 	double *p_var    = new double[3];
 	bool found       = 0;
 	double depth_var = 0.0;
+	obvious::Matrix Mvar(4,1);
 
 	// allocate space for pointcloud
 	*model_pcl = new double[ROW_MAX * COL_MAX * 3];
@@ -432,14 +433,17 @@ MSG TsdSpace::getModel(double **model_pcl, unsigned int *ctr)
 			if (rayCast(row, col, &p_var, &depth_var) == OK) //Ray returned with coordinates
 			{
 				found = 1;
+				Mvar.setData(p_var);
+				Mvar[3][0]=1.0;
+				Mvar=*_Tinv*Mvar;
 				for (unsigned int i = 0; i < 3; i++)
-					(*model_pcl)[(*ctr)++] = p_var[i];
+					(*model_pcl)[(*ctr)++] = Mvar[i][0];
 			}
 		}
 	}
 	if (found) --(*ctr);
 
-	LOGMSG(DBG_DEBUG, "Raytracing finished! Found " << *ctr << " coordinates.");
+	LOGMSG(DBG_DEBUG, "Raycasting finished! Found " << *ctr << " coordinates.");
 
 	delete p_var;
 	return (OK);
