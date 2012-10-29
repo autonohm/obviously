@@ -12,10 +12,12 @@
 #ifndef __RGBCOLOR__
 #define __RGBCOLOR__
 
+#include <ostream>
+
 /**
  * @namespace 	obviously
  */
-namespace obviously
+namespace obvious
 {
 
 class RGBColor

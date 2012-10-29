@@ -2,11 +2,8 @@
 #define __ABSTRACT_MAT__
 
 #include <list>
+#include <vector>
 #include <ostream>
-
-#ifndef __GSL_INCLUDED__
-struct gsl_matrix;
-#endif
 
 namespace obvious {
 
@@ -30,15 +27,18 @@ public:
         return *this;
     }
 
-    //! element access by col, row
-    virtual T& at(const unsigned int col, unsigned int row) = 0;
-    virtual T at(const unsigned int col, unsigned int row) const = 0;
+    //! element access by col, row and channel
+    virtual T& at(const unsigned int col, const unsigned int row, const unsigned int channel = 0) = 0;
+    virtual T at(const unsigned int col, const unsigned int row, const unsigned int channel = 0) const = 0;
 
     //! get number of cols
     unsigned int cols(void) const { return m_cols; }
 
     //! get number of rows
     unsigned int rows(void) const { return m_rows; }
+
+    //! get number of channels
+    unsigned int channels(void) const { return m_data.size(); }
 
 protected:
     //! checks if the destructor has to delete m_data
@@ -49,9 +49,9 @@ protected:
     bool haveToFreeData(void);
 
 
-    gsl_matrix*  m_data;
-    unsigned int m_cols;
-    unsigned int m_rows;
+    std::vector<void*> m_data;
+    unsigned int       m_cols;
+    unsigned int       m_rows;
 
 private:
     void signOn (AbstractMat<T>* mat);
@@ -84,7 +84,7 @@ void AbstractMat<T>::signOff(AbstractMat<T>* mat)
 
     m_refs.remove(mat);
     mat->m_refs.remove(this);
-    m_data = 0;
+    m_data.clear();
     m_cols = 0;
     m_rows = 0;
 }
