@@ -39,6 +39,7 @@ public:
       he dosen't make a deep copy. Both Mats works on the same data. For a explicit deep copy use the copy constructor or the funciton copyTo()
     */
     MatRGB& operator=(MatRGB& mat);
+    MatRGB& operator=(MatRGB mat);
 };
 
 }

@@ -18,12 +18,18 @@ namespace obvious {
 MatD::MatD(const unsigned int cols, const unsigned int rows)
     : AbstractMat(cols, rows)
 {
+    if (!cols || !rows)
+        return;
+
     m_data.push_back(gsl_matrix_alloc(rows, cols));
 }
 
 MatD::MatD(const MatD& mat)
     : AbstractMat(mat.m_cols, mat.m_rows)
 {
+    if (!m_cols || !m_rows)
+        return;
+
     m_data.push_back(gsl_matrix_alloc(mat.m_rows, mat.m_cols));
     gsl_matrix_memcpy(GSL(m_data[0]), GSL(mat.m_data[0]));
 }
@@ -92,7 +98,7 @@ MatD::MatD(const xmlpp::Node* node)
 MatD::~MatD(void)
 {
     /* Check if m_data has to be deleted */
-    if (this->haveToFreeData())
+    if (this->haveToFreeData() && m_data.size())
         gsl_matrix_free(GSL(m_data[0]));
 }
 

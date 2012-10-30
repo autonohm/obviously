@@ -17,6 +17,9 @@ namespace obvious {
 MatRGB::MatRGB(const unsigned int cols, const unsigned int rows)
     : AbstractMat(cols, rows)
 {
+    if (!m_rows && !m_cols)
+        return;
+
     for (unsigned int i = 0; i < CHANNELS; i++)
         m_data.push_back(gsl_matrix_uchar_alloc(rows, cols));
 }
@@ -24,6 +27,9 @@ MatRGB::MatRGB(const unsigned int cols, const unsigned int rows)
 MatRGB::MatRGB(const MatRGB& mat)
     : AbstractMat(mat.m_cols, mat.m_rows)
 {
+    if (!m_rows && !m_cols)
+        return;
+
     for (unsigned int i = 0; i < CHANNELS; i++)
     {
         m_data.push_back(gsl_matrix_uchar_alloc(m_rows, m_cols));
@@ -57,6 +63,18 @@ RGBColor MatRGB::rgb(const unsigned int col, const unsigned int row) const
 }
 
 MatRGB& MatRGB::operator=(MatRGB& mat)
+{
+    /* Before take a reference to another Mat, delete m_data */
+    if (this->haveToFreeData())
+        for (unsigned int i = 0; i < m_data.size(); i++)
+            gsl_matrix_uchar_free(GSL(m_data[i]));
+
+    AbstractMat<unsigned char>::operator=(mat);
+
+    return *this;
+}
+
+MatRGB& MatRGB::operator=(MatRGB mat)
 {
     /* Before take a reference to another Mat, delete m_data */
     if (this->haveToFreeData())

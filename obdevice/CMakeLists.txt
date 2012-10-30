@@ -13,7 +13,10 @@ INCLUDE_DIRECTORIES(/usr/include/openni
                     $ENV{OBVIOUSLY_ROOT}
                     ../obcore/math
                     ../obcore
+                    $ENV{OBVIOUSLY_ROOT}/../thermo_cam/include
                     )
+
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__OBVIOUSLY__")
 
 ADD_LIBRARY(obdevice
 	Kinect.cpp
@@ -22,4 +25,6 @@ ADD_LIBRARY(obdevice
 	UvcVirtualCam.cpp
         Device3D.cpp
         KinectDevice.cpp
+# uncomment this for include the thermo camera. I know that is not a realy nice solution...
+#        ThermoDevice.cpp
 	)

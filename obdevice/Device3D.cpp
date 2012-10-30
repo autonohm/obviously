@@ -5,8 +5,7 @@ namespace obvious {
 
 Device3D::~Device3D(void)
 {
-    for (unsigned int i = 0; i < m_points.size(); i++)
-        delete m_points[i];
+    this->deletePoints();
 }
 
 void Device3D::deletePoints(void)

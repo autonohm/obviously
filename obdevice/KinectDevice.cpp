@@ -32,7 +32,6 @@ bool KinectDevice::grab(void)
     }
 
     const MatRGB  rgb  = m_kinect->getMat();
-    std::cout << "MatRGB: cols = " << rgb.cols() << ", rows = " << rgb.rows() << std::endl;
     const double* data = m_kinect->getCoords();
 
     for (unsigned int row = 0, i = 0; row < rgb.rows(); row++)
