@@ -8,11 +8,18 @@ PROJECT(OBDEVICE)
 SET(OBDEVICE_VERSION_MAJOR 0)
 SET(OBDEVICE_VERSION_MINOR 1)
 
-INCLUDE_DIRECTORIES(/usr/include/openni /usr/include/ni $ENV{OBVIOUSLY_ROOT})
+INCLUDE_DIRECTORIES(/usr/include/openni
+                    /usr/include/ni
+                    $ENV{OBVIOUSLY_ROOT}
+                    ../obcore/math
+                    ../obcore
+                    )
 
 ADD_LIBRARY(obdevice
 	Kinect.cpp
 	KinectPlayback.cpp
 	UvcCam.cpp
 	UvcVirtualCam.cpp
+        Device3D.cpp
+        KinectDevice.cpp
 	)

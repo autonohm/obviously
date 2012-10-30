@@ -9,6 +9,8 @@
 #include <iostream>
 #include <fstream>
 
+#include "MatRGB.h"
+
 using namespace xn;
 using namespace std;
 
@@ -87,6 +89,12 @@ public:
    * @return pointer to color buffer (layout r1g1b1r2...)
    */
   unsigned char* getRGB();
+
+  /**
+   * Get Matrix containing RGB data
+   * @return MatRGB
+   */
+  MatRGB getMat(void) const;
 
   /**
    * Experimental: Skeleton tracking - get mask of valid points

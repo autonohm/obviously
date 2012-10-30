@@ -2,6 +2,7 @@
 #define __MAT_RGB__
 
 #include "AbstractMat.h"
+#include "rgbColor.h"
 
 namespace xmlpp {
 class Node;
@@ -30,6 +31,8 @@ public:
     unsigned char& at(const unsigned int col, const unsigned int row, const unsigned int channel = Red);
     //! get a reference of element by col, row and channel
     unsigned char at(const unsigned int col, const unsigned int row, const unsigned int channel = Red) const;
+    //! get RGBColor class of element by col, row
+    RGBColor rgb(const unsigned int col, const unsigned int row) const;
 
     //! assignment operator
     /*!

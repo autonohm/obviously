@@ -49,6 +49,13 @@ unsigned char MatRGB::at(const unsigned int col, const unsigned int row, const u
     return gsl_matrix_uchar_get(GSL(m_data[channel]), row, col);
 }
 
+RGBColor MatRGB::rgb(const unsigned int col, const unsigned int row) const
+{
+    return RGBColor(gsl_matrix_uchar_get(GSL(m_data[Red])  , row, col),
+                    gsl_matrix_uchar_get(GSL(m_data[Green]), row, col),
+                    gsl_matrix_uchar_get(GSL(m_data[Blue]) , row, col));
+}
+
 MatRGB& MatRGB::operator=(MatRGB& mat)
 {
     /* Before take a reference to another Mat, delete m_data */

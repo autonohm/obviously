@@ -8,12 +8,11 @@ include(FindPkgConfig)
 PROJECT(OBCORE)
 SET(OBCORE_VERSION_MAJOR 0)
 
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -O2")
-
 PKG_CHECK_MODULES(XML libxml++-2.6)
 
 INCLUDE_DIRECTORIES(../..
                     ..
+                    .
                     /usr/include/
                     ${XML_INCLUDE_DIRS}
                     )

@@ -11,7 +11,16 @@ SET(APPLICATIONS_VERSION_MINOR 1)
 FIND_PACKAGE(VTK REQUIRED)
 INCLUDE(${VTK_USE_FILE})
 
-INCLUDE_DIRECTORIES(/usr/include/openni /usr/include/ni $ENV{OBVIOUSLY_ROOT} /usr/include/qt4/ /usr/include/lua5.1 /opt/ros/electric/stacks/perception_pcl/flann/include/)
+INCLUDE_DIRECTORIES(/usr/include/openni
+                    /usr/include/ni
+                    $ENV{OBVIOUSLY_ROOT}
+                    /usr/include/qt4/
+                    /usr/include/lua5.1
+                    /opt/ros/electric/stacks/perception_pcl/flann/include/
+                    ../obcore/math
+                    ../obcore
+                    )
+
 LINK_DIRECTORIES(/opt/ros/electric/stacks/perception_pcl/flann/lib64/)
 
 ADD_EXECUTABLE(obvious3D_show obvious3D_show.cpp)
