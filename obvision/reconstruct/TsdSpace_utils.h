@@ -44,6 +44,20 @@ enum MSG
 	};
 
 /**
+ * Enum Variable for Raycaster mode. General for normal Raycasting. Axis for raycasting parallel to an axis
+ */
+enum RAYC_MODE
+{
+	GENERAL,
+	X_AXS,
+	X_AXS_N,
+	Y_AXS,
+	Y_AXS_N,
+	Z_AXS,
+	Z_AXS_N
+};
+
+/**
 * abs3D
 * Function to calculate the value of a threedimensional vector
 * @param foot point pointer to foot point

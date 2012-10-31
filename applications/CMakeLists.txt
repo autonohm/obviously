@@ -40,6 +40,7 @@ ADD_EXECUTABLE(synthetic_pointcloud synthetic_pointcloud.cpp)
 ADD_EXECUTABLE(read_lua_config read_lua_config.cpp)
 ADD_EXECUTABLE(logging_example logging_example.cpp)
 ADD_EXECUTABLE(tsd_test tsd_test.cpp)
+ADD_EXECUTABLE(showCloud showCloud.cpp)
 
 TARGET_LINK_LIBRARIES(obvious3D_show obgraphic obcore vtkHybrid gsl gslcblas)
 TARGET_LINK_LIBRARIES(obvious3D_map obgraphic obcore vtkHybrid gsl gslcblas)
@@ -58,3 +59,6 @@ TARGET_LINK_LIBRARIES(synthetic_pointcloud obgraphic obcore vtkHybrid gsl gslcbl
 TARGET_LINK_LIBRARIES(read_lua_config lua5.1)
 TARGET_LINK_LIBRARIES(logging_example obcore)
 TARGET_LINK_LIBRARIES(tsd_test obvision obgraphic obcore vtkHybrid gsl gslcblas)
+TARGET_LINK_LIBRARIES(showCloud obgraphic obcore vtkHybrid gsl gslcblas)
+
+
