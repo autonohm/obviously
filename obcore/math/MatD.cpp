@@ -54,17 +54,19 @@ MatD::MatD(const xmlpp::Node* node)
     }
 
     /* Read attributes cols and rows to know the dimension of the MatD */
-    std::stringstream stream(root->get_attribute_value("cols"));
+    std::stringstream stream(root->get_attribute_value("rows"));
     unsigned int rows, cols;
 
     stream >> rows;
     stream.clear();
-    stream.str(root->get_attribute_value("rows"));
+    stream.str(root->get_attribute_value("cols"));
     stream >> cols;
 
     /* If any of both has a null as value return */
     if (!rows || !cols)
+    {
         return;
+    }
 
     /* Allocate matrix */
     m_data.push_back(gsl_matrix_alloc(rows, cols));
@@ -73,13 +75,14 @@ MatD::MatD(const xmlpp::Node* node)
 
     /* Read values for the matrix */
     const xmlpp::Node::NodeList nodes = root->get_children();
-    xmlpp::Node::NodeList::const_iterator it = nodes.begin();
 
-    for (unsigned int row = 0; it != nodes.end() && row < rows; ++it, ++row)
+    unsigned int row = 0;
+
+    for (xmlpp::Node::NodeList::const_iterator it = nodes.begin(); it != nodes.end(); ++it)
     {
         xmlpp::Element* elm = dynamic_cast<xmlpp::Element*>(*it);
 
-        if (!elm && elm->get_name() != "row")
+        if (!elm || elm->get_name() != "row")
             continue;
 
         stream.clear();
@@ -92,6 +95,9 @@ MatD::MatD(const xmlpp::Node* node)
             stream >> value;
             gsl_matrix_set(GSL(m_data[0]), row, col, value);
         }
+
+        if (++row >= rows)
+            break;
     }
 }
 
@@ -141,7 +147,18 @@ double MatD::at(const unsigned int col, const unsigned int row, const unsigned i
 MatD& MatD::operator=(MatD& mat)
 {
     /* Delete m_data before take a ref to another Mat */
-    if (this->haveToFreeData())
+    if (this->haveToFreeData() && m_data.size())
+        gsl_matrix_free(GSL(m_data[0]));
+
+    AbstractMat<double>::operator=(mat);
+
+    return *this;
+}
+
+MatD& MatD::operator=(MatD mat)
+{
+    /* Delete m_data before take a ref to another Mat */
+    if (this->haveToFreeData() && m_data.size())
         gsl_matrix_free(GSL(m_data[0]));
 
     AbstractMat<double>::operator=(mat);

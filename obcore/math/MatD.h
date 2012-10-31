@@ -51,6 +51,7 @@ public:
       he dosen't make a deep copy. Both Mats works on the same data. For a explicit deep copy use the copy constructor or the funciton copyTo()
     */
     MatD& operator=(MatD& mat);
+    MatD& operator=(MatD mat);
 
     //! compute a marix matrix product
     MatD operator*(const MatD& mat);

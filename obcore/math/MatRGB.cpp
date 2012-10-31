@@ -5,6 +5,7 @@
 #include <gsl/gsl_linalg.h>
 #include <gsl/gsl_blas.h>
 #include <gsl/gsl_permutation.h>
+#include <iostream>
 
 namespace {
 const unsigned int CHANNELS = 3;
@@ -17,6 +18,8 @@ namespace obvious {
 MatRGB::MatRGB(const unsigned int cols, const unsigned int rows)
     : AbstractMat(cols, rows)
 {
+//    std::cout << __PRETTY_FUNCTION__ << std::endl;
+
     if (!m_rows && !m_cols)
         return;
 
@@ -27,6 +30,8 @@ MatRGB::MatRGB(const unsigned int cols, const unsigned int rows)
 MatRGB::MatRGB(const MatRGB& mat)
     : AbstractMat(mat.m_cols, mat.m_rows)
 {
+//    std::cout << __PRETTY_FUNCTION__ << std::endl;
+
     if (!m_rows && !m_cols)
         return;
 
@@ -37,8 +42,16 @@ MatRGB::MatRGB(const MatRGB& mat)
     }
 }
 
+MatRGB::MatRGB(MatRGB& mat)
+    : AbstractMat(mat.m_cols, mat.m_rows)
+{
+    AbstractMat<unsigned char>::operator=(mat);
+}
+
 MatRGB::~MatRGB(void)
 {
+//    std::cout << __PRETTY_FUNCTION__ << std::endl;
+
     /* Check if m_data has to be deleted */
     if (this->haveToFreeData())
         for (unsigned int i = 0; i < m_data.size(); i++)
@@ -64,6 +77,8 @@ RGBColor MatRGB::rgb(const unsigned int col, const unsigned int row) const
 
 MatRGB& MatRGB::operator=(MatRGB& mat)
 {
+//    std::cout << __PRETTY_FUNCTION__ << std::endl;
+
     /* Before take a reference to another Mat, delete m_data */
     if (this->haveToFreeData())
         for (unsigned int i = 0; i < m_data.size(); i++)
@@ -76,6 +91,8 @@ MatRGB& MatRGB::operator=(MatRGB& mat)
 
 MatRGB& MatRGB::operator=(MatRGB mat)
 {
+//    std::cout << __PRETTY_FUNCTION__ << std::endl;
+
     /* Before take a reference to another Mat, delete m_data */
     if (this->haveToFreeData())
         for (unsigned int i = 0; i < m_data.size(); i++)

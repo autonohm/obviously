@@ -23,7 +23,15 @@ public:
     //! default constructor
     MatRGB(const unsigned int cols = 0, const unsigned int rows = 0);
     //! copy constructor
+    /*!
+      makes a deep copy.
+    */
     MatRGB(const MatRGB& mat);
+    //! copy constructor
+    /*!
+      takes a ref to the data of mat.
+    */
+    MatRGB(MatRGB& mat);
     //! destructor
     ~MatRGB(void);
 
