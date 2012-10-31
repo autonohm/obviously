@@ -1,4 +1,5 @@
 cmake_minimum_required (VERSION 2.6)
+include(FindPkgConfig)
 
 ############################
 # General project settings #
@@ -6,9 +7,15 @@ cmake_minimum_required (VERSION 2.6)
 
 PROJECT(OBCORE)
 SET(OBCORE_VERSION_MAJOR 0)
-SET(OBCORE_VERSION_MINOR 1)
 
-INCLUDE_DIRECTORIES(../.. ..)
+PKG_CHECK_MODULES(XML libxml++-2.6)
+
+INCLUDE_DIRECTORIES(../..
+                    ..
+                    .
+                    /usr/include/
+                    ${XML_INCLUDE_DIRS}
+                    )
 
 add_library(obcore
 	base/CartesianCloud.cpp
@@ -18,4 +25,11 @@ add_library(obcore
 	base/tools.cpp
 	math/geometry.cpp
 	math/Matrix.cpp
+        math/MatD.cpp
+        math/MatRGB.cpp
 	)
+
+# Braucht man glaube ich hier noch gar nicht?! (Knueppl)
+target_link_libraries(obcore
+                      ${XML_LIBRARIES}
+                      )

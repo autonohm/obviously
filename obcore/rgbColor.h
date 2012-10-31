@@ -12,10 +12,12 @@
 #ifndef __RGBCOLOR__
 #define __RGBCOLOR__
 
+#include <ostream>
+
 /**
  * @namespace 	obviously
  */
-namespace obviously
+namespace obvious
 {
 
 class RGBColor
@@ -32,6 +34,10 @@ class RGBColor
 		 */
 		RGBColor(const unsigned char r = 0, const unsigned char g = 0, const unsigned char b = 0)
 			: 	m_r(r),	m_g(g),	m_b(b) { }
+
+                //! copy constructor
+                RGBColor(const RGBColor& rgb) : m_r(rgb.m_r), m_g(rgb.m_g), m_b(rgb.m_b) { }
+
 		/*---------------------------------------------------------------------
 		 * Functions to set value
 		 */

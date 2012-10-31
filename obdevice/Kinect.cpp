@@ -342,6 +342,23 @@ unsigned char* Kinect::getRGB()
   return _rgb;
 }
 
+MatRGB Kinect::getMat(void) const
+{
+    MatRGB mat(_cols, _rows);
+
+    for (unsigned int row = 0, i = 0; row < _rows; row++)
+    {
+        for (unsigned int col = 0; col < _cols; col++, i += 3)
+        {
+            mat.at(col, row, MatRGB::Red)   = _rgb[i];
+            mat.at(col, row, MatRGB::Green) = _rgb[i + 1];
+            mat.at(col, row, MatRGB::Blue)  = _rgb[i + 2];
+        }
+    }
+
+    return mat;
+}
+
 unsigned short* Kinect::getUserMask()
 {
   if(_user.GetNumberOfUsers()<1)

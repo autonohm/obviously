@@ -1,29 +1,37 @@
+#include "MatD.h"
+
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_linalg.h>
 #include <gsl/gsl_blas.h>
 #include <gsl/gsl_permutation.h>
 
-/* Define for Header */
-#define __GSL_INCLUDED__
-
-#include "MatD.h"
-
 #include <iostream>
 #include <libxml++/libxml++.h>
+
+namespace {
+#define GSL(x) (static_cast<gsl_matrix*>(x))
+}
 
 namespace obvious {
 
 MatD::MatD(const unsigned int cols, const unsigned int rows)
     : AbstractMat(cols, rows)
 {
-    m_data = gsl_matrix_alloc(rows, cols);
+    if (!cols || !rows)
+        return;
+
+    m_data.push_back(gsl_matrix_alloc(rows, cols));
 }
 
 MatD::MatD(const MatD& mat)
     : AbstractMat(mat.m_cols, mat.m_rows)
 {
-    gsl_matrix_memcpy(m_data, mat.m_data);
+    if (!m_cols || !m_rows)
+        return;
+
+    m_data.push_back(gsl_matrix_alloc(mat.m_rows, mat.m_cols));
+    gsl_matrix_memcpy(GSL(m_data[0]), GSL(mat.m_data[0]));
 }
 
 MatD::MatD(const xmlpp::Node* node)
@@ -59,7 +67,7 @@ MatD::MatD(const xmlpp::Node* node)
         return;
 
     /* Allocate matrix */
-    m_data = gsl_matrix_alloc(rows, cols);
+    m_data.push_back(gsl_matrix_alloc(rows, cols));
     m_rows = rows;
     m_cols = cols;
 
@@ -82,7 +90,7 @@ MatD::MatD(const xmlpp::Node* node)
             double value;
 
             stream >> value;
-            gsl_matrix_set(m_data, row, col, value);
+            gsl_matrix_set(GSL(m_data[0]), row, col, value);
         }
     }
 }
@@ -90,8 +98,8 @@ MatD::MatD(const xmlpp::Node* node)
 MatD::~MatD(void)
 {
     /* Check if m_data has to be deleted */
-    if (this->haveToFreeData())
-        gsl_matrix_free(m_data);
+    if (this->haveToFreeData() && m_data.size())
+        gsl_matrix_free(GSL(m_data[0]));
 }
 
 void MatD::createXml(xmlpp::Node* node) const
@@ -114,27 +122,27 @@ void MatD::createXml(xmlpp::Node* node) const
         stream.str(std::string());
 
         for (unsigned int col = 0; col < m_cols; col++)
-            stream << gsl_matrix_get(m_data, row, col) << " ";
+            stream << gsl_matrix_get(GSL(m_data[0]), row, col) << " ";
 
         elm->add_child_text(stream.str());
     }
 }
 
-double& MatD::at(const unsigned int col, const unsigned int row)
+double& MatD::at(const unsigned int col, const unsigned int row, const unsigned int)
 {
-    return *gsl_matrix_ptr(m_data, row, col);
+    return *gsl_matrix_ptr(GSL(m_data[0]), row, col);
 }
 
-double MatD::at(const unsigned int col, const unsigned int row) const
+double MatD::at(const unsigned int col, const unsigned int row, const unsigned int) const
 {
-    return gsl_matrix_get(m_data, row, col);
+    return gsl_matrix_get(GSL(m_data[0]), row, col);
 }
 
 MatD& MatD::operator=(MatD& mat)
 {
     /* Delete m_data before take a ref to another Mat */
-    if (m_data)
-        gsl_matrix_free(m_data);
+    if (this->haveToFreeData())
+        gsl_matrix_free(GSL(m_data[0]));
 
     AbstractMat<double>::operator=(mat);
 
@@ -143,8 +151,8 @@ MatD& MatD::operator=(MatD& mat)
 
 MatD MatD::operator*(const MatD& mat)
 {
-    MatD matN(m_data->size1, mat.m_data->size2);
-    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, m_data, mat.m_data, 0.0, matN.m_data);
+    MatD matN(GSL(m_data[0])->size1, GSL(mat.m_data[0])->size2);
+    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, GSL(m_data[0]), GSL(mat.m_data[0]), 0.0, GSL(matN.m_data[0]));
     return matN;
 }
 

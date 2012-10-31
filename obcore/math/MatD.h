@@ -32,10 +32,19 @@ public:
     //! destructor
     virtual ~MatD(void);
 
+    //! create XML node of this matrix
     void createXml(xmlpp::Node* node) const;
 
-    double& at(const unsigned int col, const unsigned int row);
-    double at(const unsigned int col, const unsigned int row) const;
+    //! get a reference of the element by col, row
+    /*!
+      paramenter channels has no effect.
+    */
+    double& at(const unsigned int col, const unsigned int row, const unsigned int channel = 0);
+    //! get the value of the element by col, row
+    /*!
+      parameter channel has no effect.
+    */
+    double at(const unsigned int col, const unsigned int row, const unsigned int channel = 0) const;
 
     //! assignment operator
     /*!

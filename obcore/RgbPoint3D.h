@@ -20,25 +20,25 @@ class RgbPoint3D : public virtual Point3D
 {
 public:
     //! Constructor
-    RgbPoint3D(const double x = 0.0, const double y = 0.0, const double z = 0.0, const rgbColor& rgb = RGB(Color::Black))
+    RgbPoint3D(const double x = 0.0, const double y = 0.0, const double z = 0.0, const RGBColor& rgb = RGBColor())
         : Point3D(x, y, z), m_rgb(rgb) { }
 
     //! CopyConstructor
-    RgbPoint3D(const RgbPoint3D& point) : RgbPoint3D(point.m_x, point.m_y, point.m_z), m_rgb(point.m_rgb) { }
+    RgbPoint3D(const RgbPoint3D& point) : Point3D(point.m_x, point.m_y, point.m_z), m_rgb(point.m_rgb) { }
 
     //! Operators
     RgbPoint3D& operator=(const RgbPoint3D& point)
     {
         m_rgb = point.m_rgb;
-        Point3D::opertor=(point);
+        Point3D::operator=(point);
         return *this;
     }
 
-    void setRGB(const rgbColor& rgb) { m_rgb = rgb; }
-    const rgbColor& rgb(void) const { return m_rgb; }
+    void setRGB(const RGBColor& rgb) { m_rgb = rgb; }
+    const RGBColor& rgb(void) const { return m_rgb; }
 
 protected:
-    rgbColor m_rgb;
+    RGBColor m_rgb;
 };
 
 }
