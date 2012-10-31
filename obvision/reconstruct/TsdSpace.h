@@ -108,11 +108,19 @@ namespace obvious
    // MSG TsdSpace::peak(unsigned int row, unsigned int col, AXIS axis,bool dir, double **coordinates);
     /**
      * rayCast
-     * Subfunction of get_model
+     * Subfunction
      * sends ray through space to calculate virtual depth-image
      * @param row,col position of the pixel in virtual kinect-view
      * @param coordinates pointer to store intersection coordinates in
      * Has to be allocated by calling function
+     * @param mode sets the raycaster to different modes.
+     * 		GENERAL normal mode
+     * 		X_AXS parallel to X-Axis Borders : COL = _zDim, ROW = _yDim
+     * 		X_AXS_N parallel to X-Axis negative direction
+     * 		Y_AXS parallel to Y-Axis Borders : COL = _xDim, ROW = _zDim
+     * 		Y_AXS_N parallel to Y-Axis negative direction
+     * 		Z_AXS parallel to Z-Axis Borders : COL = _xDim, ROW = _yDim
+     * 		Z_AXS_N parallel to Z-Axis negative direction
      */
     MSG rayCast(const unsigned int row, const unsigned int col, double **coordinates, double *depth,RAYC_MODE mode);
 

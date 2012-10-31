@@ -407,26 +407,89 @@ MSG TsdSpace::peak(unsigned int row, unsigned int col,unsigned int *nbr, double 
 
 MSG TsdSpace::generatePointcloud(double **cloud, unsigned int *nbr)
 {
-	//initialize
-	//allocate space for pointcloud
-	*cloud = new double[_xDim * _yDim * _zDim * 3];
+	std::vector<double> pointcloud;
+	double depth;
+	double *point=new double[3];
 
-	/*
-	 * Room for Multithreading shall use up to 12 Threads which calculate a peak each
-	 */
+	/*X_AXS parallel to X-Axis Borders : COL = _zDim, ROW = _yDim
+	     * 		X_AXS_N parallel to X-Axis negative direction
+	     * 		Y_AXS parallel to Y-Axis Borders : COL = _xDim, ROW = _zDim
+	     * 		Y_AXS_N parallel to Y-Axis negative direction
+	     * 		Z_AXS parallel to Z-Axis Borders : COL = _xDim, ROW = _yDim
+	     * 		Z_AXS_N parallel to Z-Axis negative direction*/
 
-	// send peaks through space
+	//x_parallel
+	cout<<"\nX_AXIS\n";
+	for (unsigned int row = 0; row < _yDim; row++)
+	{
+		for (unsigned int col = 0; col < _zDim; col++)
+		{
+			if((rayCast(row,col,&point,&depth,X_AXS))==OK)
+			{
+				for(unsigned int i=0;i<3;i++)
+					pointcloud.push_back(point[i]);
+			}
+			if((rayCast(row,col,&point,&depth,X_AXS_N))==OK)
+			{
+				for(unsigned int i=0;i<3;i++)
+					pointcloud.push_back(point[i]);
+			}
+		}
+	}
+
+	//y_parallel
+	cout<<"\nY_AXIS\n";
+	for (unsigned int row = 0; row < _zDim; row++)
+	{
+		for (unsigned int col = 0; col < _xDim; col++)
+		{
+			if((rayCast(row,col,&point,&depth,Y_AXS))==OK)
+			{
+				for(unsigned int i=0;i<3;i++)
+					pointcloud.push_back(point[i]);
+			}
+			if((rayCast(row,col,&point,&depth,Y_AXS_N))==OK)
+			{
+				for(unsigned int i=0;i<3;i++)
+					pointcloud.push_back(point[i]);
+			}
+		}
+	}
+
+	//z_parallel
+	cout<<"\nZ_AXIS\n";
 	for (unsigned int row = 0; row < _yDim; row++)
 	{
 		for (unsigned int col = 0; col < _xDim; col++)
 		{
-			if ((peak(row, col, nbr, cloud)) != OK)
+			if((rayCast(row,col,&point,&depth,Z_AXS))==OK)
 			{
-				LOGMSG(DBG_ERROR, "Peak in : (row/col) (" << row << "/" << col << ")");
-				continue;
+				for(unsigned int i=0;i<3;i++)
+					pointcloud.push_back(point[i]);
+			}
+			if((rayCast(row,col,&point,&depth,Z_AXS_N))==OK)
+			{
+				for(unsigned int i=0;i<3;i++)
+					pointcloud.push_back(point[i]);
 			}
 		}
 	}
+
+	*nbr=pointcloud.size();
+	*cloud=new double[*nbr];
+	for(unsigned int i=0;i<*nbr;i++)
+		(*cloud)[i]=pointcloud[i];
+
+
+
+
+			/*	if ((peak(row, col, nbr, cloud)) != OK)
+			{
+				LOGMSG(DBG_ERROR, "Peak in : (row/col) (" << row << "/" << col << ")");
+				continue;
+			}*/
+
+
 	return (OK);
 }
 
