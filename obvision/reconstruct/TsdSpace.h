@@ -98,13 +98,14 @@ namespace obvious
 
     /**
      * peak
-     * Function which sends a ray through the space parallel to z axis
+     * Function which sends a ray through the space parallel to a axis
      * @param row,col Position of the peak within space
-     * @param nbr Variable where the nbr of found points in peak is stored in
+     * @param axis Axis which the raycaster shall run parallel to
+     * @param dir set to 0 for negative direction, 1 for positive
      * @param coordinates found coords are stored in. Space has to be allocated by calling function
      */
     MSG peak(unsigned int row, unsigned int col, unsigned int *nbr, double **coordinates);
-
+   // MSG TsdSpace::peak(unsigned int row, unsigned int col, AXIS axis,bool dir, double **coordinates);
     /**
      * rayCast
      * Subfunction of get_model
@@ -113,7 +114,7 @@ namespace obvious
      * @param coordinates pointer to store intersection coordinates in
      * Has to be allocated by calling function
      */
-    MSG rayCast(const unsigned int row, const unsigned int col, double **coordinates, double *depth);
+    MSG rayCast(const unsigned int row, const unsigned int col, double **coordinates, double *depth,RAYC_MODE mode);
 
     /**
      * calcRay
@@ -125,7 +126,7 @@ namespace obvious
      * @param foot_point pointer to store footpoint in has to be allocated by calling function (4-values)
      *
      */
-    MSG calcRay(const unsigned int row, const unsigned int col, double **dir_vec, double **foot_point);
+    MSG calcRay(const unsigned int row, const unsigned int col, double **dir_vec, double **foot_point,RAYC_MODE mode);
 
     /**
      * interpolate_trilineary
