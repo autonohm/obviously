@@ -50,6 +50,12 @@ namespace obvious {
     return ( (a <= b) ? a : b );
   }
 
+  /**
+   * @function abs3D
+   * @brief template function for amount of a 3D-Vector
+   * @param a 3D-vector
+   * @return value of a
+   */
   template <class T>
   static inline T abs3D(T* a)
   {
