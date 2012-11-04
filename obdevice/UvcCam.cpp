@@ -128,6 +128,7 @@ EnumCameraError UvcCam::disconnect()
     close (_nDeviceHandle);
     _nDeviceHandle = -1;
   }
+  return CAMSUCCESS;
 }
 
 EnumCameraError UvcCam::setResolution(unsigned int width, unsigned int height)
@@ -243,6 +244,7 @@ EnumCameraError UvcCam::stopStreaming()
     cout << "UvcCam::stopStreaming(): Unable to stop streaming" << endl;
   }
   unmapMemory();
+  return CAMSUCCESS;
 }
 
 EnumCameraError UvcCam::grab(unsigned char* image)
@@ -339,6 +341,7 @@ EnumCameraError UvcCam::printAvailableFormats()
   }
 
   disconnect();
+  return CAMSUCCESS;
 }
 
 EnumCameraError UvcCam::mapMemory()

@@ -18,63 +18,160 @@ namespace obvious
 
 /**
  * @class Matrix
- * @brief
+ * @brief Matrix abstraction layer of GSL
  * @author Stefan May
  */
 class Matrix
 {
 public:
-  Matrix(unsigned int rows, unsigned int cols);
+	/**
+	 * Constructor
+	 * @param rows number of matrix rows
+	 * @param cols number of matrix columns
+	 */
+	Matrix(unsigned int rows, unsigned int cols);
 
-  Matrix(const Matrix &M);
+	/**
+	 * Copy constructor
+	 * @param M matrix to be copied
+	 */
+	Matrix(const Matrix &M);
 
-  ~Matrix();
+	/**
+	 * Destructor
+	 */
+	~Matrix();
 
-  Matrix  &operator =  (const Matrix &M);
+	/**
+	 * Assignment operator
+	 * @param M matrix assigned to this one
+	 * @return this matrix instance
+	 */
+	Matrix  &operator =  (const Matrix &M);
 
-  Matrix  &operator *= (const Matrix &M);
+	/**
+	 * Assignment operator
+	 * @param M matrix assigned to this one
+	 * @return this matrix instance
+	 */
+	Matrix  &operator *= (const Matrix &M);
 
-  double* operator [] (unsigned int i);
+	/**
+	 * Row accessor
+	 * @param i row index
+	 * @return row elements as array
+	 */
+	double* operator [] (unsigned int i);
 
-  friend Matrix operator * (const Matrix &M1, const Matrix &M2);
+	/**
+	 * Multiplication operator
+	 * @param M1 1st matrix of product
+	 * @param M2 2nd matrix of product
+	 * @return matrix product
+	 */
+	friend Matrix operator * (const Matrix &M1, const Matrix &M2);
 
-  friend ostream& operator <<(ostream &os, Matrix &M);
+	/**
+	 * Stream operator
+	 * @param os output stream
+	 * @param M matrix to be streamed, e.g. printed out
+	 */
+	friend ostream& operator <<(ostream &os, Matrix &M);
 
-  gsl_matrix* getBuffer();
+	/**
+	 * GSL matrix accessor
+	 * @brief get access to internal matrix representation
+	 * @return GSL matrix
+	 */
+	gsl_matrix* getBuffer();
 
-  void getData(double* array);
+	/**
+	 * Data accessor
+	 * @param array array to copy data into (must be instanciated outside)
+	 */
+	void getData(double* array);
 
-  void setData(double* array);
+	/**
+	 * Data mutator
+	 * @param array array to copy data from
+	 */
+	void setData(double* array);
 
-  unsigned int getRows();
+	/**
+	 * Property accessor
+	 * @return number of matrix rows
+	 */
+	unsigned int getRows();
 
-  unsigned int getCols();
+	/**
+	 * Property accessor
+	 * @return number of matrix columns
+	 */
+	unsigned int getCols();
 
-  void setIdentity();
+	/**
+	 * Set matrix to identity
+	 */
+	void setIdentity();
 
-  void setZero();
+	/**
+	 * Set all matrix elements to zero
+	 */
+	void setZero();
 
-  Matrix getInverse();
+	/**
+	 * Instantiate an inverse of the present matrix
+	 * @return inverse matrix as new instance
+	 */
+	Matrix getInverse();
 
-  void invert();
+	/**
+	 * Invert present matrix
+	 */
+	void invert();
 
-  double trace();
+	/**
+	 * Calculate trace of matrix
+	 * @return trace
+	 */
+	double trace();
 
-  gsl_vector* centroid();
+	/**
+	 * Calculate centroid of matrix
+	 * @return c-dimensional centroid vector, where c is the number of matrix columns
+	 */
+	gsl_vector* centroid();
 
-  /**
-   * perform principle component analysis
-   * @return matrix in layout [x1_from x1_to y1_from y1_to z1_from z1_to; x2...]
-   */
-  Matrix* pcaAnalysis();
+	/**
+	 * perform principle component analysis
+	 * @return matrix in layout [x1_from x1_to y1_from y1_to z1_from z1_to; x2...]
+	 */
+	Matrix* pcaAnalysis();
 
-  static Matrix* TranslationMatrix44(double tx, double ty, double tz);
+	/**
+	 * Instantiate a 4x4 translation matrix, i.e. identity with last column set to translational input
+	 * @param tx x-component of translation
+	 * @param ty y-component of translation
+	 * @param tz z-component of translation
+	 */
+	static Matrix* TranslationMatrix44(double tx, double ty, double tz);
 
-  void print();
+	/**
+	 * Print matrix to output stream
+	 */
+	void print();
 
 private:
-  gsl_matrix* _M;
-  gsl_matrix* _work;
+
+	/**
+	 * Internal GSL representation
+	 */
+	gsl_matrix* _M;
+
+	/**
+	 * Internal GSL work buffer
+	 */
+	gsl_matrix* _work;
 };
 
 }

@@ -17,7 +17,6 @@ void iterateCallback();
 void stepCallback();
 void saveCallback();
 void exportCallback();
-void resetCallback();
 
 VtkCloud* _vmodel                  = NULL;
 VtkCloud* _vscene                  = NULL;
