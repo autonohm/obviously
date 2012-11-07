@@ -6,6 +6,7 @@
 namespace obvious
 {
 
+
 UserGenerator _user;
 SceneMetaData _sceneMD;
 
