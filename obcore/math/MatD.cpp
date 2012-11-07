@@ -15,23 +15,23 @@ namespace {
 
 namespace obvious {
 
-MatD::MatD(const unsigned int cols, const unsigned int rows)
-    : AbstractMat(cols, rows)
+MatD::MatD(const unsigned int rows, const unsigned int cols)
+    : AbstractMat(rows, cols)
 {
-    if (!cols || !rows)
+    if (!_rows || !_cols)
         return;
 
-    m_data.push_back(gsl_matrix_alloc(rows, cols));
+    _data.push_back(gsl_matrix_alloc(_rows, _cols));
 }
 
 MatD::MatD(const MatD& mat)
-    : AbstractMat(mat.m_cols, mat.m_rows)
+    : AbstractMat(mat._rows, mat._cols)
 {
-    if (!m_cols || !m_rows)
+    if (!_rows || !_cols)
         return;
 
-    m_data.push_back(gsl_matrix_alloc(mat.m_rows, mat.m_cols));
-    gsl_matrix_memcpy(GSL(m_data[0]), GSL(mat.m_data[0]));
+    _data.push_back(gsl_matrix_alloc(_rows, _cols));
+    gsl_matrix_memcpy(GSL(_data[0]), GSL(mat._data[0]));
 }
 
 MatD::MatD(const xmlpp::Node* node)
@@ -69,9 +69,9 @@ MatD::MatD(const xmlpp::Node* node)
     }
 
     /* Allocate matrix */
-    m_data.push_back(gsl_matrix_alloc(rows, cols));
-    m_rows = rows;
-    m_cols = cols;
+    _data.push_back(gsl_matrix_alloc(rows, cols));
+    _cols = cols;
+    _rows = rows;
 
     /* Read values for the matrix */
     const xmlpp::Node::NodeList nodes = root->get_children();
@@ -93,7 +93,7 @@ MatD::MatD(const xmlpp::Node* node)
             double value;
 
             stream >> value;
-            gsl_matrix_set(GSL(m_data[0]), row, col, value);
+            gsl_matrix_set(GSL(_data[0]), row, col, value);
         }
 
         if (++row >= rows)
@@ -103,9 +103,9 @@ MatD::MatD(const xmlpp::Node* node)
 
 MatD::~MatD(void)
 {
-    /* Check if m_data has to be deleted */
-    if (this->haveToFreeData() && m_data.size())
-        gsl_matrix_free(GSL(m_data[0]));
+    /* Check if _data has to be deleted */
+    if (this->haveToFreeData() && _data.size())
+        gsl_matrix_free(GSL(_data[0]));
 }
 
 void MatD::createXml(xmlpp::Node* node) const
@@ -113,42 +113,41 @@ void MatD::createXml(xmlpp::Node* node) const
     /* Create tag mat with attributes cols and rows */
     xmlpp::Element* root = node->add_child("mat");
     std::stringstream stream;
-
-    stream << m_cols;
-    root->set_attribute("cols", stream.str());
-
-    stream.str(std::string());
-    stream << m_rows;
+    stream << _rows;
     root->set_attribute("rows", stream.str());
 
+    stream.str(std::string());
+    stream << _cols;
+    root->set_attribute("cols", stream.str());
+
     /* Write the data from matrix m_data to xml nodes */
-    for (unsigned int row = 0; row < m_rows; row++)
+    for (unsigned int row = 0; row < _rows; row++)
     {
         xmlpp::Element* elm = root->add_child("row");
         stream.str(std::string());
 
-        for (unsigned int col = 0; col < m_cols; col++)
-            stream << gsl_matrix_get(GSL(m_data[0]), row, col) << " ";
+        for (unsigned int col = 0; col < _cols; col++)
+            stream << gsl_matrix_get(GSL(_data[0]), row, col) << " ";
 
         elm->add_child_text(stream.str());
     }
 }
 
-double& MatD::at(const unsigned int col, const unsigned int row, const unsigned int)
+double& MatD::at(const unsigned int row, const unsigned int col, const unsigned int)
 {
-    return *gsl_matrix_ptr(GSL(m_data[0]), row, col);
+    return *gsl_matrix_ptr(GSL(_data[0]), row, col);
 }
 
-double MatD::at(const unsigned int col, const unsigned int row, const unsigned int) const
+double MatD::at(const unsigned int row, const unsigned int col, const unsigned int) const
 {
-    return gsl_matrix_get(GSL(m_data[0]), row, col);
+    return gsl_matrix_get(GSL(_data[0]), row, col);
 }
 
 MatD& MatD::operator=(MatD& mat)
 {
     /* Delete m_data before take a ref to another Mat */
-    if (this->haveToFreeData() && m_data.size())
-        gsl_matrix_free(GSL(m_data[0]));
+    if (this->haveToFreeData() && _data.size())
+        gsl_matrix_free(GSL(_data[0]));
 
     AbstractMat<double>::operator=(mat);
 
@@ -158,8 +157,8 @@ MatD& MatD::operator=(MatD& mat)
 MatD& MatD::operator=(MatD mat)
 {
     /* Delete m_data before take a ref to another Mat */
-    if (this->haveToFreeData() && m_data.size())
-        gsl_matrix_free(GSL(m_data[0]));
+    if (this->haveToFreeData() && _data.size())
+        gsl_matrix_free(GSL(_data[0]));
 
     AbstractMat<double>::operator=(mat);
 
@@ -168,8 +167,8 @@ MatD& MatD::operator=(MatD mat)
 
 MatD MatD::operator*(const MatD& mat)
 {
-    MatD matN(GSL(m_data[0])->size1, GSL(mat.m_data[0])->size2);
-    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, GSL(m_data[0]), GSL(mat.m_data[0]), 0.0, GSL(matN.m_data[0]));
+    MatD matN(GSL(_data[0])->size1, GSL(mat._data[0])->size2);
+    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, GSL(_data[0]), GSL(mat._data[0]), 0.0, GSL(matN._data[0]));
     return matN;
 }
 
@@ -187,7 +186,7 @@ std::ostream& operator<<(std::ostream& os, const obvious::MatD& mat)
 
         for (unsigned int col = 0; col < mat.cols(); col++)
         {
-            os << mat.at(col, row) << " ";
+            os << mat.at(row, col) << " ";
         }
 
         os << std::endl;

@@ -15,7 +15,7 @@ class MatD : public AbstractMat<double>
 {
 public:
     //! default constructor
-    MatD(const unsigned int cols = 0, const unsigned int rows = 0);
+    MatD(const unsigned int rows = 0, const unsigned int cols = 0);
 
     //! constructor it will be init by an xml node
     /*
@@ -39,12 +39,12 @@ public:
     /*!
       paramenter channels has no effect.
     */
-    double& at(const unsigned int col, const unsigned int row, const unsigned int channel = 0);
+    double& at(const unsigned int row, const unsigned int col, const unsigned int channel = 0);
     //! get the value of the element by col, row
     /*!
       parameter channel has no effect.
     */
-    double at(const unsigned int col, const unsigned int row, const unsigned int channel = 0) const;
+    double at(const unsigned int row, const unsigned int col, const unsigned int channel = 0) const;
 
     //! assignment operator
     /*!

@@ -21,7 +21,7 @@ public:
     };
 
     //! default constructor
-    MatRGB(const unsigned int cols = 0, const unsigned int rows = 0);
+    MatRGB(const unsigned int rows = 0, const unsigned int cols = 0);
     //! copy constructor
     /*!
       makes a deep copy.
@@ -36,11 +36,11 @@ public:
     ~MatRGB(void);
 
     //! get a reference of element by col, row and channel
-    unsigned char& at(const unsigned int col, const unsigned int row, const unsigned int channel = Red);
+    unsigned char& at(const unsigned int row, const unsigned int col, const unsigned int channel = Red);
     //! get a reference of element by col, row and channel
-    unsigned char at(const unsigned int col, const unsigned int row, const unsigned int channel = Red) const;
+    unsigned char at(const unsigned int row, const unsigned int col, const unsigned int channel = Red) const;
     //! get RGBColor class of element by col, row
-    RGBColor rgb(const unsigned int col, const unsigned int row) const;
+    RGBColor rgb(const unsigned int row, const unsigned int col) const;
 
     //! assignment operator
     /*!
