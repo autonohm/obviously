@@ -93,4 +93,27 @@ MatRGB& MatRGB::operator=(MatRGB mat)
     return *this;
 }
 
+MatRGB& MatRGB::swap(const Orientation orientation)
+{
+    for (unsigned int channel = 0; channel < _data.size(); channel++)
+    {
+        switch (orientation)
+        {
+        case X:
+            for (unsigned int colL = 0, colR = _cols - 1; colL < colR; colL++, colR--)
+                gsl_matrix_uchar_swap_columns(GSL(_data[channel]), colL, colR);
+
+            break;
+
+        case Y:
+            for (unsigned int rowT = 0, rowB = _rows - 1; rowT < rowB; rowT++, rowB--)
+                gsl_matrix_uchar_swap_rows(GSL(_data[channel]), rowT, rowB);
+
+            break;
+        }
+    }
+
+    return *this;
+}
+
 }

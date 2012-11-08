@@ -42,6 +42,13 @@ public:
     //! get RGBColor class of element by col, row
     RGBColor rgb(const unsigned int row, const unsigned int col) const;
 
+    enum Orientation {
+        X,
+        Y
+    };
+
+    MatRGB& swap(const Orientation orientation);
+
     //! assignment operator
     /*!
       he dosen't make a deep copy. Both Mats works on the same data. For a explicit deep copy use the copy constructor or the funciton copyTo()
