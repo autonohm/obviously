@@ -345,15 +345,15 @@ unsigned char* Kinect::getRGB()
 
 MatRGB Kinect::getMat(void) const
 {
-    MatRGB mat(_cols, _rows);
+    MatRGB mat(_rows, _cols);
 
     for (unsigned int row = 0, i = 0; row < _rows; row++)
     {
         for (unsigned int col = 0; col < _cols; col++, i += 3)
         {
-            mat.at(col, row, MatRGB::Red)   = _rgb[i];
-            mat.at(col, row, MatRGB::Green) = _rgb[i + 1];
-            mat.at(col, row, MatRGB::Blue)  = _rgb[i + 2];
+            mat.at(row, col, MatRGB::Red)   = _rgb[i];
+            mat.at(row, col, MatRGB::Green) = _rgb[i + 1];
+            mat.at(row, col, MatRGB::Blue)  = _rgb[i + 2];
         }
     }
 
