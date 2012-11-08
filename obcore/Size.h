@@ -18,26 +18,29 @@ class Size
 {
 public:
     //! constructor
-    Size(const T& width = 0, const T& height = 0) : m_width(width), m_height(height) { }
+    Size(const T& width = 0, const T& height = 0) : _width(width), _height(height) { }
+
+    //! copy constructor
+    Size(const Size<T>& size) : _width(size._width), _height(height) { }
 
     //! get width
-    const T& width (void) const { return m_width ; }
+    const T& width (void) const { return _width ; }
     //! get height
-    const T& height(void) const { return m_height; }
+    const T& height(void) const { return _height; }
 
     //! set width
-    void setWidth (const T& width ) { m_width  = width ; }
+    void setWidth (const T& width ) { _width  = width ; }
     //! set height
-    void setHeight(const T& height) { m_height = height; }
+    void setHeight(const T& height) { _height = height; }
 
     //! operator !=
-    bool operator!=(const Size<T>& right) const { return m_width != right.m_width || m_height != right.m_height; }
+    bool operator!=(const Size<T>& right) const { return _width != right._width || _height != right._height; }
     //! operator ==
-    bool operator==(const Size<T>& right) const { return m_width == right.m_width || m_height == right.m_height; }
+    bool operator==(const Size<T>& right) const { return _width == right._width || _height == right._height; }
 
 private:
-    T m_width;
-    T m_height;
+    T _width;
+    T _height;
 };
 
 typedef Size<unsigned int> SizeU;

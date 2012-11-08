@@ -15,13 +15,14 @@ namespace {
 
 namespace obvious {
 
-MatD::MatD(const unsigned int rows, const unsigned int cols)
+MatD::MatD(const unsigned int rows, const unsigned int cols, const unsigned int channels)
     : AbstractMat(rows, cols)
 {
     if (!_rows || !_cols)
         return;
 
-    _data.push_back(gsl_matrix_alloc(_rows, _cols));
+    for (unsigned int channel = 0; channel < channels; channel++)
+        _data.push_back(gsl_matrix_alloc(_rows, _cols));
 }
 
 MatD::MatD(const MatD& mat)
@@ -30,10 +31,15 @@ MatD::MatD(const MatD& mat)
     if (!_rows || !_cols)
         return;
 
-    _data.push_back(gsl_matrix_alloc(_rows, _cols));
-    gsl_matrix_memcpy(GSL(_data[0]), GSL(mat._data[0]));
+    for (unsigned int channel = 0; channel < mat._data.size(); channel++)
+    {
+        _data.push_back(gsl_matrix_alloc(_rows, _cols));
+        gsl_matrix_memcpy(GSL(_data[channel]), GSL(mat._data[channel]));
+    }
 }
 
+
+// Fix me !!! Can just save and create to/from xml file with one channel.
 MatD::MatD(const xmlpp::Node* node)
     : AbstractMat(0, 0)
 {
@@ -103,11 +109,18 @@ MatD::MatD(const xmlpp::Node* node)
 
 MatD::~MatD(void)
 {
-    /* Check if _data has to be deleted */
-    if (this->haveToFreeData() && _data.size())
-        gsl_matrix_free(GSL(_data[0]));
+    this->freeData();
 }
 
+void MatD::freeData(void)
+{
+    /* Check if _data has to be deleted */
+    if (this->haveToFreeData())
+        for (unsigned int channel = 0; channel < _data.size(); channel++)
+            gsl_matrix_free(GSL(_data[channel]));
+}
+
+// Fix me !!!
 void MatD::createXml(xmlpp::Node* node) const
 {
     /* Create tag mat with attributes cols and rows */
@@ -133,21 +146,20 @@ void MatD::createXml(xmlpp::Node* node) const
     }
 }
 
-double& MatD::at(const unsigned int row, const unsigned int col, const unsigned int)
+double& MatD::at(const unsigned int row, const unsigned int col, const unsigned int channel)
 {
-    return *gsl_matrix_ptr(GSL(_data[0]), row, col);
+    return *gsl_matrix_ptr(GSL(_data[channel]), row, col);
 }
 
-double MatD::at(const unsigned int row, const unsigned int col, const unsigned int) const
+double MatD::at(const unsigned int row, const unsigned int col, const unsigned int channel) const
 {
-    return gsl_matrix_get(GSL(_data[0]), row, col);
+    return gsl_matrix_get(GSL(_data[channel]), row, col);
 }
 
 MatD& MatD::operator=(MatD& mat)
 {
     /* Delete m_data before take a ref to another Mat */
-    if (this->haveToFreeData() && _data.size())
-        gsl_matrix_free(GSL(_data[0]));
+    this->freeData();
 
     AbstractMat<double>::operator=(mat);
 
@@ -156,9 +168,7 @@ MatD& MatD::operator=(MatD& mat)
 
 MatD& MatD::operator=(MatD mat)
 {
-    /* Delete m_data before take a ref to another Mat */
-    if (this->haveToFreeData() && _data.size())
-        gsl_matrix_free(GSL(_data[0]));
+    this->freeData();
 
     AbstractMat<double>::operator=(mat);
 

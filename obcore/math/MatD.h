@@ -15,7 +15,7 @@ class MatD : public AbstractMat<double>
 {
 public:
     //! default constructor
-    MatD(const unsigned int rows = 0, const unsigned int cols = 0);
+    MatD(const unsigned int rows = 0, const unsigned int cols = 0, const unsigned int channels = 1);
 
     //! constructor it will be init by an xml node
     /*
@@ -36,14 +36,8 @@ public:
     void createXml(xmlpp::Node* node) const;
 
     //! get a reference of the element by col, row
-    /*!
-      paramenter channels has no effect.
-    */
     double& at(const unsigned int row, const unsigned int col, const unsigned int channel = 0);
     //! get the value of the element by col, row
-    /*!
-      parameter channel has no effect.
-    */
     double at(const unsigned int row, const unsigned int col, const unsigned int channel = 0) const;
 
     //! assignment operator
@@ -55,6 +49,9 @@ public:
 
     //! compute a marix matrix product
     MatD operator*(const MatD& mat);
+
+private:
+    void freeData(void);
 };
 
 }
