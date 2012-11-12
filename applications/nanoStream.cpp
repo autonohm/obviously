@@ -28,9 +28,8 @@ public:
       {
         int rows           = _nano->getRows();
         int cols           = _nano->getCols();
-        int size           = rows * cols;
+        int size           = _nano->getSize();
         double* coords     = _nano->getCoords();
-
         _cloud->setCoords(coords, size, 3);
         _viewer->update();
       }
@@ -48,8 +47,9 @@ int main(int argc, char* argv[])
   _cloud      = new VtkCloud();
   _viewer     = new Obvious3D("KinectStreamShow", 1024, 768, 0, 0);
 
+  //_nano->setIntegrationTime(200);
   _nano->showParameters();
-  _nano->setIntegrationTime(300);
+  _nano->setIntegrationAuto();
   _viewer->addCloud(_cloud);
 
   vtkSmartPointer<vtkTimerCallback> cb =  vtkSmartPointer<vtkTimerCallback>::New();
