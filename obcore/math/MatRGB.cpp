@@ -47,9 +47,7 @@ MatRGB::MatRGB(MatRGB& mat)
 MatRGB::~MatRGB(void)
 {
     /* Check if m_data has to be deleted */
-    if (this->haveToFreeData())
-        for (unsigned int i = 0; i < _data.size(); i++)
-            gsl_matrix_uchar_free(GSL(_data[i]));
+    this->freeData();
 }
 
 unsigned char& MatRGB::at(const unsigned int row, const unsigned int col, const unsigned int channel)
@@ -69,28 +67,47 @@ RGBColor MatRGB::rgb(const unsigned int row, const unsigned int col) const
                     gsl_matrix_uchar_get(GSL(_data[Blue]) , row, col));
 }
 
-MatRGB& MatRGB::operator=(MatRGB& mat)
+//MatRGB& MatRGB::operator=(MatRGB& mat)
+//{
+//    /* Before take a reference to another Mat, delete m_data */
+//    this->freeData();
+//    AbstractMat<unsigned char>::operator=(mat);
+//
+//    return *this;
+//}
+
+MatRGB& MatRGB::operator=(MatRGB mat)
 {
     /* Before take a reference to another Mat, delete m_data */
-    if (this->haveToFreeData())
-        for (unsigned int i = 0; i < _data.size(); i++)
-            gsl_matrix_uchar_free(GSL(_data[i]));
-
+    this->freeData();
     AbstractMat<unsigned char>::operator=(mat);
 
     return *this;
 }
 
-MatRGB& MatRGB::operator=(MatRGB mat)
+//MatRGB& MatRGB::operator=(const MatRGB& mat)
+//{
+//    /* Before take a reference to another Mat, delete m_data */
+//    this->freeData();
+//    mat.copyTo(*this);
+//
+//    return *this;
+//}
+
+void MatRGB::copyTo(MatRGB& mat) const
 {
-    /* Before take a reference to another Mat, delete m_data */
-    if (this->haveToFreeData())
-        for (unsigned int i = 0; i < _data.size(); i++)
-            gsl_matrix_uchar_free(GSL(_data[i]));
+    mat.freeData();
+    mat._rows = _rows;
+    mat._cols = _cols;
 
-    AbstractMat<unsigned char>::operator=(mat);
+    if (!_rows || !_cols)
+        return;
 
-    return *this;
+    for (unsigned int i = 0; i < _data.size(); i++)
+    {
+        mat._data.push_back(gsl_matrix_uchar_alloc(_rows, _cols));
+        gsl_matrix_uchar_memcpy(GSL(mat._data[i]), GSL(_data[i]));
+    }
 }
 
 MatRGB& MatRGB::swap(const Orientation orientation)
@@ -100,20 +117,29 @@ MatRGB& MatRGB::swap(const Orientation orientation)
         switch (orientation)
         {
         case X:
-            for (unsigned int colL = 0, colR = _cols - 1; colL < colR; colL++, colR--)
-                gsl_matrix_uchar_swap_columns(GSL(_data[channel]), colL, colR);
+            for (unsigned int rowT = 0, rowB = _rows - 1; rowT < rowB; rowT++, rowB--)
+                gsl_matrix_uchar_swap_rows(GSL(_data[channel]), rowT, rowB);
 
             break;
 
         case Y:
-            for (unsigned int rowT = 0, rowB = _rows - 1; rowT < rowB; rowT++, rowB--)
-                gsl_matrix_uchar_swap_rows(GSL(_data[channel]), rowT, rowB);
+            for (unsigned int colL = 0, colR = _cols - 1; colL < colR; colL++, colR--)
+                gsl_matrix_uchar_swap_columns(GSL(_data[channel]), colL, colR);
 
             break;
         }
     }
 
     return *this;
+}
+
+void MatRGB::freeData(void)
+{
+    if (this->haveToFreeData())
+        for (unsigned int i = 0; i < _data.size(); i++)
+            gsl_matrix_uchar_free(GSL(_data[i]));
+
+    _data.clear();
 }
 
 }

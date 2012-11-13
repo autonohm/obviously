@@ -46,15 +46,27 @@ public:
         X,
         Y
     };
-
+    //! swap mat by orientation
     MatRGB& swap(const Orientation orientation);
+
+    //! makes a deep
+    void copyTo(MatRGB& mat) const;
 
     //! assignment operator
     /*!
       he dosen't make a deep copy. Both Mats works on the same data. For a explicit deep copy use the copy constructor or the funciton copyTo()
     */
-    MatRGB& operator=(MatRGB& mat);
+//    MatRGB& operator=(MatRGB& mat);
     MatRGB& operator=(MatRGB mat);
+
+    //! assignment opeator
+    /*!
+      makes a deep copy.
+    */
+//    MatRGB& operator=(const MatRGB& mat);
+
+private:
+    void freeData(void);
 };
 
 }

@@ -118,6 +118,8 @@ void MatD::freeData(void)
     if (this->haveToFreeData())
         for (unsigned int channel = 0; channel < _data.size(); channel++)
             gsl_matrix_free(GSL(_data[channel]));
+
+    _data.clear();
 }
 
 // Fix me !!!
