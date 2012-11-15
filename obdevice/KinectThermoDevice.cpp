@@ -116,7 +116,8 @@ bool KinectThermoDevice::grab(void)
         return false;
     }
 
-    KinectDevice::m_rgb = this->device().getMat();
+    KinectDevice::m_rgb = this->device().getMatRGB();
+    ThermoDevice::m_rgb.swap(MatRGB::X);
     const double* coords = this->device().getCoords();
     MatD mat(m_cameraMatrix * m_RT);
     const unsigned int divU = KinectDevice::m_rgb.cols() / ThermoDevice::m_rgb.cols();
@@ -145,7 +146,7 @@ bool KinectThermoDevice::grab(void)
             else
             {
 //                std::cout << "m_points.push_back(new RgbPoint3D(coords[i], coords[i + 1], coords[i + 2], KinectDevice::m_rgb.rgb(row, col)));" << std::endl;
-                m_points.push_back(new RgbPoint3D(coords[i], coords[i + 1], coords[i + 2], KinectDevice::m_rgb.rgb(row, col)));
+                m_points.push_back(new RgbPoint3D(coords[i], coords[i + 1], coords[i + 2], RGBColor(255, 255, 255)));
             }
         }
     }

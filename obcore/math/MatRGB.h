@@ -35,12 +35,14 @@ public:
     //! destructor
     ~MatRGB(void);
 
-    //! get a reference of element by col, row and channel
+    //! get a reference of element by row, col and channel
     unsigned char& at(const unsigned int row, const unsigned int col, const unsigned int channel = Red);
-    //! get a reference of element by col, row and channel
+    //! get a reference of element by row, col and channel
     unsigned char at(const unsigned int row, const unsigned int col, const unsigned int channel = Red) const;
-    //! get RGBColor class of element by col, row
+    //! get RGBColor class of element by row, col
     RGBColor rgb(const unsigned int row, const unsigned int col) const;
+    //! set RGBColor to element by row, col
+    void setRgb(const unsigned int row, const unsigned int col, const RGBColor& color);
 
     enum Orientation {
         X,

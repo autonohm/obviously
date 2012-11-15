@@ -67,6 +67,13 @@ RGBColor MatRGB::rgb(const unsigned int row, const unsigned int col) const
                     gsl_matrix_uchar_get(GSL(_data[Blue]) , row, col));
 }
 
+void MatRGB::setRgb(const unsigned int row, const unsigned int col, const RGBColor& color)
+{
+    gsl_matrix_uchar_set(GSL(_data[Red])  , row, col, color.r());
+    gsl_matrix_uchar_set(GSL(_data[Green]), row, col, color.g());
+    gsl_matrix_uchar_set(GSL(_data[Blue]) , row, col, color.b());
+}
+
 //MatRGB& MatRGB::operator=(MatRGB& mat)
 //{
 //    /* Before take a reference to another Mat, delete m_data */

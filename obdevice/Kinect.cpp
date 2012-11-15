@@ -67,7 +67,7 @@ Kinect::Kinect(const char* path)
   status = _context.FindExistingNode(XN_NODE_TYPE_IMAGE, _image);
   status = _context.FindExistingNode(XN_NODE_TYPE_IR, _ir);
 
-  // Check for night vision modus
+// Check for night vision modus
   _useIR = true;
   if (status != XN_STATUS_OK)
   {
@@ -343,17 +343,30 @@ unsigned char* Kinect::getRGB()
   return _rgb;
 }
 
-MatRGB Kinect::getMat(void) const
+MatD Kinect::getMatZ(void) const
 {
+    const double* z = _z;
+    MatD mat(_rows, _cols);
+
+    for (unsigned int row = 0; row < _rows; row++)
+        for (unsigned int col = 0; col < _cols; col++)
+            mat.at(row, col) = *z++;
+
+    return mat;
+}
+
+MatRGB Kinect::getMatRGB(void) const
+{
+    const unsigned char* rgb = _rgb;
     MatRGB mat(_rows, _cols);
 
-    for (unsigned int row = 0, i = 0; row < _rows; row++)
+    for (unsigned int row = 0; row < _rows; row++)
     {
-        for (unsigned int col = 0; col < _cols; col++, i += 3)
+        for (unsigned int col = 0; col < _cols; col++)
         {
-            mat.at(row, col, MatRGB::Red)   = _rgb[i];
-            mat.at(row, col, MatRGB::Green) = _rgb[i + 1];
-            mat.at(row, col, MatRGB::Blue)  = _rgb[i + 2];
+            mat.at(row, col, MatRGB::Red)   = *rgb++;
+            mat.at(row, col, MatRGB::Green) = *rgb++;
+            mat.at(row, col, MatRGB::Blue)  = *rgb++;
         }
     }
 
