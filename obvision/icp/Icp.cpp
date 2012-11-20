@@ -27,6 +27,8 @@ Icp::Icp(PairAssignment* assigner, IRigidEstimator* estimator)
   _Tfinal->setIdentity();
   _Tlast->setIdentity();
 
+  _convCnt = 3;
+
   this->reset();
 }
 
@@ -162,6 +164,21 @@ void Icp::setMaxIterations(unsigned int iterations)
   _maxIterations = iterations;
 }
 
+unsigned int Icp::getMaxIterations()
+{
+	return _maxIterations;
+}
+
+void Icp::setConvergenceCounter(unsigned int convCnt)
+{
+	_convCnt = convCnt;
+}
+
+unsigned int Icp::getConvergenceCounter()
+{
+	return _convCnt;
+}
+
 void Icp::applyTransformation(double** data, unsigned int size, unsigned int dim, Matrix* T)
 {
   // Apply rotation
@@ -241,7 +258,7 @@ EnumIcpState Icp::iterate(double* rms, unsigned int* iterations)
     if(fabs(*rms-rms_prev) < 10e-6) conv_cnt++;
     else
       conv_cnt = 0;
-    if((*rms <= _maxRMS || conv_cnt>=3 ))
+    if((*rms <= _maxRMS || conv_cnt>=_convCnt ))
       eRetval = ICP_SUCCESS;
     else if(iter >= _maxIterations)
       eRetval = ICP_MAXITERATIONS;

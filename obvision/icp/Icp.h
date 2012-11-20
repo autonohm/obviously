@@ -27,7 +27,8 @@ enum EnumIcpState { ICP_IDLE 			= 0,
 					ICP_MAXITERATIONS 	= 3,
 					ICP_TIMEELAPSED 	= 4,
 					ICP_SUCCESS 		= 5,
-					ICP_ERROR			= 6 };
+					ICP_CONVERGED   = 6,
+					ICP_ERROR			= 7 };
 
 /**
  * @class Icp
@@ -105,6 +106,12 @@ public:
 	 */
 	void setMaxIterations(unsigned int iterations);
 	
+	unsigned int getMaxIterations();
+
+	void setConvergenceCounter(unsigned int convCnt);
+
+	unsigned int getConvergenceCounter();
+
 	EnumIcpState step(double* rms);
 
 	/**
@@ -199,6 +206,7 @@ private:
 	 */
 	int _dim;
 
+	unsigned int _convCnt;
 };
 
 }
