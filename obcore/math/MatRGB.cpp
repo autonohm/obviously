@@ -18,7 +18,7 @@ namespace obvious {
 MatRGB::MatRGB(const unsigned int rows, const unsigned int cols)
     : AbstractMat(rows, cols)
 {
-    if (!_rows && !_cols)
+    if (!_rows || !_cols)
         return;
 
     for (unsigned int i = 0; i < CHANNELS; i++)
@@ -28,7 +28,7 @@ MatRGB::MatRGB(const unsigned int rows, const unsigned int cols)
 MatRGB::MatRGB(const MatRGB& mat)
     : AbstractMat(mat._rows, mat._cols)
 {
-    if (!_rows && !_cols)
+    if (!_rows || !_cols)
         return;
 
     for (unsigned int i = 0; i < CHANNELS; i++)
