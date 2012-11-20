@@ -19,14 +19,15 @@ double     _distZ[640*480];
 TsdSpace*  _my_space;
 Obvious3D* _viewer;
 VtkCloud*  _cloud;
+double *_normals;
 
 void cbPushScene()
 {
 	double *pcl=NULL;
 	unsigned int cl_ctr=0;
-   _my_space->push(_distZ);
-   _my_space->getModel(&pcl,&cl_ctr);
-   _cloud->setCoords(pcl, cl_ctr/3, 3);
+   _my_space->Push(_distZ);
+   _my_space->getModel(&pcl,_normals,&cl_ctr);
+   _cloud->setCoords(pcl, cl_ctr/3, 3,_normals);
    _viewer->update();
 }
 
@@ -36,6 +37,7 @@ int main(void)
 
 	double     *pcl  = NULL;
 	int         rows, cols, size;
+	_normals=new double[640*480*3];
 
 	// translation of sensor
 	double tx = 0.5;
@@ -83,7 +85,7 @@ int main(void)
 			buf[u][v][0] = x;
 			buf[u][v][1] = y;
 			buf[u][v][2] = z;
-			_distZ[v*640+u] = sqrt(x*x+y*y+z*z);
+			_distZ[v*640+u] = z;//sqrt(x*x+y*y+z*z);
 		}
 
 	// Centered square with distance = 0.5m -> s=0.5
@@ -97,10 +99,10 @@ int main(void)
 			buf[u][v][0] = x;
 			buf[u][v][1] = y;
 			buf[u][v][2] = z;
-			_distZ[v*640+u] = sqrt(x*x+y*y+z*z);;
+			_distZ[v*640+u] = z;     //sqrt(x*x+y*y+z*z);
 		}
 
-	_my_space->push(_distZ);
+	_my_space->Push(_distZ);
 
 	/**
 	 * ToDo: check why generated clouds are completely wrong when applying the following test.
@@ -124,11 +126,11 @@ int main(void)
 	}
 	delete[] buffer;
 
-	_my_space->getModel(&pcl,&cl_ctr);
+	_my_space->getModel(&pcl,_normals,&cl_ctr);
 
 	cout << "\nGetmodel returned with " << cl_ctr << " coordinates\n";
 
-	_cloud->setCoords(pcl, cl_ctr/3, 3);
+	_cloud->setCoords(pcl, cl_ctr/3, 3,_normals);
 
 	_viewer = new Obvious3D("TSD Cloud");
 	_viewer->addCloud(_cloud);
@@ -137,6 +139,7 @@ int main(void)
 
 	delete _cloud;
 	delete _viewer;
+	delete _normals;
 }
 
 
