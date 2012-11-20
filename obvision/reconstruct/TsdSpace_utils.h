@@ -2,6 +2,7 @@
 #define _TSD_SPACE_UTILS_H
 
 #include "obcore/math/Matrix.h"
+//#include "obvision/reconstruct/Projection.h"
 
 namespace obvious
 {
@@ -49,6 +50,7 @@ enum MSG
 enum RAYC_MODE
 {
 	GENERAL,
+	HALFSTEP,
 	X_AXS,
 	X_AXS_N,
 	Y_AXS,
@@ -77,6 +79,19 @@ double abs3D(obvious::Matrix *foot_point,obvious::Matrix *ref_point);
 */
 void z_img_to_gysc(const double max_depth,const char *path,const double *z_bfr,const unsigned int width,const unsigned int height,bool trace_on);
 
+/**
+ * Struct to carry all relevant information of a z-Slice
+ */
+/*struct SliceView
+{
+	Projection *_curProjection;
+	Matrix *_curTransformation;
+	TsdVoxel **_zSlice;
+	unsigned int _xDim;
+	unsigned int _yDim;
+	unsigned int _zInd;
+	double _vxlDim;
+};*/
 
 }
 
