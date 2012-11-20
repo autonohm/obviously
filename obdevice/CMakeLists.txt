@@ -20,6 +20,11 @@ INCLUDE_DIRECTORIES(/usr/include/openni
                     ${XML_INCLUDE_DIRS}
                     )
 
+# check if necessary files for PMD are installed
+if(EXISTS /usr/include/PMDSDK)
+	INCLUDE_DIRECTORIES(/usr/include/PMDSDK)
+endif()
+
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__OBVIOUSLY__")
 
 ADD_LIBRARY(obdevice
@@ -28,6 +33,8 @@ ADD_LIBRARY(obdevice
 	UvcCam.cpp
 	UvcVirtualCam.cpp
         Device3D.cpp
+# uncomment this to include the tof camera of PMD
+        #CamNano.cpp
         KinectDevice.cpp
 # uncomment this for include the thermo camera. I know that is not a realy nice solution...
 #        ThermoDevice.cpp

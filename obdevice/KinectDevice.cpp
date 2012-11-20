@@ -32,12 +32,12 @@ bool KinectDevice::grab(void)
         return false;
     }
 
-    m_rgb = m_kinect->getMat();
+    m_rgb = m_kinect->getMatRGB();
     const double* data = m_kinect->getCoords();
 
     for (unsigned int row = 0, i = 0; row < m_rgb.rows(); row++)
         for (unsigned int col = 0; col < m_rgb.cols(); col++, i += 3)
-            m_points.push_back(new RgbPoint3D(data[i], data[i + 1], data[i + 2], m_rgb.rgb(col, row)));
+            m_points.push_back(new RgbPoint3D(data[i], data[i + 1], data[i + 2], m_rgb.rgb(row, col)));
 
     return true;
 }

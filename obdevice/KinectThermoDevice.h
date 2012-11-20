@@ -25,6 +25,7 @@ public:
 private:
     MatD m_R;
     MatD m_T;
+    MatD m_RT;
     MatD m_cameraMatrix;
 };
 

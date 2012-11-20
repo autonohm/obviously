@@ -10,6 +10,7 @@
 #include <fstream>
 
 #include "MatRGB.h"
+#include "MatD.h"
 
 using namespace xn;
 using namespace std;
@@ -31,7 +32,7 @@ public:
   /**
    * Standard constructor;
    */
-  Kinect(const char* path);
+    Kinect(const char* path);
 
   /**
    * Standard destructor
@@ -84,6 +85,12 @@ public:
    */
   double* getZ();
 
+    /**
+     * Get Z buffer
+     * @return MatD
+     */
+    MatD getMatZ(void) const;
+
   /**
    * Accessor to pointer of color data
    * @return pointer to color buffer (layout r1g1b1r2...)
@@ -94,7 +101,7 @@ public:
    * Get Matrix containing RGB data
    * @return MatRGB
    */
-  MatRGB getMat(void) const;
+  MatRGB getMatRGB(void) const;
 
   /**
    * Experimental: Skeleton tracking - get mask of valid points

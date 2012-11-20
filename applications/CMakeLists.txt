@@ -21,6 +21,15 @@ INCLUDE_DIRECTORIES(/usr/include/openni
                     ../obcore
                     )
 
+# check if necessary files for PMD are installed
+if(EXISTS /usr/include/PMDSDK)
+	INCLUDE_DIRECTORIES(/usr/include/PMDSDK)
+	LINK_DIRECTORIES(/home/christian/workspace/CamBoardNano/PMDSDK/lib)
+	MESSAGE("Found PMDSDK. Will build driver for CamBoard Nano.")
+	ADD_EXECUTABLE(nanoStream nanoStream.cpp)
+	TARGET_LINK_LIBRARIES(nanoStream obgraphic obdevice obcore vtkHybrid gsl gslcblas -lpmdaccess2)
+endif()
+
 LINK_DIRECTORIES(/opt/ros/electric/stacks/perception_pcl/flann/lib64/)
 
 ADD_EXECUTABLE(obvious3D_show obvious3D_show.cpp)
@@ -60,5 +69,6 @@ TARGET_LINK_LIBRARIES(read_lua_config lua5.1)
 TARGET_LINK_LIBRARIES(logging_example obcore)
 TARGET_LINK_LIBRARIES(tsd_test obvision obgraphic obcore vtkHybrid gsl gslcblas)
 TARGET_LINK_LIBRARIES(showCloud obgraphic obcore vtkHybrid gsl gslcblas)
+
 
 

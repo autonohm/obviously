@@ -1,6 +1,8 @@
 #include "ThermoDevice.h"
 #include "thermo-cam.h"
 
+#include <iostream>
+
 namespace obvious {
 
 ThermoDevice::ThermoDevice(const std::string& configFile)

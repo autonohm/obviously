@@ -12,7 +12,7 @@ class AbstractMat
 {
 public:
     //! default constructor
-    AbstractMat(const unsigned int cols = 0, const unsigned int rows = 0) : m_data(0), m_cols(cols), m_rows(rows) { }
+    AbstractMat(const unsigned int rows = 0, const unsigned int cols = 0) : _data(0), _rows(rows), _cols(cols) { }
 
     //! vritual destructor
     virtual ~AbstractMat(void) { }
@@ -28,36 +28,36 @@ public:
     }
 
     //! element access by col, row and channel
-    virtual T& at(const unsigned int col, const unsigned int row, const unsigned int channel = 0) = 0;
-    virtual T at(const unsigned int col, const unsigned int row, const unsigned int channel = 0) const = 0;
+    virtual T& at(const unsigned int row, const unsigned int col, const unsigned int channel = 0) = 0;
+    virtual T at(const unsigned int row, const unsigned int col, const unsigned int channel = 0) const = 0;
 
     //! get number of cols
-    unsigned int cols(void) const { return m_cols; }
+    unsigned int cols(void) const { return _cols; }
 
     //! get number of rows
-    unsigned int rows(void) const { return m_rows; }
+    unsigned int rows(void) const { return _rows; }
 
     //! get number of channels
-    unsigned int channels(void) const { return m_data.size(); }
+    unsigned int channels(void) const { return _data.size(); }
 
 protected:
-    //! checks if the destructor has to delete m_data
+    //! checks if the destructor has to delete _data
     /*!
-      in classes that inherite this class the destructor must check if it has to delete m_data.
+      in classes that inherite this class the destructor must check if it has to delete _data.
       @return if ture the destructor of a subclass must delete m_data
     */
     bool haveToFreeData(void);
 
 
-    std::vector<void*> m_data;
-    unsigned int       m_cols;
-    unsigned int       m_rows;
+    std::vector<void*> _data;
+    unsigned int       _rows;
+    unsigned int       _cols;
 
 private:
     void signOn (AbstractMat<T>* mat);
     void signOff(AbstractMat<T>* mat);
 
-    std::list<AbstractMat<T>*> m_refs;
+    std::list<AbstractMat<T>*> _refs;
 };
 
 
@@ -69,11 +69,11 @@ void AbstractMat<T>::signOn(AbstractMat<T>* mat)
     if (this == mat)
         return;
 
-    m_refs.push_back(mat);
-    mat->m_refs.push_back(this);
-    m_data = mat->m_data;
-    m_cols = mat->m_cols;
-    m_rows = mat->m_rows;
+    _refs.push_back(mat);
+    mat->_refs.push_back(this);
+    _data = mat->_data;
+    _cols = mat->_cols;
+    _rows = mat->_rows;
 }
 
 template <typename T>
@@ -82,23 +82,23 @@ void AbstractMat<T>::signOff(AbstractMat<T>* mat)
     if (this == mat)
         return;
 
-    m_refs.remove(mat);
-    mat->m_refs.remove(this);
-    m_data.clear();
-    m_cols = 0;
-    m_rows = 0;
+    _refs.remove(mat);
+    mat->_refs.remove(this);
+    _data.clear();
+    _cols = 0;
+    _rows = 0;
 }
 
 template <typename T>
 bool AbstractMat<T>::haveToFreeData(void)
 {
-    /* If list m_refs empty the destructor has to delete m_data */
-    if (!m_refs.size())
+    /* If list m_refs empty the destructor has to delete _data */
+    if (!_refs.size())
         return true;
 
-    while (!m_refs.empty())
+    while (!_refs.empty())
     {
-        this->signOff(m_refs.front());
+        this->signOff(_refs.front());
     }
 
     return false;
