@@ -20,7 +20,6 @@
 #include "obcore/base/System.h"
 #include "obcore/math/mathbase.h"
 #include <vector>
-#include "RecursiveSearch.h"
 #include <omp.h>
 
 
