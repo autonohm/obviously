@@ -41,7 +41,7 @@ MatD::MatD(const MatD& mat)
 MatD::MatD(MatD& mat)
     : AbstractMat(mat._rows, mat._cols)
 {
-    AbstractMat<unsigned char>::operator=(mat);
+    AbstractMat<double>::operator=(mat);
 }
 
 // Fix me !!! Can just save and create to/from xml file with one channel.
