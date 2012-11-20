@@ -20,6 +20,9 @@
 #include "obcore/base/System.h"
 #include "obcore/math/mathbase.h"
 #include <vector>
+#include "RecursiveSearch.h"
+#include <omp.h>
+
 
 #include "obcore/base/Logger.h"
 
@@ -54,11 +57,11 @@ TsdSpace::TsdSpace(const unsigned int height, const unsigned int width,	const un
 	LOGMSG(DBG_DEBUG, "Space for " << _xDim * _yDim * _zDim	<< " TsdVoxels has been created");
 
 	// init _space Voxel***
-	for (unsigned int z = 0; z < _zDim; z++)
+	for (int z = 0; z < _zDim; z++)
 	{
-		for (unsigned y = 0; y < _yDim; y++)
+		for (int y = 0; y < _yDim; y++)
 		{
-			for (unsigned int x = 0; x < _xDim; x++)
+			for (int x = 0; x < _xDim; x++)
 			{
 				_space[z][y][x].tsdf   = 1.0;
 #if KINFU_WEIGHTING
@@ -102,22 +105,148 @@ TsdSpace::~TsdSpace(void)
 	delete _zero_h;
 }
 
-MSG TsdSpace::push(double *depthImage)
+MSG TsdSpace::Push(double *depthImage)
 {
+	std::vector<unsigned int> sliceIdcs;
+	std::vector<unsigned int> colIdcs;
+	std::vector<unsigned int> rowIdcs;
+	int xInd=0;
+	int yInd=0;
+	int zInd=0;
+	int oldZind=0;
+	unsigned int ctr=0;
+	double rayPos[3]={0};
+	double *dirVec = new double[3];
+	double *footPoint = new double[4];
+
 	//store current depth image in member variable
-	LOGMSG(DBG_DEBUG, "Store current depth image...");
 	memcpy(_depthImage, depthImage, COL_MAX * ROW_MAX * sizeof(double));
 
-	/*
-	 * Room for Multithreading shall use up to 12 Threads which calculate a slide each
-	 */
-	for (unsigned int i = 0; i < _zDim; i++)
+	if((calcRay(ROW_MAX/2, COL_MAX/2, &dirVec, &footPoint,HALFSTEP))!=OK)
+		{
+		std::cout<<"\nRecPush: Error Calculating ray!\n";
+		exit(3);
+		}
+
+	for(unsigned int i=0;i<3;i++)
+		rayPos[i]=footPoint[i];
+
+	xInd = (unsigned int) (rayPos[0] / _voxelDim);
+	yInd = (_yDim - 1) - (unsigned int) (rayPos[1] / _voxelDim);
+	zInd = (unsigned int) (rayPos[2] / _voxelDim);
+	colIdcs.push_back(xInd);
+	rowIdcs.push_back(yInd);
+	sliceIdcs.push_back(zInd);
+
+
+	//start raycaster to determine which slices to check
+	while(1)
 	{
-		if (zSlice(i) != OK)
-			LOGMSG(DBG_ERROR, "Error slice nr. " << i);
+		oldZind=zInd;                     //store idx of last iteration
+		for(unsigned int i=0;i<3;i++)
+			rayPos[i]=footPoint[i]+(double)ctr*dirVec[i];
+
+		// calculate current indices
+		xInd = (unsigned int) (rayPos[0] / _voxelDim);
+		yInd = (_yDim - 1) - (unsigned int) (rayPos[1] / _voxelDim);
+		zInd = (unsigned int) (rayPos[2] / _voxelDim);
+
+		if ((xInd >= _xDim) || (xInd < 0) || (yInd >= _yDim) || (yInd < 0) || (zInd < 0)||(zInd >= _zDim))
+		{
+		//	cout<<"\nRayPos (edge): (x/y/z) ("<<rayPos[0]<<"/"<<rayPos[1]<<"/"<<rayPos[2]<<")\n";
+			break;
+		}
+
+		if(zInd!=oldZind)
+		{
+			colIdcs.push_back(xInd);
+			rowIdcs.push_back(yInd);
+			sliceIdcs.push_back(zInd);
+			//cout<<"\nRayPos: (x/y/z) ("<<rayPos[0]<<"/"<<rayPos[1]<<"/"<<rayPos[2]<<")\n";
+		}
+		else
+		{
+			ctr++;
+			continue;
+		}
+		ctr++;
 	}
 
-	return (OK);
+	//Testing give me slices
+/*	std::cout<<"\nDetected slice idces: \n";
+	for(unsigned int i=0;i<(unsigned int)sliceIdcs.size();i++)
+		cout<<colIdcs[i]<<" "<<rowIdcs[i]<<" "<<sliceIdcs[i]<<"\n";*/
+
+#pragma omp parallel for schedule(dynamic)
+	for(unsigned int i=0;i<(unsigned int)sliceIdcs.size();i++)   //Create a recursive Search object for each detected slice
+	{
+		//RecursiveSearch recSearch(this,_projection,_space[sliceIdcs[i]],colIdcs[i],rowIdcs[i],sliceIdcs[i]);
+		secSearch(colIdcs[i],rowIdcs[i],sliceIdcs[i]);
+	}
+	//RecursiveSearch(TsdSpace *curSpace,Projection *curProjection,TsdVoxel **curZslice,unsigned int colStart,unsigned int rowStart,
+		//						 unsigned int zInd);
+	return(OK);
+}
+
+MSG TsdSpace::secSearch(const unsigned int xIdx,const unsigned int yIdx,const unsigned int zIdx)
+{
+	unsigned int ctr=0;           //stores Number of Voxels found in Virt. Kinect-View per Iteration
+	unsigned int xRange=0;         //used to
+	unsigned int yRange=0;
+	unsigned int row=0;
+	unsigned int col=0;
+	unsigned int u=0;
+	unsigned int v=0;
+	Matrix cVxlc(4,1);
+	double cVxlcCrds[4];
+	bool **sliceState=NULL;
+	obvious::System<bool>::allocate(_yDim,_xDim,sliceState);
+
+	for(int rows=0;rows<_yDim;rows++)
+	{
+		for(int cols=0;cols<_xDim;cols++)
+		{
+			sliceState[rows][cols]=0;           //init state array with 0 = Voxel has not been checked yet
+		}
+	}
+
+	cVxlcCrds[2]=((double)zIdx+0.5)*_voxelDim;
+	cVxlcCrds[3]=1.0;
+
+	while(1)
+	{
+		for(row=yIdx-yRange-1;row<yIdx+yRange+1;row++)
+		{
+			for(col=xIdx-xRange-1;col<xIdx+xRange+1;col++)
+			{
+				if(sliceState[row][col])
+					continue;
+				else
+					sliceState[row][col]=1;
+				cVxlcCrds[0]=((double)col+0.5)*_voxelDim;
+				cVxlcCrds[1]=((double)row+0.5)*_voxelDim;
+				cVxlc.setData(cVxlcCrds);
+				cVxlc=(*_Tinv)*cVxlc;
+				_projection->get_pxl(&cVxlc,&u,&v);
+				if((v < 0) || (v >= ROW_MAX))
+					continue;
+				if((u < 0) || (u >= COL_MAX))
+					continue;
+
+				ctr++;
+				calcTsdf(cVxlcCrds,u,v,col,row,zIdx);
+			}
+		}
+		if(ctr==0)
+			break;
+		else
+			ctr=0;
+		if(((row-1-(yRange+1))>=0)&&((row+1+yRange+1)<_yDim))
+			yRange++;
+		if(((col-1-(xRange+1))>=0)&&((col+1+xRange+1)<_xDim))
+			xRange++;
+	}
+	return(OK);
 }
 
 void TsdSpace::setMaxTruncation(double val)
@@ -130,112 +259,66 @@ void TsdSpace::setMaxTruncation(double val)
 	_maxTruncation = val;
 }
 
-MSG TsdSpace::zSlice(const unsigned int z)
+MSG TsdSpace::calcTsdf(const double curVxlccoords[4],const unsigned int u,const unsigned int v,const unsigned int col,const unsigned int row,const unsigned int z)
 {
-	//Variables and Pointers
-	double coordVoxel[4];
-	Matrix mCoordVoxel(4, 1);
+	double t[3]={0};
+	double distance;
+	double xl;
+	double yl;
+	double lambdaInv;
+	double tsdf;
+	double sdf;
 	TsdVoxel *voxel;
 
-	// center point of all voxels in given z-slice
-	coordVoxel[2] = ((double) z + 0.5) * _voxelDim;
-	coordVoxel[3] = 1.0;
+	//get current translation t
+	for (unsigned int i = 0; i < 3; i++)
+		t[i] = (*_T)[i][3];
 
-	// Loop over the z-slice given in depth
-	for (unsigned int row = 0; row < _yDim; row++)
-	{
-		for (unsigned int col = 0; col < _xDim; col++)
+	// calculate distance of current voxel to kinect
+	distance = euklideanDistance<double>((double*) t,(double *)curVxlccoords, 3);
+
+	xl = (u - (*_projection)[0][2]) / (*_projection)[0][0];
+	yl = (v - (*_projection)[1][2]) / (*_projection)[1][1];
+	lambdaInv = 1. / sqrt(xl * xl + yl * yl + 1.);
+	sdf = distance * lambdaInv	- ((_depthImage[((ROW_MAX - 1) - v) * COL_MAX + u])); //mm
+
+	//turn sign of the signed distance function
+	sdf *= -1.0;
+
+	if(sdf >= -_maxTruncation)         //Voxel is in front of an object
 		{
-			// calculate center point of current voxel
-			coordVoxel[0] = ((double) col + 0.5) * _voxelDim;
-			coordVoxel[1] = ((double) row + 0.5) * _voxelDim;
-			mCoordVoxel.setData(coordVoxel);
+		voxel = &_space[z][(_yDim - 1) - row][col]; //turn row idx bsp. _yDim=480, row =0 -> y_idx=479-0 = 479
 
-			// Transform coordinates of current voxel in sensor coordinate system
-			mCoordVoxel = *_Tinv * mCoordVoxel;
+		//truncate
+		tsdf = sdf / _maxTruncation; //determine whether sdf/max_truncation = ]-1;1[ otherwise continue
 
+		if(tsdf > 1.0)
+			tsdf = 1.0;
 
-#if INTERPOLATEDEPTH
-			// Get current Pixel
-			double u;
-			double v;
-			_projection->project2Plane(&mCoordVoxel, &u, &v);
-
-			if((v <= 0) || (v >= (ROW_MAX-1))) continue;
-			if((u <= 0) || (u >= (COL_MAX-1))) continue;
-
-			double depth = interpolateBilinear(u, v);
-
-			//invalid point-->test?
-			if (depth < 0.001) continue;
-#else
-			// Get current Pixel
-			unsigned int u;
-			unsigned int v;
-			_projection->get_pxl(&mCoordVoxel, &u, &v);
-
-			if((v < 0) || (v >= ROW_MAX)) continue;
-			if((u < 0) || (u >= COL_MAX)) continue;
-
-			double depth = _depthImage[((ROW_MAX-1)-v)*COL_MAX+u];
-
-			//invalid point-->test?
-			if (depth < 0.001) continue;
-#endif
-
-			// current voxel in Kinect frustrum -> Calculate TSDF
-			// get current translation_vector to kinect
-			double t[3];
-			for (unsigned int i = 0; i < 3; i++)
-				t[i] = (*_T)[i][3];
-
-			// calculate distance of current voxel to kinect
-			double distance = euklideanDistance<double>((double*) t, (double*) coordVoxel, 3);
-
-			// calculate signed distance function
-		//	double sdf = distance - depth;     //sdf(i)=abs(t(i)-v(g))-D(i)(p) /Kinect Z-Image = millimeters!FUCK!!
-
-			float xl = (u - (*_projection)[0][2]) / (*_projection)[0][0];
-			float yl = (v - (*_projection)[1][2]) / (*_projection)[1][1];
-			float lambda_inv = 1. / sqrt(xl * xl + yl * yl + 1.);
-			double sdf = distance * lambda_inv	- ((_depthImage[((ROW_MAX - 1) - v) * COL_MAX + u])); //mm
-
-			sdf *= -1.0;
-
-			if(sdf >= -_maxTruncation)
-			{
-				//calculate truncated sdf
-				//get ptr to current TsdVoxel
-				voxel = &_space[z][(_yDim - 1) - row][col]; //turn row idx bsp. _yDim=480, row =0 -> y_idx=479-0 = 479
-
-				//truncate
-				double tsdf = sdf / _maxTruncation; //determine whether sdf/max_truncation = ]-1;1[ otherwise continue
-
-				if(tsdf > 1.0)
-					tsdf = 1.0;
-
+		//Calculate Mean through weight
 #if KINFU_WEIGHTING
-				voxel->tsdf = (voxel->tsdf * voxel->weight + 1.0 * tsdf) / (voxel->weight + 1.0);
-				voxel->weight += 1.0;
-				if(voxel->weight > MAXWEIGHT) voxel->weight = MAXWEIGHT;
+		voxel->tsdf = (voxel->tsdf * voxel->weight + 1.0 * tsdf) / (voxel->weight + 1.0);
+		voxel->weight += 1.0;
+		if(voxel->weight > MAXWEIGHT)
+			voxel->weight = MAXWEIGHT;
 #else
-				//weight it with depth of the voxel
-				//increment weight
-				if (voxel->tsdf > UNUSED) //First hit? no need to weight it
-					voxel->tsdf = tsdf;
-				else
-				{
-					double* weight_var = &voxel->weight;
-					if (*weight_var < MAXWEIGHT)
-						*weight_var += 1.0;
-					voxel->tsdf = (voxel->tsdf * (*weight_var - 1.0) + tsdf) / (*weight_var);
-				}
-#endif
-			}
+		//weight it with depth of the voxel
+		//increment weight
+		if (voxel->tsdf > UNUSED) //First hit? no need to weight it
+			voxel->tsdf = tsdf;
+		else
+		{
+			double* weight_var = &voxel->weight;
+			if (*weight_var < MAXWEIGHT)
+				*weight_var += 1.0;
+			voxel->tsdf = (voxel->tsdf * (*weight_var - 1.0) + tsdf) / (*weight_var);
 		}
-	}
+#endif
 
-	return (OK);
+
+
+		}
+	return(OK);
 }
 
 MSG TsdSpace::buildSliceImage(const unsigned int depthIndex, unsigned char* image)
@@ -245,11 +328,10 @@ MSG TsdSpace::buildSliceImage(const unsigned int depthIndex, unsigned char* imag
 	unsigned char B[_xDim * _yDim];
 	unsigned int ctr = 0;
 	unsigned im_ctr = 0;
-	TsdVoxel *c_vxlPtr;
 	double c_tsdf;
 
 	// initialize arrays for RGB
-	for (unsigned int i = 0; i < _xDim * _yDim; i++)
+	for (int i = 0; i < _xDim * _yDim; i++)
 	{
 		R[i] = 0;
 		G[i] = 0;
@@ -286,7 +368,7 @@ MSG TsdSpace::buildSliceImage(const unsigned int depthIndex, unsigned char* imag
 	}
 
 	//put components together to complete picture
-	for (unsigned int i = 0; i < _xDim * _yDim * 3; i++)
+	for (int i = 0; i < _xDim * _yDim * 3; i++)
 	{
 		image[i]   = R[ctr];
 		image[++i] = G[ctr];
@@ -312,6 +394,11 @@ unsigned int TsdSpace::getZDimension()
 	return _zDim;
 }
 
+double TsdSpace::getVxlDimension()
+{
+	return _voxelDim;
+}
+
 MSG TsdSpace::setTransformation(double *transM_data)
 {
 	//Variables and Pointers
@@ -328,160 +415,106 @@ MSG TsdSpace::setTransformation(double *transM_data)
 	return (OK);
 }
 
-MSG TsdSpace::peak(unsigned int row, unsigned int col,unsigned int *nbr, double **coordinates)
-//MSG TsdSpace::peak(unsigned int row, unsigned int col, unsigned int *nbr, double **coordinates)
-{
-	double *dir_vec = new double[3];
-	double *foot_point = new double[4];
-	double *position = new double[3];
-	double *position_prev = new double[3];
-	double tsdf=0.0;
-	double tsdf_prev=0.0;
-	double interp;
-	bool dir;
-
-	double c_tsdf = 0.0;
-	double n_tsdf = 0.0;
-
-	const double X_POS = ((double) col + 0.5) * _voxelDim; //const vars to store x,y coordinates of peak
-	const double Y_POS = ((double) row + 0.5) * _voxelDim;
-	const unsigned int Y_IND = (_yDim - 1) - row;
-	const unsigned int Z_MAX = _zDim - 1;
-	int ctr=0;
-//	double *position=new double[3];
-
-	//Calculate ray
-	foot_point[0]=((double) col + 0.5) * _voxelDim;        //center point of startvoxel
-	foot_point[1]=((double) row + 0.5) * _voxelDim;
-
-	/*
-	 * Main loop
-	 */
-	//Iterate through peak
-		//Case Positive
-	if(dir)
-		//set parameters for positive peak
-		foot_point[2]=0.5f* _voxelDim;
-		dir_vec[0]=0.0;
-		dir_vec[1]=0.0;
-		dir_vec[2]=_voxelDim;
-		//for (unsigned int i = 0; i < Z_MAX; i++)
-		memcpy(position, foot_point, 3 * sizeof(*position));
-		while(1)
-		{
-			//store prev position
-			memcpy(position_prev, position, 3 * sizeof(*position));
-			//calculate current position
-			for (unsigned int i = 0; i < 3; i++)
-				position[i] = foot_point[i] + ((double) ctr) * (dir_vec[i]);
-
-
-			if (interpolateTrilinear(&position, &tsdf) != OK)
-			{
-				ctr++;
-				continue;
-			}
-
-			if (interpolateTrilinear(&position_prev, &tsdf_prev) != OK)
-			{
-				ctr++;
-				continue;
-			}
-
-			// check sign change
-			if(tsdf_prev > 0 && tsdf < 0)
-			{
-				interp = tsdf_prev / (tsdf_prev - tsdf);
-				break;
-			}
-			ctr++;
-
-
-		}
-  delete dir_vec;
-	delete foot_point;
-	delete position;
-	delete position_prev;
-	return (OK);
-}
-
-MSG TsdSpace::generatePointcloud(double **cloud, unsigned int *nbr)
+MSG TsdSpace::generatePointcloud(double **cloud, double **normals,unsigned int *nbr)
 {
 	std::vector<double> pointcloud;
+	std::vector<double> cloudNormals;
 	double depth;
 	double *point=new double[3];
+	double *normal=new double[3];
 
-	/*X_AXS parallel to X-Axis Borders : COL = _zDim, ROW = _yDim
-	     * 		X_AXS_N parallel to X-Axis negative direction
-	     * 		Y_AXS parallel to Y-Axis Borders : COL = _xDim, ROW = _zDim
-	     * 		Y_AXS_N parallel to Y-Axis negative direction
-	     * 		Z_AXS parallel to Z-Axis Borders : COL = _xDim, ROW = _yDim
-	     * 		Z_AXS_N parallel to Z-Axis negative direction*/
+	/**
+	 * X_AXS parallel to X-Axis Borders : COL = _zDim, ROW = _yDim
+	 * X_AXS_N parallel to X-Axis negative direction
+	 * Y_AXS parallel to Y-Axis Borders : COL = _xDim, ROW = _zDim
+	 * Y_AXS_N parallel to Y-Axis negative direction
+	 * Z_AXS parallel to Z-Axis Borders : COL = _xDim, ROW = _yDim
+	 * Z_AXS_N parallel to Z-Axis negative direction
+	 **/
 
 	//x_parallel
 	cout<<"\nX_AXIS\n";
-	for (unsigned int row = 0; row < _yDim; row++)
+	for (int row = 0; row < _yDim; row++)
 	{
-		for (unsigned int col = 0; col < _zDim; col++)
+		for (int col = 0; col < _zDim; col++)
 		{
-			if((rayCast(row,col,&point,&depth,X_AXS))==OK)
+			if((rayCast(row,col,&point,normal,&depth,X_AXS))==OK)
 			{
-				for(unsigned int i=0;i<3;i++)
+				for(int i=0;i<3;i++)
+				{
 					pointcloud.push_back(point[i]);
+					cloudNormals.push_back(normal[i]);
+				}
 			}
-			if((rayCast(row,col,&point,&depth,X_AXS_N))==OK)
+			if((rayCast(row,col,&point,normal,&depth,X_AXS_N))==OK)
 			{
 				for(unsigned int i=0;i<3;i++)
+				{
 					pointcloud.push_back(point[i]);
+					cloudNormals.push_back(normal[i]);
+				}
 			}
 		}
 	}
 
 	//y_parallel
 	cout<<"\nY_AXIS\n";
-	for (unsigned int row = 0; row < _zDim; row++)
+	for (int row = 0; row < _zDim; row++)
 	{
-		for (unsigned int col = 0; col < _xDim; col++)
+		for (int col = 0; col < _xDim; col++)
 		{
-			if((rayCast(row,col,&point,&depth,Y_AXS))==OK)
+			if((rayCast(row,col,&point,normal,&depth,Y_AXS))==OK)
 			{
 				for(unsigned int i=0;i<3;i++)
+				{
 					pointcloud.push_back(point[i]);
+					cloudNormals.push_back(normal[i]);
+				}
 			}
-			if((rayCast(row,col,&point,&depth,Y_AXS_N))==OK)
+			if((rayCast(row,col,&point,normal,&depth,Y_AXS_N))==OK)
 			{
 				for(unsigned int i=0;i<3;i++)
+				{
 					pointcloud.push_back(point[i]);
+					cloudNormals.push_back(normal[i]);
+				}
 			}
 		}
 	}
 
 	//z_parallel
 	cout<<"\nZ_AXIS\n";
-	for (unsigned int row = 0; row < _yDim; row++)
+	for (int row = 0; row < _yDim; row++)
 	{
-		for (unsigned int col = 0; col < _xDim; col++)
+		for (int col = 0; col < _xDim; col++)
 		{
-			if((rayCast(row,col,&point,&depth,Z_AXS))==OK)
+			if((rayCast(row,col,&point,normal,&depth,Z_AXS))==OK)
 			{
 				for(unsigned int i=0;i<3;i++)
+				{
 					pointcloud.push_back(point[i]);
+					cloudNormals.push_back(normal[i]);
+				}
 			}
-			if((rayCast(row,col,&point,&depth,Z_AXS_N))==OK)
+			if((rayCast(row,col,&point,normal,&depth,Z_AXS_N))==OK)
 			{
 				for(unsigned int i=0;i<3;i++)
+				{
 					pointcloud.push_back(point[i]);
+					cloudNormals.push_back(normal[i]);
+				}
 			}
 		}
 	}
 
 	*nbr=pointcloud.size();
 	*cloud=new double[*nbr];
+	*normals=new double[*nbr];
 	for(unsigned int i=0;i<*nbr;i++)
+	{
 		(*cloud)[i]=pointcloud[i];
-
-
-
+		(*normals)[i]=cloudNormals[i];
+	}
 
 			/*	if ((peak(row, col, nbr, cloud)) != OK)
 			{
@@ -499,7 +532,7 @@ MSG TsdSpace::calcRay(const unsigned int row, const unsigned int col, double **d
 	Matrix dirf_vecM(4, 1);
 	double abs_vec = 0.0;
 
-	if(mode==GENERAL)
+	if((mode==GENERAL)||(mode==HALFSTEP))
 	{
 		//get point out of given pixel
 		_projection->get_point3(col, row, SCALE, &dirp_vecM);
@@ -516,8 +549,22 @@ MSG TsdSpace::calcRay(const unsigned int row, const unsigned int col, double **d
 
 		//calculate vector normalized to voxeldimension
 		//((PEAK-FOOT)/ABS)*VOXELDIMENSION)
-		for (unsigned int i = 0; i < 3; i++)
-			(*dir_vec)[i] = ((dirp_vecM[i][0] - dirf_vecM[i][0]) / abs_vec)	* _voxelDim;
+		if(mode==GENERAL)
+		{
+			for(unsigned int i = 0; i < 3; i++)
+				(*dir_vec)[i] = ((dirp_vecM[i][0] - dirf_vecM[i][0]) / abs_vec)	* _voxelDim;
+		}
+		else if(mode==HALFSTEP)
+		{
+			for(unsigned int i = 0; i < 3; i++)
+				(*dir_vec)[i] = ((dirp_vecM[i][0] - dirf_vecM[i][0]) / abs_vec)	* 0.5*_voxelDim;
+		}
+		else
+		{
+			std::cout<<"\nFatal error...unnokwn Raycasting mode!\n";
+			exit(3);
+		}
+
 	}
 
 	else if((mode==X_AXS)||(mode==X_AXS_N))       //parallel to x_axis
@@ -583,8 +630,7 @@ MSG TsdSpace::calcRay(const unsigned int row, const unsigned int col, double **d
 	return (OK);
 }
 
-#if CORRECT_SIGN_CHANGE
-MSG TsdSpace::rayCast(const unsigned int row, const unsigned int col, double **coordinates, double *depth,RAYC_MODE mode)
+MSG TsdSpace::rayCast(const unsigned int row, const unsigned int col, double **coordinates,double *normal,double *depth,RAYC_MODE mode)
 {
 	double *dir_vec = new double[3];
 	double *foot_point = new double[4];
@@ -678,131 +724,113 @@ MSG TsdSpace::rayCast(const unsigned int row, const unsigned int col, double **c
 	for (unsigned int i = 0; i < 3; i++)
 		(*coordinates)[i] = position_prev[i] + dir_vec[i] * interp;
 
+	if(getNormal(*coordinates,normal)!=OK)
+		return(ERROR);
+
 	delete dir_vec;
 	delete foot_point;
 	delete position;
 	return (OK);
 }
 
-#else
-MSG TsdSpace::rayCast(const unsigned int row, const unsigned int col, double **coordinates, double *depth)
+MSG TsdSpace::getNormal(const double *crosCoords,double *normalCoords)
 {
-	double *dir_vec = new double[3];
-	double *foot_point = new double[4];
-	double *position = new double[3];
-	double *position_prev = new double[3];
-	double c_tsdf = 1.0;
-	double l_tsdf = 1.0;
-	int x_idx = 0;
-	int y_idx = 0;
-	int z_idx = 0;
-	unsigned int ctr = 0;
+	//Point pVar;
+	double *coordVar=new double[3];
+	double depthVarInc=0;
+	double depthVarDec=0;
+	double abs=0;
 
-	//initialize
-	//homogeneous coordinates
-	foot_point[3] = 1.0;
-	//calc direction vector
-	if (calcRay(row, col, &dir_vec, &foot_point) != OK)
+	coordVar[0]=crosCoords[0]+_voxelDim;        //interpolate around Voxel in x+1 direction
+	coordVar[1]=crosCoords[1];
+	coordVar[2]=crosCoords[2];
+
+	if(interpolateTrilinear(&coordVar,&depthVarInc)!=OK)
 	{
-		LOGMSG(DBG_DEBUG, "Error calculating ray (row/col) (" << row << "/" << col << ")");
-		delete dir_vec;
-		delete foot_point;
-		return (ERROR);
+	//	std::cout<<"\nError Interpolation Normals-Estimator...\n";
+		return(ERROR);
 	}
 
-	// Interpolation weight
-	double interp;
+	coordVar[0]=crosCoords[0]-_voxelDim;        //interpolate around Voxel in x-1 direction
+	coordVar[1]=crosCoords[1];
+	coordVar[2]=crosCoords[2];
 
-	while (1)
+	if(interpolateTrilinear(&coordVar,&depthVarDec)!=OK)
 	{
-		//calculate current position
-		memcpy(position_prev, position, 3 * sizeof(*position));
-
-		for (unsigned int i = 0; i < 3; i++)
-			position[i] = foot_point[i] + ((double) ctr) * (dir_vec[i]);
-
-		//calculate current indices
-		x_idx = (int) (position[0] / _voxelDim);
-		y_idx = (_yDim - 1) - (int) (position[1] / _voxelDim);
-		z_idx = (int) (position[2] / _voxelDim);
-
-		//check whether RayCaster is in space or not
-		if ((x_idx >= _xDim) || (x_idx < 0) || (y_idx >= _yDim) || (y_idx < 0) || (z_idx >= _zDim) || (z_idx < 0)) //ratraycer reached edge of space
-		{
-			delete dir_vec;
-			delete foot_point;
-			delete position;
-			return (EDGE);
-		}
-
-		//get current tsdf
-		c_tsdf = _space[z_idx][y_idx][x_idx].tsdf;
-
-		if(l_tsdf < 0 && c_tsdf > 0) return (EDGE);
-
-		//check sign change
-		//if ((l_tsdf > 0 && l_tsdf < UNUSED)	&& (c_tsdf < 0 && c_tsdf > M_UNUSED))
-		if(l_tsdf > 0 && c_tsdf < 0)
-		{
-			double tsdf_prev;
-			if (interpolateTrilinear(&position_prev, &tsdf_prev) != OK)
-			{
-				delete dir_vec;
-				delete foot_point;
-				delete position;
-				return ERROR;
-			}
-
-			double tsdf;
-			if (interpolateTrilinear(&position, &tsdf) != OK)
-			{
-				delete dir_vec;
-				delete foot_point;
-				delete position;
-				return ERROR;
-			}
-			if(!(tsdf_prev > 0 && tsdf < 0))
-			{
-				ctr++;
-				continue;
-			}
-
-
-			interp = tsdf_prev / (tsdf_prev - tsdf);
-
-			//interp = tsdf_prev;
-
-			break;
-		}
-		//store current tsdf in last tsdf
-		l_tsdf = c_tsdf;
-
-		//increment counter
-		ctr++;
+	//	std::cout<<"\nError Interpolation Normals-Estimator...\n";
+		return(ERROR);
 	}
 
-	// interpolate between voxels when sign change happened
-	for (unsigned int i = 0; i < 3; i++)
-		(*coordinates)[i] = position_prev[i] + dir_vec[i] * interp;
+	normalCoords[0]=depthVarInc-depthVarDec;     //x_coordinate of the normal
 
-	delete dir_vec;
-	delete foot_point;
-	delete position;
-	return (OK);
+	coordVar[0]=crosCoords[0];
+	coordVar[1]=crosCoords[1]+_voxelDim;    //interpolate around Voxel in y+1 direction
+	coordVar[2]=crosCoords[2];
+
+	if(interpolateTrilinear(&coordVar,&depthVarInc)!=OK)
+	{
+	//	std::cout<<"\nError Interpolation Normals-Estimator...\n";
+		return(ERROR);
+	}
+
+	coordVar[0]=crosCoords[0];
+	coordVar[1]=crosCoords[1]-_voxelDim;    //interpolate around Voxel in y-1 direction
+	coordVar[2]=crosCoords[2];
+
+	if(interpolateTrilinear(&coordVar,&depthVarDec)!=OK)
+	{
+	//	std::cout<<"\nError Interpolation Normals-Estimator...\n";
+		return(ERROR);
+	}
+
+	normalCoords[1]=depthVarInc-depthVarDec;     //y_coordinate of the normal
+
+	coordVar[0]=crosCoords[0];
+	coordVar[1]=crosCoords[1];
+	coordVar[2]=crosCoords[2]+_voxelDim;         //interpolate around Voxel in z+1 direction
+
+	if(interpolateTrilinear(&coordVar,&depthVarInc)!=OK)
+	{
+		//std::cout<<"\nError Interpolation Normals-Estimator...\n";
+		return(ERROR);
+	}
+
+	coordVar[0]=crosCoords[0];
+	coordVar[1]=crosCoords[1];
+	coordVar[2]=crosCoords[2]-_voxelDim;         //interpolate around Voxel in z-1 direction
+
+	if(interpolateTrilinear(&coordVar,&depthVarDec)!=OK)
+	{
+		//std::cout<<"\nError Interpolation Normals-Estimator...\n";
+		return(ERROR);
+	}
+
+	normalCoords[2]=depthVarInc-depthVarDec;     //z_coordinate of the normal
+
+	for(unsigned int i=0;i<3;i++)
+		abs+=normalCoords[i]*normalCoords[i];
+
+	abs=std::sqrt(abs);
+
+	for(unsigned int i=0;i<3;i++)
+		normalCoords[i]/=abs;
+
+	delete coordVar;
+
+	return(OK);
 }
-#endif
 
-MSG TsdSpace::getModel(double **model_pcl, unsigned int *ctr)
+MSG TsdSpace::getModel(double **modelPcl,double *modelNormals, unsigned int *ctr)
 {
 	double *p_var    = new double[3];
+	double *nVar=new double[3];
 	bool found       = 0;
 	double depth_var = 0.0;
 	obvious::Matrix Mvar(4,1);
-	MSG racstate;
 
 	// allocate space for pointcloud
 	//if(!model_pcl)
-		*model_pcl = new double[ROW_MAX * COL_MAX * 3];
+		*modelPcl = new double[ROW_MAX * COL_MAX * 3];
 	//LOGMSG(DBG_DEBUG, "Space allocated. Starting Raytracing...");
 
 	//reset counter
@@ -816,25 +844,29 @@ MSG TsdSpace::getModel(double **model_pcl, unsigned int *ctr)
 		for (unsigned int col = 0; col < COL_MAX; col++)
 		{
 		//	cout<<"\n(ROW/COL) ("<<row<<"/"<<col<<")\n";
-			if (  (racstate=rayCast(row, col, &p_var, &depth_var,GENERAL)) == OK) //Ray returned with coordinates
+			if (  (rayCast(row, col, &p_var,nVar,&depth_var,GENERAL)) == OK) //Ray returned with coordinates
 			{
-
 				found = 1;
 				Mvar.setData(p_var);
 				Mvar[3][0]=1.0;
 				Mvar=*_Tinv*Mvar;
 				for (unsigned int i = 0; i < 3; i++)
-					(*model_pcl)[(*ctr)++] = Mvar[i][0];
+				{
+					(*modelPcl)[*ctr] = Mvar[i][0];
+					modelNormals[(*ctr)++]=nVar[i];
+				}
 			}
 	//		else
 //				cout<<"\nRaycaster returned with state : "<<racstate<<" \n";
 		}
 	}
-	if (found) --(*ctr);
+	if (found)
+		--(*ctr);
 
 	LOGMSG(DBG_DEBUG, "Raycasting finished! Found " << *ctr << " coordinates.");
 
 	delete p_var;
+	delete nVar;
 	return (OK);
 }
 
@@ -856,10 +888,7 @@ MSG TsdSpace::interpolateTrilinear(double **coordinates, double *tsdf)
 	double w_x = 0;
 	double w_y = 0;
 	double w_z = 0;
-	double abs = 0;
-	double str_cr_val = 0;
 	Point c_vxl_mp;
-	bool edges[7]={1};
 
 	// initialize
 	// get voxel indices
@@ -931,7 +960,6 @@ MSG TsdSpace::interpolateTrilinear(double **coordinates, double *tsdf)
 
 	return (OK);
 }
-
 
 double TsdSpace::interpolateBilinear(double u, double v)
 {

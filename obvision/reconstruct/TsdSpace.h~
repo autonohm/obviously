@@ -25,9 +25,13 @@ namespace obvious
      */
     virtual ~TsdSpace(void );
 
-    MSG Push(double *depthImage);
-
-    MSG calcTsdf(const double curVxlccoords[4],const unsigned int u,const unsigned int v,const unsigned int col,const unsigned int row,const unsigned int z);
+    /**
+     * push
+     * Function to sort a depth image in the space (generate TSDF)
+     * @param depth_image contains depth image as 2D Array
+     * @return value MSG contains exit status
+     */
+    MSG push(double *depthImage);
 
     /**
      * setMaxTruncation
@@ -48,7 +52,7 @@ namespace obvious
      * Function to generate pointcloud out of the tsd_space data
      * @param cloud space will be allocated by function and coordinates will be stored in
      */
-    MSG generatePointcloud(double **cloud,double **normals, unsigned int *nbr);
+    MSG generatePointcloud(double **cloud, unsigned int *nbr);
 
     /**
      * get_model
@@ -56,7 +60,7 @@ namespace obvious
      * sends rays through space
      * @param depth_image pointer to depth image. Will be allocated by function
      */
-    MSG getModel(double **modelPcl,double *modelNormals,unsigned int *ctr);
+    MSG getModel(double **model_pcl, unsigned int *ctr);
 
     /**
      *
@@ -64,12 +68,8 @@ namespace obvious
     Matrix *getTransformation();
 
     /**
- 	   *
-	   */
-    Matrix *getinvTransformation();
-
-    /**
      * buildSliceImage
+     * @brief Subfunction of view all
      * Checks one x,y slice of the space and writes the content to a file
      * @param depthIndex index of depth slice
      * @return success
@@ -79,28 +79,37 @@ namespace obvious
     unsigned int getXDimension();
     unsigned int getYDimension();
     unsigned int getZDimension();
-    double getVxlDimension();
 
   private:
 
     /**
+     * zSlice
+     * Subfunction of push
+     * Checks one x,y slice of the space and updates the tsdf
+     * Function will be called in multithreading
+     * @param depth grows in z+ direction
+     */
+    MSG zSlice(const unsigned int z);
+
+    /**
+     * peak
+     * Function which sends a ray through the space parallel to z axis
+     * @param row,col Position of the peak within space
+     * @param nbr Variable where the nbr of found points in peak is stored in
+     * @param coordinates found coords are stored in. Space has to be allocated by calling function
+     */
+    MSG peak(unsigned int row, unsigned int col, unsigned int *nbr, double **coordinates);
+
+    /**
      * rayCast
-     * Subfunction
+     * Subfunction of get_model
      * sends ray through space to calculate virtual depth-image
      * @param row,col position of the pixel in virtual kinect-view
      * @param coordinates pointer to store intersection coordinates in
      * Has to be allocated by calling function
-     * @param mode sets the raycaster to different modes.
-     * 		GENERAL normal mode
-     * 		X_AXS parallel to X-Axis Borders : COL = _zDim, ROW = _yDim
-     * 		X_AXS_N parallel to X-Axis negative direction
-     * 		Y_AXS parallel to Y-Axis Borders : COL = _xDim, ROW = _zDim
-     * 		Y_AXS_N parallel to Y-Axis negative direction
-     * 		Z_AXS parallel to Z-Axis Borders : COL = _xDim, ROW = _yDim
-     * 		Z_AXS_N parallel to Z-Axis negative direction
      */
-    //MSG rayCast(const unsigned int row, const unsigned int col, double **coordinates, double *depth,RAYC_MODE mode);
-    MSG rayCast(const unsigned int row, const unsigned int col, double **coordinates,double *normal,double *depth,RAYC_MODE mode);
+    MSG rayCast(const unsigned int row, const unsigned int col, double **coordinates, double *depth);
+
     /**
      * calcRay
      * Subfunction of rayCast
@@ -111,14 +120,7 @@ namespace obvious
      * @param foot_point pointer to store footpoint in has to be allocated by calling function (4-values)
      *
      */
-    MSG calcRay(const unsigned int row, const unsigned int col, double **dir_vec, double **foot_point,RAYC_MODE mode);
-
-    /**
-	  * Subfunction of rayCast
-	  * Calculates normal to a hit plain element
-	  * @param normalCoords Variable to store the coordinates in. Has to be allocated by calling function (3 coordinates)
-	  */
-	 MSG getNormal(const double *crosCoords,double *normalCoords);
+    MSG calcRay(const unsigned int row, const unsigned int col, double **dir_vec, double **foot_point);
 
     /**
      * interpolate_trilineary
@@ -129,8 +131,6 @@ namespace obvious
     MSG interpolateTrilinear(double **coordinates, double *tsdf);
 
     double interpolateBilinear(double u, double v);
-
-    MSG secSearch(const unsigned int xIdx,const unsigned int yIdx,const unsigned int zIdx);
 
     int _xDim;
 
