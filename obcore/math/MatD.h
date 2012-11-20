@@ -29,6 +29,12 @@ public:
     */
     MatD(const MatD& mat);
 
+    //! copy constructor
+    /*!
+      takes a ref of mat
+    */
+    MatD(MatD& mat);
+
     //! destructor
     virtual ~MatD(void);
 
