@@ -1,8 +1,8 @@
 #ifndef __MAT_RGB__
 #define __MAT_RGB__
 
-#include "AbstractMat.h"
-#include "rgbColor.h"
+#include "obcore/math/AbstractMat.h"
+#include "obcore/rgbColor.h"
 
 namespace xmlpp {
 class Node;

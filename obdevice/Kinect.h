@@ -9,8 +9,8 @@
 #include <iostream>
 #include <fstream>
 
-#include "MatRGB.h"
-#include "MatD.h"
+#include "obcore/math/MatRGB.h"
+#include "obcore/math/MatD.h"
 
 using namespace xn;
 using namespace std;
