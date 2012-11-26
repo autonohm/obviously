@@ -104,7 +104,7 @@ TsdSpace::~TsdSpace(void)
 	delete _zero_h;
 }
 
-MSG TsdSpace::Push(double *depthImage)
+MSG TsdSpace::push(double *depthImage)
 {
 	std::vector<unsigned int> sliceIdcs;
 	std::vector<unsigned int> colIdcs;

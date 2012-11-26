@@ -25,7 +25,7 @@ void cbPushScene()
 {
 	double *pcl=NULL;
 	unsigned int cl_ctr=0;
-   _my_space->Push(_distZ);
+   _my_space->push(_distZ);
    _my_space->getModel(&pcl,_normals,&cl_ctr);
    _cloud->setCoords(pcl, cl_ctr/3, 3,_normals);
    _viewer->update();
@@ -102,7 +102,7 @@ int main(void)
 			_distZ[v*640+u] = z;     //sqrt(x*x+y*y+z*z);
 		}
 
-	_my_space->Push(_distZ);
+	_my_space->push(_distZ);
 
 	/**
 	 * ToDo: check why generated clouds are completely wrong when applying the following test.

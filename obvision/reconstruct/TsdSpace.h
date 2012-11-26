@@ -25,7 +25,7 @@ namespace obvious
      */
     virtual ~TsdSpace(void );
 
-    MSG Push(double *depthImage);
+    MSG push(double *depthImage);
 
     MSG calcTsdf(const double curVxlccoords[4],const unsigned int u,const unsigned int v,const unsigned int col,const unsigned int row,const unsigned int z);
 
