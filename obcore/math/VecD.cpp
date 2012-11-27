@@ -1,6 +1,8 @@
 #include "VecD.h"
 
 #include <gsl/gsl_vector.h>
+#include <libxml++/libxml++.h>
+#include <string>
 
 #define GSL(x) (static_cast<gsl_vector*>(x))
 
@@ -67,7 +69,7 @@ VecD::VecD(const xmlpp::Node* node)
         {
             double value;
             stream >> value;
-            gsl_vector_set(GSL(_data[channel]), value);
+            gsl_vector_set(GSL(_data[channel]), i, value);
         }
 
         if (++channel >= _data.size())
@@ -89,7 +91,7 @@ void VecD::createXml(xmlpp::Node* node) const
     root->set_attribute("size", stream.str());
 
     stream.str(std::string());
-    stram << _data.size();
+    stream << _data.size();
     root->set_attribute("channels", stream.str());
 
     /* Write the data from vector _data to xml node */
@@ -99,7 +101,7 @@ void VecD::createXml(xmlpp::Node* node) const
         stream.str(std::string());
 
         for (unsigned int i = 0; i < _size; i++)
-            stream << gsl_vector_get(GSL(_data[0]), row, col) << " ";
+            stream << gsl_vector_get(GSL(_data[channel]), i) << " ";
 
         elm->add_child_text(stream.str());
     }

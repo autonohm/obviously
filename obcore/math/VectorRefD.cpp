@@ -71,4 +71,5 @@ std::ostream& operator<<(std::ostream& os, const obvious::VectorRefD& vec)
     }
 
     os << std::endl;
+    return os;
 }

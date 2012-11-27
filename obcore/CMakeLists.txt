@@ -27,9 +27,6 @@ add_library(obcore
 	math/Matrix.cpp
         math/MatD.cpp
         math/MatRGB.cpp
+        math/VecD.cpp
+        math/VectorRefD.cpp
 	)
-
-# Braucht man glaube ich hier noch gar nicht?! (Knueppl)
-target_link_libraries(obcore
-                      ${XML_LIBRARIES}
-                      )
