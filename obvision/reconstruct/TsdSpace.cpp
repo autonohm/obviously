@@ -20,7 +20,6 @@
 #include "obcore/base/System.h"
 #include "obcore/math/mathbase.h"
 #include <vector>
-#include "RecursiveSearch.h"
 #include <omp.h>
 
 
@@ -105,7 +104,7 @@ TsdSpace::~TsdSpace(void)
 	delete _zero_h;
 }
 
-MSG TsdSpace::Push(double *depthImage)
+MSG TsdSpace::push(double *depthImage)
 {
 	std::vector<unsigned int> sliceIdcs;
 	std::vector<unsigned int> colIdcs;
