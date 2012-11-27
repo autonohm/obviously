@@ -11,6 +11,191 @@ template <typename T>
 class AbstractMat
 {
 public:
+    /* iterator class */
+    class iterator
+    {
+    public:
+        //! default constructor
+        iterator(T* data = 0) : _data(data) { }
+
+        //! increment iterator (post)
+        iterator& operator++(void)
+        {
+            _data++;
+            return *this;
+        }
+
+        //! increment iterator (pre)
+        iterator& operator++(int)
+        {
+            iterator it(_data);
+            _data++;
+            return *this;
+        }
+
+        //! decrement iterator (post)
+        iterator& operator--(void)
+        {
+            _data--;
+            return *this;
+        }
+
+        //! decrement iterator (pre)
+        iterator& operator--(int)
+        {
+            iterator it(_data);
+            _data--;
+            return *this;
+        }
+
+        //! add number to iterator and return new iterator
+        iterator& operator+(const int number) const
+        {
+            return iterator(_data + number);
+        }
+        iterator& operator+(const unsigned int number) const
+        {
+            return iterator(_data + number);
+        }
+
+        //! subtrate number from iterator and return new iterator
+        iterator& operator-(const int number) const
+        {
+            return iterator(_data - number);
+        }
+        iterator& operator-(const unsigned int number) const
+        {
+            return iterator(_data - number);
+        }
+
+        //! add number to iterator
+        iterator& operator+=(const int number)
+        {
+            _data += number;
+            return *this;
+        }
+        iterator& operator+=(const unsigned int number)
+        {
+            _data += number;
+            return *this;
+        }
+
+        //! subtrate number from iterator
+        iterator& operator-=(const int number)
+        {
+            _data -= number;
+            return *this;
+        }
+        iterator& operator-=(const unsigned int number)
+        {
+            _data -= number;
+            return *this;
+        }
+
+        //! return a ref of data
+        T& operator*(void)
+        {
+            return *_data;
+        }
+
+    private:
+        T* _data;
+    };
+
+
+
+    /* const_iterator class */
+    class const_iterator
+    {
+    public:
+        const_iterator(const T* data) : _data(data) { }
+
+        //! increment iterator (post)
+        const_iterator& operator++(void)
+        {
+            _data++;
+            return *this;
+        }
+
+        //! increment iterator (pre)
+        const_iterator& operator++(int)
+        {
+            iterator it(_data);
+            _data++;
+            return *this;
+        }
+
+        //! decrement iterator (post)
+        const_iterator& operator--(void)
+        {
+            _data--;
+            return *this;
+        }
+
+        //! decrement iterator (pre)
+        const_iterator& operator--(int)
+        {
+            iterator it(_data);
+            _data--;
+            return *this;
+        }
+
+        //! add number to iterator and return new iterator
+        const_iterator& operator+(const int number) const
+        {
+            return iterator(_data + number);
+        }
+        const_iterator& operator+(const unsigned int number) const
+        {
+            return iterator(_data + number);
+        }
+
+        //! subtrate number from iterator and return new iterator
+        const_iterator& operator-(const int number) const
+        {
+            return iterator(_data - number);
+        }
+        const_iterator& operator-(const unsigned int number) const
+        {
+            return iterator(_data - number);
+        }
+
+        //! add number to iterator
+        const_iterator& operator+=(const int number)
+        {
+            _data += number;
+            return *this;
+        }
+        const_iterator& operator+=(const unsigned int number)
+        {
+            _data += number;
+            return *this;
+        }
+
+        //! subtrate number from iterator
+        const_iterator& operator-=(const int number)
+        {
+            _data -= number;
+            return *this;
+        }
+        const_iterator& operator-=(const unsigned int number)
+        {
+            _data -= number;
+            return *this;
+        }
+
+        //! return a ref of data
+        const T& operator*(void) const
+        {
+            return *_data;
+        }
+
+    private:
+        const T* _data;
+    };
+
+
+
     //! default constructor
     AbstractMat(const unsigned int rows = 0, const unsigned int cols = 0) : _data(0), _rows(rows), _cols(cols) { }
 
@@ -31,6 +216,14 @@ public:
     virtual T& at(const unsigned int row, const unsigned int col, const unsigned int channel = 0) = 0;
     virtual T at(const unsigned int row, const unsigned int col, const unsigned int channel = 0) const = 0;
 
+    //! returns a iterator pointing to the begin of Mat
+    virtual iterator begin(const unsigned int channel = 0) = 0;
+    virtual const_iterator begin(const unsigned int channel = 0) const = 0;
+
+    //! returns a iterator pointing to the end + 1 of Mat
+    virtual iterator end(const unsigned int channel = 0) = 0;
+    virtual const_iterator end(const unsigned int channel = 0) const = 0;
+
     //! get number of cols
     unsigned int cols(void) const { return _cols; }
 
@@ -47,7 +240,6 @@ protected:
       @return if ture the destructor of a subclass must delete m_data
     */
     bool haveToFreeData(void);
-
 
     std::vector<void*> _data;
     unsigned int       _rows;

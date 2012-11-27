@@ -44,6 +44,14 @@ public:
     //! set RGBColor to element by row, col
     void setRgb(const unsigned int row, const unsigned int col, const RGBColor& color);
 
+    //! reimplementation of begin()
+    virtual iterator begin(const unsigned int channel);
+    virtual const_iterator begin(const unsigned int channel) const;
+
+    //! reimplementation of end()
+    virtual iterator end(const unsigned int channel);
+    virtual const_iterator end(const unsigned int channel) const;
+
     enum Orientation {
         X,
         Y

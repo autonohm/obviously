@@ -74,14 +74,37 @@ void MatRGB::setRgb(const unsigned int row, const unsigned int col, const RGBCol
     gsl_matrix_uchar_set(GSL(_data[Blue]) , row, col, color.b());
 }
 
-//MatRGB& MatRGB::operator=(MatRGB& mat)
-//{
-//    /* Before take a reference to another Mat, delete m_data */
-//    this->freeData();
-//    AbstractMat<unsigned char>::operator=(mat);
-//
-//    return *this;
-//}
+MatRGB::iterator MatRGB::begin(const unsigned int channel)
+{
+    if (!_data.size())
+        return iterator(0);
+
+    return iterator(gsl_matrix_uchar_ptr(GSL(_data[channel]), 0, 0));
+}
+
+MatRGB::const_iterator MatRGB::begin(const unsigned int channel) const
+{
+    if (!_data.size())
+        return const_iterator(0);
+
+    return const_iterator(gsl_matrix_uchar_ptr(GSL(_data[channel]), 0, 0));
+}
+
+MatRGB::iterator MatRGB::end(const unsigned int channel)
+{
+    if (!_data.size())
+        return iterator(0);
+
+    return iterator(gsl_matrix_uchar_ptr(GSL(_data[channel]), _rows - 1, _cols - 1) + 1);
+}
+
+MatRGB::const_iterator MatRGB::end(const unsigned int channel) const
+{
+    if (!_data.size())
+        return const_iterator(0);
+
+    return const_iterator(gsl_matrix_uchar_ptr(GSL(_data[channel]), _rows - 1, _cols - 1) + 1);
+}
 
 MatRGB& MatRGB::operator=(MatRGB mat)
 {
@@ -91,15 +114,6 @@ MatRGB& MatRGB::operator=(MatRGB mat)
 
     return *this;
 }
-
-//MatRGB& MatRGB::operator=(const MatRGB& mat)
-//{
-//    /* Before take a reference to another Mat, delete m_data */
-//    this->freeData();
-//    mat.copyTo(*this);
-//
-//    return *this;
-//}
 
 void MatRGB::copyTo(MatRGB& mat) const
 {

@@ -163,6 +163,38 @@ double MatD::at(const unsigned int row, const unsigned int col, const unsigned i
     return gsl_matrix_get(GSL(_data[channel]), row, col);
 }
 
+MatD::iterator MatD::begin(const unsigned int channel = 0)
+{
+    if (_data.size())
+        return iterator(gsl_matrix_ptr(GSL(_data[channel]), 0, 0));
+
+    return iterator(0);
+}
+
+MatD::const_iterator MatD::begin(const unsigned int channel = 0) const
+{
+    if (_data.size())
+        return const_iterator(gsl_matrix_ptr(GSL(_data[channel]), 0, 0));
+
+    return const_iterator(0);
+}
+
+MatD::iterator MatD::end(const unsigned int channel = 0)
+{
+    if (_data.size())
+        return iterator(gsl_matrix_ptr(GSL(_data[channel]), _rows - 1, _cols - 1) + 1);
+
+    return iterator(0);
+}
+
+MatD::const_iterator MatD::end(const unsigned int channel = 0) const
+{
+    if (_data.size())
+        return const_iterator(gsl_matrix_ptr(GSL(_data[channel]), _rows - 1, _cols - 1) + 1);
+
+    return const_iterator(0);
+}
+
 MatD& MatD::operator=(MatD& mat)
 {
     /* Delete m_data before take a ref to another Mat */

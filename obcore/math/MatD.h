@@ -46,6 +46,14 @@ public:
     //! get the value of the element by col, row
     double at(const unsigned int row, const unsigned int col, const unsigned int channel = 0) const;
 
+    //! reimplementation of begin()
+    virtual iterator begin(const unsigned int channel);
+    virtual const_iterator begin(const unsigned int channel) const;
+
+    //! reimplementation of end()
+    virtual iterator end(const unsigned int channel);
+    virtual const_iterator end(const unsigned int channel) const;
+
     //! assignment operator
     /*!
       he dosen't make a deep copy. Both Mats works on the same data. For a explicit deep copy use the copy constructor or the funciton copyTo()
