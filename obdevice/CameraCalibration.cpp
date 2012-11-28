@@ -2,10 +2,18 @@
 
 #include <libxml++/libxml++.h>
 
-CameraCalibration::CamerCalibration(const xmlpp::Node* node)
+namespace {
+const char* const TAG_CALIBRATION = "camera_calibration";
+const char* const TAG_INTRINSIC   = "intrinsic";
+const char* const TAG_DISTORTION  = "distortion";
+}
+
+namespace obvious {
+
+CameraCalibration::CameraCalibration(const xmlpp::Node* node)
 {
     /* Check if the XML tag has the name camera_calibration */
-    if (node->get_name() != "camera_calibration")
+    if (node->get_name() != TAG_CALIBRATION)
     {
         throw "Invaild xml node for camera calibration initialization!";
         return;
@@ -30,19 +38,58 @@ CameraCalibration::CamerCalibration(const xmlpp::Node* node)
         if (!elm)
             continue;
 
-        if (elm->get_name() == "intrinsic")
-            _intrinsic = MatD(elm);
-        else if (elm->get_name() == "distortion")
-            _distCoeffs = MatD(elm);
+        if (elm->get_name() == TAG_INTRINSIC)
+        {
+            const xmlpp::Node* child = this->getChild(elm, "mat");
+
+            if (child)
+                _intrinsic = MatD(elm);
+        }
+        else if (elm->get_name() == TAG_DISTORTION)
+        {
+            const xmlpp::Node* child = this->getChild(elm, "vec");
+
+            if (child)
+                _distCoeffs = VecD(elm);
+        }
     }
 }
 
 void CameraCalibration::createXml(xmlpp::Node* node)
 {
+    /* create tags */
+    xmlpp::Element* root = node->add_child(TAG_CALIBRATION);
+    xmlpp::Element* tagIntrinsic = root->add_child(TAG_INTRINSIC);
+    xmlpp::Element* tagDistortion = root->add_child(TAG_DISTORTION);
 
+    _intrinsic.createXml(tagIntrinsic);
+    _distCoeffs.createXml(tagDistortion);
+}
+
+const xmlpp::Node* CameraCalibration::getChild(const xmlpp::Node* parent, const std::string& child)
+{
+    /* try to cast Node to Element */
+    const xmlpp::Element* root = dynamic_cast<const xmlpp::Element*>(parent);
+
+    if (!root)
+        return 0;
+
+    const xmlpp::Node::NodeList nodes = root->get_children();
+
+    for (xmlpp::Node::NodeList::const_iterator it = nodes.begin(); it != nodes.end(); ++it)
+    {
+        const xmlpp::Element* elm = dynamic_cast<const xmlpp::Element*>(*it);
+
+        if (elm && elm->get_name() == child)
+            return elm;
+    }
+
+    return 0;
 }
 
 void CameraCalibration::correctImage(MatRGB& image)
 {
 
 }
+
+} // end namespace obvious

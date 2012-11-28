@@ -38,6 +38,9 @@ public:
     //! destructor
     virtual ~MatD(void);
 
+    //! make a deep copy
+    void copyTo(MatD& mat) const;
+
     //! create XML node of this matrix
     void createXml(xmlpp::Node* node) const;
 

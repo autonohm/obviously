@@ -5,6 +5,8 @@
 #include "obcore/math/MatRGB.h"
 #include "obcore/math/VecD.h"
 
+#include <string>
+
 namespace xmlpp {
 class Node;
 }
@@ -27,6 +29,8 @@ public:
     void correctImage(MatRGB& image);
 
 private:
+    const xmlpp::Node* getChild(const xmlpp::Node* parent, const std::string& child);
+
     MatD _intrinsic;
     VecD _distCoeffs;
 };

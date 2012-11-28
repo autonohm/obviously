@@ -153,6 +153,22 @@ void MatD::createXml(xmlpp::Node* node) const
     }
 }
 
+void MatD::copyTo(MatD& mat) const
+{
+    mat.freeData();
+    mat._rows = _rows;
+    mat._cols = _cols;
+
+    if (!_rows || !_cols)
+        return;
+
+    for (unsigned int i = 0; i < _data.size(); i++)
+    {
+        mat._data.push_back(gsl_matrix_alloc(_rows, _cols));
+        gsl_matrix_memcpy(GSL(mat._data[i]), GSL(_data[i]));
+    }
+}
+
 double& MatD::at(const unsigned int row, const unsigned int col, const unsigned int channel)
 {
     return *gsl_matrix_ptr(GSL(_data[channel]), row, col);

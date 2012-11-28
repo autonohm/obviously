@@ -107,6 +107,21 @@ void VecD::createXml(xmlpp::Node* node) const
     }
 }
 
+void VecD::copyTo(VecD& vec) const
+{
+    vec.freeData();
+    vec._size = _size;
+
+    if (!_size)
+        return;
+
+    for (unsigned int channel = 0; channel < _data.size(); channel++)
+    {
+        vec._data.push_back(gsl_vector_alloc(_size));
+        gsl_vector_memcpy(GSL(vec._data[channel]), GSL(_data[channel]));
+    }
+}
+
 double& VecD::at(const unsigned int index, const unsigned int channel)
 {
     return *gsl_vector_ptr(GSL(_data[channel]), index);

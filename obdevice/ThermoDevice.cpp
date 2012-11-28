@@ -6,21 +6,20 @@
 namespace obvious {
 
 ThermoDevice::ThermoDevice(const std::string& configFile)
-    : Device2D("Thermocam"),
-      m_camera(new ThermoCam(configFile))
+    : _camera(new ThermoCam(configFile))
 {
 
 }
 
 ThermoDevice::~ThermoDevice(void)
 {
-    delete m_camera;
+    delete _camera;
 }
 
 bool ThermoDevice::grab(void)
 {
-    m_camera->grab();
-    m_rgb = m_camera->getMatRGB();
+    _camera->grab();
+    _rgb = _camera->getMatRGB();
 
     return true;
 }

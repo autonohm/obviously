@@ -16,6 +16,7 @@ public:
     VecD(const xmlpp::Node* node);
     ~VecD(void);
 
+    void copyTo(VecD& vec) const;
     void createXml(xmlpp::Node* node) const;
     double& at(const unsigned int index, const unsigned int channel = 1);
     double at(const unsigned int index, const unsigned int channel = 1) const;
