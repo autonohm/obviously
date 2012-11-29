@@ -27,6 +27,7 @@ add_library(obcore
 	math/Matrix.cpp
         math/MatD.cpp
         math/MatRGB.cpp
+        math/PID_Controller.cpp
 	)
 
 # Braucht man glaube ich hier noch gar nicht?! (Knueppl)
