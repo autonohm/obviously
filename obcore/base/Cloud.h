@@ -2,11 +2,11 @@
 #define __CLOUD__
 
 #include <vector>
-#include "Point3D.h"
-#include "rgbColor.h"
-#include "MatRGB.h"
-#include "MatD.h"
-#include "RgbPoint3D.h"
+#include "obcore/Point3D.h"
+#include "obcore/rgbColor.h"
+#include "obcore/math/MatRGB.h"
+#include "obcore/math/MatD.h"
+#include "obcore/RgbPoint3D.h"
 
 namespace obvious {
 

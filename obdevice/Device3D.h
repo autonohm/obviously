@@ -10,15 +10,13 @@ namespace obvious {
 class Device3D
 {
 public:
-    virtual ~Device3D(void);
+    virtual ~Device3D(void) { }
 
     virtual bool grab(void) = 0;
 
     const std::vector<Point3D>& coords(void) const { return _coords; }
 
 protected:
-    void deletePoints(void);
-
     std::vector<Point3D> _coords;
 };
 

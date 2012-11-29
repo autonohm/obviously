@@ -60,7 +60,7 @@ MatD::MatD(const xmlpp::Node* node)
 
     if (!root)
     {
-        throw "Invaild xml node for matrix initialization!";
+        throw "Fail to convert Node* to Element* in matrix initialization!";
         return;
     }
 

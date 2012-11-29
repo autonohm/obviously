@@ -18,8 +18,6 @@ KinectDevice::~KinectDevice(void)
 
 bool KinectDevice::grab(void)
 {
-    this->deletePoints();
-
     if (!_kinect->grab())
     {
         std::cout << __PRETTY_FUNCTION__  << std::endl;

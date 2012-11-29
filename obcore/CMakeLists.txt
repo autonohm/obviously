@@ -23,6 +23,7 @@ add_library(obcore
 	base/Timer.cpp
 	base/Logger.cpp
 	base/tools.cpp
+        base/Cloud.cpp
 	math/geometry.cpp
 	math/Matrix.cpp
         math/MatD.cpp

@@ -1,5 +1,6 @@
 #include "CameraCalibration.h"
 
+#include <iostream>
 #include <libxml++/libxml++.h>
 
 namespace {
@@ -41,21 +42,21 @@ CameraCalibration::CameraCalibration(const xmlpp::Node* node)
         if (elm->get_name() == TAG_INTRINSIC)
         {
             const xmlpp::Node* child = this->getChild(elm, "mat");
-
+            std::cout << "do init MatD" << std::endl;
             if (child)
-                _intrinsic = MatD(elm);
+                _intrinsic = MatD(child);
         }
         else if (elm->get_name() == TAG_DISTORTION)
         {
             const xmlpp::Node* child = this->getChild(elm, "vec");
-
+            std::cout << "do init VecD" << std::endl;
             if (child)
-                _distCoeffs = VecD(elm);
+                _distortion = VecD(child);
         }
     }
 }
 
-void CameraCalibration::createXml(xmlpp::Node* node)
+void CameraCalibration::createXml(xmlpp::Node* node) const
 {
     /* create tags */
     xmlpp::Element* root = node->add_child(TAG_CALIBRATION);
@@ -63,7 +64,7 @@ void CameraCalibration::createXml(xmlpp::Node* node)
     xmlpp::Element* tagDistortion = root->add_child(TAG_DISTORTION);
 
     _intrinsic.createXml(tagIntrinsic);
-    _distCoeffs.createXml(tagDistortion);
+    _distortion.createXml(tagDistortion);
 }
 
 const xmlpp::Node* CameraCalibration::getChild(const xmlpp::Node* parent, const std::string& child)

@@ -63,7 +63,7 @@ VecD::VecD(const xmlpp::Node* node)
     stream >> channels;
 
     /* allocate data for vector */
-    for (unsigned int channel = 0; channel < channels; channels++)
+    for (unsigned int channel = 0; channel < channels; channel++)
         _data.push_back(gsl_vector_alloc(_size));
 
     /* copy data from xml to vector */
@@ -84,6 +84,7 @@ VecD::VecD(const xmlpp::Node* node)
         {
             double value;
             stream >> value;
+
             gsl_vector_set(GSL(_data[channel]), i, value);
         }
 
