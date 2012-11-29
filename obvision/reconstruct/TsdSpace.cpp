@@ -40,7 +40,8 @@
 namespace obvious
 {
 
-TsdSpace::TsdSpace(const unsigned int height, const unsigned int width,	const unsigned int depth,  const double voxelDim, double* perspective)
+//TsdSpace::TsdSpace(const unsigned int height, const unsigned int width,	const unsigned int depth,  const double voxelDim, double* perspective)
+TsdSpace::TsdSpace(const unsigned int height, const unsigned int width,	const unsigned int depth,  const double voxelDim, Projection *projection)
 {
 	// determine number of voxels in each dimension
 	_xDim = round(width  / voxelDim);
@@ -77,7 +78,8 @@ TsdSpace::TsdSpace(const unsigned int height, const unsigned int width,	const un
 	_width    = width;
 	_depth    = depth;
 
-	_projection = new Projection(perspective);
+	//_projection = new Projection(perspective);
+	_projection = projection;
 
 	_T = new Matrix(4, 4);
 	_T->setIdentity();
@@ -97,7 +99,7 @@ TsdSpace::TsdSpace(const unsigned int height, const unsigned int width,	const un
 TsdSpace::~TsdSpace(void)
 {
 	delete [] _space;
-	delete _projection;
+	//delete _projection;
 	delete _T;
 	delete _Tinv;
 	delete [] _depthImage;

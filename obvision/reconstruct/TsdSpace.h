@@ -18,8 +18,8 @@ namespace obvious
      * @param height,width,depth dimension of the allocated space in meters
      * @param vxldimension edge length of the Tsd_voxels
      */
-    TsdSpace(const unsigned int height = 0, const unsigned int width = 0, const unsigned int depth = 0, const double voxelDim = 0, double *perspective = NULL);
-
+    //TsdSpace(const unsigned int height = 0, const unsigned int width = 0, const unsigned int depth = 0, const double voxelDim = 0, double *perspective = NULL);
+	  TsdSpace(const unsigned int height = 0, const unsigned int width = 0, const unsigned int depth = 0, const double voxelDim = 0, Projection *projection=NULL);
     /**
      * Destructor
      */

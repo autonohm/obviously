@@ -11,6 +11,7 @@
 #include "obvision/reconstruct/TsdSpace.h"
 #include "obvision/reconstruct/TsdSpace_utils.h"
 #include "obcore/base/Logger.h"
+#include "obvision/reconstruct/Projection.h"
 
 using namespace std;
 using namespace obvious;
@@ -70,7 +71,9 @@ int main(void)
 	double tv = 240;
 	double perspective[12]  = {su, 0, tu, 0, 0, sv, tv, 0, 0, 0, 1, 0};
 
-	_my_space=new TsdSpace(1, 1, 1, 0.02, perspective);
+	Projection *projection=new Projection(perspective);
+
+	_my_space=new TsdSpace(1, 1, 1, 0.02, projection);
 	_my_space->setTransformation(tf);
 	_my_space->setMaxTruncation(0.08);
 
