@@ -121,9 +121,8 @@ public:
 
 
 
-protected:
     //! default constructor
-    AbstractVector(const unsigned size = 0) : _data(0), _size(size) { }
+    AbstractVector(const unsigned size = 0) : _size(size) { }
 
     //! destructor
     ~AbstractVector(void) { }
@@ -137,6 +136,18 @@ public:
 
     virtual iterator end(const unsigned int channel = 0) = 0;
     virtual const_iterator end(const unsigned int channel = 0) const = 0;
+
+    unsigned int size(void) const { return _size; }
+
+    //! assignment operator
+    /*!
+      he dosen't make a deep copy. Both Mats works on the same data. For a explicit deep copy use the copy constructor or the funciton copyTo()
+    */
+    virtual AbstractVector<T>& operator=(AbstractVector<T>& vec)
+    {
+        this->signOn(&vec);
+        return *this;
+    }
 
 protected:
     bool haveToFreeData(void);

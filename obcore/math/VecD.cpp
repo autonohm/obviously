@@ -3,6 +3,7 @@
 #include <gsl/gsl_vector.h>
 #include <libxml++/libxml++.h>
 #include <string>
+#include <iostream>
 
 #define GSL(x) (static_cast<gsl_vector*>(x))
 
@@ -16,6 +17,20 @@ VecD::VecD(const unsigned int size, const unsigned int channels)
 
     for (unsigned int channel = 0; channel < channels; channel++)
         _data.push_back(gsl_vector_alloc(_size));
+}
+
+VecD::VecD(const VecD& vec)
+    : AbstractVector(vec._size)
+{
+    if (!_size)
+        return;
+
+    vec.copyTo(*this);
+}
+
+VecD::VecD(VecD& vec)
+{
+    AbstractVector<double>::operator=(vec);
 }
 
 VecD::VecD(const xmlpp::Node* node)
@@ -164,13 +179,37 @@ VecD::const_iterator VecD::end(const unsigned int channel) const
     return const_iterator(gsl_vector_ptr(GSL(_data[channel]), _size), GSL(_data[channel])->stride);
 }
 
+VecD& VecD::operator=(VecD vec)
+{
+    this->freeData();
+    AbstractVector<double>::operator=(vec);
+    return *this;
+}
+
 void VecD::freeData(void)
 {
     if (this->haveToFreeData())
+    {
         for (unsigned int channel = 0; channel < _data.size(); channel++)
             gsl_vector_free(GSL(_data[channel]));
+    }
 
     _data.clear();
 }
 
 } // end namespace obvious
+
+
+std::ostream& operator<<(std::ostream& os, const obvious::VecD& vec)
+{
+    os << "vector: size = " << vec.size() << std::endl;
+
+    for (unsigned int i = 0; i < vec.size(); i++)
+    {
+        os << vec.at(i);
+        if ((i + 1) < vec.size()) os << ", ";
+    }
+
+    os << std::endl;
+    return os;
+}
