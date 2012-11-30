@@ -25,15 +25,12 @@ add_library(obcore
 	base/tools.cpp
 	math/geometry.cpp
 	math/Matrix.cpp
-<<<<<<< HEAD
    math/MatD.cpp
    math/MatRGB.cpp
 	filter/EuclidianFilterD.cpp
-=======
-        math/MatD.cpp
-        math/MatRGB.cpp
-        math/PID_Controller.cpp
->>>>>>> 98ebc6655181c628fbf8e55a5137d5bc6eb57c1c
+   math/MatD.cpp
+   math/MatRGB.cpp
+   math/PID_Controller.cpp
 	)
 
 # Braucht man glaube ich hier noch gar nicht?! (Knueppl)
