@@ -27,10 +27,11 @@ add_library(obcore
 	math/Matrix.cpp
    math/MatD.cpp
    math/MatRGB.cpp
-	filter/EuclidianFilterD.cpp
    math/MatD.cpp
    math/MatRGB.cpp
    math/PID_Controller.cpp
+	filter/EuclidianFilterD.cpp
+	filter/EuclidianFilterVecD.cpp
 	)
 
 # Braucht man glaube ich hier noch gar nicht?! (Knueppl)

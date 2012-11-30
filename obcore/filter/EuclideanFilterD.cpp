@@ -1,11 +1,11 @@
 /*
- * EuclidianFilterD.cpp
+ * EuclideanFilterD.cpp
  *
  *  Created on: 29.11.2012
  *      Author: phil
  */
 
-#include "obcore/filter/EuclidianFilterD.h"
+#include "obcore/filter/EuclideanFilterD.h"
 #include "obcore/math/mathbase.h"
 #include <iostream>
 
@@ -16,7 +16,7 @@ namespace obvious
 
 /***************************************************************************************************/
 
-FILRETVAL EuclidianFilterD::setInput(double *addr,const unsigned int inputSize)
+FILRETVAL EuclideanFilterD::setInput(double *addr,const unsigned int inputSize)
 {
 	_input=addr;
 	_size=inputSize;
@@ -25,7 +25,7 @@ FILRETVAL EuclidianFilterD::setInput(double *addr,const unsigned int inputSize)
 
 /***************************************************************************************************/
 
-FILRETVAL EuclidianFilterD::applyFilter(void)
+FILRETVAL EuclideanFilterD::applyFilter(void)
 {
 	if((!_input)||(!_output))
 	{
