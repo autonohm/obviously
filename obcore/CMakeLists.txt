@@ -25,8 +25,9 @@ add_library(obcore
 	base/tools.cpp
 	math/geometry.cpp
 	math/Matrix.cpp
-        math/MatD.cpp
-        math/MatRGB.cpp
+   math/MatD.cpp
+   math/MatRGB.cpp
+	filter/EuclidianFilterD.cpp
 	)
 
 # Braucht man glaube ich hier noch gar nicht?! (Knueppl)
