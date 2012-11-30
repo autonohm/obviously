@@ -28,6 +28,8 @@ if(EXISTS /usr/include/PMDSDK)
 	MESSAGE("Found PMDSDK. Will build driver for CamBoard Nano.")
 	ADD_EXECUTABLE(nanoStream nanoStream.cpp)
 	TARGET_LINK_LIBRARIES(nanoStream obgraphic obdevice obcore vtkHybrid gsl gslcblas -lpmdaccess2)
+	ADD_EXECUTABLE(nanoStreamIR nanoStreamIR.cpp)
+   TARGET_LINK_LIBRARIES(nanoStreamIR obgraphic obdevice obcore v4l2 glut GL -lpmdaccess2)
 endif()
 
 LINK_DIRECTORIES(/opt/ros/electric/stacks/perception_pcl/flann/lib64/)
