@@ -85,16 +85,20 @@ public:
    * @return pointer to coordinate buffer (layout x1y1z1x2...)
    */
   double* getCoords(void) const;
-
+  /**
+   * Function to return image of tof camera.
+   * @return image
+   */
   unsigned char* getImage(void) const;
   /**
    * Function to get the frame rate of sensor
    * @return   frame rate in pictures per second
    */
   float getFrameRate(void) const;
-
+  /**
+   * Function to get integration time of camera
+   */
   float getIntegrationTime(void) const;
-
   /**
    * Grab new image with filtering and validation
    * @return success of grabbing
