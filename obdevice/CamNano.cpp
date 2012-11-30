@@ -51,8 +51,11 @@ CamNano::CamNano()
 	_points = _size;
 
 	_coords    = new double[_size*3];
+	_image     = new unsigned char [_size];
+	_imageF    = new float[_size];
 
 	_meanAmp      = 0.0f;
+	_intTime      = 0.0f;
 	_autoIntegrat = true;
 	_frameRate    = 0.0f;
 	_rawSet       = false;
@@ -87,7 +90,6 @@ void CamNano::setRaw(bool raw)
 {
   _rawSet = raw;
 }
-
 /*
  * Function to get number of columns
  */
@@ -95,7 +97,6 @@ unsigned int CamNano::getCols(void) const
 {
 	return _cols;
 }
-
 /*
  * Function to get number of rows
  */
@@ -122,11 +123,9 @@ bool CamNano::grab()
 
   this->estimateFrameRate();
 
-  //_coords  = new double[_size*3];
-
   _res = pmdUpdate(_hnd);
   if (_res != PMD_OK)
-  {;
+  {
     LOGMSG(DBG_ERROR, "Error updating sensor");
     pmdClose (_hnd);
     return(false);
@@ -147,6 +146,8 @@ bool CamNano::grab()
 	_res = pmdGetDistances(_hnd, dist, sizeof(dist));
 	_res = pmdGetAmplitudes(_hnd, amp, sizeof(amp));
 	_res = pmdGet3DCoordinates(_hnd, coordsTmp, _size * sizeof(float) * 3);
+
+	_imageF = amp;
 
 	if (_rawSet)
 	  this->noFilterPoints(coordsTmp);
@@ -205,7 +206,28 @@ double* CamNano::getCoords() const
 {
 	return _coords;
 }
+/*
+ * Function to return image array
+ */
+unsigned char* CamNano::getImage(void) const
+{
+  float minMag = 1000;
+  float maxMag = 0;
+  for (int i = 0 ; i < _size ; i++)
+  {
+    if (_imageF[i] < minMag)
+      minMag = _imageF[i];
+    if (_imageF[i] > maxMag)
+      maxMag = _imageF[i];
+  }
 
+  float range = minMag - maxMag;
+  for (int i = 0 ; i < _size ; i++)
+  {
+     _image[i] = (unsigned char)((_imageF[i] - minMag)/range*255);
+  }
+  return _image;
+}
 /*
  * Function to return frame rate
  */
@@ -294,7 +316,9 @@ void CamNano::estimateFrameRate(void)
   _frameRate = 1 / (newTime - oldTime) * 1000;
   oldTime = newTime;
 }
-
+/*
+ * Function to set automatic integration time
+ */
 void CamNano::setAutoIntegration(void)
 {
   float time;
