@@ -7,7 +7,7 @@ using namespace obvious;
 
 Obvious3D*        _viewer;
 VtkCloud*         _cloud;
-CamNano*           _nano;
+CamNano*          _nano;
 bool              _pause       = false;
 bool              _showNormals = false;
 
@@ -26,11 +26,10 @@ public:
     {
       if(_nano->grab())
       {
-        int rows           = _nano->getRows();
-        int cols           = _nano->getCols();
-        int size           = _nano->getSize();
-        double* coords     = _nano->getCoords();
-        _cloud->setCoords(coords, size, 3);
+        std::cout << "Frame rate: \t\t" << _nano->getFrameRate() << std::endl;
+        std::cout << setprecision(3);
+        std::cout << "Integration value: \t" << _nano->getIntegrationTime() << std::endl;
+        _cloud->setCoords(_nano->getCoords(), _nano->getSize(), 3);
         _viewer->update();
       }
     }
@@ -45,9 +44,8 @@ int main(int argc, char* argv[])
 {
   _nano       = new CamNano();
   _cloud      = new VtkCloud();
-  _viewer     = new Obvious3D("KinectStreamShow", 1024, 768, 0, 0);
+  _viewer     = new Obvious3D("Nano Stream 3D", 1024, 768, 0, 0);
 
-  //_nano->setIntegrationTime(200);
   _nano->showParameters();
   _nano->setIntegrationAuto();
   _viewer->addCloud(_cloud);
