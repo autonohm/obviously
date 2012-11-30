@@ -85,11 +85,16 @@ public:
    * @return pointer to coordinate buffer (layout x1y1z1x2...)
    */
   double* getCoords(void) const;
+
+  unsigned char* getImage(void) const;
   /**
    * Function to get the frame rate of sensor
    * @return   frame rate in pictures per second
    */
-  float getFrameRate(void) const ;
+  float getFrameRate(void) const;
+
+  float getIntegrationTime(void) const;
+
   /**
    * Grab new image with filtering and validation
    * @return success of grabbing
@@ -161,9 +166,12 @@ private:
   unsigned int        _points;        ///< number of points 2d
 
   float               _meanAmp;       ///< mean amplitude for controller
+  float               _intTime;
 
   float               _frameRate;     ///< frame rate of grabbing
   double*             _coords;        ///< coords save as x1,y1,z1; x2, ...
+  unsigned char*      _image;         ///< 2d image
+  float*              _imageF;
   bool                _intrinsic;     ///< object gives back nondistrubed point cloud @see grub
   bool                _rawSet;        ///< TRUE for output of raw unfiltered data from sensor
   bool                _init;          ///< TRUE if camera initialized
