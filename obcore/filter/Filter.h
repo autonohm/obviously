@@ -31,6 +31,7 @@ public:
 	 * @return Returns error in an error case
 	 */
 	virtual FILRETVAL applyFilter(void)=0;
+protected:
 private:
 };
 
