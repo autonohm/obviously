@@ -7,23 +7,9 @@
 */
 
 #include "obcore/filter/CartesianFilter.h"
-#include <iostream>
 
 using namespace obvious;
 
-/*
- * Function to set input of filter
- */
-FILRETVAL CartesianFilter::setInput(double *addr,const unsigned int inputSize)
-{
-  _input = addr;
-  _size  = inputSize;
-  return(FILTER_OK);
-}
-
-/*
- * Funtion to apply filter
- */
 FILRETVAL CartesianFilter::applyFilter(void)
 {
   if((!_input)||(!_output))
