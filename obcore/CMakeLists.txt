@@ -30,8 +30,9 @@ add_library(obcore
    math/MatD.cpp
    math/MatRGB.cpp
    math/PID_Controller.cpp
-	filter/EuclidianFilterD.cpp
-	filter/EuclidianFilterVecD.cpp
+	filter/EuclideanFilterD.cpp
+	filter/EuclideanFilterVecD.cpp
+	filter/CartesianFilter.cpp
 	)
 
 # Braucht man glaube ich hier noch gar nicht?! (Knueppl)

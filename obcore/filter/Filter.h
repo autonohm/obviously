@@ -25,12 +25,13 @@ enum FILRETVAL{
 class Filter
 {
 public:
-	virtual ~Filter(){}
+	virtual ~Filter(){ }
 	/**
 	 * Function to start the filter
 	 * @return Returns error in an error case
 	 */
 	virtual FILRETVAL applyFilter(void)=0;
+protected:
 private:
 };
 

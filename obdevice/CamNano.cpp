@@ -175,13 +175,24 @@ void CamNano::setIntegrationTime(unsigned value)
 {
   _res = pmdSetIntegrationTime(_hnd, 0, value);
   if (_res != PMD_OK)
+  {
     LOGMSG(DBG_ERROR, "Wrong integration time");
+  }
+  else
+  {
+    _intTime = value;
+  }
 }
 
 
 void CamNano::setIntegrationAuto(bool autom)
 {
   _autoIntegrat = autom;
+}
+
+float CamNano::getIntegrationTime(void) const
+{
+  return (_intTime);
 }
 
 /*
@@ -321,10 +332,9 @@ void CamNano::estimateFrameRate(void)
  */
 void CamNano::setAutoIntegration(void)
 {
-  float time;
   _ctrl.setSetValue(300);
-  time = _ctrl.controll(_meanAmp);
-  setIntegrationTime(time);
+  _intTime = _ctrl.controll(_meanAmp);
+  setIntegrationTime(_intTime);
   if (_debug)
     this->showParameters();
 }

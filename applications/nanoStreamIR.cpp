@@ -29,7 +29,7 @@ int main(int argc, char* argv[])
     if (nano->grab())
       viewer.draw(nano->getImage(), width, height, 1);
   }
-  delete [] nano;
+  delete nano;
   return 0;
 }
 
