@@ -1,7 +1,7 @@
 /**
-* @file NormalFilter.h
-* @autor christian
-* @date  04.12.2012
+* @file   NormalFilter.h
+* @author Christian Pfitzner
+* @date   04.12.2012
 *
 *
 */
@@ -28,8 +28,8 @@ class Filter;
 typedef Point3D CustomAxis;
 
 /**
- * @class Class to filter points by its normals out of a given dataset of
- * 3d points in a double array to a specified angle and axis.
+ * @class NormalFilter  Class to filter points by its normals out of a
+ * given dataset of 3d points in a double array to a specified angle and axis.
  */
 class NormalFilter : public FilterBase
 {
@@ -67,7 +67,7 @@ public:
   /**
    * Function to start filtering
    *
-   * @note This function musst be called after setting input and output of
+   * @note This function must be called after setting input and output of
    * base class.
    */
   FILRETVAL applyFilter(void);

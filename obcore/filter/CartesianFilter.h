@@ -22,8 +22,8 @@ namespace obvious
 class Filter;
 
 /**
- * @class Class to filter points out of a given dataset of 3d points in a double
- * array
+ * @class   CartesianFilter   Class to filter points out of a given dataset
+ * of 3d points in a double array
  */
 class CartesianFilter : public FilterBase
 {

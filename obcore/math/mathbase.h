@@ -392,7 +392,7 @@ namespace obvious {
   }
 
   /**
-   * Calculates angle between two vectors
+   * @function  Calculates angle between two vectors
    * @param     vec1 vector one
    * @param     vec2 vector two
    * @return    smallest angle between vectors

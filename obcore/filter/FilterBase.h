@@ -16,6 +16,9 @@ namespace obvious
 
 class Filter;
 
+/**
+ * @class  FilterBase   Base class for filtering
+ */
 class FilterBase : public Filter
 {
 public:
