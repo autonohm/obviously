@@ -11,6 +11,8 @@
 #include <math.h>
 #include <algorithm>
 #include <iostream>
+#include <vector>
+
 using namespace std;
 
 #ifdef WIN32
@@ -297,6 +299,21 @@ namespace obvious {
 	  }
 	  return sqrt(sqr);
 	  }
+
+ /* double euklideanDistanceVecD(vector<double>::iterator *vec1,vector<double>::iterator *vec2)
+  {
+	  double abs=0;
+	  vector<double>::iterator iter1=*vec1;
+	  if(!vec2)
+	  {
+		  for(unsigned int i=0;i<3;i++)
+		  	{
+		  		abs+=*iter1*(*iter1);
+		  		iter1++;
+		  	}
+		}
+	  return(sqrt(abs));
+  }*/
 
   /**
    * Calculate the L1 distance between two n-dimensional points
