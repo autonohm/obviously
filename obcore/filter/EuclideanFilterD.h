@@ -26,7 +26,7 @@ class EuclideanFilterD : public FilterBase
 public:
 	EuclideanFilterD(void)
     : FilterBase() {}
-	virtual ~EuclideanFilterD(){}
+	//virtual ~EuclideanFilterD(){}
 
 	/**
 	 * Function to start the Filter

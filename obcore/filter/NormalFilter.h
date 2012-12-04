@@ -21,6 +21,10 @@ namespace obvious
 
 class Filter;
 
+/**
+ * @typedef Point3D to CustomAxis
+ * Axis similar to Point
+ */
 typedef Point3D CustomAxis;
 
 /**
@@ -33,12 +37,20 @@ public:
   /**
    * Default constructor with initialization
    */
-  NormalFilter()
+  NormalFilter(void)
     : FilterBase(),
       _outputNormals(NULL),
       _inputNormals(NULL),
       _axis(x),
       _customAxis(0, 0, 0) {  }
+  /**
+   * Default destructor
+   */
+  virtual ~NormalFilter(void)
+  {
+    delete [] _inputNormals;
+    delete [] _outputNormals;
+  }
   /**
    * Function to set input of filter
    * @param   addr        address of input data set

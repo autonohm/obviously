@@ -10,6 +10,9 @@
 
 using namespace obvious;
 
+/*
+ * Function to start filtering
+ */
 FILRETVAL CartesianFilter::applyFilter(void)
 {
   if((!_input)||(!_output))
@@ -17,6 +20,7 @@ FILRETVAL CartesianFilter::applyFilter(void)
     LOGMSG(DBG_ERROR, "Pointer to input or output invalid");
     return(FILTER_ERROR);
   }
+
   _validSize      = 0;
   double distance = 0;
   double *dPtr    = _input;

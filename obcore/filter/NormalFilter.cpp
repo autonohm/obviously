@@ -45,12 +45,10 @@ FILRETVAL NormalFilter::applyFilter(void)
 
   for(unsigned int i=0 ; i<_size ; )
   {
-    CustomAxis normal;
-    normal.setX(_inputNormals[i+x]);
-    normal.setY(_inputNormals[i+y]);
-    normal.setZ(_inputNormals[i+z]);
+    double normal[3] = {_inputNormals[i], _inputNormals[i+1], _inputNormals[i+2]};
+    double axis[3]   = {_customAxis[0],   _customAxis[1],     _customAxis[2]};
 
-    double angle = getAngleBetweenVec<CustomAxis>(_customAxis, normal);
+    double angle = getAngleBetweenVec<double>(normal, axis);
     if(angle > _threshold)
     {
       dPtr       += 3;

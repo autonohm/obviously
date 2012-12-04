@@ -1,9 +1,9 @@
 /**
-* @file FilterBase.h
-* @autor christian
-* @date  03.12.2012
+* @file   FilterBase.h
+* @author Christian
+* @date   03.12.2012
 *
-*
+* @todo implement method for filtering min and max
 */
 
 #ifndef FILTERBASE_H_
@@ -19,12 +19,23 @@ class Filter;
 class FilterBase : public Filter
 {
 public:
+  /**
+   * Standard constuctor with default parameters
+   */
   FilterBase()
     : _threshold(0),
-      _input(),
-      _output(),
+      _input(0),
+      _output(0),
       _size(0),
       _validSize(0) { }
+  /**
+   * Default destructor
+   */
+//  virtual ~FilterBase()
+//  {
+//    delete [] _input;
+//    delete [] _output;
+//  }
   /**
    * Function to set input of filter
    * @param   addr        address of input data set
@@ -53,10 +64,10 @@ public:
    */
   void setOutput(double *addr)          { _output    = addr; }
 protected:
-  double        _threshold;  ///< threshold for filtering
-  double*       _input;      ///< adress of the input buffer
-  unsigned int  _size;       ///< size of both buffers
-  double*       _output;     ///< adress of the output buffer
+  double*       _input;                 ///< adress of the input buffer
+  double*       _output;                ///< adress of the output buffer
+  double        _threshold;             ///< threshold for filtering
+  unsigned int  _size;                  ///< size of both buffers
   unsigned int  _validSize;
 private:
 };

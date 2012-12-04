@@ -1,6 +1,6 @@
 /**
-* @file CartesianFilter.h
-* @autor christian
+* @file  CartesianFilter.h
+* @author christian
 * @date  03.12.2012
 *
 *
@@ -24,8 +24,6 @@ class Filter;
 /**
  * @class Class to filter points out of a given dataset of 3d points in a double
  * array
- *
- *
  */
 class CartesianFilter : public FilterBase
 {
@@ -38,6 +36,9 @@ public:
       _axis(x) {  }
   /**
    * Function to start filtering
+   *
+   * @note This function musst be called after setting input and output of
+   * base class.
    */
   FILRETVAL applyFilter(void);
   /**
