@@ -1,8 +1,8 @@
 #ifndef __DEVICE_2D__
 #define __DEVICE_2D__
 
-#include "MatRGB.h"
-#include "CameraCalibration.h"
+#include "obcore/math/MatRGB.h"
+#include "obdevice/CameraCalibration.h"
 
 namespace xmlpp {
 class Node;

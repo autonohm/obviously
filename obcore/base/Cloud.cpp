@@ -1,47 +1,44 @@
 #include "Cloud.h"
 
-namespace {
-const unsigned int DIMENSIONS = 3;
-}
-
 namespace obvious {
 
 Cloud::Cloud(const unsigned int size, const double* coords, const unsigned char* rgb)
-    : _size(size),
-      _points(size, DIMENSIONS),
-      _rgb(rgb != 0 ? size : 0, 1)
+    : _coords(size),
+      _rgb(rgb ? size : 0)
 {
-    for (unsigned int row = 0; row < _points.rows(); row++)
-        for (unsigned int col = 0; col < _points.cols(); col++, coords++)
-            _points.at(row, col) = *coords;
-
-    for (unsigned int row = 0; row < _rgb.rows(); row++)
+    for (std::vector<VecD>::iterator it = _coords.begin(); it < _coords.end(); ++it)
     {
-        _rgb.at(row, 0, MatRGB::Red)   = *rgb++;
-        _rgb.at(row, 0, MatRGB::Green) = *rgb++;
-        _rgb.at(row, 0, MatRGB::Blue)  = *rgb++;
+        VecD vec(3);
+        vec.at(X) = *coords++;
+        vec.at(Y) = *coords++;
+        vec.at(Z) = *coords++;
+        (*it) = vec;
+    }
+
+    for (std::vector<RGBColor>::iterator it = _rgb.begin(); it < _rgb.end(); ++it)
+    {
+        (*it).setR(*rgb++);
+        (*it).setG(*rgb++);
+        (*it).setB(*rgb++);
     }
 }
 
 Cloud::Cloud(const std::vector<Point3D>& points, const std::vector<RGBColor>& color)
-    : _size(points.size()),
-      _points(points.size(), 3),
-      _rgb(color.size(), 1)
+    : _coords(points.size(), 3),
+      _rgb(color.size() ? points.size() : 0)
 {
+    std::vector<Point3D>::const_iterator itPoints = points.begin();
 
-    std::vector<Point3D>::const_iterator itP = points.begin();
-
-    for (unsigned int row = 0; row < _points.rows(); row++, ++itP)
+    for (std::vector<VecD>::iterator it = _coords.begin(); it < _coords.end(); ++it, ++itPoints)
     {
-        _points.at(row, X) = (*itP).x();
-        _points.at(row, Y) = (*itP).y();
-        _points.at(row, Z) = (*itP).z();
+        VecD vec(3);
+        vec.at(X) = (*itPoints).x();
+        vec.at(Y) = (*itPoints).y();
+        vec.at(Z) = (*itPoints).z();
+        (*it) = vec;
     }
 
-    std::vector<RGBColor>::const_iterator itC = color.begin();
-
-    for (unsigned int row = 0; row < _rgb.rows(); row++, ++itC)
-        _rgb.setRgb(row, 0, *itC);
+    _rgb = color;
 }
 
 } // end namespace obvious
