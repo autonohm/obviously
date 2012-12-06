@@ -19,8 +19,6 @@
 namespace obvious
 {
 
-class Filter;
-
 /**
  * @typedef Point3D to CustomAxis
  * Axis similar to Point
@@ -46,11 +44,15 @@ public:
   /**
    * Default destructor
    */
-  virtual ~NormalFilter(void)
-  {
-    delete [] _inputNormals;
-    delete [] _outputNormals;
-  }
+  ~NormalFilter(void) { }
+  /**
+   * Function to start filtering
+   *
+   * @note This function must be called after setting input and output of
+   * base class.
+   */
+  FILRETVAL applyFilter(void);
+  //~~~~~~~~~~~~~~~~~~ Functions to SET ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   /**
    * Function to set input of filter
    * @param   addr        address of input data set
@@ -64,21 +66,6 @@ public:
     _size         = inputSize;
     return(FILTER_OK);
   }
-  /**
-   * Function to start filtering
-   *
-   * @note This function must be called after setting input and output of
-   * base class.
-   */
-  FILRETVAL applyFilter(void);
-  /**
-   * @enum  axis  Enum for switching to xyz axis
-   */
-  enum Axis{
-    x,    /// z axis
-    y,    /// y axis
-    z     /// z axis
-  };
   /**
    * Function to set axis for cartesian filtering (cartesian axis)
    * @param   ax    axis to filter @see axis

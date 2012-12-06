@@ -43,27 +43,51 @@ FILRETVAL NormalFilter::applyFilter(void)
     _outputNormals[i] = 0.0;
   }
 
-  for(unsigned int i=0 ; i<_size ; )
+  if (_direction == FILTER_BIGGER)
   {
-    double normal[3] = {_inputNormals[i], _inputNormals[i+1], _inputNormals[i+2]};
-    double axis[3]   = {_customAxis[0],   _customAxis[1],     _customAxis[2]};
+    for(unsigned int i=0 ; i<_size ; i+=3) {
+      double normal[3] = {_inputNormals[i], _inputNormals[i+1], _inputNormals[i+2]};
+      double axis[3]   = {_customAxis[0],   _customAxis[1],     _customAxis[2]};
+      double angle     = getAngleBetweenVec<double>(normal, axis);
 
-    double angle = getAngleBetweenVec<double>(normal, axis);
-    if(angle > _threshold)
-    {
-      dPtr       += 3;
-      dPtrN      += 3;
-      _validSize += 3;
-    }
-    else
-    {
-      for(unsigned int j=0 ; j<3 ; j++)
+      if(angle > _threshold)
       {
-        *_output++        = *dPtr++;
-        *_outputNormals++ = *dPtr++;
+        dPtr       += 3;
+        dPtrN      += 3;
+      }
+      else
+      {
+        for(unsigned int j=0 ; j<3 ; j++)
+        {
+          *_output++        = *dPtr++;
+          *_outputNormals++ = *dPtr++;
+        }
+        _validSize += 3;
       }
     }
-    i += 3;
+  }
+  else // FILTER_SMALLER
+  {
+    for(unsigned int i=0 ; i<_size ; i+=3) {
+      double normal[3] = {_inputNormals[i], _inputNormals[i+1], _inputNormals[i+2]};
+      double axis[3]   = {_customAxis[0],   _customAxis[1],     _customAxis[2]};
+      double angle     = getAngleBetweenVec<double>(normal, axis);
+
+      if(angle <= _threshold)
+      {
+        dPtr       += 3;
+        dPtrN      += 3;
+      }
+      else
+      {
+        for(unsigned int j=0 ; j<3 ; j++)
+        {
+          *_output++        = *dPtr++;
+          *_outputNormals++ = *dPtr++;
+        }
+        _validSize += 3;
+      }
+    }
   }
   return(FILTER_OK);
 }

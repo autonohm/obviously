@@ -10,8 +10,7 @@
 #include <cmath>
 #include <iostream>
 
-namespace obvious
-{
+using namespace obvious;
 
 double absVector(vector<double>::iterator start);
 
@@ -53,6 +52,4 @@ double absVector(vector<double>::iterator start)
 }
 
 
-
-}  //End of namespace obvious
 

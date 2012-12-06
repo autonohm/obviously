@@ -14,8 +14,6 @@
 namespace obvious
 {
 
-class Filter;
-
 /**
  * @class EuclideanFilterD
  * Filter to push values from the input into the output buffer.
@@ -26,7 +24,8 @@ class EuclideanFilterD : public FilterBase
 public:
 	EuclideanFilterD(void)
     : FilterBase() {}
-	//virtual ~EuclideanFilterD(){}
+
+	virtual ~EuclideanFilterD(void) { }
 
 	/**
 	 * Function to start the Filter
@@ -34,6 +33,6 @@ public:
 	FILRETVAL applyFilter(void);
 };
 
-}
+} // namespace
 
 #endif /* EUCLIDEANFILTERD_H_ */

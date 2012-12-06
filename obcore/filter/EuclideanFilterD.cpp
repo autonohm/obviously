@@ -7,18 +7,16 @@
 
 #include "obcore/filter/EuclideanFilterD.h"
 #include "obcore/math/mathbase.h"
-#include <iostream>
 
 using std::cout;
 
-namespace obvious
-{
+using namespace obvious;
 
 FILRETVAL EuclideanFilterD::applyFilter(void)
 {
 	if((!_input)||(!_output))
 	{
-		cout<<"\nEUCLF: Pointer to input or output invalid!\n";
+	  LOGMSG(DBG_ERROR, "Pointer to input or output invalid");
 		return(FILTER_ERROR);
 	}
 	double depthVar = 0;
@@ -28,24 +26,34 @@ FILRETVAL EuclideanFilterD::applyFilter(void)
 	for(unsigned int i=0 ; i<_size ; i++)
 		_output[i]=0.0;
 
-	for(unsigned int i=0 ; i<_size/3 ; i++)
+	if (_direction == FILTER_BIGGER)
 	{
-		depthVar =	euklideanDistance<double>((double*)dPtr, NULL, 3);
-		if(depthVar > _threshold)
-		{
-		  _validSize += 3;
-		  dPtr       += 3;
-		}
-
-		else
-		{
-			for(unsigned int j=0 ; j<3 ; j++)
-				*_output++ = *dPtr++;
-		}
+    for(unsigned int i=0 ; i<_size ; i+=3) {
+      depthVar =  euklideanDistance<double>((double*)dPtr, NULL, 3);
+      if(depthVar > _threshold) {
+        dPtr += 3;
+      }
+      else {
+        for(unsigned int j=0 ; j<3 ; j++)
+          *_output++=*dPtr++;
+        _validSize += 3;
+      }
+    }
+	}
+	else // FILTER_SMALLER
+	{
+    for(unsigned int i=0 ; i<_size ; i+=3) {
+      depthVar =  euklideanDistance<double>((double*)dPtr, NULL, 3);
+      if(depthVar <= _threshold) {
+        dPtr += 3;
+      }
+      else {
+        for(unsigned int j=0 ; j<3 ; j++)
+          *_output++=*dPtr++;
+        _validSize += 3;
+      }
+    }
 	}
 	return(FILTER_OK);
 }
 
-/***************************************************************************************************/
-
-}

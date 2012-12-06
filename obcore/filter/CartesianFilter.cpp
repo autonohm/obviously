@@ -26,20 +26,33 @@ FILRETVAL CartesianFilter::applyFilter(void)
   double *dPtr    = _input;
 
   // init output array
-  for(unsigned int i=0;i<_size;i++)
+  for(unsigned int i=0 ; i<_size ; i++)
     _output[i]=0.0;
 
-  for(unsigned int i=_axis ; i<_size/3 ; i++)
+  if (_direction == FILTER_BIGGER)
   {
-    if(_input[i] > _threshold)
-    {
-      dPtr += 3;
-      _validSize += 3;
+    for(unsigned int i=_axis ; i<_size ; i+=3) {
+      if(_input[i] > _threshold) {
+        dPtr += 3;
+      }
+      else {
+        for(unsigned int j=0 ; j<3 ; j++)
+          *_output++=*dPtr++;
+        _validSize += 3;
+      }
     }
-    else
-    {
-      for(unsigned int j=0 ; j<3 ; j++)
-        *_output++=*dPtr++;
+  }
+  else // FILTER_SMALLER
+  {
+    for(unsigned int i=_axis ; i<_size ; i+=3) {
+      if(_input[i] <= _threshold) {
+        dPtr += 3;
+      }
+      else {
+        for(unsigned int j=0 ; j<3 ; j++)
+          *_output++=*dPtr++;
+        _validSize += 3;
+      }
     }
   }
   return(FILTER_OK);

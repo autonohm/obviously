@@ -11,7 +11,7 @@
 
 #include "obcore/filter/Filter.h"
 #include "obcore/filter/FilterBase.h"
-#include "obcore/base/Logger.h"
+
 
 /**
  * @namespace of obviously library
@@ -31,24 +31,17 @@ public:
   /**
    * Default constructor with initialization
    */
-  CartesianFilter()
+  CartesianFilter(void)
     : FilterBase(),
       _axis(x) {  }
+  ~CartesianFilter(void) { }
   /**
    * Function to start filtering
    *
-   * @note This function musst be called after setting input and output of
+   * @note This function must be called after setting input and output of
    * base class.
    */
   FILRETVAL applyFilter(void);
-  /**
-   * @enum  axis  Enum for switching to xyz axis
-   */
-  enum Axis{
-    x,    /// z axis
-    y,    /// y axis
-    z     /// z axis
-  };
   /**
    * Function to set axis for cartesian filtering
    * @param   ax    axis to filter @see axis
