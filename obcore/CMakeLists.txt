@@ -33,6 +33,8 @@ add_library(obcore
 	filter/EuclideanFilterD.cpp
 	filter/EuclideanFilterVecD.cpp
 	filter/CartesianFilter.cpp
+	filter/NormalFilter.cpp
+	filter/BoundingBoxFilter.cpp
 	)
 
 # Braucht man glaube ich hier noch gar nicht?! (Knueppl)

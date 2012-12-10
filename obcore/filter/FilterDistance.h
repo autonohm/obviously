@@ -28,7 +28,7 @@ public:
    * Standard constructor with initialization
    */
   FilterDistance()
-    : _centroid(0.0, 0.0, 0.0) { }
+    : _centroid(Point3D(0.0, 0.0, 0.0)) { }
   /**
    * virtual destructor
    */
@@ -49,7 +49,7 @@ protected:
    * @param   center      center of filter
    */
   virtual void setCentroidDefault(const Point3D& center) {_centroid = center; }
-  Point3D         _centroid;       ///< centroid to filter
+  Point3D         _centroid;          ///< centroid to filter
 };
 
 }; // namespace
