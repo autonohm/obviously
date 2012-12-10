@@ -1,7 +1,7 @@
 /**
-* @file  CartesianFilter.h
-* @author christian
-* @date  03.12.2012
+* @file   CartesianFilter.h
+* @author Christian Pfitzner
+* @date   03.12.2012
 *
 *
 */
@@ -9,31 +9,27 @@
 #ifndef CARTESIANFILTER_H_
 #define CARTESIANFILTER_H_
 
-#include "obcore/filter/Filter.h"
-#include "obcore/filter/FilterBase.h"
-
+#include "obcore/filter/FilterDistance.h"
 
 /**
- * @namespace of obviously library
+ * @namespace obvious
  */
 namespace obvious
 {
-
-class Filter;
-
+class FilterDistance;
 /**
- * @class   CartesianFilter   Class to filter points out of a given dataset
- * of 3d points in a double array
+ * @class   CartesianFilter
+ * Class to filter points out of a given dataset of 3d points in a double array
  */
-class CartesianFilter : public FilterBase
+class CartesianFilter : public FilterDistance
 {
 public:
   /**
    * Default constructor with initialization
    */
   CartesianFilter(void)
-    : FilterBase(),
-      _axis(x) {  }
+    : FilterDistance(),
+      _axis(x){ }
   ~CartesianFilter(void) { }
   /**
    * Function to start filtering
@@ -43,14 +39,17 @@ public:
    */
   FILRETVAL applyFilter(void);
   /**
-   * Function to set axis for cartesian filtering
-   * @param   ax    axis to filter @see axis
+   * Function to set specified axis for filtering
+   * @param   a   defined axis
    */
-  void setAxis(const Axis ax)         { _axis      = ax; }
-protected:
+  void setAxis(const Axis& a);
+  /**
+   * Function to set centroid for filtering
+   * @param   center   center point
+   */
+  void setCentroid(const Point3D& center);
 private:
-  Axis          _axis;       ///< axis to filter
-
+  Axis            _axis;           ///< axis to filter
 };
 
 };  //namespace

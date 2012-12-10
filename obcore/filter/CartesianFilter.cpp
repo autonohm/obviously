@@ -31,33 +31,48 @@ FILRETVAL CartesianFilter::applyFilter(void)
 
   if (_direction == FILTER_BIGGER)
   {
-    for(unsigned int i=_axis ; i<_size ; i+=3) {
-      if(_input[i] > _threshold) {
-        dPtr += 3;
+    for(unsigned int i=_axis ; i<_size ; i+=Point3D::sizeP) {
+      if((_input[i]+_centroid[_axis]) > _threshold) {
+        dPtr += Point3D::sizeP;
       }
       else {
-        for(unsigned int j=0 ; j<3 ; j++)
+        for(unsigned int j=0 ; j<Point3D::sizeP ; j++)
           *_output++=*dPtr++;
-        _validSize += 3;
+        _validSize += Point3D::sizeP;
       }
     }
   }
   else // FILTER_SMALLER
   {
-    for(unsigned int i=_axis ; i<_size ; i+=3) {
-      if(_input[i] <= _threshold) {
-        dPtr += 3;
+    for(unsigned int i=_axis ; i<_size ; i+=Point3D::sizeP) {
+      if((_input[i]+_centroid[_axis]) <= _threshold) {
+        dPtr += Point3D::sizeP;
       }
       else {
-        for(unsigned int j=0 ; j<3 ; j++)
+        for(unsigned int j=0 ; j<Point3D::sizeP ; j++)
           *_output++=*dPtr++;
-        _validSize += 3;
+        _validSize += Point3D::sizeP;
       }
     }
   }
   return(FILTER_OK);
 }
 
+/*
+ * Function to set axis
+ */
+void CartesianFilter::setAxis(const Axis& a)
+{
+  _axis = a;
+}
+
+/*
+ * Function to set centroid
+ */
+void CartesianFilter::setCentroid(const Point3D& center)
+{
+  setCentroidDefault(center);
+}
 
 
 

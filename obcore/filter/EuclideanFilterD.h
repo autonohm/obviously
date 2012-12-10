@@ -8,31 +8,41 @@
 #ifndef EUCLIDEANFILTERD_H_
 #define EUCLIDEANFILTERD_H_
 
-#include "obcore/filter/Filter.h"
-#include "obcore/filter/FilterBase.h"
-
-namespace obvious
-{
+#include "obcore/filter/FilterDistance.h"
 
 /**
- * @class EuclideanFilterD
- * Filter to push values from the input into the output buffer.
- * Values which amount is bigger than a threshold, won't be copied.
+ * @namespace obvious
  */
-class EuclideanFilterD : public FilterBase
+namespace obvious
+{
+/**
+ * @class  EuclideanFilterD
+ * @brief  Filter to push values from the input into the output buffer.
+ *         Values which amount is bigger than a threshold, won't be copied.
+ */
+class EuclideanFilterD : public FilterDistance
 {
 public:
+  /**
+   * Default constructor
+   */
 	EuclideanFilterD(void)
-    : FilterBase() {}
-
+    : FilterDistance()    { }
+	/**
+	 * virtual destructor
+	 */
 	virtual ~EuclideanFilterD(void) { }
-
 	/**
 	 * Function to start the Filter
 	 */
 	FILRETVAL applyFilter(void);
+	/**
+   * Function to set centroid for filtering
+   * @param   center   center point
+   */
+	void setCentroid(const Point3D& center);
 };
 
-} // namespace
+}; // namespace
 
 #endif /* EUCLIDEANFILTERD_H_ */

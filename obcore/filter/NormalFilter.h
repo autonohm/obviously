@@ -2,8 +2,6 @@
 * @file   NormalFilter.h
 * @author Christian Pfitzner
 * @date   04.12.2012
-*
-*
 */
 
 #ifndef NORMALFILTER_H_
@@ -11,32 +9,33 @@
 
 #include "obcore/Point3D.h"
 #include "obcore/math/mathbase.h"
-#include "obcore/filter/FilterBase.h"
+#include "obcore/filter/Filter.h"
 
 /**
- * @namespace of obviously library
+ * @namespace obvious
  */
 namespace obvious
 {
-
 /**
- * @typedef Point3D to CustomAxis
+ * @typedef CustomAxis
  * Axis similar to Point
  */
 typedef Point3D CustomAxis;
 
 /**
- * @class NormalFilter  Class to filter points by its normals out of a
- * given dataset of 3d points in a double array to a specified angle and axis.
+ * @class   NormalFilter
+ * @brief   Class to filter points by its normals out of a
+ *          given dataset of 3d points in a double array to a specified
+ *          angle and axis.
  */
-class NormalFilter : public FilterBase
+class NormalFilter : public Filter
 {
 public:
   /**
    * Default constructor with initialization
    */
   NormalFilter(void)
-    : FilterBase(),
+    : Filter(),
       _outputNormals(NULL),
       _inputNormals(NULL),
       _axis(x),

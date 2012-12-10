@@ -22,6 +22,8 @@ enum Axis{
   Y,      //!< Y
   Z       //!< Z
 };
+
+
 /**
  * @class Point3D   Class for points in R3 euclidian space
  */
@@ -119,6 +121,7 @@ public:
                    <<        "\ty: " << p._y
                    <<        "\tz: " << p._z << std::endl;
     }
+    const static unsigned int sizeP = 3;
 protected:
     double _x;          //!< x element of point
     double _y;          //!< y element of point

@@ -39,13 +39,14 @@ int main(int argc, char* argv[])
   }
   std::cout << std::endl;
 
-  Filter* pFilter = filterCartesian;
+  // Interface for filters of obcore
+  IFilter* pFilter = filterCartesian;
 
-  filterCartesian->setAxis(Filter::x);   // set axis to filter
+  filterCartesian->setAxis(IFilter::x);   // set axis to filter
   pFilter->setThreshold(2.0);             // specifiy threshold
   pFilter->setInput(coords, size);        // set input and size of data
   pFilter->setOutput(coordsOut);          // get output address
-  pFilter->setFilterDirection(Filter::FILTER_SMALLER);
+  pFilter->setFilterDirection(FILTER_BIGGER);
   pFilter->applyFilter();                 // start filtering
   std::cout << "************************************" << std::endl <<
                "* Cartesian Filter"                   << std::endl <<
