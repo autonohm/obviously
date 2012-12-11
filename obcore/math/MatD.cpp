@@ -230,11 +230,41 @@ MatD& MatD::operator=(MatD mat)
     return *this;
 }
 
-MatD MatD::operator*(const MatD& mat)
+MatD MatD::operator*(const MatD& mat) const
 {
-    MatD matN(GSL(_data[0])->size1, GSL(mat._data[0])->size2);
-    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, GSL(_data[0]), GSL(mat._data[0]), 0.0, GSL(matN._data[0]));
+    if (!mat.channels())
+        return MatD();
+
+    MatD matN(GSL(_data[0])->size1, GSL(mat._data[0])->size2, mat.channels());
+
+    for (unsigned int channel = 0; channel < mat.channels(); channel++)
+        gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, GSL(_data[channel]), GSL(mat._data[channel]), 0.0, GSL(matN._data[channel]));
+
     return matN;
+}
+
+MatD& MatD::operator/=(const double number)
+{
+    if (!_data.size() || number == 0.0)
+        return *this;
+
+    for (unsigned int channel = 0; channel < _data.size(); channel++)
+        for (unsigned int row = 0; row < _rows; row++)
+            for (unsigned int col = 0; col < _cols; col++)
+                *gsl_matrix_ptr(GSL(_data[channel]), row, col) /= number;
+}
+
+double MatD::det(const unsigned int channel) const
+{
+    int signum;
+    double det;
+
+    gsl_permutation *p = gsl_permutation_alloc(GSL(_data[channel])->size1);
+    gsl_linalg_LU_decomp(GSL(_data[channel]), p, &signum);
+    det = gsl_linalg_LU_det(GSL(_data[channel]), signum);
+    gsl_permutation_free(p);
+
+    return det;
 }
 
 }

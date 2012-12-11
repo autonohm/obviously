@@ -65,7 +65,13 @@ public:
     MatD& operator=(MatD mat);
 
     //! compute a marix matrix product
-    MatD operator*(const MatD& mat);
+    MatD operator*(const MatD& mat) const;
+
+    //! div matrix throw number
+    MatD& operator/=(const double number);
+
+    //! compute det of matrix
+    double det(const unsigned int channel = 0) const;
 
 private:
     void freeData(void);

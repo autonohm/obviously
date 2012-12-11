@@ -25,6 +25,7 @@ public:
     void setIntrinsic(const MatD& intrinsic)   { intrinsic.copyTo(_intrinsic); }
     const VecD& distortion(void) const         { return _distortion; }
     void setDistortion(const VecD& distCoeffs) { distCoeffs.copyTo(_distortion); }
+    bool valid(void) const;
 
     void correctImage(MatRGB& image);
 

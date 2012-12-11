@@ -56,6 +56,11 @@ CameraCalibration::CameraCalibration(const xmlpp::Node* node)
     }
 }
 
+bool CameraCalibration::valid(void) const
+{
+    return _intrinsic.rows() == 3 && _intrinsic.cols() == 3 && _distortion.size() == 5;
+}
+
 void CameraCalibration::createXml(xmlpp::Node* node) const
 {
     /* create tags */
