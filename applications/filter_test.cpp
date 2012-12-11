@@ -1,7 +1,7 @@
 /**
 * @file   filter_test.cpp
 * @author Christian Pfitzner
-* @date   03.12.2012
+* @date   11.12.2012
 *
 *
 */
@@ -11,101 +11,153 @@
 #include "obcore/filter/CartesianFilter.h"
 #include "obcore/filter/EuclideanFilterD.h"
 #include "obcore/filter/BoundingBoxFilter.h"
-
-#include "obcore/Point3D.h"
+#include "obgraphic/Obvious3D.h"
+#include <vector>
 
 using namespace obvious;
+using namespace std;
 
-int main(int argc, char* argv[])
+// enum for state control
+enum State{
+  RESET,
+  CART,
+  EUC,
+  BB
+};
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~ init global variables ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+unsigned int size = 200000;
+Obvious3D*  viewer;
+VtkCloud*   cloud;
+
+IFilter*            _filter;
+CartesianFilter*    filterCartesian;
+EuclideanFilterD*   filterEuclidean;
+BoundingBoxFilter*  filterBB;
+
+double* coords    = new double[size*3];
+double* coordsOut = new double[size*3];
+State state;
+
+
+class vtkTimerCallback : public vtkCommand
 {
-  const unsigned int size = 12;
-  CartesianFilter*    filterCartesian = new CartesianFilter;
-  EuclideanFilterD*   filterEuclidean = new EuclideanFilterD;
-  BoundingBoxFilter* _pBBFilter       = new BoundingBoxFilter;
-
-  double coords[size]    = { 1.2,  1.7,  1.6,
-                             2.1,  0.1,  0.9,
-                             3.4, -2.1,  0.1,
-                            -1.2, -3.1,  2.3};
-  double coordsOut[size];
-
-  std::cout << "************************************" << std::endl <<
-               "* Input"                              << std::endl <<
-               "**" << std::endl;
-  for (unsigned int i = 0 ; i < size ; )
+public:
+  static vtkTimerCallback *New()
   {
-    std::cout << "Point: \t" << coords[i]   << " \t"
-                             << coords[i+1] << " \t"
-                             << coords[i+2] << std::endl;
-    i += 3;
+    vtkTimerCallback *cb = new vtkTimerCallback;
+    return cb;
   }
-  std::cout << std::endl;
 
-  // Interface for filters of obcore
-  IFilter* pFilter = filterCartesian;
-
-  filterCartesian->setAxis(IFilter::x);   // set axis to filter
-  pFilter->setThreshold(2.0);             // specifiy threshold
-  pFilter->setInput(coords, size);        // set input and size of data
-  pFilter->setOutput(coordsOut);          // get output address
-  pFilter->setFilterDirection(FILTER_BIGGER);
-  pFilter->applyFilter();                 // start filtering
-  std::cout << "************************************" << std::endl <<
-               "* Cartesian Filter"                   << std::endl <<
-               "**" << std::endl <<
-               "* Threshold \t2.0"                    << std::endl <<
-               "* Axis \t\tx"                         << std::endl <<
-               "**" << std::endl;
-  for (unsigned int i = 0 ; i < pFilter->getValidSize() ; i += 3)
+  virtual void Execute(vtkObject *vtkNotUsed(caller), unsigned long eventId,  void *vtkNotUsed(callData))
   {
-    std::cout << "Point: \t" << coordsOut[i]   << " \t"
-                             << coordsOut[i+1] << " \t"
-                             << coordsOut[i+2] << std::endl;
-  }
-  std::cout << std::endl;
+    unsigned int validSize;
+      if (state == CART)
+      {
+        _filter = filterCartesian;
+        filterCartesian->setAxis(IFilter::x);   // set axis to filter
+        filterCartesian->setThreshold(2.0);             // specifiy threshold
+        filterCartesian->setInput(coords, size);        // set input and size of data
+        filterCartesian->setOutput(coordsOut);          // get output address
+        filterCartesian->setFilterDirection(FILTER_BIGGER);
+        filterCartesian->applyFilter();                 // start filtering
+        validSize = filterCartesian->getValidSize();
+      }
+      else if (state == EUC)
+      {
+        _filter = filterEuclidean;
+        filterEuclidean->setThreshold(4.0);            // set threshold to filter
+        filterEuclidean->setInput(coords, size);       // set input and size of data
+        filterEuclidean->setOutput(coordsOut);         // get output address
+        filterEuclidean->setFilterDirection(FILTER_SMALLER);
+        filterEuclidean->applyFilter();                // start filtering
+        validSize = filterEuclidean->getValidSize();
+      }
+      else if (state == BB)
+      {
+        _filter = filterBB;
+        filterBB->setCentroid(Point3D(0.0, 0.0, 0.0));
+        filterBB->setDimension(2.0f, 1.0f, 5.0f);
+        filterBB->setInput(coords, size);        // set input and size of data
+        filterBB->setOutput(coordsOut);         // get output address
+        filterBB->applyFilter();
+        validSize = filterBB->getValidSize();
+      }
+      else // state == RESET
+      {
+        for (unsigned int i=0 ; i<size ; i++)
+          coordsOut[i] = coords[i];
+        validSize = size;
+      }
 
-  filterEuclidean->setThreshold(3.2);            // set threshold to filter
-  filterEuclidean->setInput(coords, size);       // set input and size of data
-  filterEuclidean->setOutput(coordsOut);         // get output address
-  filterEuclidean->applyFilter();                // start filtering
-  std::cout << "************************************" << std::endl <<
-               "* Euclidean Filter"                   << std::endl <<
-               "**" << std::endl <<
-               "* Threshold \t3.2"                    << std::endl <<
-               "**" << std::endl;
-  for (unsigned int i = 0 ; i < filterEuclidean->getValidSize() ; i += 3)
-  {
-    std::cout << "Point: \t" << coordsOut[i]   << " \t"
-                             << coordsOut[i+1] << " \t"
-                             << coordsOut[i+2] << std::endl;
-  }
-  std::cout << std::endl;
+      cloud->setCoords(coordsOut, validSize, 3);
+      viewer->update();
+   }
+};
 
+//~~~~~~~~~~~~~~~~~~~~~~~~~ functions to switch states ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-  _pBBFilter->setCentroid(Point3D(0.0, 0.0, 0.0));
-  _pBBFilter->setDimension(3.0f);
-  _pBBFilter->setInput(coords, size);        // set input and size of data
-  _pBBFilter->setOutput(coordsOut);         // get output address
-  _pBBFilter->applyFilter();
-
-  std::cout << "************************************" << std::endl <<
-               "* Bounding Box Filter"                   << std::endl <<
-               "**" << std::endl;
-  for (unsigned int i = 0 ; i < _pBBFilter->getValidSize() ; i += 3 )
-  {
-    std::cout << "Point: \t" << coordsOut[i]   << " \t"
-                             << coordsOut[i+1] << " \t"
-                             << coordsOut[i+2] << std::endl;
-  }
-  std::cout << std::endl;
-
-  delete filterCartesian;
-  delete filterEuclidean;
-  delete _pBBFilter;
+void state0(void)
+{
+  state = RESET;
 }
 
+void state1(void)
+{
+  state = CART;
+}
 
+void state2(void)
+{
+  state = EUC;
+}
 
+void state3(void)
+{
+  state = BB;
+}
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ main ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+int main(int argc, char *argv[])
+{
+  std::cout << "*** Test for filters of obcore ***" << std::endl;
+  std::cout << "Use keyboard for switching filters" << std::endl;
+  std::cout << "\t" << "a: Cartesian Filter" << std::endl;
+  std::cout << "\t" << "s: Euclidean Filter" << std::endl;
+  std::cout << "\t" << "d: Bouding Box Filter" << std::endl;
+  std::cout << "\t" << "r: Reset" << std::endl;
+  std::cout << "\t" << "q: Quit" << std::endl;
+  cloud = VtkCloud::createRandom(size, 5.0);
+  cloud->copyCoords(coords);
+  state = RESET;
+
+  IFilter* _filter = NULL;
+  filterCartesian = new CartesianFilter;
+  filterEuclidean = new EuclideanFilterD;
+  filterBB        = new BoundingBoxFilter;
+
+  viewer = new Obvious3D();
+  viewer->addCloud(cloud);
+
+  vtkSmartPointer<vtkTimerCallback> cb =  vtkSmartPointer<vtkTimerCallback>::New();
+  vtkSmartPointer<vtkRenderWindowInteractor> interactor = viewer->getWindowInteractor();
+  interactor->AddObserver(vtkCommand::TimerEvent, cb);
+
+  interactor->CreateRepeatingTimer(30);
+  viewer->registerKeyboardCallback("r", state0);
+  viewer->registerKeyboardCallback("a", state1);
+  viewer->registerKeyboardCallback("s", state2);
+  viewer->registerKeyboardCallback("d", state3);
+
+  viewer->startRendering(); // loop
+
+  delete viewer;
+  delete cloud;
+  delete filterCartesian;
+  delete filterEuclidean;
+  delete filterBB;
+}
 
 
 

@@ -73,7 +73,7 @@ TARGET_LINK_LIBRARIES(read_lua_config lua5.1)
 TARGET_LINK_LIBRARIES(logging_example obcore)
 TARGET_LINK_LIBRARIES(tsd_test obvision obgraphic obcore vtkHybrid gsl gslcblas)
 TARGET_LINK_LIBRARIES(showCloud obgraphic obcore vtkHybrid gsl gslcblas)
-TARGET_LINK_LIBRARIES(filterTest obcore)
+TARGET_LINK_LIBRARIES(filterTest vtkHybrid obgraphic obcore gsl gslcblas)
 
 
 
