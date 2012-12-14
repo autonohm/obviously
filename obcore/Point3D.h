@@ -7,6 +7,7 @@
 #ifndef __POINT_3D__
 #define __POINT_3D__
 
+#include "obcore/Axis.h"
 #include "obcore/base/Logger.h"
 #include <iostream>
 
@@ -14,15 +15,6 @@
  * @namespace of obviously library
  */
 namespace obvious {
-/**
- * @enum Idx for index operator
- */
-enum Axis{
-  X,      //!< X
-  Y,      //!< Y
-  Z       //!< Z
-};
-
 
 /**
  * @class Point3D   Class for points in R3 euclidian space
@@ -47,7 +39,7 @@ public:
     /**
      * Standard destructor
      */
-    virtual ~Point3D(void) { }
+    ~Point3D(void) { }
     /**
      * Function to return x value
      * @return    x value
@@ -83,7 +75,7 @@ public:
      * @param     right   object of Point3D
      * @return    object of Point3D
      */
-    virtual Point3D& operator= (const Point3D& right) { _x  = right._x; _y  = right._y; _z  = right._z; return *this; }
+    Point3D& operator= (const Point3D& right) { _x  = right._x; _y  = right._y; _z  = right._z; return *this; }
     /**
      * Index operator [] to return ref on member for read and write access
      * @param[in]   index     index of member @see Axis
