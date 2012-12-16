@@ -20,7 +20,7 @@ Projection::Projection(double* proj_data)
 	// Generate projection matrix
 	_projection=new Matrix(3,4);
 	_projection->setData(proj_data);
-	LOGMSG(DBG_DEBUG, "Projection Matrix has been set to\n"<<*_projection);
+	//LOGMSG(DBG_DEBUG, "Projection Matrix has been set to\n"<<*_projection);
 }
 
 /*****************************************************************************************************************************/

@@ -26,7 +26,6 @@ class Projection {
 	  * @param depth value of depth image at given pixel
 	  * @param point3 point with homogenous coordinates (x,y,z,1) has to be allocated by calling function
 	  */
-
     MSG get_point3(const unsigned int col, const unsigned int row, const double depth, Matrix* point3);
 
     /**
