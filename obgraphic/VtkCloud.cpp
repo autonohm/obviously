@@ -18,6 +18,7 @@
 #include <vtkIdList.h>
 #include <vtkTriangle.h>
 #include <vtkCellArray.h>
+#include <vtkPointSource.h>
 
 #include "obcore/math/mathbase.h"
 
@@ -522,6 +523,27 @@ VtkCloud* VtkCloud::createExample()
 
   delete [] data;
   delete [] colors;
+
+  return cloud;
+}
+
+VtkCloud* VtkCloud::createRandom(unsigned int nrPoints, double radius)
+{
+  VtkCloud* cloud = new VtkCloud();
+
+  // Create a point cloud
+  vtkSmartPointer<vtkPointSource> pointSource =
+    vtkSmartPointer<vtkPointSource>::New();
+  pointSource->SetCenter(0.0, 0.0, 0.0);
+  pointSource->SetNumberOfPoints(nrPoints);
+  pointSource->SetRadius(radius);
+  pointSource->Update();
+
+  vtkSmartPointer<vtkVertexGlyphFilter> glyphFilter =  vtkSmartPointer<vtkVertexGlyphFilter>::New();
+  glyphFilter->SetInputConnection(pointSource->GetOutput()->GetProducerPort());
+  glyphFilter->Update();
+
+  cloud->getPolyData()->ShallowCopy(glyphFilter->GetOutput());
 
   return cloud;
 }

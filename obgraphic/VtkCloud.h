@@ -159,6 +159,8 @@ public:
    */
   static VtkCloud* createExample();
 
+  static VtkCloud* createRandom(unsigned int nrPoints, double radius);
+
 private:
 
   vtkSmartPointer<vtkPolyData> _polyData;

@@ -37,6 +37,8 @@ class Projection {
 
     MSG project2Plane(const Matrix* point3, double* col, double* row);
 
+    obvious::Matrix *getProjection(void){return(_projection);}
+
   private:
     obvious::Matrix * _projection;
 

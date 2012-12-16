@@ -25,8 +25,11 @@ using std::vector;
 class EuclideanFilterVecD : public Filter
 {
 public:
-	EuclideanFilterVecD(void){}
-	virtual ~EuclideanFilterVecD(){}
+	EuclideanFilterVecD(void)
+    : _threshold(0.0),
+      _output(NULL),
+      _input(NULL) { }
+	virtual ~EuclideanFilterVecD(){ }
 
 
 	/**
