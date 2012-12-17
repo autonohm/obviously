@@ -57,8 +57,9 @@ public:
         _icp->setScene(scene->getCoords(), scene->getNormals());
 
         double rms;
+        unsigned int pairs;
         unsigned int it;
-        EnumIcpState state  = _icp->iterate(&rms, &it);
+        EnumIcpState state  = _icp->iterate(&rms, &pairs, &it);
 
         Matrix* T           = _icp->getFinalTransformation();
         /*cout << "print T" << endl;
