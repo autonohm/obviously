@@ -111,12 +111,13 @@ int main(int argc, char* argv[])
 void iterateCallback()
 {
   double rms;
+  unsigned int pairs;
   unsigned int iterations;
 
   _icp->reset();
   Timer timer;
-  EnumIcpState state  = _icp->iterate(&rms, &iterations);
-  cout << "elapsed (" << iterations << " iterations): "  << timer.getTime() << " ms , rms = " << rms << endl;
+  EnumIcpState state  = _icp->iterate(&rms, &pairs, &iterations);
+  cout << "elapsed (" << iterations << " iterations): "  << timer.getTime() << " ms , rms = " << rms << ", # of pairs: " << pairs << endl;
 
   Matrix* T           = _icp->getFinalTransformation();
   double Tdata[16];
@@ -128,10 +129,11 @@ void iterateCallback()
 void stepCallback()
 {
   double rms;
+  unsigned int pairs;
 
   Timer timer;
-  EnumIcpState state  = _icp->step(&rms);
-  cout << "elapsed (step): " << timer.getTime() << " ms , rms = " << rms << endl;
+  EnumIcpState state  = _icp->step(&rms, &pairs);
+  cout << "elapsed (step): " << timer.getTime() << " ms , rms = " << rms << ", # of pairs: " << pairs << endl;
 
   Matrix* T           = _icp->getLastTransformation();
   double Tdata[16];

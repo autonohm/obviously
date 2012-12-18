@@ -101,31 +101,56 @@ public:
 	double getMaxRMS();
 	
 	/**
-	 * Set maximal iteration steps
+	 * Set maximum number of iteration steps
 	 * @param nIterations maximum number of iteration steps
 	 */
 	void setMaxIterations(unsigned int iterations);
 	
+	/**
+	 * Get maximum number of iteration steps
+	 * @return maximum number of iteration steps
+	 */
 	unsigned int getMaxIterations();
 
+	/**
+	 * If the RMS error is not reducing within this number, the matching process is considered as successful.
+	 * @param convCnt convergence counter
+	 */
 	void setConvergenceCounter(unsigned int convCnt);
 
+	/**
+	 * Access convergence counter
+	 * @param convCnt convergence counter
+	 */
 	unsigned int getConvergenceCounter();
 
-	EnumIcpState step(double* rms);
+	/**
+	 * Perform one iteration
+	 * @param rms return value of RMS error
+	 * @param pairs return value of pair assignments, i.e. number of pairs
+	 * @return processing state
+	 */
+	EnumIcpState step(double* rms, unsigned int* pairs);
 
 	/**
-	 * Start iteration.
+	 * Start iteration
 	 * @param rms return value of RMS error
-	 * @return state of finished and successful processing
+	 * @param pairs return value of pair assignments, i.e. number of pairs
+	 * @param iterations return value of performed iterations
+	 * @return  processing state
 	 */
-	EnumIcpState iterate(double* rms, unsigned int* iterations);
+	EnumIcpState iterate(double* rms, unsigned int* pairs, unsigned int* iterations);
 	
 	/**
-	 * get final rotation matrix determined through iteration
-	 * @return final rotation matrix
+	 * Get final rotation matrix determined through iteration
+	 * @return final transformation matrix
 	 */
 	Matrix* getFinalTransformation();
+
+	/**
+	 * Get last rotation matrix determined within the last iteration step
+	 * @return last transformation matrix
+	 */
 	Matrix* getLastTransformation();
 	
 private:
@@ -156,7 +181,7 @@ private:
 	double** _model;
 
 	double** _normalsM;
-  double** _normalsS;
+    double** _normalsS;
 
 	/** 
 	 * size of model 
@@ -196,7 +221,6 @@ private:
 	/**
 	 * final matrix, found after iteration
 	 */
-	
 	//gsl_matrix* _finalMatrix;
 	Matrix* _Tfinal;
 	Matrix* _Tlast;

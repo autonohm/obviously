@@ -204,7 +204,7 @@ void Icp::applyTransformation(double** data, unsigned int size, unsigned int dim
 }
 
 
-EnumIcpState Icp::step(double* rms)
+EnumIcpState Icp::step(double* rms, unsigned int* pairs)
 {
   if(_model==NULL || _scene == NULL) return ICP_ERROR;
 
@@ -213,6 +213,7 @@ EnumIcpState Icp::step(double* rms)
   _assigner->determinePairs(_scene, _sizeScene);
 
   pvPairs = _assigner->getPairs();
+  *pairs = pvPairs->size();
 
   if(pvPairs->size()>2)
   {
@@ -243,7 +244,7 @@ EnumIcpState Icp::step(double* rms)
   return ICP_PROCESSING;
 }
 
-EnumIcpState Icp::iterate(double* rms, unsigned int* iterations)
+EnumIcpState Icp::iterate(double* rms, unsigned int* pairs, unsigned int* iterations)
 {
   EnumIcpState eRetval = ICP_PROCESSING;
   unsigned int iter = 0;
@@ -251,7 +252,7 @@ EnumIcpState Icp::iterate(double* rms, unsigned int* iterations)
   unsigned int conv_cnt = 0;
   while( eRetval == ICP_PROCESSING )
   {
-    eRetval = step(rms);
+    eRetval = step(rms, pairs);
 
     iter++;
 

@@ -49,8 +49,9 @@ int main(int argc, char** argv)
   icp->setMaxIterations(iterations);
 
   double rms;
+  unsigned int pairs;
   unsigned int it;
-  icp->iterate(&rms, &it);
+  icp->iterate(&rms, &pairs, &it);
   Matrix* F = icp->getFinalTransformation();
 
   gsl_matrix_fprintf(stdout, F->getBuffer(), "%f");
