@@ -35,6 +35,7 @@ add_library(obcore
 	filter/CartesianFilter.cpp
 	filter/NormalFilter.cpp
 	filter/BoundingBoxFilter.cpp
+	Grid2D.cpp
 	)
 
 # Braucht man glaube ich hier noch gar nicht?! (Knueppl)
