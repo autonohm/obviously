@@ -12,6 +12,7 @@
 #define __POINT__
 
 #include <iostream>
+#include "obcore/math/mathbase.h"
 #include "obcore/Axis.h"
 
 namespace obvious {
@@ -46,8 +47,7 @@ public:
      * Index operator [] to return ref on member for read and write access
      * @param[in]   index     index of member @see Axis
      */
-    T& operator[](int idx)
-    {
+    T& operator[](int idx) {
       if (idx == X)
       {
         return _x;
@@ -55,16 +55,49 @@ public:
       else if (idx == Y) return _y;
     }
     /**
-     * Overloaded comparison operator for class Point3D
-     * @param     right   Object of Point3D
+     * Overloaded comparison operator for class Point
+     * @param     right   Object of Point
      * @return    TRUE if both objects have the same values
      */
-    bool operator==(const Point& right) const
-    {
+    bool operator==(const Point& right) const {
       if ((_x == right._x) && (_y == right._y))
         return(true);
       else
         return(false);
+    }
+    /**
+     * Overloaded comparison operator for class Point
+     * @param[in]     right   Object of Point
+     * @return    TRUE if objects are different
+     */
+    bool operator!=(const Point& right) const {
+      return !(this->operator ==(right));
+    }
+    /**
+     * Overloaded comparison operator LESS for class Point
+     * @param[in]     right   Object of Point
+     * @return    TRUE if x value is smaller
+     */
+    bool operator< (const Point& right) const {
+      if (_x < right._x)
+        return(true);
+      else
+        if (_y < right._y)
+          return(true);
+      return(false);
+    }
+    /**
+     * Overloaded comparison operator BIGGER for class Point
+     * @param[in]     right   Object of Point
+     * @return    TRUE if objects are different
+     */
+    bool operator> (const Point& right) const {
+      if (_x > right._x)
+        return true;
+      else
+        if (_y > right._y)
+          return(true);
+      return(false);
     }
     /**
      * Ostream operator of class point
@@ -72,8 +105,7 @@ public:
      * @param[in] p       Point object
      * @return    ostream object
      */
-    friend std::ostream &operator<<(std::ostream &ostr, Point &p)
-    {
+    friend std::ostream &operator<<(std::ostream &ostr, Point &p) {
       return  ostr << "Point: \tx: " << p._x
                     <<        "\ty: " << p._y << std::endl;
     }

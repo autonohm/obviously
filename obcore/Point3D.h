@@ -9,6 +9,7 @@
 
 #include "obcore/Axis.h"
 #include "obcore/base/Logger.h"
+#include "obcore/math/mathbase.h"
 #include <iostream>
 
 /**
@@ -80,8 +81,7 @@ public:
      * Index operator [] to return ref on member for read and write access
      * @param[in]   index     index of member @see Axis
      */
-    double& operator[](int idx)
-    {
+    double& operator[](int idx) {
       if (idx == X)
       {
         return _x;
@@ -94,12 +94,52 @@ public:
      * @param     right   Object of Point3D
      * @return    TRUE if both objects have the same values
      */
-    virtual bool operator==(const Point3D& right) const
+    bool operator==(const Point3D& right) const
     {
       if ((_x == right._x) && (_y == right._y) &&(_z == right._z))
         return(true);
       else
         return(false);
+    }
+    /**
+     * Overloaded comparison operator for class Point3D
+     * @param[in]     right   Object of Point
+     * @return    TRUE if objects are different
+     */
+    bool operator!=(const Point3D& right) const {
+      return !(this->operator ==(right));
+    }
+    /**
+     * Overloaded comparison operator LESS for class Point3D
+     * @param[in]     right   Object of Point
+     * @return    TRUE if x value is smaller
+     */
+    bool operator< (const Point3D& right) const {
+      if (_x < right._x)
+        return(true);
+      else
+        if (_y < right._y)
+          return(true);
+        else
+          if (_z < right._z)
+            return(true);
+      return(false);
+    }
+    /**
+     * Overloaded comparison operator BIGGER for class Point3D
+     * @param[in]     right   Object of Point
+     * @return    TRUE if objects are different
+     */
+    bool operator> (const Point3D& right) const {
+      if (_x > right._x)
+        return(true);
+      else
+        if (_y > right._y)
+          return(true);
+        else
+          if (_z > right._z)
+            return(true);
+      return(false);
     }
     /**
      * Ostream operator of class point
