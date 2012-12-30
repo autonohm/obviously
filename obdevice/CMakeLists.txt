@@ -40,4 +40,5 @@ ADD_LIBRARY(obdevice
 #        ThermoDevice.cpp
 #        KinectThermoDevice.cpp
    Xtion.cpp
+   OpenNIDevice.cpp
 	)

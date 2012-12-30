@@ -8,8 +8,8 @@ using namespace obvious;
 Obvious3D*        _viewer;
 VtkCloud*         _cloud;
 CamNano*          _nano;
-bool              _pause       = false;
-bool              _showNormals = false;
+bool             _pause       = false;
+bool             _showNormals = false;
 
 class vtkTimerCallback : public vtkCommand
 {
@@ -27,9 +27,7 @@ public:
       if(_nano->grab())
       {
         std::cout << "Frame rate: \t\t" << _nano->getFrameRate() << std::endl;
-        std::cout << setprecision(3);
-        std::cout << "Integration value: \t" << _nano->getIntegrationTime() << std::endl;
-        _cloud->setCoords(_nano->getCoords(), _nano->getSize(), 3);
+        _cloud->setCoords(_nano->getCoords(), _nano->getValidSize(), 3);
         _viewer->update();
       }
     }
@@ -47,7 +45,7 @@ int main(int argc, char* argv[])
   _viewer     = new Obvious3D("Nano Stream 3D", 1024, 768, 0, 0);
 
   _nano->showParameters();
-  _nano->setIntegrationAuto();
+  _nano->setIntegrationTime(600);
   _viewer->addCloud(_cloud);
 
   vtkSmartPointer<vtkTimerCallback> cb =  vtkSmartPointer<vtkTimerCallback>::New();

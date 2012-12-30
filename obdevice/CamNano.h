@@ -9,9 +9,10 @@
 #ifndef __CAMNANO__
 #define __CAMNANO__
 
-#include "obcore/base/Logger.h"
+
 #include "obcore/base/Timer.h"
 #include "obcore/math/PID_Controller.h"
+#include "obdevice/Device3D.h"
 
 #include <stdio.h>
 #include <iostream>
@@ -48,13 +49,14 @@ namespace obvious {
 
 /**
  * @class CamNano
- * Driver for PMD time of flight camera
+ * @brief Driver for PMD time of flight camera
+ * @see   Device3D
  *
  * This driver contains common functions needed to work with the pmd
  * camboard nano. The specifications of this sensor can be seen on
  * http://www.pmdtec.com/fileadmin/pmdtec/media/PMDvision-CamBoard-nano.pdf
  */
-class CamNano
+class CamNano : public Device3D
 {
 public:
   /**
@@ -64,27 +66,12 @@ public:
   /**
    * Standard destructor
    */
-  ~CamNano(void);
+  virtual ~CamNano(void);
   /**
-   * Get number of rows of images
-   * @return rows
+   * Function to return valid size of coords
+   * @return  valid size
    */
-  unsigned int getRows(void ) const;
-  /**
-   * Get number of columns of images
-   * @return columns
-   */
-  unsigned int getCols(void) const;
-  /**
-   * Function to get size of coords array
-   * @return size
-   */
-  unsigned int getSize(void) const;
-  /**
-   * Accessor to pointer of coordinate data
-   * @return pointer to coordinate buffer (layout x1y1z1x2...)
-   */
-  double* getCoords(void) const;
+  unsigned int getValidSize(void) const;
   /**
    * Function to return image of tof camera.
    * @return image
@@ -132,9 +119,7 @@ public:
   void setDebug(bool debug = true);
 
 private:
-  /*
-   * Private functions
-   */
+  void record(void) {};
   /**
    * Function to filter points
    * @param     points
@@ -164,17 +149,13 @@ private:
   PID_Controller      _ctrl;          ///< pid controller for automatic integration set up
 
   int                 _res;           ///< error buffer of PMD devices
-  unsigned int        _rows;          ///< number of rows
-  unsigned int        _cols;          ///< number of columns
-  unsigned int        _size;          ///< size of picture
-  unsigned int        _points;        ///< number of points 2d
+  unsigned int       _points;        ///< number of points 2d
 
   float               _meanAmp;       ///< mean amplitude for controller
   float               _intTime;
 
   float               _frameRate;     ///< frame rate of grabbing
-  double*             _coords;        ///< coords save as x1,y1,z1; x2, ...
-  unsigned char*      _image;         ///< 2d image
+  unsigned char*     _image;         ///< 2d image
   float*              _imageF;
   bool                _intrinsic;     ///< object gives back nondistrubed point cloud @see grub
   bool                _rawSet;        ///< TRUE for output of raw unfiltered data from sensor

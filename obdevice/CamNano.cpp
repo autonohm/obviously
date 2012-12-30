@@ -9,6 +9,7 @@
 
 
 #include "CamNano.h"
+#include "obcore/base/Logger.h"
 
 using namespace obvious;
 
@@ -16,6 +17,7 @@ using namespace obvious;
  * Standard constructor of class CamNano
  */
 CamNano::CamNano()
+  : Device3D("CamNano")
 {
    _res = pmdOpen (&_hnd, SOURCE_PLUGIN, SOURCE_PARAM, PROC_PLUGIN, PROC_PARAM);
 
@@ -47,12 +49,11 @@ CamNano::CamNano()
 
 	_rows   = 120;
 	_cols   = 165;
-	_size   = _rows * _cols;
-	_points = _size;
+	_points = _rows*_cols;
 
-	_coords    = new double[_size*3];
-	_image     = new unsigned char [_size];
-	_imageF    = new float[_size];
+	_coords    = new double[_rows*_cols*3];
+	_image     = new unsigned char [_rows*_cols];
+	_imageF    = new float[_rows*_cols];
 
 	_meanAmp      = 0.0f;
 	_intTime      = 0.0f;
@@ -83,6 +84,11 @@ CamNano::~CamNano()
 	pmdClose(_hnd);
 }
 
+unsigned int CamNano::getValidSize(void) const
+{
+  return _points;
+}
+
 /*
  * Function to grab raw data from camera
  */
@@ -90,25 +96,7 @@ void CamNano::setRaw(bool raw)
 {
   _rawSet = raw;
 }
-/*
- * Function to get number of columns
- */
-unsigned int CamNano::getCols(void) const
-{
-	return _cols;
-}
-/*
- * Function to get number of rows
- */
-unsigned int CamNano::getRows(void) const
-{
-	return _rows;
-}
 
-unsigned int CamNano::getSize(void) const
-{
-  return _points;
-}
 /*
  * Function to grab data from camera
  */
@@ -139,13 +127,13 @@ bool CamNano::grab()
 	  return(false);
 	}
 
-	float* coordsTmp  	= new float [_size * 3];
-	float     dist[_size];
-	float     amp[_size];
+	float* coordsTmp  	= new float [_rows*_cols * 3];
+	float  dist[_rows*_cols];
+	float  amp[_rows*_cols];
 
 	_res = pmdGetDistances(_hnd, dist, sizeof(dist));
 	_res = pmdGetAmplitudes(_hnd, amp, sizeof(amp));
-	_res = pmdGet3DCoordinates(_hnd, coordsTmp, _size * sizeof(float) * 3);
+	_res = pmdGet3DCoordinates(_hnd, coordsTmp, _rows*_cols * sizeof(float) * 3);
 
 	_imageF = amp;
 
@@ -182,8 +170,8 @@ void CamNano::setIntegrationTime(unsigned value)
   {
     _intTime = value;
   }
+  _autoIntegrat = false;
 }
-
 
 void CamNano::setIntegrationAuto(bool autom)
 {
@@ -211,20 +199,13 @@ void CamNano::showParameters(void)
 }
 
 /*
- * Function to return data array
- */
-double* CamNano::getCoords() const
-{
-	return _coords;
-}
-/*
  * Function to return image array
  */
 unsigned char* CamNano::getImage(void) const
 {
   float minMag = 1000;
   float maxMag = 0;
-  for (int i = 0 ; i < _size ; i++)
+  for (int i = 0 ; i < _rows*_cols ; i++)
   {
     if (_imageF[i] < minMag)
       minMag = _imageF[i];
@@ -233,7 +214,7 @@ unsigned char* CamNano::getImage(void) const
   }
 
   float range = minMag - maxMag;
-  for (int i = 0 ; i < _size ; i++)
+  for (int i = 0 ; i < _rows*_cols ; i++)
   {
      _image[i] = (unsigned char)((_imageF[i] - minMag)/range*255);
   }
@@ -268,7 +249,7 @@ void CamNano::filterPoints(const float* points, const float* dist, const float* 
    * Check data for valid points with the help of distances and amplitude
    */
   unsigned int i = 0, j = 0;
-  for (unsigned int k = 0 ; k < _size*3 ; )
+  for (unsigned int k = 0 ; k < _rows*_cols*3 ; )
   {
     // filter points distance distance
      if (dist[j] <= DIST_THRESHOLD_MAX && dist[j] >= DIST_THRESHOLD_MIN)
@@ -280,11 +261,11 @@ void CamNano::filterPoints(const float* points, const float* dist, const float* 
           * saving points to member variable
           *
           * NOTE: image is mirrored so her we mirror it again to get the right
-          * perspective by changing the leading sign of x
+          * perspective by changing the leadeing sign of x
           */
         _coords[i]    = -points[k];     // x
-        _coords[i+1]  = points[k+1];    // y
-        _coords[i+2]  = points[k+2];    // z
+        _coords[i+1]  =  points[k+1];   // y
+        _coords[i+2]  =  points[k+2];   // z
         ampSum += amp[j];
         i += 3;
        }
@@ -309,7 +290,7 @@ void CamNano::filterPoints(const float* points, const float* dist, const float* 
 void CamNano::noFilterPoints(const float* points)
 {
   unsigned int i = 0;
-  for (unsigned int k = 0 ; k < _size*3 ; k++ )
+  for (unsigned int k = 0 ; k < _rows*_cols*3 ; k++ )
   {
     _coords[i] = points[k];
     i += 1;;
