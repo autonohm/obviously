@@ -1,7 +1,7 @@
 /**
-* @file  PID_Controller.h
-* @autor Christian Pfitzner
-* @date  09.11.2012
+* @file   PID_Controller.h
+* @author Christian Pfitzner
+* @date   09.11.2012
 */
 
 #include <iostream>

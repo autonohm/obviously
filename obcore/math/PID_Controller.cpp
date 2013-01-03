@@ -1,7 +1,7 @@
 /**
-* @file   PID_Controller.cpp
-* @autor  Christian Pfitzner
-* @date   09.11.2012
+* @file     PID_Controller.cpp
+* @author   Christian Pfitzner
+* @date     09.11.2012
 *
 *
 */
