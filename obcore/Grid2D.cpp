@@ -8,6 +8,10 @@
 
 #include "obcore/Grid2D.h"
 
+#include <math.h>
+#include "obcore/Point.h"
+#include "obcore/Point3D.h"
+
 using namespace obvious;
 
 /*
@@ -22,17 +26,13 @@ Grid2D::Grid2D(double resolution, double length, double width)
   _cols            = floor((_length / _resolution) + _resolution);
   _grid            = new MatD(_rows, _cols);
   _nrChannels      = 0;
-  _obstaclesInGrid = 0;
   _pointsEstimated = false;
 
-  //init _grid
+  // init _grid
   for(unsigned int x=0 ; x<_cols ; x++) {
     for(unsigned int y=0 ; y<_rows ; y++)
-    {
       _grid->at(x,y,0) = INIT_DOUBLE;
-    }
   }
-
 }
 
 /*
@@ -46,11 +46,11 @@ Grid2D::~Grid2D()
 SUCCESFUL Grid2D::cloud2Grid(double* cloud, unsigned int size, double* data)
 {
   unsigned int j=0;
-  for(unsigned int i=0; i<size ; i++)
+  for(unsigned int i=0; i<size ; i+=3)
   {
     // gets indices of grid for point
-    int x = getIndexX(cloud[i+X]);
-    int y = getIndexY(cloud[i+Y]);
+    int x = getIndexX(cloud[i]);
+    int y = getIndexY(cloud[i+1]);//getIndexY(cloud[i+Y]);
 
     // check if points are in frontiers of grid
     if (x<=_cols && y<=_rows)
@@ -63,18 +63,6 @@ SUCCESFUL Grid2D::cloud2Grid(double* cloud, unsigned int size, double* data)
   return(ALRIGHT);
 }
 
-SUCCESFUL Grid2D::normals2Grid(double* cloud, unsigned int size, double* normals)
-{
-  return(ALRIGHT);
-}
-
-double* Grid2D::getObstacles()
-{
-  if (!_pointsEstimated)
-    this->getPointsInGrid();
-  double* obstacles = new double[_obstaclesInGrid];
-  return(obstacles);
-}
 
 unsigned int Grid2D::getCols()
 {
@@ -102,22 +90,17 @@ unsigned int Grid2D::getPointsInGrid(void)
     }
   }
   _pointsEstimated = true;
-  return _obstaclesInGrid = points;
+  return points;
 }
 
 void Grid2D::getImageOfGrid(unsigned char* img)
 {
-  //init image
-  for(unsigned int i=0 ; i<_cols*_rows ; i++)
-  {
-    img[i] = OBSTACLE_COLOR;
-  }
   // checkout data from grid to image
   for(unsigned int x=0 ; x<_cols ; x++) {
     for(unsigned int y=0 ; y<_rows ; y++)
     {
       if(_grid->at(x,y,0) != INIT_DOUBLE)
-        img[x*_rows + y] = OBSTACLE_COLOR;
+        img[x*_rows + y] = SET_COLOR;
       else
         img[x*_rows + y] = FREE_COLOR;
     }
@@ -127,19 +110,28 @@ void Grid2D::getImageOfGrid(unsigned char* img)
 //~~~~~~~~~~~~ Private ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 int Grid2D::getIndexX(double xValue)
 {
-  if (xValue > 0)
-    return(floor((xValue + _resolution) / _resolution) + floor((double)_cols/2));
-  else
-    return(ceil((xValue  + _resolution) / _resolution) + ceil((double)_cols/2));
+  if (xValue > 0) {
+    double tmp = xValue + _resolution;
+    return(-floor(tmp  / _resolution) + floor((double)_rows/2));
+  }
+  else {
+    double tmp = xValue - _resolution;
+    return(-ceil(tmp   / _resolution) -1 + floor((double)_rows/2));
+  }
 }
 
 int Grid2D::getIndexY(double yValue)
 {
-  if (yValue > 0)
-    return(floor((yValue + _resolution) / _resolution) + floor((double)_rows/2));
-  else
-    return(ceil((yValue  + _resolution) / _resolution) + ceil((double)_rows/2));
+  if (yValue > 0) {
+    double tmp = yValue + _resolution;
+    return(-floor(tmp  / _resolution) + floor((double)_cols/2));
+  }
+  else {
+    double tmp = yValue - _resolution;
+    return(-ceil(tmp   / _resolution) -1 + floor((double)_cols/2));
+  }
 }
+
 
 
 

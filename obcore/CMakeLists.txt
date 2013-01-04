@@ -29,12 +29,16 @@ add_library(obcore
    math/MatRGB.cpp
    math/MatD.cpp
    math/MatRGB.cpp
+   math/MatTransform.cpp
+   math/MatRot.cpp
+   math/MatTranslation.cpp
    math/PID_Controller.cpp
 	filter/EuclideanFilterD.cpp
 	filter/EuclideanFilterVecD.cpp
 	filter/CartesianFilter.cpp
 	filter/NormalFilter.cpp
 	filter/BoundingBoxFilter.cpp
+	ObstacleGrid.cpp
 	Grid2D.cpp
 	)
 
