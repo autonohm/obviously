@@ -32,7 +32,6 @@ ADD_LIBRARY(obdevice
 	KinectPlayback.cpp
 	UvcCam.cpp
 	UvcVirtualCam.cpp
-   Device3D.cpp
 # uncomment this to include the tof camera of PMD
    CamNano.cpp
    KinectDevice.cpp
@@ -41,4 +40,9 @@ ADD_LIBRARY(obdevice
 #        KinectThermoDevice.cpp
    Xtion.cpp
    OpenNIDevice.cpp
+# uncomment this to include the tof camera of PMD
+        #CamNano.cpp
+        CameraCalibration.cpp
+        KinectDevice.cpp
+#        ThermoDevice.cpp
 	)

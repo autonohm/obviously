@@ -4,6 +4,8 @@
 #include "Device2D.h"
 #include "Device3D.h"
 
+#include <string>
+
 namespace obvious {
 
 class Kinect;
@@ -16,11 +18,8 @@ public:
 
     virtual bool grab(void);
 
-protected:
-    Kinect& device(void) { return *m_kinect; }
-
 private:
-    Kinect* m_kinect;
+    Kinect* _kinect;
 };
 
 } // end namespace obvious
