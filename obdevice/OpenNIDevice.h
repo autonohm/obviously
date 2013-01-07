@@ -14,7 +14,7 @@
 #include <XnCppWrapper.h>
 #include <XnFPSCalculator.h>
 
-#include "obdevice/Device3D.h"
+#include "obdevice/ParentDevice3D.h"
 
 using namespace xn;
 using namespace std;
@@ -29,7 +29,7 @@ namespace obvious
  * @brief Abstract class for devices of OpenNI
  * @see   Device3D
  */
-class OpenNIDevice : public Device3D
+class OpenNIDevice : public ParentDevice3D
 {
 public:
   /**
@@ -72,7 +72,6 @@ protected:
 
   unsigned char* _irRGB;
   const char*    _path;
-private:
 };
 
 }; // namespace

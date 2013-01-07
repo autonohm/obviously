@@ -1,13 +1,14 @@
 #include <iostream>
 #include "obgraphic/Obvious3D.h"
 #include "obdevice/Xtion.h"
+#include "obdevice/XtionDevice.h"
 
 using namespace std;
 using namespace obvious;
 
 Obvious3D*        _viewer;
 VtkCloud*         _cloud;
-Xtion*            _xtion;
+XtionDevice*      _xtion;
 bool              _pause       = false;
 bool              _showNormals = false;
 
@@ -38,7 +39,7 @@ private:
 
 int main(int argc, char* argv[])
 {
-  _xtion      = new Xtion(argv[1]);
+  _xtion      = new XtionDevice(argv[1]);
   _cloud      = new VtkCloud();
   _viewer     = new Obvious3D("Xtion Stream 3D", 1024, 768, 0, 0);
 

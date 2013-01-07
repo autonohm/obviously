@@ -9,12 +9,12 @@
 #include "obdevice/OpenNIDevice.h"
 #include <obcore/math/mathbase.h>
 #include <obcore/math/Matrix.h>
-#include "math.h"
+#include <math.h>
 
 using namespace obvious;
 
 OpenNIDevice::OpenNIDevice(const char* path)
-  : Device3D("default")
+  : ParentDevice3D()
 {
   _init   = false;
   _rows   = 0;
