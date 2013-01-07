@@ -1,13 +1,15 @@
 /**
 * @file   Filter.h
-* @author Christian
+* @author Christian Pfitzner
 * @date   03.12.2012
 
 */
 
 #ifndef IFILTER_H_
 #define IFILTER_H_
-
+/**
+ * @namespace obvious
+ */
 namespace obvious
 {
 /**
@@ -93,12 +95,11 @@ public:
 #include "obcore/filter/Filter.h"
 #include "obcore/base/Logger.h"
 #include "obcore/Point3D.h"
-
+/**
+ * @namespace obvious
+ */
 namespace obvious
 {
-
-class IFilter;
-
 /**
  * @class   FilterBase
  * @brief   Base class for filtering
@@ -111,9 +112,9 @@ public:
    */
   Filter()
     : _direction(FILTER_BIGGER),
-      _threshold(0),
-      _input(0),
-      _output(0),
+      _input(NULL),
+      _output(NULL),
+      _threshold(0.0),
       _size(0),
       _validSize(0) { }
   /**
@@ -156,12 +157,12 @@ public:
    */
   double* getOutput(void) const                { return _output; }
 protected:
-  Direction     _direction;             ///< BIGGER (default) Lowpass, SMALLER for Highpass
-  double*       _input;                 ///< adress of the input buffer
-  double*       _output;                ///< adress of the output buffer
-  double        _threshold;             ///< threshold for filtering
-  unsigned int  _size;                  ///< size of both buffers
-  unsigned int  _validSize;             ///< number of valid points in data
+  Direction       _direction;             ///< BIGGER (default) Lowpass, SMALLER for Highpass
+  double*        _input;                 ///< adress of the input buffer
+  double*        _output;                ///< adress of the output buffer
+  double         _threshold;             ///< threshold for filtering
+  unsigned int   _size;                  ///< size of both buffers
+  unsigned int   _validSize;             ///< number of valid points in data
 };
 
 };

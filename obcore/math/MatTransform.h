@@ -66,6 +66,11 @@ public:
    * @return  translation vector
    */
   MatTranslation getMatTranslation(void);
+  /**
+   * Function to save calibration to xml file
+   * @param filename
+   */
+  void saveToXML(std::string filename);
 private:
   /**
    * Function to update rotation

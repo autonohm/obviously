@@ -7,6 +7,7 @@
 */
 
 #include "obcore/math/MatTransform.h"
+#include <libxml++/libxml++.h>
 
 using namespace obvious;
 
@@ -51,6 +52,29 @@ MatRot MatTransform::getMatRot(void)
 MatTranslation MatTransform::getMatTranslation(void)
 {
   return *_trans;
+}
+
+void MatTransform::saveToXML(std::string filename)
+{
+  xmlpp::Document   document;
+  std::stringstream stream;
+  stream << _rows;
+
+  xmlpp::Element* nodeRoot = document.create_root_node("Calibration");
+  xmlpp::Element* node;
+
+  /* Write the data from matrix m_data to xml nodes */
+  for (unsigned int row = 0; row < _rows; row++)
+  {
+      node = nodeRoot->add_child("row");
+      stream.str(std::string());
+      for (unsigned int col = 0; col < _cols; col++)
+          stream << this->at(row,col) << " ";
+
+      node->add_child_text(stream.str());
+  }
+  Glib::ustring whole = document.write_to_string();
+  document.write_to_file_formatted(filename.c_str());
 }
 
 void MatTransform::updateRot(void)
