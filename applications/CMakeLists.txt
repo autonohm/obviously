@@ -57,8 +57,8 @@ ADD_EXECUTABLE(logging_example logging_example.cpp)
 #ADD_EXECUTABLE(tsd_test tsd_test.cpp)
 ADD_EXECUTABLE(showCloud showCloud.cpp)
 ADD_EXECUTABLE(filterTest filter_test.cpp)
-ADD_EXECUTABLE(cloud2grid  cloud2grid.cpp)
-ADD_EXECUTABLE(XtionStream XtionStream.cpp)
+#ADD_EXECUTABLE(cloud2grid  cloud2grid.cpp)
+#ADD_EXECUTABLE(XtionStream XtionStream.cpp)
 
 TARGET_LINK_LIBRARIES(obvious3D_show obgraphic obcore vtkHybrid gsl gslcblas)
 TARGET_LINK_LIBRARIES(obvious3D_map obgraphic obcore vtkHybrid gsl gslcblas)
@@ -79,8 +79,8 @@ TARGET_LINK_LIBRARIES(logging_example obcore)
 #TARGET_LINK_LIBRARIES(tsd_test obvision obgraphic obcore vtkHybrid gsl gslcblas)
 TARGET_LINK_LIBRARIES(showCloud obgraphic obcore vtkHybrid gsl gslcblas)
 TARGET_LINK_LIBRARIES(filterTest vtkHybrid obgraphic obcore gsl gslcblas)
-TARGET_LINK_LIBRARIES(XtionStream vtkHybrid obvision obgraphic obdevice obcore glut gsl gslcblas flann ann OpenNI)
-TARGET_LINK_LIBRARIES(cloud2grid vtkHybrid obgraphic obcore vtkHybrid gsl gslcblas glut GL)
+#TARGET_LINK_LIBRARIES(XtionStream vtkHybrid obvision obgraphic obdevice obcore glut gsl gslcblas flann ann OpenNI)
+#TARGET_LINK_LIBRARIES(cloud2grid vtkHybrid obgraphic obcore vtkHybrid gsl gslcblas glut GL)
 
 
 
