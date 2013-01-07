@@ -38,8 +38,10 @@ add_library(obcore
 	filter/CartesianFilter.cpp
 	filter/NormalFilter.cpp
 	filter/BoundingBoxFilter.cpp
-	ObstacleGrid.cpp
-	Grid2D.cpp
+   grid/Grid2D.cpp
+   grid/GradientGrid.cpp
+   grid/HeightGrid.cpp
+   grid/ObstacleGrid.cpp
 	)
 
 # Braucht man glaube ich hier noch gar nicht?! (Knueppl)
