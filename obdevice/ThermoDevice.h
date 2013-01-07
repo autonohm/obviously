@@ -16,7 +16,7 @@ public:
     virtual bool grab(void);
 
 private:
-    ThermoCam* m_camera;
+    ThermoCam* _camera;
 };
 
 } // end namespace obvious

@@ -60,7 +60,7 @@ MatD::MatD(const xmlpp::Node* node)
 
     if (!root)
     {
-        throw "Invaild xml node for matrix initialization!";
+        throw "Fail to convert Node* to Element* in matrix initialization!";
         return;
     }
 
@@ -153,6 +153,22 @@ void MatD::createXml(xmlpp::Node* node) const
     }
 }
 
+void MatD::copyTo(MatD& mat) const
+{
+    mat.freeData();
+    mat._rows = _rows;
+    mat._cols = _cols;
+
+    if (!_rows || !_cols)
+        return;
+
+    for (unsigned int i = 0; i < _data.size(); i++)
+    {
+        mat._data.push_back(gsl_matrix_alloc(_rows, _cols));
+        gsl_matrix_memcpy(GSL(mat._data[i]), GSL(_data[i]));
+    }
+}
+
 double& MatD::at(const unsigned int row, const unsigned int col, const unsigned int channel)
 {
     return *gsl_matrix_ptr(GSL(_data[channel]), row, col);
@@ -214,11 +230,41 @@ MatD& MatD::operator=(MatD mat)
     return *this;
 }
 
-MatD MatD::operator*(const MatD& mat)
+MatD MatD::operator*(const MatD& mat) const
 {
-    MatD matN(GSL(_data[0])->size1, GSL(mat._data[0])->size2);
-    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, GSL(_data[0]), GSL(mat._data[0]), 0.0, GSL(matN._data[0]));
+    if (!mat.channels())
+        return MatD();
+
+    MatD matN(GSL(_data[0])->size1, GSL(mat._data[0])->size2, mat.channels());
+
+    for (unsigned int channel = 0; channel < mat.channels(); channel++)
+        gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, GSL(_data[channel]), GSL(mat._data[channel]), 0.0, GSL(matN._data[channel]));
+
     return matN;
+}
+
+MatD& MatD::operator/=(const double number)
+{
+    if (!_data.size() || number == 0.0)
+        return *this;
+
+    for (unsigned int channel = 0; channel < _data.size(); channel++)
+        for (unsigned int row = 0; row < _rows; row++)
+            for (unsigned int col = 0; col < _cols; col++)
+                *gsl_matrix_ptr(GSL(_data[channel]), row, col) /= number;
+}
+
+double MatD::det(const unsigned int channel) const
+{
+    int signum;
+    double det;
+
+    gsl_permutation *p = gsl_permutation_alloc(GSL(_data[channel])->size1);
+    gsl_linalg_LU_decomp(GSL(_data[channel]), p, &signum);
+    det = gsl_linalg_LU_det(GSL(_data[channel]), signum);
+    gsl_permutation_free(p);
+
+    return det;
 }
 
 }

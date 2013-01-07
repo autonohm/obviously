@@ -1,29 +1,24 @@
 #include "KinectDevice.h"
 #include "Kinect.h"
-#include "RgbPoint3D.h"
 
 #include <iostream>
 
 namespace obvious {
 
 KinectDevice::KinectDevice(const std::string& configFile)
-    : Device2D("Kinect RGB"),
-      Device3D("Kinect XYZ"),
-      m_kinect(new Kinect(configFile.c_str()))
+       : _kinect(new Kinect(configFile.c_str()))
 {
 
 }
 
 KinectDevice::~KinectDevice(void)
 {
-    delete m_kinect;
+    delete _kinect;
 }
 
 bool KinectDevice::grab(void)
 {
-    this->deletePoints();
-
-    if (!m_kinect->grab())
+    if (!_kinect->grab())
     {
         std::cout << __PRETTY_FUNCTION__  << std::endl;
         std::cout << "Can't grab Kinect!" << std::endl;
@@ -32,12 +27,12 @@ bool KinectDevice::grab(void)
         return false;
     }
 
-    m_rgb = m_kinect->getMatRGB();
-    const double* data = m_kinect->getCoords();
+    _rgb = _kinect->getMatRGB();
+    const double* data = _kinect->getCoords();
+    _coords.resize(_kinect->getRows() * _kinect->getCols());
 
-    for (unsigned int row = 0, i = 0; row < m_rgb.rows(); row++)
-        for (unsigned int col = 0; col < m_rgb.cols(); col++, i += 3)
-            m_points.push_back(new RgbPoint3D(data[i], data[i + 1], data[i + 2], m_rgb.rgb(row, col)));
+    for (unsigned int i = 0; i < _coords.size(); i++, data += 3)
+        _coords[i] = Point3D(data[0], data[1], data[2]);
 
     return true;
 }

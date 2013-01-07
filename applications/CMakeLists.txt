@@ -1,4 +1,5 @@
 cmake_minimum_required (VERSION 2.6)
+include(FindPkgConfig)
 
 ############################
 # General project settings #
@@ -10,6 +11,7 @@ SET(APPLICATIONS_VERSION_MINOR 1)
 
 FIND_PACKAGE(VTK REQUIRED)
 INCLUDE(${VTK_USE_FILE})
+PKG_CHECK_MODULES(XML libxml++-2.6)
 
 INCLUDE_DIRECTORIES(/usr/include/openni
                     /usr/include/ni
@@ -20,6 +22,7 @@ INCLUDE_DIRECTORIES(/usr/include/openni
                     ../obcore/math
                     ../obcore/filter
                     ../obcore
+                    ${XML_INCLUDE_DIRS}
                     )
 
 # check if necessary files for PMD are installed
@@ -54,18 +57,18 @@ ADD_EXECUTABLE(logging_example logging_example.cpp)
 #ADD_EXECUTABLE(tsd_test tsd_test.cpp)
 ADD_EXECUTABLE(showCloud showCloud.cpp)
 ADD_EXECUTABLE(filterTest filter_test.cpp)
-ADD_EXECUTABLE(cloud2grid  cloud2grid.cpp)
-ADD_EXECUTABLE(XtionStream XtionStream.cpp)
+#ADD_EXECUTABLE(cloud2grid  cloud2grid.cpp)
+#ADD_EXECUTABLE(XtionStream XtionStream.cpp)
 
 TARGET_LINK_LIBRARIES(obvious3D_show obgraphic obcore vtkHybrid gsl gslcblas)
 TARGET_LINK_LIBRARIES(obvious3D_map obgraphic obcore vtkHybrid gsl gslcblas)
 TARGET_LINK_LIBRARIES(kinect_perspective obgraphic obcore vtkHybrid gsl gslcblas)
-TARGET_LINK_LIBRARIES(icp_matching2D obvision obcore gsl gslcblas ann)
+TARGET_LINK_LIBRARIES(icp_matching2D obvision obcore gsl gslcblas ann ${XML_LIBRARIES})
 TARGET_LINK_LIBRARIES(icp_interactive3D vtkHybrid obgraphic obvision obcore gsl gslcblas ann flann)
-TARGET_LINK_LIBRARIES(kinect_stream_show vtkHybrid obvision obgraphic obdevice obcore glut gsl gslcblas flann ann OpenNI)
-TARGET_LINK_LIBRARIES(kinect_mesh_show vtkHybrid obvision obgraphic obdevice obcore glut gsl gslcblas flann ann OpenNI)
+TARGET_LINK_LIBRARIES(kinect_stream_show vtkHybrid obvision obgraphic obdevice obcore glut gsl gslcblas flann ann OpenNI ${XML_LIBRARIES})
+TARGET_LINK_LIBRARIES(kinect_mesh_show vtkHybrid obvision obgraphic obdevice obcore glut gsl gslcblas flann ann OpenNI ${XML_LIBRARIES})
 TARGET_LINK_LIBRARIES(kinect_playback vtkHybrid obgraphic obdevice obcore glut gsl gslcblas)
-TARGET_LINK_LIBRARIES(kinect_localize vtkHybrid obvision obgraphic obdevice obcore glut gsl gslcblas flann ann OpenNI)
+TARGET_LINK_LIBRARIES(kinect_localize vtkHybrid obvision obgraphic obdevice obcore glut gsl gslcblas flann ann OpenNI ${XML_LIBRARIES})
 TARGET_LINK_LIBRARIES(uvccam_serialize obdevice obcore v4l2)
 TARGET_LINK_LIBRARIES(uvcvirtualcam_serialize obdevice obcore v4l2)
 TARGET_LINK_LIBRARIES(uvccam_stream obgraphic obdevice obcore v4l2 glut GL)
@@ -76,8 +79,8 @@ TARGET_LINK_LIBRARIES(logging_example obcore)
 #TARGET_LINK_LIBRARIES(tsd_test obvision obgraphic obcore vtkHybrid gsl gslcblas)
 TARGET_LINK_LIBRARIES(showCloud obgraphic obcore vtkHybrid gsl gslcblas)
 TARGET_LINK_LIBRARIES(filterTest vtkHybrid obgraphic obcore gsl gslcblas)
-TARGET_LINK_LIBRARIES(XtionStream vtkHybrid obvision obgraphic obdevice obcore glut gsl gslcblas flann ann OpenNI)
-TARGET_LINK_LIBRARIES(cloud2grid vtkHybrid obgraphic obcore vtkHybrid gsl gslcblas glut GL)
+#TARGET_LINK_LIBRARIES(XtionStream vtkHybrid obvision obgraphic obdevice obcore glut gsl gslcblas flann ann OpenNI)
+#TARGET_LINK_LIBRARIES(cloud2grid vtkHybrid obgraphic obcore vtkHybrid gsl gslcblas glut GL)
 
 
 

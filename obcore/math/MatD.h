@@ -38,6 +38,9 @@ public:
     //! destructor
     virtual ~MatD(void);
 
+    //! make a deep copy
+    void copyTo(MatD& mat) const;
+
     //! create XML node of this matrix
     void createXml(xmlpp::Node* node) const;
 
@@ -62,7 +65,13 @@ public:
     MatD& operator=(MatD mat);
 
     //! compute a marix matrix product
-    MatD operator*(const MatD& mat);
+    MatD operator*(const MatD& mat) const;
+
+    //! div matrix throw number
+    MatD& operator/=(const double number);
+
+    //! compute det of matrix
+    double det(const unsigned int channel = 0) const;
 
 private:
     void freeData(void);
