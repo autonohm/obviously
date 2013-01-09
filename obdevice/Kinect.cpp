@@ -140,7 +140,7 @@ Kinect::Kinect(const char* path)
 Kinect::~Kinect()
 {
   if(!_init) return;
-
+  _context.StopGeneratingAll();
   _context.Release();
   delete [] _proj;
   delete [] _wrld;

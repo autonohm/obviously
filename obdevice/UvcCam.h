@@ -52,6 +52,8 @@ public:
    */
   ~UvcCam();
 
+  static void FindDevice(const char* serial, char* &path);
+
   /**
    * Get image width, i.e., number of columns
    * @return image width

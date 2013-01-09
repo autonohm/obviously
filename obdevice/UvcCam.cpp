@@ -1,5 +1,8 @@
 #include "UvcCam.h"
 
+#include <libudev.h>
+#include <linux/videodev2.h>
+
 /**
  * Initial implementation taken from openvolksbot library
  */
@@ -34,6 +37,7 @@ UvcCam::UvcCam(const char *dev, unsigned int width, unsigned int height)
   _LutGv         = (int *) malloc(256 * sizeof(int));
   _LutBu         = (int *) malloc(256 * sizeof(int));
   _nb_buffers    = NB_BUFFERS;
+  _mem           = NULL;
   for (int i = 0; i < 256; i++)
   {
     _LutRv[i] = (i - 128) * CoefRv / 1000;
@@ -46,6 +50,50 @@ UvcCam::UvcCam(const char *dev, unsigned int width, unsigned int height)
 UvcCam::~UvcCam()
 {
   disconnect();
+}
+
+void UvcCam::FindDevice(const char* serial, char* &path)
+{
+	struct udev *udev;
+	struct udev_enumerate *enumerate;
+	struct udev_list_entry *devices, *dev_list_entry;
+
+	udev      = udev_new();
+	enumerate = udev_enumerate_new(udev);
+	udev_enumerate_add_match_subsystem(enumerate, "video4linux");
+	udev_enumerate_scan_devices(enumerate);
+	devices   = udev_enumerate_get_list_entry(enumerate);
+
+	udev_list_entry_foreach(dev_list_entry, devices)
+	{
+		const char *sysfs_path;
+		const char *dev_path;
+		struct udev_device *uvc_dev; // The device's UVC udev node.
+		struct udev_device *dev;     // The actual hardware device.
+
+		sysfs_path  = udev_list_entry_get_name(dev_list_entry);
+		uvc_dev     = udev_device_new_from_syspath(udev, sysfs_path);
+		dev_path    = udev_device_get_devnode(uvc_dev);
+
+		dev = udev_device_get_parent_with_subsystem_devtype( uvc_dev, "usb", "usb_device");
+		const char * strVendor = udev_device_get_sysattr_value(dev, "idVendor");
+		const char* strProduct = udev_device_get_sysattr_value(dev, "idProduct");
+		const char* strSerial  = udev_device_get_sysattr_value(dev, "serial");
+
+		if(strcmp(strSerial, serial)==0)
+		{
+			path = new char[strlen(dev_path)+1];
+			memcpy(path, dev_path, strlen(dev_path));
+			path[strlen(dev_path)] = '\0';
+			udev_device_unref(uvc_dev);
+			break;
+		}
+
+		udev_device_unref(uvc_dev);
+	}
+
+	udev_enumerate_unref(enumerate);
+	udev_unref(udev);
 }
 
 unsigned int UvcCam::getWidth()
@@ -341,6 +389,7 @@ EnumCameraError UvcCam::printAvailableFormats()
   }
 
   disconnect();
+
   return CAMSUCCESS;
 }
 
@@ -382,8 +431,13 @@ EnumCameraError UvcCam::mapMemory()
 
 void UvcCam::unmapMemory()
 {
-  for(int i = 0; i < _rb.count; i++)
-    munmap(_mem[i].start, _mem[i].length);
+  if(_mem!=NULL)
+  {
+    for(int i = 0; i < _rb.count; i++)
+    {
+	  munmap(_mem[i].start, _mem[i].length);
+    }
+  }
 }
 
 // aus lucview color.c util.c
