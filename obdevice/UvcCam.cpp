@@ -80,7 +80,7 @@ void UvcCam::FindDevice(const char* serial, char* &path)
 		const char* strProduct = udev_device_get_sysattr_value(dev, "idProduct");
 		const char* strSerial  = udev_device_get_sysattr_value(dev, "serial");
 
-		if(strcmp(strSerial, serial)==0)
+		if((strSerial != NULL) && strcmp(strSerial, serial)==0)
 		{
 			path = new char[strlen(dev_path)+1];
 			memcpy(path, dev_path, strlen(dev_path));
