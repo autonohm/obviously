@@ -39,7 +39,7 @@ ADD_LIBRARY(obdevice
 #        ThermoDevice.cpp
 #        KinectThermoDevice.cpp
    Xtion.cpp
-# XtionDevice.cpp
+   XtionDevice.cpp
    OpenNIDevice.cpp
    ParentDevice3D.cpp
 # uncomment this to include the tof camera of PMD
