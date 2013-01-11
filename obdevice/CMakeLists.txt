@@ -16,7 +16,7 @@ INCLUDE_DIRECTORIES(/usr/include/openni
                     $ENV{OBVIOUSLY_ROOT}
                     ../obcore/math
                     ../obcore
-                    $ENV{OBVIOUSLY_ROOT}/../thermo_cam/include
+                    $ENV{OBVIOUSLY_ROOT}/../obviously_intern/thermo_cam/include
                     ${XML_INCLUDE_DIRS}
                     )
 
@@ -36,7 +36,6 @@ ADD_LIBRARY(obdevice
 #   CamNano.cpp
    KinectDevice.cpp
 # uncomment this for include the thermo camera. I know that is not a realy nice solution...
-#        ThermoDevice.cpp
 #        KinectThermoDevice.cpp
    Xtion.cpp
    XtionDevice.cpp
@@ -45,5 +44,5 @@ ADD_LIBRARY(obdevice
 # uncomment this to include the tof camera of PMD
         CameraCalibration.cpp
         KinectDevice.cpp
-#        ThermoDevice.cpp
+        ThermoDevice.cpp
 	)

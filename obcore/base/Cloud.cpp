@@ -35,7 +35,7 @@ Cloud::Cloud(const std::vector<Point3D>& points, const std::vector<RGBColor>& co
         vec.at(X) = (*itPoints).x();
         vec.at(Y) = (*itPoints).y();
         vec.at(Z) = (*itPoints).z();
-        (*it) = vec;
+        vec.copyTo(*it);
     }
 
     _rgb = color;
