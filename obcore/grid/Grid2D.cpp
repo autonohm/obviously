@@ -26,6 +26,7 @@ Grid2D::Grid2D(const double resolution, const double length,
   _cols            = floor((_length / _resolution) + _resolution);
   _grid            = new MatD(_rows, _cols, channels);
   _pointsEstimated = false;
+  _img             = new unsigned char[_cols*_rows];
 }
 
 /*
@@ -34,6 +35,7 @@ Grid2D::Grid2D(const double resolution, const double length,
 Grid2D::~Grid2D()
 {
   delete _grid;
+  delete [] _img;
 }
 
 SUCCESFUL Grid2D::cloud2Grid(const double* cloud, unsigned int size)
@@ -84,18 +86,19 @@ unsigned int Grid2D::getPointsInGrid(void)
   return points;
 }
 
-void Grid2D::getImageOfGrid(unsigned char* img)
+unsigned char* Grid2D::getImageOfGrid(void)
 {
   // checkout data from grid to image
   for(unsigned int x=0 ; x<_cols ; x++) {
     for(unsigned int y=0 ; y<_rows ; y++)
     {
       if(_grid->at(x,y,0) != INIT_DOUBLE)
-        img[x*_rows + y] = SET_COLOR;
+        _img[x*_rows + y] = SET_COLOR;
       else
-        img[x*_rows + y] = FREE_COLOR;
+        _img[x*_rows + y] = FREE_COLOR;
     }
   }
+  return(_img);
 }
 
 MatD& Grid2D::getMat(void)

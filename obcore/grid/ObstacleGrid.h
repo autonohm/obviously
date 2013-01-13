@@ -60,7 +60,8 @@ public:
    */
   double* getObstacles(void) const;
 
-  virtual void getImageOfGrid(unsigned char* img);
+  virtual unsigned char* getImageOfGrid(void);
+  double getNearestObstacle() const;
 private:
   /**
    * @enum CHANNEL

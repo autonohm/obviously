@@ -45,13 +45,13 @@ public:
    * Function to return unsigned char image for visualization
    * @param         img    allocated unsigned char array
    */
-  void getImageOfGrid(unsigned char *img);
+  unsigned char* getImageOfGrid(void);
 private:
   /**
    * Function to return map as image with gradients
    * @param         img
    */
-  void getGradientMap(unsigned char* img);
+  unsigned char* getGradientMap(void);
   enum EnumChannel{GRADIENT_X, GRADIENT_Y};
 
 };

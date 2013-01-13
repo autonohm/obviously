@@ -58,5 +58,5 @@ void HeightGrid::getHeightMap(unsigned char *img)
   // checkout data from grid to image
   for(unsigned int x=0 ; x<_cols ; x++)
     for(unsigned int y=0 ; y<_rows ; y++)
-      img[x*_rows + y] = (unsigned char)(_grid->at(x,y) - minValue)/range*255;
+      _img[x*_rows + y] = (unsigned char)(_grid->at(x,y) - minValue)/range*255;
 }

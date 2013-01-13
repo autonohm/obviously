@@ -55,13 +55,13 @@ SUCCESFUL GradientGrid::gradient2Grid(const MatD& heigthMat)
   return(ALRIGHT);
 }
 
-void GradientGrid::getImageOfGrid(unsigned char *img)
+unsigned char* GradientGrid::getImageOfGrid(void)
 {
-  getGradientMap(img);
+  return(getGradientMap());
 }
 
 //~~~~~~~~~~~~ Private ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-void GradientGrid::getGradientMap(unsigned char* img)
+unsigned char* GradientGrid::getGradientMap(void)
 {
   MatD *gradient = new MatD(_rows, _cols);
   for(unsigned int x=0 ; x<_cols ; x++)
@@ -86,8 +86,10 @@ void GradientGrid::getGradientMap(unsigned char* img)
   // checkout data from grid to image
   for(unsigned int x=0 ; x<_cols ; x++)
     for(unsigned int y=0 ; y<_rows ; y++)
-      img[x*_rows + y] = (gradient->at(x,y) - minValue)/range*255;
+      _img[x*_rows + y] = (gradient->at(x,y) - minValue)/range*255;
+
   delete gradient;
+  return(_img);
 }
 
 

@@ -66,10 +66,75 @@ double* ObstacleGrid::getObstacles() const
   return(obstacles);
 }
 
-void ObstacleGrid::getImageOfGrid(unsigned char* img)
+unsigned char* ObstacleGrid::getImageOfGrid( void)
 {
 //  _hGrid->getImageOfGrid(img);
-  _gGrid->getImageOfGrid(img);
+  return(_gGrid->getImageOfGrid());
+
+}
+
+double ObstacleGrid::getNearestObstacle(void) const
+{
+  unsigned int x = 0;
+  unsigned int y = 0;
+  // estimate maximum square calculation
+  unsigned int squareMax;
+  if (_cols >= _rows)
+    squareMax = _cols/2;
+  else
+    squareMax = _rows/2;
+
+  for(unsigned int square = 1 ; square < squareMax ; square++ )
+  {
+    enum DIRECTION {DOWN, LEFT, UP, RIGHT};
+
+    unsigned int nrPerRow_Col = square * 2;
+    unsigned int nrPerSquare  = square+4 + ((square-1)*8);
+    unsigned int idxStartY    = floor(_rows/2) - (square-1);
+    unsigned int idxStartX    = floor(_cols/2) - (square-1);
+
+    for(unsigned int dir = DOWN ; dir <= RIGHT ; dir++)
+    {
+      unsigned int idxX, idxY;
+      if(dir == DOWN) {
+        for(unsigned int i = 0 ; i<nrPerRow_Col ; i++)
+        {
+          idxX = idxStartX + i;
+          idxY = idxStartY;
+        }
+      }
+      if(dir == LEFT) {
+        for(unsigned int i = 0 ; i<nrPerRow_Col ; i++)
+        {
+          idxX = idxStartX + nrPerRow_Col - 1;
+          idxY = idxStartY + i;
+        }
+      }
+      if(dir == UP) {
+        for(unsigned int i = 0 ; i<nrPerRow_Col ; i++)
+        {
+          idxX = idxStartX + i;
+          idxY = idxStartY + nrPerRow_Col - 1;
+        }
+      }
+      if(dir == RIGHT) {
+        for(unsigned int i = 0 ; i<nrPerRow_Col ; i++)
+        {
+          idxX = idxStartX + nrPerRow_Col - 1;
+          idxY = idxStartY + i;
+        }
+      }
+
+      if (_gGrid->getMat().at(idxX,idxY) != 0.0)
+      {
+        x = 2.0;//idxX;
+        y = 1.0; //idxY;
+        std::cout << "found" << std::endl;
+        return(x);
+        exit(0);
+      }
+    }
+  }
 }
 
 

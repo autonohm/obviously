@@ -74,7 +74,7 @@ public:
    * Function to return unsigned char image for visualization
    * @param[in]     img    allocated unsigned char array
    */
-  void getImageOfGrid(unsigned char* img);
+  unsigned char* getImageOfGrid(void);
   /**
    * Function to get matrix
    * @return  Matrix
@@ -117,6 +117,7 @@ protected:
   unsigned int       _cols;                 //!< number of columns
   bool                _pointsEstimated;      //!< true if function getPointsInGrid was called
   MatD*                _grid;                //!< pointer on grid
+  unsigned char*     _img;                  //!< image for visualization
 };
 
 } // namespace
