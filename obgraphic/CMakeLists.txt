@@ -15,6 +15,7 @@ INCLUDE_DIRECTORIES(..)
 
 add_library(obgraphic
 	Obvious2D.cpp
+	Obvious2DMap.cpp
 	Obvious3D.cpp
 	VtkCloud.cpp
 	)

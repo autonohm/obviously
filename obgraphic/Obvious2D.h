@@ -53,7 +53,7 @@ namespace obvious
     /**
      * Destructor
      */
-    ~Obvious2D();
+    virtual ~Obvious2D();
 
     /**
      * Draw image to screen
@@ -62,7 +62,7 @@ namespace obvious
      * @param[in] height Image height
      * @param[in] channels Number of image channels
      */
-    void draw(unsigned char* image, unsigned int width, unsigned int height, unsigned int channels);
+    virtual void draw(unsigned char* image, unsigned int width, unsigned int height, unsigned int channels);
 
     /**
      * Register keyboard events
@@ -78,12 +78,36 @@ namespace obvious
      */
     void addText(char* text, unsigned int c, unsigned int r);
 
-    /*
+    /**
      * Clears the texts to be displayed
      */
     void clearText(void);
 
-  private:
+    /**
+     * Function to draw a rect to image
+     * @param[in]   rUpLeft   row of upper left corner
+     * @param[in]   cUpLeft   colum of upper left corner
+     * @param[in]   xDim      dimension in rows
+     * @param[in]   yDim      dimension in columns
+     */
+    void addRect(unsigned int rUpLeft, unsigned int cUpLeft, unsigned int xDim, unsigned int yDim);
+    /**
+     * Function to draw a circle
+     * @param[in]   rCenter   row of center
+     * @param[in]   cCenter   column of center
+     * @param[in]   radius    radius in rows
+     */
+    void addCircle(unsigned int rCenter, unsigned int cCenter, unsigned int radius);
+
+  protected:
+    /**
+     * Draw image to screen
+     * @param[in] image Pointer to image data (size = width*height*channels)
+     * @param[in] width Image width
+     * @param[in] height Image height
+     * @param[in] channels Number of image channels
+     */
+    void drawDefault(unsigned char* image, unsigned int width, unsigned int height, unsigned int channels);
 
     /**
      * GLUT window handle

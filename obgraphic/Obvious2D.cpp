@@ -6,6 +6,7 @@
 #define GL_GLEXT_PROTOTYPES 1
 #include <GL/freeglut.h>
 #include <signal.h>
+#include "obcore/math/mathbase.h"
 
 #include <map>
 
@@ -77,34 +78,7 @@ namespace obvious
 
   void Obvious2D::draw(unsigned char* image, unsigned int width, unsigned int height, unsigned int channels)
   {
-    float ratioW = (float)_width/width;
-    float ratioH = (float)_height/height;
-
-    glPixelZoom(ratioW, -ratioH);
-
-    if(channels==1)
-      glDrawPixels(width, height, GL_LUMINANCE,GL_UNSIGNED_BYTE, image);
-    else if(channels==3)
-      glDrawPixels(width, height, GL_RGB,GL_UNSIGNED_BYTE, image);
-    else
-      cout << "WARNING: draw method not implemented for channels=" << channels << endl;
-
-    for(int j=0; j<_textCnt; j++)
-      {
-        if(strlen(_text[j].text)>0)
-          {
-            glPushMatrix();
-            // Flip vertically for correct text display
-            glPixelZoom(ratioW, ratioH);
-            glColor3f(0.0, 1.0, 0.0);
-            glWindowPos2i(_text[j].col, _text[j].row);
-            for (int i=0; i<strlen(_text[j].text); i++)
-              glutBitmapCharacter(GLUT_BITMAP_9_BY_15, (int)_text[j].text[i]);
-            glRasterPos2f(-1.0, 1.0);
-            glPopMatrix();
-          }
-      }
-
+    drawDefault(image, width, height, channels);
     glutSwapBuffers();
     glutMainLoopEvent();
   }
@@ -131,4 +105,75 @@ namespace obvious
     _textCnt = 0;
   }
 
+void Obvious2D::addRect(unsigned int rUpLeft, unsigned int cUpLeft, unsigned int xDim, unsigned int yDim)
+{
+  float x   = (float)xDim/(float)_height;
+  float y   = (float)yDim/(float)_width;
+  float rUL = (float)(rUpLeft-(double)_height)/(float)_height;
+  float cUL = (float)(cUpLeft-(double)_width)/(float)_width;
+  float rDL = rUL;
+  float cDL = cUL - x;
+  glBegin(GL_LINES);
+  glColor3f(.15,.15,.15);
+  // verticals
+  glVertex2f(rUL, cUL);
+  glVertex2f(rDL, cDL);
+  glVertex2f(rUL+y, cUL);
+  glVertex2f(rDL+y, cDL);
+  // horizontals
+  glVertex2f(rUL, cUL);
+  glVertex2f(rUL+y, cUL);
+  glVertex2f(rDL, cDL);
+  glVertex2f(rDL+y, cDL);
+
+  glEnd();
 }
+
+void Obvious2D::addCircle(unsigned int rCenter, unsigned int cCenter, unsigned int radius)
+{
+  const int sides = 36;  // The amount of segment to create the circle
+  double r = (double)radius/_height;
+  glColor3f(.15,.15,.15);
+  glBegin(GL_LINE_LOOP);
+  for (int a=0; a<360; a+=360 / sides)
+  {
+    double heading = a * M_PI / 180;
+    glVertex2f(cos(heading)*r + (double)(rCenter-(double)_height)/(double)_height,
+               sin(heading)*r + (double)(cCenter-(double)_width) /(double)_width);
+  }
+  glEnd();
+}
+
+
+void Obvious2D::drawDefault(unsigned char* image, unsigned int width, unsigned int height, unsigned int channels)
+{
+  float ratioW = (float)_width/width;
+  float ratioH = (float)_height/height;
+
+  glPixelZoom(ratioW, -ratioH);
+
+  if(channels==1)
+    glDrawPixels(width, height, GL_LUMINANCE,GL_UNSIGNED_BYTE, image);
+  else if(channels==3)
+    glDrawPixels(width, height, GL_RGB,GL_UNSIGNED_BYTE, image);
+  else
+    cout << "WARNING: draw method not implemented for channels=" << channels << endl;
+
+  for(int j=0; j<_textCnt; j++)
+    {
+      if(strlen(_text[j].text)>0)
+        {
+          glPushMatrix();
+          // Flip vertically for correct text display
+          glPixelZoom(ratioW, ratioH);
+          glColor3f(0.0, 1.0, 0.0);
+          glWindowPos2i(_text[j].col, _text[j].row);
+          for (int i=0; i<strlen(_text[j].text); i++)
+            glutBitmapCharacter(GLUT_BITMAP_9_BY_15, (int)_text[j].text[i]);
+          glRasterPos2f(-1.0, 1.0);
+          glPopMatrix();
+        }
+    }
+}
+
+} // namespace
