@@ -122,7 +122,7 @@ void Matrix::setZero()
 
 Matrix Matrix::getInverse()
 {
-  Matrix Mi(*this);
+  Matrix Mi = *this;
   Mi.invert();
   return Mi;
 }
@@ -130,8 +130,6 @@ Matrix Matrix::getInverse()
 void Matrix::invert()
 {
   int r = _M->size1;
-  int c = _M->size2;
-
   int sig;
   gsl_permutation* perm = gsl_permutation_alloc(r);
   gsl_matrix_memcpy(_work, _M);
@@ -164,7 +162,7 @@ gsl_vector* Matrix::centroid()
 {
   gsl_vector* c = gsl_vector_alloc(_M->size2);
 
-  for(int i=0; i<_M->size2; i++)
+  for(size_t i=0; i<_M->size2; i++)
   {
     gsl_vector_view col = gsl_matrix_column(_M, i);
     double m = gsl_stats_mean(col.vector.data,_M->size2,_M->size1);
@@ -180,11 +178,11 @@ Matrix* Matrix::pcaAnalysis()
   gsl_matrix* M = gsl_matrix_alloc(_M->size1, _M->size2);
   gsl_matrix_memcpy(M, _M);
 
-  int i;
+  size_t i;
   // number of points
-  int rows = M->size1;
+  size_t rows = M->size1;
   // dimensionality
-  int dim  = M->size2;
+  size_t dim  = M->size2;
 
   Matrix* axes = new Matrix(dim, 2*dim);
 
@@ -230,7 +228,7 @@ Matrix* Matrix::pcaAnalysis()
 
     gsl_vector_view eigen = gsl_matrix_column(V, i);
 
-    for(int j=0; j<dim; j++)
+    for(size_t j=0; j<dim; j++)
     {
       double e = gsl_vector_get(&eigen.vector,j)*align;
       cent[j] += e;
@@ -248,7 +246,7 @@ Matrix* Matrix::pcaAnalysis()
     gsl_vector_view eigen = gsl_matrix_column(V, i);
 
     // coordinates of axis j
-    for(int j=0; j<dim; j++)
+    for(size_t j=0; j<dim; j++)
     {
       double e = gsl_vector_get(&eigen.vector,j)*ext/2.0;
       // axis coordinates with respect to center of original coordinate system
@@ -280,9 +278,9 @@ Matrix* Matrix::TranslationMatrix44(double tx, double ty, double tz)
 
 void Matrix::print()
 {
-  for(int r=0; r<_M->size1; r++)
+  for(size_t r=0; r<_M->size1; r++)
   {
-    for(int c=0; c<_M->size2; c++)
+    for(size_t c=0; c<_M->size2; c++)
       cout << (*this)[r][c] << " ";
     cout << endl;
   }

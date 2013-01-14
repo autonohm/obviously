@@ -286,8 +286,8 @@ void CartesianCloud3D::createProjection(unsigned char* pImage, unsigned char* pM
       double dw = gsl_vector_get(ni,2);
       if(dw > 10e-6)
       {
-        int u = (int)( du / dw + 0.5);
-        int v = nH-1-(int)(dv / dw + 0.5);
+        int u = nW-1-(int)( du / dw + 0.5);
+        int v = (int)(dv / dw + 0.5);
 
         if(u>=0 & u<nW & v>=0 & v<nH)
         {
