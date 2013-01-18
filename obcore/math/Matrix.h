@@ -29,7 +29,7 @@ public:
 	 * @param rows number of matrix rows
 	 * @param cols number of matrix columns
 	 */
-	Matrix(unsigned int rows, unsigned int cols);
+	Matrix(unsigned int rows, unsigned int cols, const double* data = NULL);
 
 	/**
 	 * Copy constructor
@@ -50,11 +50,18 @@ public:
 	Matrix  &operator =  (const Matrix &M);
 
 	/**
-	 * Assignment operator
-	 * @param M matrix assigned to this one
+	 * Multiplication operator
+	 * @param M matrix multiplied with this one
 	 * @return this matrix instance
 	 */
 	Matrix  &operator *= (const Matrix &M);
+
+	/**
+	 * Subtraction operator
+	 * @param M matrix subtracted from this one
+	 * @return this matrix instance
+	 */
+	Matrix &operator -= (const Matrix &M);
 
 	/**
 	 * Row accessor
@@ -95,7 +102,7 @@ public:
 	 * Data mutator
 	 * @param array array to copy data from
 	 */
-	void setData(double* array);
+	void setData(const double* array);
 
 	/**
 	 * Property accessor

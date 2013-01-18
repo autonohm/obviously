@@ -55,6 +55,25 @@ IRigidEstimator* Icp::getRigidEstimator()
   return _estimator;
 }
 
+void Icp::setModel(double* coords, double* normals, const unsigned int size)
+{
+  unsigned int sizeNormals = _sizeModelBuf;
+
+  checkMemory(size, _dim, _sizeModelBuf, _model);
+
+  memcpy(&_model[0][0], coords, size*_dim*sizeof(double));
+  if(normals)
+  {
+    checkMemory(size, _dim, sizeNormals, _normalsM);
+    memcpy(_normalsM[0], normals, size*_dim*sizeof(double));
+  }
+
+  _sizeModel = size;
+
+  _assigner->setModel(_model, _sizeModel);
+  _estimator->setModel(_model, _sizeModel, _normalsM);
+}
+
 void Icp::setModel(gsl_matrix* coords, gsl_matrix* normals)
 {
   if(coords->size2 != _dim)
@@ -91,6 +110,25 @@ void Icp::setModel(gsl_matrix* coords, gsl_matrix* normals)
   _estimator->setModel(_model, _sizeModel, _normalsM);
 }
 
+void Icp::setScene(double* coords, double* normals, const unsigned int size)
+{
+  _sizeScene = size;
+
+  unsigned int sizeNormals = _sizeSceneBuf;
+
+  checkMemory(_sizeScene, _dim, _sizeSceneBuf, _scene);
+  memcpy(_scene[0], coords, size*_dim*sizeof(double));
+
+  if(normals)
+  {
+    checkMemory(_sizeScene, _dim, sizeNormals, _normalsS);
+    memcpy(_normalsS[0], normals, size*_dim*sizeof(double));
+  }
+
+  applyTransformation(_scene, _sizeScene, _dim, _Tfinal);
+  if(normals) applyTransformation(_normalsS, _sizeScene, _dim, _Tfinal);
+}
+
 void Icp::setScene(gsl_matrix* coords, gsl_matrix* normals)
 {
   if(coords->size2 != _dim)
@@ -122,8 +160,6 @@ void Icp::setScene(gsl_matrix* coords, gsl_matrix* normals)
 
   applyTransformation(_scene, _sizeScene, _dim, _Tfinal);
   if(normals) applyTransformation(_normalsS, _sizeScene, _dim, _Tfinal);
-
-  //_estimator->setScene(_scene, _sizeScene, _normalsS);
 }
 
 void Icp::checkMemory(unsigned int rows, unsigned int cols, unsigned int &memsize, double** &mem)

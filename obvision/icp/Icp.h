@@ -71,15 +71,33 @@ public:
 	 */
 	IRigidEstimator* getRigidEstimator();
 	
+  /**
+   * Copy model to internal buffer
+   * @param coords model coordinates, as tuples or triples
+   * @param normals model normals, as tuples or triples, may be NULL
+   * @param size number of points, i.e. coordinate triples
+   */
+	void setModel(double* coords, double* normals, const unsigned int size);
+
 	/**
 	 * Convenience method extracting all points from cloud to double array
-	 * @param cloud model cloud
+   * @param coords model coordinates
+   * @param normals model normals, may be NULL
 	 */
 	void setModel(gsl_matrix* coords, gsl_matrix* normals = NULL);
 	
+  /**
+   * Copy scene to internal buffer
+   * @param coords scene coordinates, as tuples or triples
+   * @param normals scene normals, as tuples or triples, may be NULL
+   * @param size number of points, i.e. coordinate triples
+   */
+  void setScene(double* coords, double* normals, const unsigned int size);
+
 	/**
 	 * Convenience method extracting data from cloud to double array
-	 * @param cloud scene cloud 
+   * @param coords scene coordinates
+   * @param normals scene normals, may be NULL
 	 */
 	void setScene(gsl_matrix* coords, gsl_matrix* normals = NULL);
 	

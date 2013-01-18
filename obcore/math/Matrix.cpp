@@ -7,10 +7,11 @@
 namespace obvious
 {
 
-Matrix::Matrix(unsigned int rows, unsigned int cols)
+Matrix::Matrix(unsigned int rows, unsigned int cols, const double* data)
 {
   _M = gsl_matrix_alloc(rows, cols);
   _work = gsl_matrix_alloc(rows, cols);
+  if(data != NULL) setData(data);
 }
 
 Matrix::Matrix(const Matrix &M)
@@ -38,6 +39,12 @@ Matrix&  Matrix::operator *=  (const Matrix &M)
 {
   gsl_matrix_memcpy(_work, _M);
   gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, _work, M._M, 0.0, _M);
+  return *this;
+}
+
+Matrix& Matrix::operator -= (const Matrix &M)
+{
+  gsl_matrix_sub (_M, M._M);
   return *this;
 }
 
@@ -87,7 +94,7 @@ void Matrix::getData(double* array)
   }
 }
 
-void Matrix::setData(double* array)
+void Matrix::setData(const double* array)
 {
   unsigned int rows = _M->size1;
   unsigned int cols = _M->size2;
