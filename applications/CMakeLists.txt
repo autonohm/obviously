@@ -70,7 +70,7 @@ TARGET_LINK_LIBRARIES(icp_matching2D obvision obcore gsl gslcblas ann ${XML_LIBR
 TARGET_LINK_LIBRARIES(icp_interactive3D vtkHybrid obgraphic obvision obcore gsl gslcblas ann flann)
 TARGET_LINK_LIBRARIES(kinect_stream_show vtkHybrid obvision obgraphic obdevice obcore glut gsl gslcblas flann ann OpenNI ${XML_LIBRARIES})
 TARGET_LINK_LIBRARIES(kinect_mesh_show vtkHybrid obvision obgraphic obdevice obcore glut gsl gslcblas flann ann OpenNI ${XML_LIBRARIES})
-TARGET_LINK_LIBRARIES(kinect_playback vtkHybrid obgrapmake hic obdevice obcore glut gsl gslcblas)
+TARGET_LINK_LIBRARIES(kinect_playback vtkHybrid obgraphic obdevice obcore glut gsl gslcblas)
 TARGET_LINK_LIBRARIES(kinect_localize vtkHybrid obvision obgraphic obdevice obcore glut gsl gslcblas flann ann OpenNI ${XML_LIBRARIES})
 TARGET_LINK_LIBRARIES(uvccam_serialize obdevice obcore v4l2 udev)
 TARGET_LINK_LIBRARIES(uvcvirtualcam_serialize obdevice obcore v4l2 udev)
