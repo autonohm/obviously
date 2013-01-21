@@ -3,8 +3,6 @@
 * @autor Christian Pfitzner
 * @date  08.11.2012
 *
-* @todo   set up matrix based filtering
-* @todo   set up controller for integration time according to amplitudes
 */
 
 
@@ -17,16 +15,21 @@ using namespace obvious;
  * Standard constructor of class CamNano
  */
 CamNano::CamNano()
-  : Device3D("CamNano")
+  : ParentDevice3D(165,120)
 {
    _res = pmdOpen (&_hnd, SOURCE_PLUGIN, SOURCE_PARAM, PROC_PLUGIN, PROC_PARAM);
-
+   sleep(2);
    if (_res != PMD_OK)
    {
-      LOGMSG(DBG_ERROR, "Error openning sensor");
+     std::cout << "Error code: " <<_res << std::endl;
+     LOGMSG(DBG_ERROR, "Error openning sensor");
    }
    else
-     std::cout << "Opened sensor" << std::endl;
+     LOGMSG(DBG_ERROR, "Opened sensor");
+
+//   char loaded[8];
+//   pmdSourceCommand(&_hnd, loaded, 8, “IsCalibrationDataLoaded”);
+
 
    /*
     * config pmd processing
@@ -47,22 +50,23 @@ CamNano::CamNano()
     */
    LOGMSG_CONF("CamNano.log", Logger::file_off|Logger::screen_on, DBG_DEBUG, DBG_ERROR);
 
-	_rows   = 120;
-	_cols   = 165;
 	_points = _rows*_cols;
 
-	_coords    = new double[_rows*_cols*3];
+	_coordsV   = new double[_rows*_cols*3];
+	_coordsF   = new float[_rows*_cols*3];
 	_image     = new unsigned char [_rows*_cols];
 	_imageF    = new float[_rows*_cols];
 
 	_meanAmp      = 0.0f;
 	_intTime      = 0.0f;
 	_autoIntegrat = true;
-	_frameRate    = 0.0f;
 	_rawSet       = false;
 	_intrinsic    = true;
 	_init         = true;
 	_debug        = false;
+
+	_cols = 165;
+	_rows = 120;
 
 	// init of pid controller
 	_ctrl.setDebug(_debug);
@@ -80,7 +84,11 @@ CamNano::CamNano()
  */
 CamNano::~CamNano()
 {
-	delete [] _coords;
+	//delete [] _coords;
+	delete [] _coordsF;
+	delete [] _image;
+	delete [] _imageF;
+	delete [] _coordsV;
 	pmdClose(_hnd);
 }
 
@@ -127,33 +135,79 @@ bool CamNano::grab()
 	  return(false);
 	}
 
-	float* coordsTmp  	= new float [_rows*_cols * 3];
 	float  dist[_rows*_cols];
-	float  amp[_rows*_cols];
-
 	_res = pmdGetDistances(_hnd, dist, sizeof(dist));
+	if (_res != PMD_OK)
+	{
+	  LOGMSG(DBG_ERROR, "Error getting the distance");
+	  pmdClose(_hnd);
+	  return(false);
+	}
+
+  float  amp[_rows*_cols];
 	_res = pmdGetAmplitudes(_hnd, amp, sizeof(amp));
-	_res = pmdGet3DCoordinates(_hnd, coordsTmp, _rows*_cols * sizeof(float) * 3);
+  if (_res != PMD_OK)
+  {
+    LOGMSG(DBG_ERROR, "Error getting the amplitudes");
+    pmdClose(_hnd);
+    return(false);
+  }
+
+  _res = pmdGet3DCoordinates(_hnd, _coordsF, _rows*_cols * sizeof(float) * 3);
+  if (_res != PMD_OK)
+  {
+    LOGMSG(DBG_ERROR, "Error getting coordinates");
+    pmdClose(_hnd);
+    return(false);
+  }
 
 	_imageF = amp;
 
-	if (_rawSet)
-	  this->noFilterPoints(coordsTmp);
-	else
-	  this->filterPoints(coordsTmp, dist, amp);
+  unsigned int maxval = 0;
+  unsigned int minval = 10000;
+  for (unsigned int i=0; i<_rows*_cols; i++) {
+    if(amp[i] > maxval)
+      maxval = amp[i];
+    if(amp[i] < minval)
+      minval = amp[i];
+  }
 
-	delete [] coordsTmp;
-
-	if (_res != PMD_OK)
+	unsigned int k=0;
+	for(unsigned int i=0 ; i<_rows*_cols*3 ; i+=3, k++)
 	{
-	  LOGMSG(DBG_ERROR, "Error filtering data");
-	  pmdClose (_hnd);
-	  return(false);
+	  _coords[i]    = -(double)_coordsF[i];
+	  _coords[i+1]  = (double)_coordsF[i+1];
+	  _coords[i+2]  = (double)_coordsF[i+2];
+	  _rgb[i]       = (amp[k]-minval) * 255 / (maxval);
+	  _rgb[i+1]     = (amp[k]-minval) * 255 / (maxval);
+	  _rgb[i+2]     = (amp[k]-minval) * 255 / (maxval);
+	  _z[k]         = _coords[i+2] / 1000.0;
+	  _mask[k]      = (!isnan(_z[k])) && (amp[k]>AMP_THRESHOLD) && (_z[k] < DIST_THRESHOLD_MAX) && (_z[k] > DIST_THRESHOLD_MIN);
 	}
 
 	if (_autoIntegrat)
 	  this->setAutoIntegration();
 	return(true);
+}
+
+/*
+ * Function to get valid coords
+ */
+double* CamNano::getValidCoords(void)
+{
+  unsigned int v=0;
+  for(unsigned int i=0 ; i<_rows*_cols ; i++)
+  {
+    if(_mask[i] == true)
+    {
+      _coordsV[v]   = _coords[3*i];
+      _coordsV[v+1] = _coords[3*i+1];
+      _coordsV[v+2] = _coords[3*i+2];
+      v+=3;
+    }
+  }
+  _points = v/3;
+  return(_coordsV);
 }
 
 /*
@@ -167,17 +221,22 @@ void CamNano::setIntegrationTime(unsigned value)
     LOGMSG(DBG_ERROR, "Wrong integration time");
   }
   else
-  {
     _intTime = value;
-  }
+
   _autoIntegrat = false;
 }
 
+/*
+ * Function to switch between autonomous and static integration time
+ */
 void CamNano::setIntegrationAuto(bool autom)
 {
   _autoIntegrat = autom;
 }
 
+/*
+ * Function to get integration Time
+ */
 float CamNano::getIntegrationTime(void) const
 {
   return (_intTime);
@@ -220,13 +279,6 @@ unsigned char* CamNano::getImage(void) const
   }
   return _image;
 }
-/*
- * Function to return frame rate
- */
-float CamNano::getFrameRate(void) const
-{
-  return _frameRate;
-}
 
 /*
  * Function to activate debug mode
@@ -236,78 +288,6 @@ void CamNano::setDebug(bool debug)
   _debug = debug;
 }
 
-/*-----------------------------------------------------------------------------
- * Private functions
- */
-/*
- * Function to filter invalid points
- */
-void CamNano::filterPoints(const float* points, const float* dist, const float* amp)
-{
-  float ampSum;
-  /*
-   * Check data for valid points with the help of distances and amplitude
-   */
-  unsigned int i = 0, j = 0;
-  for (unsigned int k = 0 ; k < _rows*_cols*3 ; )
-  {
-    // filter points distance distance
-     if (dist[j] <= DIST_THRESHOLD_MAX && dist[j] >= DIST_THRESHOLD_MIN)
-     {
-       // filter points with amplitude
-       if (amp[j] >= AMP_THRESHOLD)
-       {
-         /*
-          * saving points to member variable
-          *
-          * NOTE: image is mirrored so her we mirror it again to get the right
-          * perspective by changing the leadeing sign of x
-          */
-        _coords[i]    = -points[k];     // x
-        _coords[i+1]  =  points[k+1];   // y
-        _coords[i+2]  =  points[k+2];   // z
-        ampSum += amp[j];
-        i += 3;
-       }
-     }
-     k += 3; j += 1;
-  }
-
-  _points = i / 3;
-
-  if (i != 0)
-    _meanAmp = ampSum / i;
-  else
-    _meanAmp = 0;
-
-  if (_debug)
-    std::cout << "Mean amplitude: " <<  _meanAmp << std::endl;
-}
-
-/*
- * Function to set points unfiltered to member
- */
-void CamNano::noFilterPoints(const float* points)
-{
-  unsigned int i = 0;
-  for (unsigned int k = 0 ; k < _rows*_cols*3 ; k++ )
-  {
-    _coords[i] = points[k];
-    i += 1;;
-  }
-}
-
-/*
- * Function to estimate frame rate
- */
-void CamNano::estimateFrameRate(void)
-{
-  static long double oldTime;
-  long double newTime = _time.getTime();
-
-  _frameRate = 1 / (newTime - oldTime) * 1000;
-  oldTime = newTime;
-}
 /*
  * Function to set automatic integration time
  */

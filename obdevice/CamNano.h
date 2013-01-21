@@ -10,9 +10,9 @@
 #define __CAMNANO__
 
 
-#include "obcore/base/Timer.h"
+
 #include "obcore/math/PID_Controller.h"
-#include "obdevice/Device3D.h"
+#include "obdevice/ParentDevice3D.h"
 
 #include <stdio.h>
 #include <iostream>
@@ -41,7 +41,7 @@ namespace obvious {
 /// @def minimum threshold for distance filter
 #define DIST_THRESHOLD_MIN  0.05
 /// @def threshold for amplitude
-#define AMP_THRESHOLD       100
+#define AMP_THRESHOLD       120
 /// @def maximal integration time
 #define MAX_INTEGRATIONTIME 2000
 /// @def minimal integration time
@@ -56,7 +56,7 @@ namespace obvious {
  * camboard nano. The specifications of this sensor can be seen on
  * http://www.pmdtec.com/fileadmin/pmdtec/media/PMDvision-CamBoard-nano.pdf
  */
-class CamNano : public Device3D
+class CamNano : public ParentDevice3D
 {
 public:
   /**
@@ -72,16 +72,14 @@ public:
    * @return  valid size
    */
   unsigned int getValidSize(void) const;
+
+  double* getValidCoords(void);
   /**
    * Function to return image of tof camera.
    * @return image
    */
   unsigned char* getImage(void) const;
-  /**
-   * Function to get the frame rate of sensor
-   * @return   frame rate in pictures per second
-   */
-  float getFrameRate(void) const;
+
   /**
    * Function to get integration time of camera
    */
@@ -128,15 +126,6 @@ private:
    */
   void filterPoints(const float* points, const float* distances, const float* amplitudes);
   /**
-   * Function to write points from sensor to member variable _coords
-   * @param   points
-   */
-  void noFilterPoints(const float* points);
-  /**
-   * Function to estimate frame rate of grabbing
-   */
-  void estimateFrameRate(void);
-  /**
    * Function to set integration value automatically
    */
   void setAutoIntegration(void);
@@ -145,7 +134,7 @@ private:
    */
   PMDHandle           _hnd;           ///< Handler of PMD device
   PMDDataDescription  _dd;            ///< description of PMD device
-  Timer               _time;          ///< timer for estimation of frame rate
+
   PID_Controller      _ctrl;          ///< pid controller for automatic integration set up
 
   int                 _res;           ///< error buffer of PMD devices
@@ -154,7 +143,9 @@ private:
   float               _meanAmp;       ///< mean amplitude for controller
   float               _intTime;
 
-  float               _frameRate;     ///< frame rate of grabbing
+  float*              _coordsF;
+  double*             _coordsV;
+
   unsigned char*     _image;         ///< 2d image
   float*              _imageF;
   bool                _intrinsic;     ///< object gives back nondistrubed point cloud @see grub

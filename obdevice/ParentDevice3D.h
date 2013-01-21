@@ -10,6 +10,8 @@
 #define PARENTDEVICE3D_H_
 
 #include "obcore/math/MatD.h"
+#include "obcore/math/MatRGB.h"
+#include "obcore/base/Timer.h"
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -23,10 +25,8 @@ public:
   /**
    * Standard constructor
    */
-  ParentDevice3D(void)
-   : _coords(NULL), _mask(NULL), _z(NULL),
-    _rows(0), _cols(0),
-    _record(false) { }
+  ParentDevice3D(unsigned int cols = 0, unsigned int rows = 0);
+
   /**
    * Default destructor
    */
@@ -61,6 +61,21 @@ public:
    */
   MatD getMatZ(void) const;
   /**
+   * Accessor to pointer of color data
+   * @return pointer to color buffer (layout r1g1b1r2...)
+   */
+  unsigned char* getRGB()     { return _rgb; }
+  /**
+   * Get Matrix containing RGB data
+   * @return MatRGB
+   */
+  MatRGB getMatRGB(void) const;
+  /**
+   * Function to get the frame rate of sensor
+   * @return   frame rate in pictures per second
+   */
+  float getFrameRate(void) const { return _frameRate; }
+  /**
    * Start serializing the data stream to file
    * @param filename name of file
    */
@@ -71,11 +86,21 @@ public:
   void stopRecording(void);
 protected:
   virtual void record(void) = 0;
-  double*         _coords;
+  /**
+   * Function to estimate frame rate of grabbing
+   */
+  void estimateFrameRate(void);
+
   unsigned int    _rows;
   unsigned int    _cols;
-  double*         _z;
-  bool*           _mask;
+  double*          _coords;
+  double*          _z;
+  bool*            _mask;
+  unsigned char*  _rgb;
+
+  Timer            _time;          ///< timer for estimation of frame rate
+  float           _frameRate;     ///< frame rate of grabbing
+
   bool            _record;
   std::ofstream   _recfile;
 };

@@ -63,6 +63,7 @@ protected:
   Context        _context;
   DepthGenerator _depth;
   IRGenerator    _ir;
+  ImageGenerator _image;
   bool          _useIR;
 
   XnPoint3D* _proj;
@@ -70,7 +71,6 @@ protected:
 
   bool      _init;
 
-  unsigned char* _irRGB;
   const char*    _path;
 };
 
