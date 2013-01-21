@@ -8,7 +8,7 @@ using namespace obvious;
 
 Obvious3D*        _viewer;
 VtkCloud*         _cloud;
-XtionDevice*      _xtion;
+Xtion*            _xtion;
 bool              _pause       = false;
 bool              _showNormals = false;
 
@@ -23,10 +23,12 @@ public:
 
   virtual void Execute(vtkObject *vtkNotUsed(caller), unsigned long eventId,  void *vtkNotUsed(callData))
   {
-    if(!_pause) {
+    if(!_pause)
+    {
       if(_xtion->grab())
       {
         _cloud->setCoords(_xtion->getCoords(), _xtion->getCols()*_xtion->getRows(), 3);
+        _cloud->setColors(_xtion->getRGB(),    _xtion->getCols()*_xtion->getRows(), 3);
         _viewer->update();
       }
     }
@@ -39,7 +41,7 @@ private:
 
 int main(int argc, char* argv[])
 {
-  _xtion      = new XtionDevice(argv[1]);
+  _xtion      = new Xtion(argv[1]);
   _cloud      = new VtkCloud();
   _viewer     = new Obvious3D("Xtion Stream 3D", 1024, 768, 0, 0);
 

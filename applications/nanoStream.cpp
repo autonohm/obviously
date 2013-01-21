@@ -27,7 +27,8 @@ public:
       if(_nano->grab())
       {
         std::cout << "Frame rate: \t\t" << _nano->getFrameRate() << std::endl;
-        _cloud->setCoords(_nano->getCoords(), _nano->getValidSize(), 3);
+        _cloud->setCoords(_nano->getCoords(), _nano->getCols()*_nano->getRows(), 3);
+        _cloud->setColors(_nano->getRGB(),    _nano->getCols()*_nano->getRows(), 3);
         _viewer->update();
       }
     }
@@ -45,14 +46,14 @@ int main(int argc, char* argv[])
   _viewer     = new Obvious3D("Nano Stream 3D", 1024, 768, 0, 0);
 
   _nano->showParameters();
-  _nano->setIntegrationTime(600);
+  //_nano->setIntegrationTime(200);
   _viewer->addCloud(_cloud);
 
   vtkSmartPointer<vtkTimerCallback> cb =  vtkSmartPointer<vtkTimerCallback>::New();
   vtkSmartPointer<vtkRenderWindowInteractor> interactor = _viewer->getWindowInteractor();
   interactor->AddObserver(vtkCommand::TimerEvent, cb);
 
-  interactor->CreateRepeatingTimer(30);
+  interactor->CreateRepeatingTimer(1);
   _viewer->startRendering();
 
   delete _cloud;

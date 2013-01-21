@@ -27,7 +27,7 @@ int main(int argc, char* argv[])
   Image         *_img      = new Image(_G->getCols(), _G->getRows(), Image::GREY);
   unsigned int size      = _xtion->getRows()*_xtion->getRows();
 
-//  _viewer->showGrid();
+  //_viewer->showGrid();
   _viewer->showCircle();
   _viewer->showAngles();
   while(1)
