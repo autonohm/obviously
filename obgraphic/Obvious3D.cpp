@@ -11,6 +11,8 @@
 #include <vtkPlanes.h>
 #include <vtkProperty.h>
 #include <vtkInteractorStyleSwitch.h>
+#include <vtkOrientationMarkerWidget.h>
+#include <vtkAxesActor.h>
 
 #include <iostream>
 #include <string>
@@ -78,6 +80,7 @@ Obvious3D::Obvious3D(const char* windowName, unsigned int sizx, unsigned int siz
   _renderWindow->AddRenderer(_renderer);
   _renderWindow->SetSize(sizx, sizy);
   _renderWindow->SetPosition(posx,posy);
+
   if(windowName == NULL) _renderWindow->SetWindowName("Obvious3D");
   else _renderWindow->SetWindowName(windowName);
   _renderWindowInteractor = vtkSmartPointer<vtkRenderWindowInteractor>::New();
@@ -91,7 +94,6 @@ Obvious3D::Obvious3D(const char* windowName, unsigned int sizx, unsigned int siz
   _renderWindowInteractor->Initialize();
 
   _renderer->GetActiveCamera()->Yaw(180);
-
 }
 
 Obvious3D::~Obvious3D()
@@ -160,6 +162,19 @@ void Obvious3D::startRendering()
 {
   update();
   _renderWindowInteractor->Start();
+}
+
+void Obvious3D::showAxes(bool show )
+{
+  vtkSmartPointer<vtkAxesActor> axes = vtkSmartPointer<vtkAxesActor>::New();
+	if(show)
+	{
+	  _renderer->AddActor(axes);
+	}
+	else
+	{
+	  _renderer->RemoveActor(axes);
+	}
 }
 
 vtkSmartPointer<vtkRenderer> Obvious3D::getRenderer()

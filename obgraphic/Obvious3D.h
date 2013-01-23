@@ -52,6 +52,12 @@ public:
   void startRendering();
 
   /**
+   * Function to show coordinate axes in viewer
+   * @param[in]     show      set to TRUE for visualization (default:=TRUE)
+   */
+  void showAxes(bool show = true);
+
+  /**
    * Register a callback function for a specific keypress event
    * @param key key code
    * @param fptr function pointer
@@ -68,10 +74,10 @@ public:
   void setFrustum(double xmin, double xmax, double ymin, double ymax, double zmin, double zmax);
 private:
 
-  vtkSmartPointer<vtkRenderer> _renderer;
-  vtkSmartPointer<vtkRenderWindow> _renderWindow;
-  vtkSmartPointer<vtkRenderWindowInteractor> _renderWindowInteractor;
-  vtkSmartPointer<vtkExtractSelectedFrustum> _frust;
+  vtkSmartPointer<vtkRenderer>                _renderer;
+  vtkSmartPointer<vtkRenderWindow>            _renderWindow;
+  vtkSmartPointer<vtkRenderWindowInteractor>  _renderWindowInteractor;
+  vtkSmartPointer<vtkExtractSelectedFrustum>  _frust;
 };
 
 }
