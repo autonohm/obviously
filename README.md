@@ -2,6 +2,8 @@ obviously
 =========
 
 Open Robotic Vision and Utilities Library
+You can install all neccessary packages by using the installObviously script
+Type "sudo ./installObviously" to the terminal. 
 
 Initial Checkout
 ================

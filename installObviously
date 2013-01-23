@@ -1,0 +1,25 @@
+#!/bin/sh
+
+#set path of obviously to bashrc
+HERE=`dirname $(pwd)/obviously/`
+echo $HERE
+
+echo "export OBVIOUSLY_ROOT=$HERE" >> ~/.bashrc
+echo "source ~/.bashrc"
+
+#packages for obcore
+apt-get install gls-bin libgsl0-dev libudev-dev libxml++2.6-dev 
+ liblua5.1-0-dev
+
+#packages for obdevice
+apt-get install ps-engine openni-dev libv4l-dev
+
+#packages for obgraphic
+apt-get install libvtk5-dev libvtk5.8 freeglut3-dev
+
+#packages for obvision
+add-apt-repository ppa:v-launchpad-jochen-sprickerhof-de/pcl
+apt-get update
+apt-get install libpcl-1.1-dev
+apt-get install libann-dev libflann-dev
+
