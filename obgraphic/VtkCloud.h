@@ -72,19 +72,19 @@ public:
    * Copy coordinates to buffer. The size of buffer has to be getSize * 3.
    * @param dst destination buffer (layout x1y1z1x2y2z2...)
    */
-  void copyCoords(double* dst);
+  void copyCoords(double* dst, unsigned int subsampling=1);
 
   /**
    * Copy color array to buffer. The size of buffer has to be getSize * 3.
    * @param dst destination buffer (layout r1g1b1r2g2b2...)
    */
-  void copyColors(unsigned char* dst);
+  void copyColors(unsigned char* dst, unsigned int subsampling=1);
 
   /**
    * Copy normals to buffer. The size of buffer has to be getSize * 3.
    * @param dst destination buffer (layout x1y1z1x2y2z2...)
    */
-  void copyNormals(double* dst);
+  void copyNormals(double* dst, unsigned int subsampling=1);
 
   void copyData(gsl_matrix* C, gsl_matrix* N, unsigned char* rgb);
 

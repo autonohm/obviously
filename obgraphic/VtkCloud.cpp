@@ -249,21 +249,23 @@ unsigned int VtkCloud::getSize()
   return pointsScene->GetNumberOfPoints();
 }
 
-void VtkCloud::copyCoords(double* dst)
+void VtkCloud::copyCoords(double* dst, unsigned int subsampling)
 {
   vtkSmartPointer<vtkPointSet> points  = vtkPointSet::SafeDownCast(_polyData);
-  for(int i=0; i<points->GetNumberOfPoints(); i++)
-      points->GetPoint(i, &dst[i*3]);
+  int j=0;
+  for(int i=0; i<points->GetNumberOfPoints(); i+=subsampling, j++)
+      points->GetPoint(i, &dst[j*3]);
 }
 
-void VtkCloud::copyColors(unsigned char* dst)
+void VtkCloud::copyColors(unsigned char* dst, unsigned int subsampling)
 {
   vtkSmartPointer<vtkUnsignedCharArray> colors = vtkUnsignedCharArray::SafeDownCast(_polyData->GetPointData()->GetScalars());
-  for(int i=0; i<colors->GetNumberOfTuples(); i++)
-    colors->GetTupleValue(i, &dst[3*i]);
+  int j=0;
+  for(int i=0; i<colors->GetNumberOfTuples(); i+=subsampling, j++)
+    colors->GetTupleValue(i, &dst[3*j]);
 }
 
-void VtkCloud::copyNormals(double* dst)
+void VtkCloud::copyNormals(double* dst, unsigned int subsampling)
 {
   vtkSmartPointer<vtkDoubleArray> normals  = vtkDoubleArray::SafeDownCast(_polyData->GetPointData()->GetNormals());
 
@@ -273,8 +275,9 @@ void VtkCloud::copyNormals(double* dst)
     return;
   }
 
-  for(int i=0; i<normals->GetNumberOfTuples(); i++)
-      normals->GetTuple(i, &dst[i*3]);
+  int j=0;
+  for(int i=0; i<normals->GetNumberOfTuples(); i+=subsampling, j++)
+      normals->GetTuple(i, &dst[j*3]);
 }
 
 void VtkCloud::copyData(gsl_matrix* C, gsl_matrix* N, unsigned char* rgb)
