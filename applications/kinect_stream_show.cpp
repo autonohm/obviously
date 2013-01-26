@@ -2,6 +2,7 @@
 #include "obgraphic/Obvious3D.h"
 #include "obdevice/Kinect.h"
 #include "obvision/normals/NormalsEstimator.h"
+#include "obcore/base/Timer.h"
 
 using namespace std;
 using namespace obvious;
@@ -87,7 +88,7 @@ void recordCallback()
   else
     _kinect->stopRecording();
 
-  record != record;
+  record = !record;
 }
 
 int main(int argc, char* argv[])

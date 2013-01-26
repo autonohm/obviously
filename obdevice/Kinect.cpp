@@ -428,8 +428,8 @@ void Kinect::filterBilinear(bool* mask, double* z_filtered)
 
   double distance_dim;
   double distance_range;
-  double sigmad = 3;
-  double sigmar = 30;
+  double sigmad = 1.0/(3.0*3.0);
+  double sigmar = 1.0/(30.0*30.0);
   double wd, wr;
 
   _depth.GetMetaData(depthMD);
@@ -462,8 +462,8 @@ void Kinect::filterBilinear(bool* mask, double* z_filtered)
               if (!mask[k*_cols+l]) continue;
               double depthNeighbor = depthMD(l, k);
 
-              distance_dim   = distRow2 + (j - l)*(j - l) / (sigmad*sigmad);
-              distance_range = (depthCenter - depthNeighbor)*(depthCenter - depthNeighbor) / (sigmar*sigmar);
+              distance_dim   = distRow2 + (j - l)*(j - l) * sigmad;
+              distance_range = (depthCenter - depthNeighbor)*(depthCenter - depthNeighbor) * sigmar;
 
               double w = exp(-0.5 * (distance_dim + distance_range));
 
