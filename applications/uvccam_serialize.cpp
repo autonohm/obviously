@@ -35,24 +35,39 @@ int main(int argc, char* argv[])
   EnumCameraError retval = cam->connect();
   if(retval != CAMSUCCESS) return -1;
 
+  unsigned int format = V4L2_PIX_FMT_YUYV;
+  retval = cam->setFormat(width, height, format);
+  if(retval!=CAMSUCCESS) return -1;
+
   retval = cam->startStreaming();
 
   if(retval==CAMSUCCESS)
   {
     cam->setColorMode(mode);
-    cam->grab(img);
+    unsigned int bytes;
+    cam->grab(img, &bytes);
 
-    if(mode==CAMRGB)
+    if(format == V4L2_PIX_FMT_MJPEG)
     {
-      char* path = (char*)"/tmp/test.ppm";
-      cout << "Serializing image to " << path << " (width: " << width << ", " << height << ")" << endl;
-      serializePPM(path, img, width, height, 0);
+       char* path = (char*)"/tmp/test.jpg";
+       FILE* file = fopen (path, "wb");
+       fwrite (img, bytes, 1, file);
+       fclose (file);
     }
     else
     {
-      char* path = (char*)"/tmp/test.pgm";
-      cout << "Serializing image to " << path << " (width: " << width << ", " << height << ")" << endl;
-      serializePGM(path, img, width, height, 0);
+       if(mode==CAMRGB)
+       {
+         char* path = (char*)"/tmp/test.ppm";
+         cout << "Serializing image to " << path << " (width: " << width << ", " << height << ")" << endl;
+         serializePPM(path, img, width, height, 0);
+       }
+       else
+       {
+         char* path = (char*)"/tmp/test.pgm";
+         cout << "Serializing image to " << path << " (width: " << width << ", " << height << ")" << endl;
+         serializePGM(path, img, width, height, 0);
+       }
     }
   }
   else

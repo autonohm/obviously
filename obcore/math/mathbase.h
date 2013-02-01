@@ -53,13 +53,30 @@ namespace obvious {
   }
 
   /**
-   * @function abs3D
-   * @brief template function for amount of a 3D-Vector
-   * @param a 3D-vector
-   * @return value of a
+   * @function abs2D
+   * @brief template function calculating length of 2D vector
+   * @param a 2D vector
+   * @return length
    */
   template <class T>
-  static inline T abs3D(T* a)
+  static inline T abs2D(T a[2])
+  {
+    T abs=0;
+    for(unsigned int i=0; i<2; i++)
+    {
+        abs+=a[i]*a[i];
+    }
+    return(sqrt(abs));
+  }
+
+  /**
+   * @function abs3D
+   * @brief template function calculating length of 3D vector
+   * @param a 3D vector
+   * @return length
+   */
+  template <class T>
+  static inline T abs3D(T a[3])
   {
     T abs=0;
     for(unsigned int i=0; i<3; i++)
@@ -130,6 +147,15 @@ namespace obvious {
   static inline T dot3(const T* u, const T* v)
   {
     return u[0]*v[0] + u[1]*v[1] + u[2]*v[2];
+  }
+
+  template <class T>
+  static inline void norm2(T* n)
+  {
+    T len = sqrt(n[0]*n[0] + n[1]*n[1]);
+    if(fabs(len)<=10e-6) return;
+    n[0] /= len;
+    n[1] /= len;
   }
 
   template <class T>
