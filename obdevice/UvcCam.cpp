@@ -32,7 +32,8 @@ struct buffer
 UvcCam::UvcCam(const char *dev, unsigned int width, unsigned int height)
 {
    _nDeviceHandle = -1;
-   _dev           = dev;
+   _dev           = new char[strlen(dev)];
+   strcpy(_dev, dev);
    _width         = width;
    _height        = height;
    _colorMode     = CAMRGB;
@@ -54,6 +55,7 @@ UvcCam::UvcCam(const char *dev, unsigned int width, unsigned int height)
 UvcCam::~UvcCam()
 {
    disconnect();
+   delete _dev;
 }
 
 void UvcCam::FindDevice(const char* serial, char* &path)
@@ -85,8 +87,7 @@ void UvcCam::FindDevice(const char* serial, char* &path)
       if((strSerial != NULL) && strcmp(strSerial, serial)==0)
       {
          path = new char[strlen(dev_path)+1];
-         memcpy(path, dev_path, strlen(dev_path));
-         path[strlen(dev_path)] = '\0';
+         strcpy(path, dev_path);
          udev_device_unref(uvc_dev);
          break;
       }
@@ -275,10 +276,11 @@ EnumCameraError UvcCam::startStreaming()
    int type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 
    int err = ioctl(_nDeviceHandle, VIDIOC_STREAMON, &type);
-   while(err < 0)
+   if(err < 0)
    {
-      err = ioctl(_nDeviceHandle, VIDIOC_STREAMON, &type);
+      //err = ioctl(_nDeviceHandle, VIDIOC_STREAMON, &type);
       LOGMSG(DBG_DEBUG, "Unable to enable video capture");
+      exit(1);
    }
 
    CLEAR(_buf);

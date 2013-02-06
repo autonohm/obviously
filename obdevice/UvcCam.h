@@ -170,7 +170,7 @@ private:
   /**
    * File path of video device
    */
-  const char* _dev;
+  char* _dev;
 
   /**
    * Color mode, i.e., GrayScale, RGB, ...
