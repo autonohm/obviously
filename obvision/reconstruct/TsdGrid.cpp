@@ -13,7 +13,7 @@ namespace obvious
 
 #define MAXWEIGHT 128.0
 
-TsdGrid::TsdGrid(const unsigned int dimX, const unsigned int dimY, const double cellSize, const unsigned int beams, double angularRes)
+TsdGrid::TsdGrid(const unsigned int dimX, const unsigned int dimY, const double cellSize)
 {
    _cellSize = cellSize;
    _invCellSize = 1.0 / _cellSize;
@@ -26,15 +26,9 @@ TsdGrid::TsdGrid(const unsigned int dimX, const unsigned int dimY, const double 
    _dimY = dimY;
    _maxTruncation = 2*cellSize;
 
-   _phiMin = -angularRes * (double)((beams-1)/2);
-   _phiMax =  angularRes * (double)((beams-1)/2);
-   _angularRes = angularRes;
-
    LOGMSG(DBG_DEBUG, "Grid dimensions are (x/y) (" << _cellsX << "/" << _cellsY << ")");
 
    System<TsdCell>::allocate(_cellsY, _cellsX, _grid);
-
-   _cellCoords = new Matrix(_sizeOfGrid, 3);
 
    int i=0;
    for (int y = 0; y < _cellsY; y++)
@@ -45,20 +39,10 @@ TsdGrid::TsdGrid(const unsigned int dimX, const unsigned int dimY, const double 
          _grid[y][x].weight = 0.0;
       }
    }
-
-   _T = new Matrix(3, 3);
-   _T->setIdentity();
-   double Tinit[6];
-   Tinit[0] = 1.0;  Tinit[1] = 0.0;  Tinit[2] = ((double)dimX) * 0.5;
-   Tinit[3] = 0.0;  Tinit[4] = 1.0;  Tinit[5] = ((double)dimY) * 0.5;
-   setTransformation(Tinit);
 }
 
 TsdGrid::~TsdGrid(void)
 {
-   delete _Tinv;
-   delete _T;
-   delete _cellCoords;
    delete [] _grid;
 }
 
@@ -93,25 +77,13 @@ double TsdGrid::getMaxTruncation()
    return _maxTruncation;
 }
 
-void TsdGrid::setTransformation(double TData[6])
-{
-   Matrix T(3, 3, TData);
-   (*_T) *= T;
-
-   (*_Tinv) = _T->getInverse();
-
-   _tr[0] = (*_T)[0][2];
-   _tr[1] = (*_T)[1][2];
-}
-
-double* TsdGrid::getTransformation()
-{
-   return _T->getBuffer()->data;
-}
-
-void TsdGrid::push(double* depthArray, bool* mask)
+void TsdGrid::push(SensorPolar2D* sensor)
 {
    Timer t;
+   double* data = sensor->getRealMeasurementData();
+   bool* mask = sensor->getRealMeasurementMask();
+   double tr[2];
+   sensor->getPosition(tr);
 
    for(int y=0; y<_cellsY; y++)
    {
@@ -122,18 +94,34 @@ void TsdGrid::push(double* depthArray, bool* mask)
          cellCoords[0] = ((double)x + 0.5) * _cellSize;
          cellCoords[1] = ((double)y + 0.5) * _cellSize;
 
-         double phi = atan2(cellCoords[1],cellCoords[0]);
-         double r   = abs2D(cellCoords);
+         int index = sensor->backProject(cellCoords);
 
-         if(phi>_phiMin && phi<_phiMax)
+         if(index>0)
          {
-            unsigned int index = phi2Index(phi);
-            addTsdfValue(cellCoords, x, y, depthArray[index]);
+            if(mask[index])
+            {
+               // calculate distance of current cell to sensor
+               double distance = euklideanDistance<double>(tr, (double*)cellCoords, 2);
+               double sdf = data[index] - distance;
+               addTsdfValue(x, y, sdf);
+            }
          }
       }
    }
 
    LOGMSG(DBG_DEBUG, "Elapsed push: " << t.getTime() << "ms");
+}
+
+void TsdGrid::grid2GrayscaleImage(unsigned char* image)
+{
+   for(int y=0; y<_cellsY; y++)
+   {
+      int i = y*_cellsX;
+      for(int x=0; x<_cellsX; x++, i++)
+      {
+         image[i] = (unsigned char)((_grid[y][x].tsdf * 127.0) + 128.0);
+      }
+   }
 }
 
 bool TsdGrid::interpolateNormal(const double* coord, double* normal)
@@ -187,12 +175,8 @@ bool TsdGrid::interpolateBilinear(double coord[2], double* tsdf)
    return true;
 }
 
-void TsdGrid::addTsdfValue(const double cellCoords[2], const unsigned int x, const unsigned int y, const double depth)
+void TsdGrid::addTsdfValue(const unsigned int x, const unsigned int y, const double sdf)
 {
-   // calculate distance of current cell to sensor
-   double distance = euklideanDistance<double>(_tr, (double*)cellCoords, 2);
-   double sdf = depth - distance;
-
    // determine whether sdf/max_truncation = ]-1;1[
    if(sdf >= -_maxTruncation)
    {
@@ -206,11 +190,6 @@ void TsdGrid::addTsdfValue(const double cellCoords[2], const unsigned int x, con
       cell->tsdf   = (cell->tsdf * (cell->weight - 1.0) + tsdf) * invWeight;
       cell->weight = min(cell->weight, MAXWEIGHT);
    }
-}
-
-inline unsigned int TsdGrid::phi2Index(double phi)
-{
-   return (phi - _phiMin)/_angularRes;
 }
 
 inline bool TsdGrid::coord2Cell(double coord[2], int* x, int* y, double* dx, double* dy)

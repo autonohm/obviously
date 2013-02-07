@@ -30,4 +30,6 @@ add_library(obvision
 	reconstruct/TsdSpace.cpp
 	reconstruct/Projection.cpp
 	reconstruct/TsdSpace_utils.cpp
+	reconstruct/TsdGrid.cpp
+	reconstruct/SensorPolar2D.cpp
 	)
