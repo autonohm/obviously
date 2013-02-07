@@ -29,4 +29,5 @@ add_library(obvision
 	mesh/TriangleMesh.cpp
 	reconstruct/TsdGrid.cpp
 	reconstruct/SensorPolar2D.cpp
+	reconstruct/RayCast2D.cpp
 	)

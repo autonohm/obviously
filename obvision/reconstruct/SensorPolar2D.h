@@ -65,6 +65,13 @@ public:
    bool* getRealMeasurementMask();
 
    /**
+    * Calculate ray of specific beam
+    * @param[in] beam beam index
+    * @param[out] ray vector
+    */
+   void calcRay(unsigned int beam, double ray[2]);
+
+   /**
     * Assign an arbitrary coordinate to a measurement beam
     * @param[in] coordinate vector
     * @return beam index

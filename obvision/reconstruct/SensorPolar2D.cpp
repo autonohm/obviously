@@ -24,7 +24,7 @@ SensorPolar2D::SensorPolar2D(unsigned int size, double angularRes, double minPhi
       _data[i] = 1.0;
       _mask[i] = true;
 
-#if 0
+#if 1
       // plain wall
       _mask[i] = false;
       if(i>0 && i<_size-1)
@@ -73,6 +73,18 @@ double* SensorPolar2D::getRealMeasurementData()
 bool* SensorPolar2D::getRealMeasurementMask()
 {
    return _mask;
+}
+
+void SensorPolar2D::calcRay(unsigned int beam, double ray[2])
+{
+   Matrix Rh(3, 1);
+   double phi = _minPhi + ((double)beam) * _angularRes;
+   Rh[0][0] = cos(phi);
+   Rh[1][0] = sin(phi);
+   Rh[2][0] = 0.0;
+   Rh = (*_Pose) * Rh;
+   ray[0] = Rh[0][0];
+   ray[1] = Rh[1][0];
 }
 
 int SensorPolar2D::backProject(double* data)

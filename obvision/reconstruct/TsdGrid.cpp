@@ -163,8 +163,8 @@ bool TsdGrid::interpolateBilinear(double coord[2], double* tsdf)
    double dy;
    if(!coord2Cell(coord, &x, &y, &dx, &dy)) return false;
 
-   double wx = dx - (double)x;
-   double wy = dy - (double)y;
+   double wx = (coord[0] - dx) / _cellSize;
+   double wy = (coord[1] - dy) / _cellSize;
 
    // Interpolate
    *tsdf =    _grid[y + 0][x + 0].tsdf * (1. - wx) * (1. - wy)
@@ -200,7 +200,7 @@ inline bool TsdGrid::coord2Cell(double coord[2], int* x, int* y, double* dx, dou
    int yIdx = (int) (coord[1] * _invCellSize);
 
    // check edges / 0 is edge because of cell fine tuning
-   if ((xIdx >= (_cellsX - 2)) || (xIdx < 1) || (yIdx >= (_cellsY - 2)) || (yIdx < 1))
+   if ((xIdx >= (_cellsX - 2)) || (xIdx <= 1) || (yIdx >= (_cellsY - 2)) || (yIdx <= 1))
       return false;
 
    // get center point of current cell
