@@ -56,13 +56,19 @@ namespace obvious
     virtual ~Obvious2D();
 
     /**
+     * Check validity of viewer
+     * @return alive flag (false, if window was closed before)
+     */
+    bool isAlive();
+
+    /**
      * Draw image to screen
      * @param[in] image Pointer to image data (size = width*height*channels)
      * @param[in] width Image width
      * @param[in] height Image height
      * @param[in] channels Number of image channels
      */
-    virtual void draw(unsigned char* image, unsigned int width, unsigned int height, unsigned int channels);
+    virtual void draw(unsigned char* image, unsigned int width, unsigned int height, unsigned int channels, unsigned int jpeg=0, unsigned int bytes=0);
 
     /**
      * Register keyboard events

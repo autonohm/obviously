@@ -7,6 +7,7 @@ UvcVirtualCam::UvcVirtualCam(const char* dev, unsigned int maxWidth, unsigned in
 {
   _cam = new UvcCam(dev, maxWidth, maxHeight);
   _cam->connect();
+  _cam->setFormat(maxWidth, maxHeight, V4L2_PIX_FMT_YUYV);
   _cam->setColorMode(mode);
   _cam->startStreaming();
 

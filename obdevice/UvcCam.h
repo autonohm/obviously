@@ -79,6 +79,12 @@ public:
   EnumCameraColorMode getColorMode();
 
   /**
+   * Image formats
+   * @return either V4L2_PIX_FMT_MJPEG or V4L2_PIX_FMT_YUYU
+   */
+  unsigned int getFormat();
+
+  /**
    * Get number of image channels
    * @return channels (rgb=3, grayscale=1)
    */
@@ -89,7 +95,7 @@ public:
    * @param img Pointer to image buffer (must be instantiated externally)
    * @return Grabbing state
    */
-  EnumCameraError grab(unsigned char* img);
+  EnumCameraError grab(unsigned char* img, unsigned int* bytes = NULL);
 
   /**
    * Opens the connection to the UVC camera and initializes the device with
@@ -102,11 +108,13 @@ public:
 
   EnumCameraError disconnect();
 
+  void resetControls();
+
   EnumCameraError startStreaming();
 
   EnumCameraError stopStreaming();
 
-  EnumCameraError setResolution(unsigned int width, unsigned int height);
+  EnumCameraError setFormat(unsigned int width, unsigned int height, unsigned int format = V4L2_PIX_FMT_YUYV);
 
   /**
    * Print available image formats to stdout
@@ -162,7 +170,7 @@ private:
   /**
    * File path of video device
    */
-  const char* _dev;
+  char* _dev;
 
   /**
    * Color mode, i.e., GrayScale, RGB, ...
@@ -187,7 +195,7 @@ private:
   int* _LutGu;
   int* _LutGv;
   int* _LutBu;
-
+  unsigned int _format;
 };
 
 }

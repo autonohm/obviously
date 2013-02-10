@@ -122,7 +122,10 @@ Logger& Logger::getInstance()
 {
 	Logger::lock();
 	if (_m == 0)
+	{
 		_m = new Logger;
+		LOGMSG_CONF("nofile.log", Logger::file_off|Logger::screen_on, DBG_ERROR, DBG_DEBUG);
+	}
 	Logger::unlock();
 	return *_m;
 }
@@ -143,12 +146,6 @@ void Logger::print(const unsigned int verbosityLevel,
 {
 	std::stringstream logmsg;
 
-	if (!_configured)
-	{
-		logmsg << "ERROR: Logger not configured!" << std::endl;
-		PRINT_LOG(logmsg.str().c_str());
-		return;
-	}
 	Logger::lock();
 	switch(verbosityLevel)
 	{
