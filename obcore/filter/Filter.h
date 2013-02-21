@@ -56,33 +56,33 @@ public:
    * @param   inputSize   size of input
    * @return  TRUE if filter is sucessfull
    */
-	virtual FILRETVAL setInput(double *addr, const unsigned int inputSize) = 0;
+//	virtual FILRETVAL setInput(double *addr, const unsigned int inputSize) = 0;
   /**
    * Function to get output of filter
    * @param   addr
    */
-  virtual void setOutput(double *addr) = 0;
+  //virtual void setOutput(double *addr) = 0;
   /**
    * Function to set threshold
    * @param   val   threshold value for filtering
    */
-  virtual void setThreshold(const double& val) = 0;
+  //virtual void setThreshold(const double& val) = 0;
   /**
    * Function to change direction of filter
    * @param   direction   @see enum Direction
    */
-  virtual void setFilterDirection(Direction direction) = 0;
+  //virtual void setFilterDirection(Direction direction) = 0;
   //~~~~~~~~~~~~~~~~~~ Functions to GET ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   /**
    * Function to get output address of filter
    * @return pointer on adress
    */
-  virtual double* getOutput(void) const = 0;
+  //virtual double* getOutput(void) const = 0;
   /**
    * Function to return valid size
    * @return  valid size of filtered points
    */
-  virtual unsigned int getValidSize(void) const = 0;
+  //virtual unsigned int getValidSize(void) const = 0;
 };
 }
 
