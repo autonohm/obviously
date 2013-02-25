@@ -24,7 +24,7 @@ public:
 	bool* getMask(void){return(_mask);}
 	unsigned int getValidPoints(void){return(_validPoints);}
 	void setPointCloud(double* pointCloud){_pointCloud=pointCloud;}
-	void setNormals(double* pointCloud){_pointCloud=pointCloud;}
+	void setNormals(double* normals);
 	void setDepthMap(double* depthMap){_depthMap=depthMap;}
 	void setMask(bool* mask){_mask=mask;}
 	void setValidPoints(unsigned int validPoints){_validPoints=validPoints;}

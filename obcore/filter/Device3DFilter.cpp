@@ -7,6 +7,7 @@
 
 #include <cstdlib>
 #include <vector>
+#include <cstring>
 #include "Device3DFilter.h"
 #include "obcore/math/mathbase.h"
 
@@ -34,6 +35,12 @@ Device3DData::~Device3DData(void)
       delete _depthMap;
 }
 
+void Device3DData::setNormals(double* normals)
+{
+	//delete _normals;
+	_normals=normals;
+}
+
 /****************************************************************************************************/
 
 Device3DFilter::Device3DFilter(void)
@@ -58,7 +65,7 @@ FILRETVAL Device3DFilter::applyFilter(void)
       std::cout<<"\nError! Invalid input pointer!\n";
       return(FILTER_ERROR);
    }
-   if((_threshold<0.001)||(_threshold>-0.001))
+   if((_threshold<0.001)&&(_threshold>-0.001))
    {
       std::cout<<"\nError! Threshold not initialized!\n";
       return(FILTER_ERROR);
@@ -72,7 +79,7 @@ FILRETVAL Device3DFilter::applyFilter(void)
    std::vector<double> outPcl;
    std::vector<double> outNorm;
    double* outDepthmap=new double[640*480];
-   bool* outMask=new double[640*480];
+   bool* outMask=new bool[640*480];
    double abs=0.0;
 
    for(unsigned int i=0;i<640*480;i++)
@@ -98,15 +105,37 @@ FILRETVAL Device3DFilter::applyFilter(void)
          outMask[i]=_input->getMask()[i];
          outDepthmap[i]=_input->getDepthMap()[i];
       }
-
+   }
+   if(outPcl.size()!=outNorm.size())
+   {
+   	std::cout<<"\nError! Nbr. of points differs nbr. of normals\n";
+   	return(FILTER_ERROR);
    }
 
+   //Generate filtered data object
    _output=new Device3DData();
+   double* outputPcl=new double[outPcl.size()];
+   double* outputNorm=new double[outNorm.size()];
+   memcpy(outputPcl,outPcl.data(),outPcl.size()*sizeof(double));
+   memcpy(outputNorm,outNorm.data(),outNorm.size()*sizeof(double));
+   _output->setPointCloud(outputPcl);
+   _output->setNormals(outputNorm);
+   _output->setDepthMap(outDepthmap);
+   _output->setMask(outMask);
+   _output->setValidPoints(outPcl.size()/3);
 
    return(FILTER_OK);
 }
 
-
+Device3DData* Device3DFilter::getOutput(void)
+{
+	if(!_output)
+	{
+		std::cout<<"\nError! Output is empty!\n";
+		return(NULL);
+	}
+	return(_output);
+}
 
 
 }
