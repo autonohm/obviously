@@ -15,6 +15,7 @@ INCLUDE_DIRECTORIES(../..
                     .
                     /usr/include/
                     ${XML_INCLUDE_DIRS}
+                    /usr/include/openni
                     )
 
 add_library(obcore
