@@ -9,6 +9,7 @@
 #define DEVICE3DFILTER_H_
 
 #include "Filter.h"
+#include "obdevice/Kinect.h"
 
 namespace obvious
 {
@@ -16,17 +17,19 @@ namespace obvious
 class Device3DData
 {
 public:
-	Device3DData(void);
+	Device3DData(Kinect* kinect,double* normals);
+	Device3DData(double* pointcloud,double* normals,bool* mask,double* depthMap);
+	Device3DData(Device3DData* data);
 	~Device3DData(void);
 	double* getPointCloud(void){return(_pointCloud);}
 	double* getNormals(void){return(_normals);}
 	double* getDepthMap(void){return(_depthMap);}
 	bool* getMask(void){return(_mask);}
 	unsigned int getValidPoints(void){return(_validPoints);}
-	void setPointCloud(double* pointCloud){_pointCloud=pointCloud;}
-	void setNormals(double* normals);
-	void setDepthMap(double* depthMap){_depthMap=depthMap;}
-	void setMask(bool* mask){_mask=mask;}
+//	void setPointCloud(double* pointCloud){_pointCloud=pointCloud;}
+//	void setNormals(double* normals);
+//	void setDepthMap(double* depthMap){_depthMap=depthMap;}
+//	void setMask(bool* mask){_mask=mask;}
 	void setValidPoints(unsigned int validPoints){_validPoints=validPoints;}
 private:
 	double* _pointCloud;

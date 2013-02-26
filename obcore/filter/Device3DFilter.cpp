@@ -10,18 +10,37 @@
 #include <cstring>
 #include "Device3DFilter.h"
 #include "obcore/math/mathbase.h"
+#include "obdevice/Kinect.h"
 
 namespace obvious
 {
 
-Device3DData::Device3DData(void)
+Device3DData::Device3DData(Kinect* kinect,double* normals) :
+		                        _normals(normals)
 {
-	_pointCloud=NULL;
-	_normals=NULL;
-	_mask=NULL;
-	_depthMap=NULL;
+	_pointCloud=kinect->getCoords();
+	_mask=kinect->getMask();
+	_depthMap=kinect->getZ();
 	_validPoints=0;
 }
+
+Device3DData::Device3DData(double* pointCloud,double* normals, bool* mask,double* depthMap) :
+	          _pointCloud(pointCloud),
+	          _normals(normals),
+	          _mask(mask),
+	          _depthMap(depthMap)
+{
+
+}
+
+Device3DData::Device3DData(Device3DData* data)
+{
+	_pointCloud=data->getPointCloud();
+	_normals=data->getNormals();
+	_mask=data->getMask();
+	_depthMap=data->getDepthMap();
+}
+
 
 Device3DData::~Device3DData(void)
 {
@@ -35,11 +54,7 @@ Device3DData::~Device3DData(void)
       delete _depthMap;
 }
 
-void Device3DData::setNormals(double* normals)
-{
-	//delete _normals;
-	_normals=normals;
-}
+
 
 /****************************************************************************************************/
 
@@ -113,15 +128,11 @@ FILRETVAL Device3DFilter::applyFilter(void)
    }
 
    //Generate filtered data object
-   _output=new Device3DData();
    double* outputPcl=new double[outPcl.size()];
    double* outputNorm=new double[outNorm.size()];
    memcpy(outputPcl,outPcl.data(),outPcl.size()*sizeof(double));
    memcpy(outputNorm,outNorm.data(),outNorm.size()*sizeof(double));
-   _output->setPointCloud(outputPcl);
-   _output->setNormals(outputNorm);
-   _output->setDepthMap(outDepthmap);
-   _output->setMask(outMask);
+   _output=new Device3DData(outputPcl,outputNorm,outMask,outDepthmap);
    _output->setValidPoints(outPcl.size()/3);
 
    return(FILTER_OK);
