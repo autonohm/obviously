@@ -17,25 +17,21 @@ namespace obvious
 class Device3DData
 {
 public:
-	Device3DData(Kinect* kinect,double* normals);
-	Device3DData(double* pointcloud,double* normals,bool* mask,double* depthMap);
-	Device3DData(Device3DData* data);
+	Device3DData(Kinect* const kinect,double* const normals);
+	Device3DData(double* const pointCloud,double* const normals, bool* const mask,double* const depthMap);
+	Device3DData(const Device3DData* const data);
 	~Device3DData(void);
-	double* getPointCloud(void){return(_pointCloud);}
-	double* getNormals(void){return(_normals);}
-	double* getDepthMap(void){return(_depthMap);}
-	bool* getMask(void){return(_mask);}
-	unsigned int getValidPoints(void){return(_validPoints);}
-//	void setPointCloud(double* pointCloud){_pointCloud=pointCloud;}
-//	void setNormals(double* normals);
-//	void setDepthMap(double* depthMap){_depthMap=depthMap;}
-//	void setMask(bool* mask){_mask=mask;}
+	double* getPointCloud(void)const{return(_pointCloud);}
+	double* getNormals(void)const{return(_normals);}
+	double* getDepthMap(void)const{return(_depthMap);}
+	bool* getMask(void)const{return(_mask);}
+	unsigned int getValidPoints(void)const{return(_validPoints);}
 	void setValidPoints(unsigned int validPoints){_validPoints=validPoints;}
 private:
-	double* _pointCloud;
-	double* _normals;
-	double* _depthMap;
-	bool* _mask;
+	double* const _pointCloud;
+	double* const _normals;
+	bool* const _mask;
+	double* const _depthMap;
 	unsigned int _validPoints;
 };
 
@@ -45,7 +41,7 @@ class Device3DFilter : public IFilter
 public:
 	Device3DFilter(void);
 	~Device3DFilter(void);
-	void setInput(Device3DData* input){_input=input;}
+	void setInput(Device3DData* const input){_input=input;}
 	Device3DData* getOutput(void);
 	FILRETVAL applyFilter(void);
 	void setThreshold(double threshold){_threshold=threshold;}

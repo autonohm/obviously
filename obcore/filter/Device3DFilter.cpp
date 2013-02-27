@@ -15,30 +15,31 @@
 namespace obvious
 {
 
-Device3DData::Device3DData(Kinect* kinect,double* normals) :
-		                        _normals(normals)
+Device3DData::Device3DData(Kinect* const kinect,double* const normals) :
+		                        _pointCloud(kinect->getCoords()),
+		                        _normals(normals),
+		                        _mask(kinect->getMask()),
+		                        _depthMap(kinect->getZ())
 {
-	_pointCloud=kinect->getCoords();
-	_mask=kinect->getMask();
-	_depthMap=kinect->getZ();
 	_validPoints=0;
 }
 
-Device3DData::Device3DData(double* pointCloud,double* normals, bool* mask,double* depthMap) :
+Device3DData::Device3DData(double* const pointCloud,double* const normals, bool* const mask,double* const depthMap) :
 	          _pointCloud(pointCloud),
 	          _normals(normals),
 	          _mask(mask),
 	          _depthMap(depthMap)
 {
-
+	_validPoints=0;
 }
 
-Device3DData::Device3DData(Device3DData* data)
+Device3DData::Device3DData(const Device3DData* const data) :
+		                        _pointCloud(data->getPointCloud()),
+		                        _normals(data->getNormals()),
+		                        _mask(data->getMask()),
+		                        _depthMap(data->getDepthMap())
 {
-	_pointCloud=data->getPointCloud();
-	_normals=data->getNormals();
-	_mask=data->getMask();
-	_depthMap=data->getDepthMap();
+	_validPoints=data->getValidPoints();
 }
 
 
