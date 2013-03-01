@@ -11,6 +11,7 @@
 
 #include "obcore/math/MatRGB.h"
 #include "obcore/math/MatD.h"
+#include "obcore/datatypes/Device3DData.h"
 
 using namespace xn;
 using namespace std;
@@ -113,6 +114,12 @@ public:
    * Experimental: Activate bilinear Filter
    */
   void useBilinearFilter(bool activate);
+
+  /**
+  * Get valid pointers of the Kinect camera
+  * @@param data Pointer to datatype (will be allocated). Has to be set to NULL
+  */
+  void getDevice3DData(Device3DData* data);
 
 private:
 
