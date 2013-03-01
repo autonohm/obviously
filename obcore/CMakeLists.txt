@@ -15,7 +15,6 @@ INCLUDE_DIRECTORIES(../..
                     .
                     /usr/include/
                     ${XML_INCLUDE_DIRS}
-                    /usr/include/openni
                     )
 
 add_library(obcore
@@ -45,4 +44,5 @@ add_library(obcore
    grid/GradientGrid.cpp
    grid/HeightGrid.cpp
    grid/ObstacleGrid.cpp
+   datatypes/Device3DData.cpp
 	)
