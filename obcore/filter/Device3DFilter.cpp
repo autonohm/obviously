@@ -24,8 +24,6 @@ Device3DFilter::Device3DFilter(void)
 
 Device3DFilter::~Device3DFilter(void)
 {
-   if(_input)
-      delete(_input);
    if(_output)
       delete(_output);
 }

@@ -32,14 +32,14 @@ Device3DData::Device3DData(const Device3DData* const data) :
 
 Device3DData::~Device3DData(void)
 {
-   if(_pointCloud)
+/*   if(_pointCloud)
       delete _pointCloud;
    if(_normals)
       delete _normals;
    if(_mask)
       delete _mask;
    if(_depthMap)
-      delete _depthMap;
+      delete _depthMap;*/
 }
 
 }
