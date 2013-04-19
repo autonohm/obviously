@@ -336,7 +336,7 @@ EnumCameraError UvcCam::grab(unsigned char* image, unsigned int* bytes)
       return CAMFAILURE;
    }
 
-   LOGMSG(DBG_DEBUG, "Bytes used: " << _buf.bytesused);
+   //LOGMSG(DBG_DEBUG, "Bytes used: " << _buf.bytesused);
 
    if(bytes) *bytes = _buf.bytesused;
 
