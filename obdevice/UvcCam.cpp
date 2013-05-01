@@ -221,7 +221,7 @@ EnumCameraError UvcCam::setFormat(unsigned int width, unsigned int height, unsig
       LOGMSG(DBG_DEBUG, "desired format unavailable");
       LOGMSG(DBG_DEBUG, "choosing next possible format - width: " << fmt.fmt.pix.width << ", height: " << fmt.fmt.pix.height);
    }
-   _width = fmt.fmt.pix.width;
+   _width  = fmt.fmt.pix.width;
    _height = fmt.fmt.pix.height;
 
    return CAMSUCCESS;
@@ -283,15 +283,6 @@ EnumCameraError UvcCam::startStreaming()
       exit(1);
    }
 
-   CLEAR(_buf);
-   _buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-   _buf.memory = V4L2_MEMORY_MMAP;
-   if (ioctl(_nDeviceHandle, VIDIOC_DQBUF, &_buf) < 0)
-   {
-      LOGMSG(DBG_DEBUG, "Unable to dequeue buffer");
-      return CAMFAILURE;
-   }
-
    return CAMSUCCESS;
 }
 
@@ -308,6 +299,7 @@ EnumCameraError UvcCam::stopStreaming()
    {
       LOGMSG(DBG_DEBUG, "Unable to stop streaming");
    }
+
    unmapMemory();
    return CAMSUCCESS;
 }
@@ -320,12 +312,6 @@ EnumCameraError UvcCam::grab(unsigned char* image, unsigned int* bytes)
       return CAMERRORINIT;
    }
 
-   if (ioctl(_nDeviceHandle, VIDIOC_QBUF, &_buf) < 0)
-   {
-      LOGMSG(DBG_DEBUG, "Unable to requeue buffer");
-      return CAMFAILURE;
-   }
-
    CLEAR(_buf);
    _buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
    _buf.memory = V4L2_MEMORY_MMAP;
@@ -336,7 +322,13 @@ EnumCameraError UvcCam::grab(unsigned char* image, unsigned int* bytes)
       return CAMFAILURE;
    }
 
-   LOGMSG(DBG_DEBUG, "Bytes used: " << _buf.bytesused);
+   if (ioctl(_nDeviceHandle, VIDIOC_QBUF, &_buf) < 0)
+   {
+      LOGMSG(DBG_DEBUG, "Unable to requeue buffer");
+      return CAMFAILURE;
+   }
+
+//   LOGMSG(DBG_DEBUG, "Bytes used: " << _buf.bytesused);
 
    if(bytes) *bytes = _buf.bytesused;
 
@@ -464,6 +456,12 @@ void UvcCam::unmapMemory()
          munmap(_mem[i].start, _mem[i].length);
       }
    }
+
+   CLEAR(_rb);
+   _rb.count  = 0;
+   _rb.type   = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+   _rb.memory = V4L2_MEMORY_MMAP;
+   ioctl(_nDeviceHandle, VIDIOC_REQBUFS, &_rb);
 }
 
 // aus lucview color.c util.c

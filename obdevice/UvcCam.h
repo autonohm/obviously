@@ -23,7 +23,7 @@ namespace obvious
 {
 
 #define LIMITVALUE(x)  ((x)>0xffffff?0xff: ((x)<=0xffff?0:((x)>>16)))
-#define NB_BUFFERS 4
+#define NB_BUFFERS 2
 
 enum EnumCameraError { CAMSUCCESS, CAMGRABBING, CAMERRORINIT, CAMFAILURE };
 enum EnumCameraColorMode { CAMRGB, CAMGRAYSCALE };
