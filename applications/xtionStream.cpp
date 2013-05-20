@@ -1,7 +1,6 @@
 #include <iostream>
 #include "obgraphic/Obvious3D.h"
 #include "obdevice/Xtion.h"
-#include "obdevice/XtionDevice.h"
 
 using namespace std;
 using namespace obvious;
