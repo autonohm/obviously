@@ -10,7 +10,6 @@
 #ifndef SICKLMS100_H_
 #define SICKLMS100_H_
 
-#include "obdevice/LaserDevice.h"
 #include <LMS1xx.h>
 
 /**
@@ -21,58 +20,74 @@ namespace obvious
 /**
  * @class LaserDevice
  */
-class SickLMS100 : public LaserDevice
+class SickLMS100
 {
 public:
-  /**
-   * Standard Constructor
-   */
-  SickLMS100(double minAngle=-135.0, double maxAngle=135.0, unsigned int rays = 1);
-  /**
-   * Default Destructor
-   */
-  virtual   ~SickLMS100();
-  /**
-   * Function to grab new data
-   * @return  TRUE if success
-   */
-  virtual bool      grab(void);
+   /**
+    * Standard Constructor
+    */
+   SickLMS100();
+
+   /**
+    * Default Destructor
+    */
+   virtual   ~SickLMS100();
+
+   double getStartAngle();
+
+   double getStopAngle();
+
+   unsigned int getNumberOfRays();
+
+   double getAngularRes(void);
+
+   double* getRanges();
+
+   double* getCoords();
+
+   /**
+    * Function to grab new data
+    * @return  TRUE if success
+    */
+   virtual bool      grab(void);
+
+   void schedule();
+
 private:
-  void estimateAngularRes(void);
-  /**
-   * Function to estimate ranges in scan
-   */
-  void estimateRanges(void);
-  /**
-   * Function to estimate intensities in scan
-   */
-  virtual void estimateIntensities(void);
-  /**
-   * Function to estimate single angles for every ray
-   */
-  virtual void estimateAngles(void);
-  /**
-   * Function to estimate 2D coords
-   */
-  virtual void estimateCoords2D(void);
-  /**
-   * Function to estimate 3D coords
-   */
-  virtual void estimateCoords3D(void);
-  /**
-   * Function to estimate normals
-   */
-  virtual void estimateNormals(void);
-  /**
-   * Function to estimate mask
-   */
-  virtual void estimateMask(void);
 
-  LMS1xx      _laser;
-  scanCfg     _cfg;
-  scanDataCfg _dataCfg;
-  scanData    _data;
+   /**
+    * Function to estimate ranges in scan
+    */
+   void calculateRanges(void);
 
+   /**
+    * Function to estimate intensities in scan
+    */
+   void calculateIntensities(void);
+
+   /**
+    * Function to estimate single angles for every ray
+    */
+   void calculateAngles(void);
+
+   /**
+    * Function to estimate 2D coords
+    */
+   void calculateCoords2D(void);
+
+   LMS1xx      _laser;
+   scanCfg     _cfg;
+   scanDataCfg _dataCfg;
+   scanData    _data;
+   scanData    _dataBuffer;
+   unsigned int _nrOfRays;
+
+   double*   _ranges;            //!< Distance in meters
+   double*   _intensities;       //!< Intensities
+   double*   _coords2D;          //!< 2D coords
+   double*   _normals;           //!< normals
+   double*   _angles;            //!< Angles in rad
+   bool*     _mask;              //!< mask for valid or invalid points
 
 };
 

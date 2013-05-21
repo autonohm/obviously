@@ -81,7 +81,7 @@ void TsdGrid::push(SensorPolar2D* sensor)
 {
    Timer t;
    double* data = sensor->getRealMeasurementData();
-   bool* mask = sensor->getRealMeasurementMask();
+   bool*   mask = sensor->getRealMeasurementMask();
    double tr[2];
    sensor->getPosition(tr);
 
@@ -90,13 +90,15 @@ void TsdGrid::push(SensorPolar2D* sensor)
       int i = y*_cellsX;
       for(int x=0; x<_cellsX; x++, i++)
       {
+         // Center of cell
          double cellCoords[2];
          cellCoords[0] = ((double)x + 0.5) * _cellSize;
          cellCoords[1] = ((double)y + 0.5) * _cellSize;
 
+         // Index of laser beam
          int index = sensor->backProject(cellCoords);
 
-         if(index>0)
+         if(index>=0)
          {
             if(mask[index])
             {
@@ -116,7 +118,7 @@ void TsdGrid::grid2GrayscaleImage(unsigned char* image)
 {
    for(int y=0; y<_cellsY; y++)
    {
-      int i = y*_cellsX;
+      int i = (_cellsY-1-y)*_cellsX;
       for(int x=0; x<_cellsX; x++, i++)
       {
          image[i] = (unsigned char)((_grid[y][x].tsdf * 127.0) + 128.0);
@@ -167,17 +169,17 @@ bool TsdGrid::interpolateBilinear(double coord[2], double* tsdf)
    double wy = (coord[1] - dy) / _cellSize;
 
    // Interpolate
-   *tsdf =    _grid[y + 0][x + 0].tsdf * (1. - wx) * (1. - wy)
-            + _grid[y - 1][x + 0].tsdf * (1. - wx) * wy
-            + _grid[y + 0][x + 1].tsdf * wx * (1. - wy)
-            + _grid[y - 1][x + 1].tsdf * wx * wy;
+   *tsdf =    _grid[y + 0][x + 0].tsdf * (1. - wy) * (1. - wx)
+            + _grid[y - 1][x + 0].tsdf *       wy  * (1. - wx)
+            + _grid[y + 0][x + 1].tsdf * (1. - wy) *       wx
+            + _grid[y - 1][x + 1].tsdf *       wy  *       wx;
 
    return true;
 }
 
 void TsdGrid::addTsdfValue(const unsigned int x, const unsigned int y, const double sdf)
 {
-   // determine whether sdf/max_truncation = ]-1;1[
+   // Determine whether sdf/max_truncation = ]-1;1[
    if(sdf >= -_maxTruncation)
    {
       TsdCell* cell = &_grid[y][x];
@@ -194,20 +196,15 @@ void TsdGrid::addTsdfValue(const unsigned int x, const unsigned int y, const dou
 
 inline bool TsdGrid::coord2Cell(double coord[2], int* x, int* y, double* dx, double* dy)
 {
-   // initialize
-   // get cell indices
-   int xIdx = (int) (coord[0] * _invCellSize);
-   int yIdx = (int) (coord[1] * _invCellSize);
+   // Get cell indices
+   int xIdx = (int) (coord[0] * _invCellSize + 0.5);
+   int yIdx = (int) (coord[1] * _invCellSize + 0.5);
 
-   // check edges / 0 is edge because of cell fine tuning
-   if ((xIdx >= (_cellsX - 2)) || (xIdx <= 1) || (yIdx >= (_cellsY - 2)) || (yIdx <= 1))
-      return false;
-
-   // get center point of current cell
+   // Get center point of current cell
    *dx = (double(xIdx) + 0.5) * _cellSize;
    *dy = (double(yIdx) + 0.5) * _cellSize;
 
-   // cell fine tuning -> shift to lower-left-front edge
+   // Cell fine tuning -> shift to lower-left-front edge
    if (coord[0] < *dx)
    {
       xIdx--;
@@ -218,6 +215,10 @@ inline bool TsdGrid::coord2Cell(double coord[2], int* x, int* y, double* dx, dou
       yIdx--;
       (*dy) -= _cellSize;
    }
+
+   // Check edges / consider cell fine tuning
+   if ((xIdx > (_cellsX - 2)) || (xIdx < 0) || (yIdx > (_cellsY - 1)) || (yIdx < 1))
+      return false;
 
    *x = xIdx;
    *y = yIdx;

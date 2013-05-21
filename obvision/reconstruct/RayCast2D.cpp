@@ -78,17 +78,23 @@ bool RayCast2D::rayCastFromCurrentView(TsdGrid* grid, SensorPolar2D* sensor, con
 	// Interpolation weight
 	double interp;
 
-	double xmin   = ((double)(ray[0] > 0.0 ? 0 : (xDim-1)*cellSize) - tr[0]) / ray[0];
-	double ymin   = ((double)(ray[1] > 0.0 ? 0 : (yDim-1)*cellSize) - tr[1]) / ray[1];
+	double xmin   = -10e9;
+	double ymin   = -10e9;
+	if(fabs(ray[0])>10e-6) xmin = ((double)(ray[0] > 0.0 ? 0 : (xDim-1)*cellSize) - tr[0]) / ray[0];
+	if(fabs(ray[1])>10e-6) ymin = ((double)(ray[1] > 0.0 ? 0 : (yDim-1)*cellSize) - tr[1]) / ray[1];
 	double idxMin = max(xmin, ymin);
 	idxMin        = max(idxMin, 0.0);
 
-	double xmax   = ((double)(ray[0] > 0.0 ? (xDim-1)*cellSize : 0) - tr[0]) / ray[0];
-	double ymax   = ((double)(ray[1] > 0.0 ? (yDim-1)*cellSize : 0) - tr[1]) / ray[1];
+	double xmax   = 10e9;
+	double ymax   = 10e9;
+	if(fabs(ray[0])>10e-6) xmax = ((double)(ray[0] > 0.0 ? (xDim-1)*cellSize : 0) - tr[0]) / ray[0];
+	if(fabs(ray[1])>10e-6) ymax = ((double)(ray[1] > 0.0 ? (yDim-1)*cellSize : 0) - tr[1]) / ray[1];
 	double idxMax = min(xmax, ymax);
 
 	if (idxMin >= idxMax)
+	{
 		return false;
+	}
 
 	double tsdf_prev;
 	position[0] = tr[0] + idxMin * ray[0];
@@ -96,9 +102,9 @@ bool RayCast2D::rayCastFromCurrentView(TsdGrid* grid, SensorPolar2D* sensor, con
 	grid->interpolateBilinear(position, &tsdf_prev);
 
 	bool found = false;
-	for(int i=idxMin; i<idxMax; i++)
+	for(int i=idxMin; i<=idxMax; i++)
 	{
-		// calculate current position
+		// Calculate current position
 		memcpy(position_prev, position, 2 * sizeof(*position));
 
 		position[0] += ray[0];
@@ -106,9 +112,11 @@ bool RayCast2D::rayCastFromCurrentView(TsdGrid* grid, SensorPolar2D* sensor, con
 
 		double tsdf;
 		if (!grid->interpolateBilinear(position, &tsdf))
+		{
 			continue;
+		}
 
-		// check sign change
+		// Check sign change
 		if(tsdf_prev > 0 && tsdf_prev < 0.99999 && tsdf < 0)
 		{
 			interp = tsdf_prev / (tsdf_prev - tsdf);

@@ -18,8 +18,8 @@ public:
    /**
     * Standard constructor
     * @param[in] beams number of beams
-    * @param[in] angularRes angular resolution, i.e. angle between beams in degree
-    * @param[in] minPhi minimum angle from which beams are counted positive counter-clockwisely
+    * @param[in] angularRes angular resolution, i.e. angle between beams in rad
+    * @param[in] minPhi minimum angle from which beams are counted positive counter-clockwisely (rad)
     */
    SensorPolar2D(unsigned int beams, double angularRes, double minPhi);
 
@@ -52,11 +52,15 @@ public:
     */
    unsigned int getRealMeasurementSize();
 
+   void setRealMeasurementData(double* data);
+
    /**
     * Get measurement vector
     * @return vector of distance data
     */
    double* getRealMeasurementData();
+
+   void setRealMeasurementMask(bool* mask);
 
    /**
     * Get validity mask
@@ -77,10 +81,12 @@ public:
     * @return beam index
     */
    int backProject(double* data);
+   void backProject2(double* data, int idx[2], double w[2]);
 
 private:
 
    int phi2Index(double phi);
+   void phi2Index2(double phi, int idx[2], double w[2]);
 
    Matrix* _Pose;
 

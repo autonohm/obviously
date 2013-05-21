@@ -22,10 +22,7 @@ public:
   /**
    * Standard Constructor
    */
-  LaserDevice(double minAngle, double maxAngle, unsigned int rays)
-    : _minAngle(minAngle), _maxAngle(maxAngle), _nrOfRays(rays),
-      _ranges(0), _intensities(0), _angles(0), _mask(0),
-      _angRes(estimateAngularRes()) { }
+  LaserDevice();
 
   /**
    * Default Destructor
@@ -43,12 +40,6 @@ public:
    * @return  TRUE if success
    */
   virtual bool grab(void)           { return(true); }
-
-  /**
-   * Return number of rays
-   * @return  rays
-   */
-  unsigned int getNumberOfRays() const { return _nrOfRays; }
 
   /**
    * Function to return Distances
@@ -139,12 +130,10 @@ protected:
   double*   _angles;            //!< Angles in rad
   bool*     _mask;              //!< mask for valid or invalid points
   /*~~~~~~~~~~~~~~~~~~~~~~~~~~ Configuration ~~~~~~~~~~~~~~~~~~~~~~~~~*/
-  double            _minAngle;
-  double            _maxAngle;
+
   unsigned int      _nrOfRays;
   double            _angRes;
 
-  double estimateAngularRes(void)      { return((double)(_maxAngle-_minAngle)/_nrOfRays); }
 };
 
 };  //namespace
