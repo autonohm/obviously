@@ -24,7 +24,7 @@ float PID_Controller::controll(const float& isValue)
   float  d_ctrl_output  = (error - oldError) * _d;
   i_ctrl_output += error * _i;
 
-  // Anti wind up controll
+  // Anti wind up control
   if (i_ctrl_output >= _awu)
     i_ctrl_output = _awu;
   else if (i_ctrl_output <= -_awu)
