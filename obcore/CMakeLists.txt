@@ -39,10 +39,8 @@ add_library(obcore
 	filter/CartesianFilter.cpp
 	filter/NormalFilter.cpp
 	filter/BoundingBoxFilter.cpp
-	filter/Device3DFilter.cpp
    grid/Grid2D.cpp
    grid/GradientGrid.cpp
    grid/HeightGrid.cpp
    grid/ObstacleGrid.cpp
-   datatypes/Device3DData.cpp
 	)
