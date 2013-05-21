@@ -35,7 +35,6 @@ add_library(obcore
    math/VecD.cpp
    math/VectorRefD.cpp
 	filter/EuclideanFilterD.cpp
-	filter/EuclideanFilterVecD.cpp
 	filter/CartesianFilter.cpp
 	filter/NormalFilter.cpp
 	filter/BoundingBoxFilter.cpp
