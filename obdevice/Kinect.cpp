@@ -1,7 +1,6 @@
 #include "Kinect.h"
 #include <obcore/math/mathbase.h>
 #include <obcore/math/Matrix.h>
-#include "obcore/datatypes/Device3DData.h"
 #include "math.h"
 
 namespace obvious
@@ -479,11 +478,5 @@ void Kinect::filterBilinear(bool* mask, double* z_filtered)
   }
 }
 
-void Kinect::getDevice3DData(Device3DData* data)
-{
-	if(data)
-		delete data;
-	data=new Device3DData(_coords,_mask,_z);
-}
 
 } // end namespace

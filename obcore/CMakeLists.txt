@@ -35,14 +35,11 @@ add_library(obcore
    math/VecD.cpp
    math/VectorRefD.cpp
 	filter/EuclideanFilterD.cpp
-	filter/EuclideanFilterVecD.cpp
 	filter/CartesianFilter.cpp
 	filter/NormalFilter.cpp
 	filter/BoundingBoxFilter.cpp
-	filter/Device3DFilter.cpp
    grid/Grid2D.cpp
    grid/GradientGrid.cpp
    grid/HeightGrid.cpp
    grid/ObstacleGrid.cpp
-   datatypes/Device3DData.cpp
 	)
