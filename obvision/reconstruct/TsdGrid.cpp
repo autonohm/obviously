@@ -87,8 +87,7 @@ void TsdGrid::push(SensorPolar2D* sensor)
 
    for(int y=0; y<_cellsY; y++)
    {
-      int i = y*_cellsX;
-      for(int x=0; x<_cellsX; x++, i++)
+      for(int x=0; x<_cellsX; x++)
       {
          // Center of cell
          double cellCoords[2];
@@ -102,9 +101,12 @@ void TsdGrid::push(SensorPolar2D* sensor)
          {
             if(mask[index])
             {
+
                // calculate distance of current cell to sensor
-               double distance = euklideanDistance<double>(tr, (double*)cellCoords, 2);
+               double distance = euklideanDistance<double>(tr, cellCoords, 2);
+
                double sdf = data[index] - distance;
+
                addTsdfValue(x, y, sdf);
             }
          }
@@ -165,8 +167,8 @@ bool TsdGrid::interpolateBilinear(double coord[2], double* tsdf)
    double dy;
    if(!coord2Cell(coord, &x, &y, &dx, &dy)) return false;
 
-   double wx = (coord[0] - dx) / _cellSize;
-   double wy = (coord[1] - dy) / _cellSize;
+   double wx = fabs((coord[0] - dx) / (_cellSize));
+   double wy = fabs((coord[1] - dy) / (_cellSize));
 
    // Interpolate
    *tsdf =    _grid[y + 0][x + 0].tsdf * (1. - wy) * (1. - wx)
@@ -197,26 +199,29 @@ void TsdGrid::addTsdfValue(const unsigned int x, const unsigned int y, const dou
 inline bool TsdGrid::coord2Cell(double coord[2], int* x, int* y, double* dx, double* dy)
 {
    // Get cell indices
-   int xIdx = (int) (coord[0] * _invCellSize + 0.5);
-   int yIdx = (int) (coord[1] * _invCellSize + 0.5);
+   double dCoordX = coord[0] * _invCellSize;
+   double dCoordY = coord[1] * _invCellSize;
+
+   int xIdx = floor(dCoordX);
+   int yIdx = floor(dCoordY);
 
    // Get center point of current cell
    *dx = (double(xIdx) + 0.5) * _cellSize;
    *dy = (double(yIdx) + 0.5) * _cellSize;
 
-   // Cell fine tuning -> shift to lower-left-front edge
+   // Ensure that query point has 4 neighbors for bilinear interpolation
    if (coord[0] < *dx)
    {
       xIdx--;
       (*dx) -= _cellSize;
    }
-   if (coord[1] < *dy)
+   if (coord[1] > *dy)
    {
-      yIdx--;
-      (*dy) -= _cellSize;
+      yIdx++;
+      (*dy) += _cellSize;
    }
 
-   // Check edges / consider cell fine tuning
+   // Check boundaries
    if ((xIdx > (_cellsX - 2)) || (xIdx < 0) || (yIdx > (_cellsY - 1)) || (yIdx < 1))
       return false;
 

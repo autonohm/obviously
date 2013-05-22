@@ -301,15 +301,15 @@ namespace obvious {
 
   /**
    * Calculate the Euklidean distance between two n-dimensional points
-   * @param pfCoords1 first coordinate vector
-   * @param pfCoords2 second coordinate vector SET TO NULL FOR ABS OF 1 Vector Edited by Philipp Koch
+   * @param coords1 first coordinate vector
+   * @param coords2 second coordinate vector SET TO NULL FOR ABS OF 1 Vector Edited by Philipp Koch
    * @param size size of coordinate vectors (must both be equally sized)
    * @return Euklidean distance
    */
   template <class T>
   inline float euklideanDistance(T* coords1, T* coords2, int size)
   {
-	  T sqr = 0.0f;
+	  T sqr = 0.0;
 	  if(coords2!=NULL)
 	  {
 		  for(int i=0; i<size; i++)

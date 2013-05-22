@@ -81,12 +81,10 @@ public:
     * @return beam index
     */
    int backProject(double* data);
-   void backProject2(double* data, int idx[2], double w[2]);
 
 private:
 
    int phi2Index(double phi);
-   void phi2Index2(double phi, int idx[2], double w[2]);
 
    Matrix* _Pose;
 

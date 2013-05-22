@@ -1,5 +1,6 @@
 #include "SensorPolar2D.h"
 #include "obcore/math/mathbase.h"
+#include "obcore/base/Logger.h"
 
 #include <math.h>
 #include <string.h>
@@ -20,6 +21,11 @@ SensorPolar2D::SensorPolar2D(unsigned int size, double angularRes, double minPhi
 
    _angularRes = angularRes;
    _minPhi = minPhi;
+
+   if(minPhi>=180.0)
+   {
+     LOGMSG(DBG_ERROR, "Valid minimal angle < 180 degree");
+   }
 }
 
 SensorPolar2D::~SensorPolar2D()
@@ -101,8 +107,11 @@ int SensorPolar2D::backProject(double* data)
 int SensorPolar2D::phi2Index(double phi)
 {
    double phiAligned = phi-_minPhi;
+
    // ensure angle to lie in valid bounds
    if(phiAligned<=-0.5*_angularRes) return -1;
+   if(phiAligned>=(2.0*M_PI-0.5*_angularRes)) phiAligned -= 2.0*M_PI;
+
    int index = round(phiAligned /_angularRes);
 
    if(index >= _size) index = -1;
