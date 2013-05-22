@@ -138,4 +138,66 @@ bool RayCast2D::rayCastFromCurrentView(TsdGrid* grid, SensorPolar2D* sensor, con
 	return true;
 }
 
+void RayCast2D::calcCoordsAligned(TsdGrid* grid, double* coords, double* normals, unsigned int* cnt)
+{
+   Timer t;
+   *cnt = 0;
+
+   double c[2];
+   double n[2];
+
+   double cellSize = grid->getCellSize();
+   for (unsigned int y=0; y<grid->getCellsY(); y++)
+   {
+      c[0] = cellSize * 0.5;
+      c[1] = y*cellSize + cellSize * 0.5;
+      double tsdf_prev;
+      grid->interpolateBilinear(c, &tsdf_prev);
+      for (unsigned int x=1; x<grid->getCellsX(); x++)
+      {
+         c[0] += cellSize;
+         double tsdf;
+         if(grid->interpolateBilinear(c, &tsdf))
+         {
+            // Check sign change
+            if(tsdf_prev*tsdf < 0 && fabs(tsdf)<0.9999 && fabs(tsdf_prev)<0.99999)
+            {
+               double interp = 1-(tsdf_prev / (tsdf_prev - tsdf));
+               coords[*cnt] = c[0] - interp * cellSize;
+               coords[*cnt+1] = c[1];
+               *cnt+=2;
+            }
+         }
+         tsdf_prev = tsdf;
+      }
+   }
+
+   for (unsigned int x=0; x<grid->getCellsX(); x++)
+   {
+      c[0] = x*cellSize + cellSize * 0.5;
+      c[1] = cellSize * 0.5;
+      double tsdf_prev;
+      grid->interpolateBilinear(c, &tsdf_prev);
+      for (unsigned int y=1; y<grid->getCellsY(); y++)
+      {
+         c[1] += cellSize;
+         double tsdf;
+         if(grid->interpolateBilinear(c, &tsdf))
+         {
+            // Check sign change
+            if(tsdf_prev*tsdf < 0 && fabs(tsdf)<0.9999 && fabs(tsdf_prev)<0.99999)
+            {
+               double interp = 1-(tsdf_prev / (tsdf_prev - tsdf));
+               coords[*cnt] = c[0];
+               coords[*cnt+1] = c[1] - interp * cellSize;
+               *cnt+=2;
+            }
+         }
+         tsdf_prev = tsdf;
+      }
+   }
+   LOGMSG(DBG_DEBUG, "Elapsed TSDF projection: " << t.getTime() << "ms");
+   LOGMSG(DBG_DEBUG, "Ray casting finished! Found " << *cnt << " coordinates");
+}
+
 }

@@ -11,7 +11,7 @@
 namespace obvious
 {
 
-#define MAXWEIGHT 128.0
+#define MAXWEIGHT 32.0
 
 TsdGrid::TsdGrid(const unsigned int dimX, const unsigned int dimY, const double cellSize)
 {
@@ -124,6 +124,40 @@ void TsdGrid::grid2GrayscaleImage(unsigned char* image)
       for(int x=0; x<_cellsX; x++, i++)
       {
          image[i] = (unsigned char)((_grid[y][x].tsdf * 127.0) + 128.0);
+      }
+   }
+}
+
+void TsdGrid::grid2ColorImage(unsigned char* image)
+{
+   unsigned char rgb[3];
+   for(int y=0; y<_cellsY; y++)
+   {
+      int i = (_cellsY-1-y)*_cellsX;
+      for(int x=0; x<_cellsX; x++, i++)
+      {
+
+         double tsd = _grid[y][x].tsdf;
+         if(tsd>0.0 && tsd<0.999)
+         {
+            rgb[0] = 127;
+            rgb[1] = 127 + (unsigned char)(128.0*tsd);
+            rgb[2] = 127;
+         }
+         else if(tsd<0.0 && tsd>-0.999)
+         {
+            rgb[0] = 127 + (unsigned char)(-128.0*tsd);
+            rgb[1] = 127;
+            rgb[2] = 127;
+         }
+         else
+         {
+            rgb[0] = 255;
+            rgb[1] = 255;
+            rgb[2] = 255;
+         }
+
+         memcpy(&image[3*i], rgb, 3*sizeof(unsigned char));
       }
    }
 }

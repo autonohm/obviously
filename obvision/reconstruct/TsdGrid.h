@@ -84,6 +84,12 @@ public:
    void grid2GrayscaleImage(unsigned char* image);
 
    /**
+    * Create color image from tsdf grid
+    * @param[out] color image (3-channel)
+    */
+   void grid2ColorImage(unsigned char* image);
+
+   /**
     * Calculates normal of plain element hit by a ray caster
     * @param[out] coordinates
     * @param[out] normal vector

@@ -24,6 +24,8 @@ public:
 
    void calcCoordsFromCurrentView(TsdGrid* grid, SensorPolar2D* sensor, double* coords, double* normals, unsigned int* ctr);
 
+   void calcCoordsAligned(TsdGrid* grid, double* coords, double* normals, unsigned int* cnt);
+
 private:
 
    bool rayCastFromCurrentView(TsdGrid* grid, SensorPolar2D* sensor, const unsigned int beam, double coordinates[2], double normal[2]);

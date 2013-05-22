@@ -18,59 +18,62 @@ using namespace obvious;
 
 int main(void)
 {
-	LOGMSG_CONF("tsd_grid_test.log", Logger::file_off|Logger::screen_on, DBG_DEBUG, DBG_DEBUG);
+   LOGMSG_CONF("tsd_grid_test.log", Logger::file_off|Logger::screen_on, DBG_DEBUG, DBG_DEBUG);
 
-	// Initialization of TSD grid
-	double dimX = 10.0;
-	double dimY = 10.0;
-	double cellSize = 0.05;
+   // Initialization of TSD grid
+   double dimX = 8.0;
+   double dimY = 8.0;
+   double cellSize = 0.05;
 
    TsdGrid* grid = new TsdGrid(dimX, dimY, cellSize);
    grid->setMaxTruncation(6.0*cellSize);
 
 
    // Initialization of 2D viewer
+   // image display is only possible for image dimensions divisible by 4
    unsigned int w = grid->getCellsX();
    unsigned int h = grid->getCellsY();
-   unsigned char* image = new unsigned char[w * h];
-   Obvious2D viewer(4*w, 4*h, "tsd_grid_test");
+   unsigned char* image = new unsigned char[3*w*h];
+   double ratio = double(w)/double(h);
+   double screen_width = 800;
+   Obvious2D viewer(screen_width, screen_width/ratio, "tsd_grid_lms100");
 
 
    // Translation of sensor
    double tx = dimX/2.0;
    double ty = dimY/2.0;
 
-	// Rotation about z-axis of sensor
-	double phi = 0.0 * M_PI / 180.0;
-	double tf[9] = {cos(phi), -sin(phi), tx,
-			          sin(phi),  cos(phi), ty,
-			          0,         0,        1};
-	Matrix Tinit(3, 3);
-	Tinit.setData(tf);
+   // Rotation about z-axis of sensor
+   double phi = 0.0 * M_PI / 180.0;
+   double tf[9] = {cos(phi), -sin(phi), tx,
+                   sin(phi),  cos(phi), ty,
+                   0,         0,        1};
+   Matrix Tinit(3, 3);
+   Tinit.setData(tf);
 
 
-	// Sensor initialization
-	SickLMS100 lms;
+   // Sensor initialization
+   SickLMS100 lms;
    int     rays       = lms.getNumberOfRays();
    double  angularRes = lms.getAngularRes();
    double  minPhi     = lms.getStartAngle();
 
    cout << "Rays: " << rays << " angular resolution: " << angularRes << " " << " min Phi: " << minPhi << endl;
-	SensorPolar2D sensor(rays, angularRes, minPhi);
+   SensorPolar2D sensor(rays, angularRes, minPhi);
 
 
-	RayCast2D rayCaster;
+   RayCast2D rayCaster;
    double* mCoords = new double[rays*2];
    double* mNormals = new double[rays*2];
-
+   double* map      = new double[grid->getCellsX()*grid->getCellsY()*2];
 
    // Compose ICP modules
-   int iterations                 = 30;
+   int iterations                 = 50;
    PairAssignment* assigner       = (PairAssignment*)  new AnnPairAssignment(2);
-   IPostAssignmentFilter* filterD = (IPostAssignmentFilter*) new DistanceFilter(0.5, 0.01, iterations);
+   IPostAssignmentFilter* filterD = (IPostAssignmentFilter*) new DistanceFilter(1.5, 0.01, iterations);
    assigner->addPostFilter(filterD);
    IRigidEstimator* estimator     = (IRigidEstimator*) new ClosedFormEstimator2D();
-	Icp* icp = new Icp(assigner, estimator);
+   Icp* icp = new Icp(assigner, estimator);
    icp->setMaxRMS(0.0);
    icp->setMaxIterations(iterations);
 
@@ -80,60 +83,63 @@ int main(void)
    sensor.transform(&Tinit);
    grid->push(&sensor);
 
-	while(viewer.isAlive())
-	{
-	   lms.grab();
+   while(viewer.isAlive())
+   {
+      lms.grab();
 
-	   unsigned int mSize = rays;
-	   rayCaster.calcCoordsFromCurrentView(grid, &sensor, mCoords, mNormals, &mSize);
-	   LOGMSG(DBG_DEBUG, "Raycast resulted in " << mSize << " coordinates");
+      unsigned int mSize = rays;
+      rayCaster.calcCoordsFromCurrentView(grid, &sensor, mCoords, mNormals, &mSize);
+      LOGMSG(DBG_DEBUG, "Raycast resulted in " << mSize << " coordinates");
 
-	   double* sCoords = lms.getCoords();
+      double* sCoords = lms.getCoords();
 
-	   gsl_matrix_view model = gsl_matrix_view_array(mCoords, mSize, 2);
-	   gsl_matrix_view scene = gsl_matrix_view_array(sCoords, rays, 2);
+      Matrix* M = new Matrix(mSize, 2, mCoords);
+      Matrix* S = new Matrix(rays, 2, sCoords);
 
-	   icp->reset();
-	   icp->setModel(&model.matrix);
-	   icp->setScene(&scene.matrix);
+      icp->reset();
+      icp->setModel(M->getBuffer());
+      icp->setScene(S->getBuffer());
 
-	   double rms;
+      double rms;
       unsigned int pairs;
       unsigned int it;
       icp->iterate(&rms, &pairs, &it);
       LOGMSG(DBG_DEBUG, "ICP result - RMS: " << rms << " pairs: " << pairs << " iterations: " << it << endl;)
 
       Matrix* T = icp->getFinalTransformation();
-      //T->print();
-
-      Matrix T2D(3, 3);
-      T2D[0][0] = (*T)[0][0]; T2D[0][1] = (*T)[0][1]; T2D[0][2] = (*T)[0][3];
-      T2D[1][0] = (*T)[1][0]; T2D[1][1] = (*T)[1][1]; T2D[1][2] = (*T)[1][3];
-      T2D[2][0] = (*T)[3][0]; T2D[2][1] = (*T)[3][1]; T2D[2][2] = (*T)[3][3];
-
-      //T2D.print();
-      Matrix Tinv = T2D.getInverse();
-
       sensor.setRealMeasurementData(lms.getRanges());
-	   sensor.transform(&T2D);
-	   Matrix* Tsensor = sensor.getPose();
-	   //Tsensor->print();
-	   grid->push(&sensor);
+      sensor.transform(T);
+      Matrix* TSensor = sensor.getPose();
+      Matrix TSensorInv = T->getInverse();
 
-	   grid->grid2GrayscaleImage(image);
-	   /*for(int i=0; i<mSize; i+=2)
-	   {
-	      int x = ((double)(mCoords[i] + tx)) / cellSize;
-	      int y = ((double)(mCoords[i+1] + ty)) / cellSize;
-	      image[y*w + x] = 0;
-	   }*/
+      grid->push(&sensor);
+      grid->grid2ColorImage(image);
+      unsigned int mapSize;
+      rayCaster.calcCoordsAligned(grid, map, NULL, &mapSize);
+      for(int i=0; i<mapSize/2; i++)
+      {
+         double x = map[2*i];
+         double y = map[2*i+1];
+         int u = x / cellSize;
+         int v = h-(y / cellSize);
+         if(u>0 && u<w && v>0 && v<h)
+         {
+            int idx = 3*(v*w+u);
+            image[idx] = 0;
+            image[idx+1] = 0;
+            image[idx+2] = 0;
+         }
+      }
 
-	   viewer.draw(image, w, h, 1, 0, 0);
-	}
+      delete M;
+      delete S;
+      viewer.draw(image, w, h, 3, 0, 0);
+   }
 
-	serializePGM("/tmp/tsd_grid.pgm", image, w, h, true);
+   //output for grayscale data
+   //serializePGM("/tmp/tsd_grid.pgm", image, w, h, true);
 
-	delete [] image;
+   delete [] image;
    delete [] mCoords;
    delete [] mNormals;
 }
