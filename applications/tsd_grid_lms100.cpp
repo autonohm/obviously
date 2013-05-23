@@ -21,12 +21,12 @@ int main(void)
    LOGMSG_CONF("tsd_grid_test.log", Logger::file_off|Logger::screen_on, DBG_DEBUG, DBG_DEBUG);
 
    // Initialization of TSD grid
-   double dimX = 8.0;
-   double dimY = 8.0;
+   double dimX = 16.0;
+   double dimY = 16.0;
    double cellSize = 0.05;
 
    TsdGrid* grid = new TsdGrid(dimX, dimY, cellSize);
-   grid->setMaxTruncation(6.0*cellSize);
+   grid->setMaxTruncation(2.0*cellSize);
 
 
    // Initialization of 2D viewer
@@ -35,7 +35,7 @@ int main(void)
    unsigned int h = grid->getCellsY();
    unsigned char* image = new unsigned char[3*w*h];
    double ratio = double(w)/double(h);
-   double screen_width = 800;
+   double screen_width = 600;
    Obvious2D viewer(screen_width, screen_width/ratio, "tsd_grid_lms100");
 
 
@@ -109,8 +109,6 @@ int main(void)
       Matrix* T = icp->getFinalTransformation();
       sensor.setRealMeasurementData(lms.getRanges());
       sensor.transform(T);
-      Matrix* TSensor = sensor.getPose();
-      Matrix TSensorInv = T->getInverse();
 
       grid->push(&sensor);
       grid->grid2ColorImage(image);

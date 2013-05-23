@@ -64,7 +64,7 @@ int main(void)
     data[i] = 2.0;
     mask[i] = true;
 
-#if 0
+#if 1
     // plain wall
     mask[i] = false;
     if(i>0 && i<beams-1)
