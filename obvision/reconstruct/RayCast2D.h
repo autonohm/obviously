@@ -9,30 +9,30 @@
 namespace obvious
 {
 
-/**
- * @class RayCast2D
- * @brief
- * @author Stefan May, Philipp Koch
- */
-class RayCast2D
-{
-public:
+  /**
+   * @class RayCast2D
+   * @brief
+   * @author Stefan May, Philipp Koch
+   */
+  class RayCast2D
+  {
+  public:
 
-   RayCast2D();
+    RayCast2D();
 
-   ~RayCast2D();
+    ~RayCast2D();
 
-   void calcCoordsFromCurrentView(TsdGrid* grid, SensorPolar2D* sensor, double* coords, double* normals, unsigned int* ctr);
+    void calcCoordsFromCurrentView(TsdGrid* grid, SensorPolar2D* sensor, double* coords, double* normals, unsigned int* ctr);
 
-   void calcCoordsAligned(TsdGrid* grid, double* coords, double* normals, unsigned int* cnt);
+    void calcCoordsAligned(TsdGrid* grid, double* coords, double* normals, unsigned int* cnt);
 
-private:
+  private:
 
-   bool rayCastFromCurrentView(TsdGrid* grid, SensorPolar2D* sensor, const unsigned int beam, double coordinates[2], double normal[2]);
+    bool rayCastFromCurrentView(TsdGrid* grid, SensorPolar2D* sensor, const unsigned int beam, double coordinates[2], double normal[2]);
 
-   void calcRayFromCurrentView(const unsigned int beam, double dirVec[2]);
+    void calcRayFromCurrentView(const unsigned int beam, double dirVec[2]);
 
-};
+  };
 
 }
 
