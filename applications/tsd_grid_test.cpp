@@ -49,9 +49,9 @@ int main(void)
 
 
   // Sensor initialization
-  int beams = 37;
-  double angularRes = deg2rad(10.0);
-  double minPhi     = deg2rad(-180.0);
+  int beams = 1081;
+  double angularRes = deg2rad(0.25);
+  double minPhi     = deg2rad(-135.0);
 
   SensorPolar2D sensor(beams, angularRes, minPhi);
 
@@ -95,7 +95,7 @@ int main(void)
   grid->grid2ColorImage(image);
   for(unsigned int i=0; i<cnt; i+=2)
   {
-    cout << " x: " << coords[i] << " y: " << coords[i+1] << " d:" << sqrt(coords[i]*coords[i] + coords[i+1]*coords[i+1]) << endl;
+    if(i%10==0) cout << " x: " << coords[i] << " y: " << coords[i+1] << " d:" << sqrt(coords[i]*coords[i] + coords[i+1]*coords[i+1]) << endl;
     int x = round(((double)(coords[i] + tx)) / cellSize);
     int y = h-round(((double)(coords[i+1] + ty)) / cellSize);
     unsigned int idx = y*w + x;
