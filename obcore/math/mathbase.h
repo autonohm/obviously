@@ -87,6 +87,23 @@ namespace obvious {
   }
 
   /**
+   * Calculate the l2-norm of an arbitrarily sized vector
+   * @param coords coordinate vector
+   * @param size size of coordinate vector
+   * @return l2-norm
+   */
+  template <class T>
+  inline float l2Norm(T* coords, int size)
+  {
+    T sqr = coords[0] * coords[0];
+    for(int i=1; i<size; i++)
+    {
+      sqr += coords[i] * coords[i];
+    }
+    return sqrt(sqr);
+  }
+
+  /**
    * @function Dist2_2D
    * @return Squared distance between two points in 2D space
    **/
@@ -349,23 +366,6 @@ namespace obvious {
         dist += fabs(tmp);
       }
     return dist;
-  }
-
-  /**
-   * Calculate the l2-norm of an arbitrarily sized vector
-   * @param coords coordinate vector
-   * @param size size of coordinate vector
-   * @return l2-norm
-   */
-  template <class T>
-  inline float l2Norm(T* coords, int size)
-  {
-    T sqr = coords[0] * coords[0];
-    for(int i=1; i<size; i++)
-    {
-      sqr += coords[i] * coords[i];
-    }
-    return sqrt(sqr);
   }
 
   /**
