@@ -18,9 +18,9 @@ int main(void)
   LOGMSG_CONF("tsd_grid_test.log", Logger::file_off|Logger::screen_on, DBG_DEBUG, DBG_DEBUG);
 
   // Initialization of TSD grid
-  double dimX = 10.0;
-  double dimY = 10.0;
-  double cellSize = 0.02;
+  double dimX = 24.0;
+  double dimY = 24.0;
+  double cellSize = 0.04;
 
   TsdGrid* grid = new TsdGrid(dimX, dimY, cellSize);
   grid->setMaxTruncation(6.0*cellSize);
@@ -61,7 +61,7 @@ int main(void)
   for(int i=0; i<beams; i++)
   {
     // circular structure
-    data[i] = 2.0;
+    data[i] = std::min(dimX, dimY) / 3.0;
     mask[i] = true;
 
 #if 0
@@ -70,7 +70,7 @@ int main(void)
     if(i>0 && i<beams-1)
     {
       double theta = angularRes*((double)i)+minPhi;
-      data[i] = 1.0/sin(theta);
+      data[i] = std::min(dimX, dimY) / 3.0/sin(theta);
       mask[i] = true;
     }
 #endif
@@ -93,7 +93,7 @@ int main(void)
 
 
   grid->grid2GrayscaleImage(image);
-  for(int i=0; i<cnt; i+=2)
+  for(unsigned int i=0; i<cnt; i+=2)
   {
     cout << " x: " << coords[i] << " y: " << coords[i+1] << " d:" << sqrt(coords[i]*coords[i] + coords[i+1]*coords[i+1]) << endl;
     int x = round(((double)(coords[i] + tx)) / cellSize);

@@ -22,6 +22,12 @@ SensorPolar2D::SensorPolar2D(unsigned int size, double angularRes, double minPhi
    _angularRes = angularRes;
    _minPhi = minPhi;
 
+   // smallest angle to lie in bounds (must be negative)
+   _phiLowerBound = -0.5*_angularRes + _minPhi;
+
+   // if angle is too large, it might be projected with modulo 2 PI to a valid index
+   _phiUpperBound = 2.0*M_PI + _phiLowerBound;
+
    if(minPhi>=180.0)
    {
      LOGMSG(DBG_ERROR, "Valid minimal angle < 180 degree");
@@ -104,13 +110,37 @@ int SensorPolar2D::backProject(double* data)
    return phi2Index(phi);
 }
 
+void SensorPolar2D::backProject(Matrix* M, int* indices)
+{
+  Timer t;
+  Matrix PoseInv = (*_Pose);
+  PoseInv.invert();
+  gsl_matrix* coords2D = gsl_matrix_alloc(3, M->getRows());
+
+  gsl_blas_dgemm(CblasNoTrans, CblasTrans, 1.0, PoseInv.getBuffer(), M->getBuffer(), 0.0, coords2D);
+
+  double* x = gsl_matrix_ptr(coords2D, 0, 0);
+  double* y = gsl_matrix_ptr(coords2D, 1, 0);
+
+  for(int i=0; i<M->getRows(); i++)
+  {
+    //const double x = gsl_matrix_get(coords2D, 0, i);
+    //const double y = gsl_matrix_get(coords2D, 1, i);
+    //indices[i] = phi2Index(atan2(y, x));
+
+    indices[i] = phi2Index(atan2(*(y+i), *(x+i)));
+  }
+
+  gsl_matrix_free(coords2D);
+}
+
 int SensorPolar2D::phi2Index(double phi)
 {
-   double phiAligned = phi-_minPhi;
-
    // ensure angle to lie in valid bounds
-   if(phiAligned<=-0.5*_angularRes) return -1;
-   if(phiAligned>=(2.0*M_PI-0.5*_angularRes)) phiAligned -= 2.0*M_PI;
+   if(phi<=_phiLowerBound) return -1;
+   if(phi>=_phiUpperBound) phi -= 2.0*M_PI;
+
+   double phiAligned = phi-_minPhi;
 
    int index = round(phiAligned /_angularRes);
 

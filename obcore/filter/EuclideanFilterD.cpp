@@ -34,7 +34,7 @@ FILRETVAL EuclideanFilterD::applyFilter(void)
                           dPtr[i+1] + _centroid[Y],
                           dPtr[i+2] + _centroid[Z]
       };
-      depthVar =  euklideanDistance<double>(coord, NULL, Point3D::sizeP);
+      depthVar =  l2Norm<double>(coord, Point3D::sizeP);
       if(depthVar > _threshold) {
         dPtr += Point3D::sizeP;
       }
@@ -48,7 +48,7 @@ FILRETVAL EuclideanFilterD::applyFilter(void)
 	else // FILTER_SMALLER
 	{
     for(unsigned int i=0 ; i<_size ; i+=Point3D::sizeP) {
-      depthVar =  euklideanDistance<double>((double*)dPtr, NULL, Point3D::sizeP);
+      depthVar =  l2Norm<double>((double*)dPtr, Point3D::sizeP);
       if(depthVar <= _threshold) {
         dPtr += Point3D::sizeP;
       }

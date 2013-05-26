@@ -82,6 +82,8 @@ public:
     */
    int backProject(double* data);
 
+   void backProject(Matrix* M, int* indices);
+
 private:
 
    int phi2Index(double phi);
@@ -97,6 +99,10 @@ private:
    double _angularRes;
 
    double _minPhi;
+
+   double _phiLowerBound;
+
+   double _phiUpperBound;
 
 };
 
