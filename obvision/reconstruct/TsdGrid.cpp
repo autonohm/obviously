@@ -108,6 +108,7 @@ void TsdGrid::push(SensorPolar2D* sensor)
       //int index = sensor->backProject(cellCoords);
 
       int index = indices[i];
+
       if(index>=0)
       {
         if(mask[index])
@@ -216,9 +217,9 @@ bool TsdGrid::interpolateBilinear(double coord[2], double* tsdf)
 
   // Interpolate
   *tsdf =    _grid[y + 0][x + 0].tsdf * (1. - wy) * (1. - wx)
-                + _grid[y - 1][x + 0].tsdf *       wy  * (1. - wx)
-                + _grid[y + 0][x + 1].tsdf * (1. - wy) *       wx
-                + _grid[y - 1][x + 1].tsdf *       wy  *       wx;
+                    + _grid[y - 1][x + 0].tsdf *       wy  * (1. - wx)
+                    + _grid[y + 0][x + 1].tsdf * (1. - wy) *       wx
+                    + _grid[y - 1][x + 1].tsdf *       wy  *       wx;
 
   return true;
 }
@@ -228,10 +229,10 @@ void TsdGrid::addTsdfValue(const unsigned int x, const unsigned int y, const dou
   // Determine whether sdf/max_truncation = ]-1;1[
   if(sdf >= -_maxTruncation)
   {
+    TsdCell* cell = &_grid[y][x];
+
     double tsdf = sdf / _maxTruncation;
     tsdf = min(tsdf, 1.0);
-
-    TsdCell* cell = &_grid[y][x];
 
     cell->weight += 1.0;
     const double invWeight = 1.0 / cell->weight;

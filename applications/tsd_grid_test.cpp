@@ -29,7 +29,7 @@ int main(void)
   // Initialization of 2D viewer
   unsigned int w = grid->getCellsX();
   unsigned int h = grid->getCellsY();
-  unsigned char* image = new unsigned char[w * h];
+  unsigned char* image = new unsigned char[3 * w * h];
   double ratio = double(w)/double(h);
   double screen_width = 600;
   Obvious2D viewer(screen_width, screen_width/ratio, "tsd_grid_test");
@@ -92,18 +92,21 @@ int main(void)
   LOGMSG(DBG_DEBUG, "Found " << cnt/2 << " coordinate tuples");
 
 
-  grid->grid2GrayscaleImage(image);
+  grid->grid2ColorImage(image);
   for(unsigned int i=0; i<cnt; i+=2)
   {
     cout << " x: " << coords[i] << " y: " << coords[i+1] << " d:" << sqrt(coords[i]*coords[i] + coords[i+1]*coords[i+1]) << endl;
     int x = round(((double)(coords[i] + tx)) / cellSize);
     int y = h-round(((double)(coords[i+1] + ty)) / cellSize);
-    image[y*w + x] = 0;
+    unsigned int idx = y*w + x;
+    image[3*idx] = 0;
+    image[3*idx+1] = 0;
+    image[3*idx+2] = 0;
   }
 
   while(viewer.isAlive())
   {
-    viewer.draw(image, w, h, 1, 0, 0);
+    viewer.draw(image, w, h, 3, 0, 0);
     usleep(200000);
   }
 

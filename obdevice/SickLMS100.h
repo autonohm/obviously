@@ -17,79 +17,79 @@
  */
 namespace obvious
 {
-/**
- * @class LaserDevice
- */
-class SickLMS100
-{
-public:
-   /**
-    * Standard Constructor
-    */
-   SickLMS100();
+  /**
+   * @class LaserDevice
+   */
+  class SickLMS100
+  {
+  public:
+    /**
+     * Standard Constructor
+     */
+    SickLMS100();
 
-   /**
-    * Default Destructor
-    */
-   virtual   ~SickLMS100();
+    /**
+     * Default Destructor
+     */
+    virtual   ~SickLMS100();
 
-   double getStartAngle();
+    double getStartAngle();
 
-   double getStopAngle();
+    double getStopAngle();
 
-   unsigned int getNumberOfRays();
+    unsigned int getNumberOfRays();
 
-   double getAngularRes(void);
+    double getAngularRes(void);
 
-   double* getRanges();
+    double* getRanges();
 
-   double* getCoords();
+    double* getCoords();
 
-   /**
-    * Function to grab new data
-    * @return  TRUE if success
-    */
-   virtual bool      grab(void);
+    /**
+     * Function to grab new data
+     * @return  TRUE if success
+     */
+    virtual bool      grab(void);
 
-   void schedule();
+    void schedule();
 
-private:
+  private:
 
-   /**
-    * Function to estimate ranges in scan
-    */
-   void calculateRanges(void);
+    /**
+     * Function to estimate ranges in scan
+     */
+    void calculateRanges(void);
 
-   /**
-    * Function to estimate intensities in scan
-    */
-   void calculateIntensities(void);
+    /**
+     * Function to estimate intensities in scan
+     */
+    void calculateIntensities(void);
 
-   /**
-    * Function to estimate single angles for every ray
-    */
-   void calculateAngles(void);
+    /**
+     * Function to estimate single angles for every ray
+     */
+    void calculateAngles(void);
 
-   /**
-    * Function to estimate 2D coords
-    */
-   void calculateCoords2D(void);
+    /**
+     * Function to estimate 2D coords
+     */
+    void calculateCoords2D(void);
 
-   LMS1xx      _laser;
-   scanCfg     _cfg;
-   scanDataCfg _dataCfg;
-   scanData    _data;
-   scanData    _dataBuffer;
-   unsigned int _nrOfRays;
+    LMS1xx      _laser;
+    scanCfg     _cfg;
+    scanDataCfg _dataCfg;
+    scanData    _data;
+    scanData    _dataBuffer;
+    unsigned int _nrOfRays;
 
-   double*   _ranges;            //!< Distance in meters
-   double*   _intensities;       //!< Intensities
-   double*   _coords2D;          //!< 2D coords
-   double*   _normals;           //!< normals
-   double*   _angles;            //!< Angles in rad
-   bool*     _mask;              //!< mask for valid or invalid points
+    double*   _ranges;            //!< Distance in meters
+    double*   _intensities;       //!< Intensities
+    double*   _coords2D;          //!< 2D coords
+    double*   _normals;           //!< normals
+    double*   _angles;            //!< Angles in rad
+    bool*     _mask;              //!< mask for valid or invalid points
 
-};
+  };
 
 };  //namespace
 
