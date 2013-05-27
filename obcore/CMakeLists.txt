@@ -34,7 +34,7 @@ add_library(obcore
    math/MatRGB.cpp
    math/VecD.cpp
    math/VectorRefD.cpp
-	filter/EuclideanFilterD.cpp
+	filter/EuclideanFilter.cpp
 	filter/CartesianFilter.cpp
 	filter/NormalFilter.cpp
 	filter/BoundingBoxFilter.cpp

@@ -1,16 +1,16 @@
 /*
- * EuclideanFilterD.cpp
+ * EuclideanFilter.cpp
  *
  *  Created on: 29.11.2012
  *      Author: phil
  */
 
-#include "obcore/filter/EuclideanFilterD.h"
+#include "obcore/filter/EuclideanFilter.h"
 #include "obcore/math/mathbase.h"
 
 using namespace obvious;
 
-FILRETVAL EuclideanFilterD::applyFilter(void)
+FILRETVAL EuclideanFilter::applyFilter(void)
 {
   // check if input and output are set properly
 	if((!_input)||(!_output))
@@ -65,7 +65,7 @@ FILRETVAL EuclideanFilterD::applyFilter(void)
 /*
  * Function to set centroid
  */
-void EuclideanFilterD::setCentroid(const Point3D& center)
+void EuclideanFilter::setCentroid(const Point3D& center)
 {
   setCentroidDefault(center);
 }
