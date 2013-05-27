@@ -1,12 +1,12 @@
 /*
- * EuclideanFilterD.h
+ * EuclideanFilter.h
  *
  *  Created on: 29.11.2012
  *      Author: phil
  */
 
-#ifndef EUCLIDEANFILTERD_H_
-#define EUCLIDEANFILTERD_H_
+#ifndef EUCLIDEANFilter_H_
+#define EUCLIDEANFilter_H_
 
 #include "obcore/filter/FilterDistance.h"
 
@@ -16,22 +16,22 @@
 namespace obvious
 {
 /**
- * @class  EuclideanFilterD
+ * @class  EuclideanFilter
  * @brief  Filter to push values from the input into the output buffer.
  *         Values which amount is bigger than a threshold, won't be copied.
  */
-class EuclideanFilterD : public FilterDistance
+class EuclideanFilter : public FilterDistance
 {
 public:
   /**
    * Default constructor
    */
-	EuclideanFilterD(void)
+	EuclideanFilter(void)
     : FilterDistance()    { }
 	/**
 	 * virtual destructor
 	 */
-	virtual ~EuclideanFilterD(void) { }
+	virtual ~EuclideanFilter(void) { }
 	/**
 	 * Function to start the Filter
 	 */
@@ -45,4 +45,4 @@ public:
 
 }; // namespace
 
-#endif /* EUCLIDEANFILTERD_H_ */
+#endif /* EUCLIDEANFilter_H_ */

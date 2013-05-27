@@ -160,10 +160,16 @@ public:
 	EnumIcpState iterate(double* rms, unsigned int* pairs, unsigned int* iterations);
 	
 	/**
-	 * Get final rotation matrix determined through iteration
+	 * Get final 4x4 rotation matrix determined through iteration
 	 * @return final transformation matrix
 	 */
-	Matrix* getFinalTransformation();
+	Matrix* getFinalTransformation4x4();
+
+	/**
+    * Get final rotation matrix determined through iteration
+    * @return final transformation matrix
+    */
+   Matrix* getFinalTransformation();
 
 	/**
 	 * Get last rotation matrix determined within the last iteration step
@@ -239,7 +245,7 @@ private:
 	/**
 	 * final matrix, found after iteration
 	 */
-	//gsl_matrix* _finalMatrix;
+	Matrix* _Tfinal4x4;
 	Matrix* _Tfinal;
 	Matrix* _Tlast;
 

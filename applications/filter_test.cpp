@@ -9,7 +9,7 @@
 #include <iostream>
 #include "obcore/filter/Filter.h"
 #include "obcore/filter/CartesianFilter.h"
-#include "obcore/filter/EuclideanFilterD.h"
+#include "obcore/filter/EuclideanFilter.h"
 #include "obcore/filter/BoundingBoxFilter.h"
 #include "obgraphic/Obvious3D.h"
 #include <vector>
@@ -32,7 +32,7 @@ VtkCloud*   cloud;
 
 IFilter*            _filter;
 CartesianFilter*    filterCartesian;
-EuclideanFilterD*   filterEuclidean;
+EuclideanFilter*   filterEuclidean;
 BoundingBoxFilter*  filterBB;
 
 double* coords    = new double[size*3];
@@ -134,7 +134,7 @@ int main(int argc, char *argv[])
 
   IFilter* _filter = NULL;
   filterCartesian = new CartesianFilter;
-  filterEuclidean = new EuclideanFilterD;
+  filterEuclidean = new EuclideanFilter;
   filterBB        = new BoundingBoxFilter;
 
   viewer = new Obvious3D();

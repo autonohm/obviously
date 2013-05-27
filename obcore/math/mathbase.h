@@ -87,6 +87,23 @@ namespace obvious {
   }
 
   /**
+   * Calculate the l2-norm of an arbitrarily sized vector
+   * @param coords coordinate vector
+   * @param size size of coordinate vector
+   * @return l2-norm
+   */
+  template <class T>
+  inline float l2Norm(T* coords, int size)
+  {
+    T sqr = coords[0] * coords[0];
+    for(int i=1; i<size; i++)
+    {
+      sqr += coords[i] * coords[i];
+    }
+    return sqrt(sqr);
+  }
+
+  /**
    * @function Dist2_2D
    * @return Squared distance between two points in 2D space
    **/
@@ -301,30 +318,22 @@ namespace obvious {
 
   /**
    * Calculate the Euklidean distance between two n-dimensional points
-   * @param pfCoords1 first coordinate vector
-   * @param pfCoords2 second coordinate vector SET TO NULL FOR ABS OF 1 Vector Edited by Philipp Koch
+   * @param coords1 first coordinate vector
+   * @param coords2 second coordinate vector
    * @param size size of coordinate vectors (must both be equally sized)
    * @return Euklidean distance
    */
   template <class T>
   inline float euklideanDistance(T* coords1, T* coords2, int size)
   {
-	  T sqr = 0.0f;
-	  if(coords2!=NULL)
-	  {
-		  for(int i=0; i<size; i++)
-		  {
-			  T tmp = coords1[i] - coords2[i];
-			  sqr += tmp * tmp;
-		  }
-	  }
-	  else
-	  {
-		  for(int i=0; i<size; i++)
-			  sqr += coords1[i]*coords1[i];
-	  }
+	  T sqr = 0.0;
+    for(int i=0; i<size; i++)
+    {
+      T tmp = coords1[i] - coords2[i];
+      sqr += tmp * tmp;
+    }
 	  return sqrt(sqr);
-	  }
+	}
 
  /* double euklideanDistanceVecD(vector<double>::iterator *vec1,vector<double>::iterator *vec2)
   {

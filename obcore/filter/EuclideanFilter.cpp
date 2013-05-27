@@ -1,16 +1,16 @@
 /*
- * EuclideanFilterD.cpp
+ * EuclideanFilter.cpp
  *
  *  Created on: 29.11.2012
  *      Author: phil
  */
 
-#include "obcore/filter/EuclideanFilterD.h"
+#include "obcore/filter/EuclideanFilter.h"
 #include "obcore/math/mathbase.h"
 
 using namespace obvious;
 
-FILRETVAL EuclideanFilterD::applyFilter(void)
+FILRETVAL EuclideanFilter::applyFilter(void)
 {
   // check if input and output are set properly
 	if((!_input)||(!_output))
@@ -34,7 +34,7 @@ FILRETVAL EuclideanFilterD::applyFilter(void)
                           dPtr[i+1] + _centroid[Y],
                           dPtr[i+2] + _centroid[Z]
       };
-      depthVar =  euklideanDistance<double>(coord, NULL, Point3D::sizeP);
+      depthVar =  l2Norm<double>(coord, Point3D::sizeP);
       if(depthVar > _threshold) {
         dPtr += Point3D::sizeP;
       }
@@ -48,7 +48,7 @@ FILRETVAL EuclideanFilterD::applyFilter(void)
 	else // FILTER_SMALLER
 	{
     for(unsigned int i=0 ; i<_size ; i+=Point3D::sizeP) {
-      depthVar =  euklideanDistance<double>((double*)dPtr, NULL, Point3D::sizeP);
+      depthVar =  l2Norm<double>((double*)dPtr, Point3D::sizeP);
       if(depthVar <= _threshold) {
         dPtr += Point3D::sizeP;
       }
@@ -65,7 +65,7 @@ FILRETVAL EuclideanFilterD::applyFilter(void)
 /*
  * Function to set centroid
  */
-void EuclideanFilterD::setCentroid(const Point3D& center)
+void EuclideanFilter::setCentroid(const Point3D& center)
 {
   setCentroidDefault(center);
 }
