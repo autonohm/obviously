@@ -264,6 +264,7 @@ bool Kinect::grabIR()
       _proj[i].X = (XnFloat) c;
       _proj[i].Y = (XnFloat) r;
       _proj[i].Z = depthMD(c, r);
+      _z[i]      = depthMD(c, r);
     }
   }
 
