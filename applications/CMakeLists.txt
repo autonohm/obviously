@@ -24,6 +24,11 @@ INCLUDE_DIRECTORIES(/usr/include/openni
                     ../obcore
                     ${XML_INCLUDE_DIRS}
                     )
+                    
+SET(CORELIBS obcore gsl gslcblas)
+SET(DEVICELIBS obdevice OpenNI v4l2 udev)
+SET(GRAPHICLIBS obgraphic vtkHybrid glut GL jpeg)
+SET(VISIONLIBS obvision ann flann)
 
 # check if necessary files for PMD are installed
 if(EXISTS /usr/include/PMDSDK)
@@ -34,6 +39,12 @@ if(EXISTS /usr/include/PMDSDK)
 	TARGET_LINK_LIBRARIES(nanoStream obgraphic obdevice obcore vtkHybrid gsl gslcblas -lpmdaccess2 ${XML_LIBRARIES})
 #	ADD_EXECUTABLE(nanoStreamIR nanoStreamIR.cpp)
 #   TARGET_LINK_LIBRARIES(nanoStreamIR obgraphic obdevice obcore v4l2 glut GL -lpmdaccess2)
+endif()
+
+if(EXISTS /usr/local/include/LMS1xx.h)
+	MESSAGE("Found libLMS. Will build drivers for Sick Laser Scanner.")
+	ADD_EXECUTABLE(tsd_grid_lms100 tsd_grid_lms100.cpp)
+	TARGET_LINK_LIBRARIES(tsd_grid_lms100 ${VISIONLIBS} ${GRAPHICLIBS} ${DEVICELIBS} -lLMS1xx ${CORELIBS})
 endif()
 
 LINK_DIRECTORIES(/opt/ros/electric/stacks/perception_pcl/flann/lib64/)
@@ -57,17 +68,12 @@ ADD_EXECUTABLE(read_lua_config read_lua_config.cpp)
 ADD_EXECUTABLE(logging_example logging_example.cpp)
 #ADD_EXECUTABLE(tsd_test tsd_test.cpp)
 ADD_EXECUTABLE(tsd_grid_test tsd_grid_test.cpp)
-ADD_EXECUTABLE(tsd_grid_lms100 tsd_grid_lms100.cpp)
+
 ADD_EXECUTABLE(showCloud showCloud.cpp)
 ADD_EXECUTABLE(filterTest filter_test.cpp)
 #ADD_EXECUTABLE(cloud2grid  cloud2grid.cpp)
 ADD_EXECUTABLE(xtionStream xtionStream.cpp)
 #ADD_EXECUTABLE(obstacleView obstacleView.cpp)
-
-SET(CORELIBS obcore gsl gslcblas)
-SET(DEVICELIBS obdevice OpenNI v4l2 udev)
-SET(GRAPHICLIBS obgraphic vtkHybrid glut GL jpeg)
-SET(VISIONLIBS obvision ann flann)
 
 TARGET_LINK_LIBRARIES(obvious3D_show ${GRAPHICLIBS} ${CORELIBS})
 TARGET_LINK_LIBRARIES(obvious3D_map ${GRAPHICLIBS} ${CORELIBS})
@@ -88,7 +94,6 @@ TARGET_LINK_LIBRARIES(read_lua_config lua5.1)
 TARGET_LINK_LIBRARIES(logging_example obcore)
 #TARGET_LINK_LIBRARIES(tsd_test ${VISIONLIBS} ${GRAPHICLIBS} ${CORELIBS})
 TARGET_LINK_LIBRARIES(tsd_grid_test ${VISIONLIBS} ${GRAPHICLIBS} ${CORELIBS})
-TARGET_LINK_LIBRARIES(tsd_grid_lms100 ${VISIONLIBS} ${GRAPHICLIBS} ${DEVICELIBS} -lLMS1xx ${CORELIBS})
 TARGET_LINK_LIBRARIES(showCloud ${GRAPHICLIBS} ${CORELIBS})
 TARGET_LINK_LIBRARIES(filterTest ${GRAPHICLIBS} ${CORELIBS})
 TARGET_LINK_LIBRARIES(xtionStream ${VISIONLIBS} ${GRAPHICLIBS} ${DEVICELIBS} ${CORELIBS} ${XML_LIBRARIES})
