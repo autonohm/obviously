@@ -1,5 +1,7 @@
 #include <iostream>
-#include <math.h>
+#include <cmath>
+#include <unistd.h>
+
 #include "obcore/base/tools.h"
 #include "obcore/base/System.h"
 #include "obcore/base/Logger.h"

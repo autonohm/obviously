@@ -41,7 +41,8 @@ ADD_LIBRARY(obdevice
     ParentDevice3D.cpp
 # uncomment this to include the tof camera of PMD
     CameraCalibration.cpp
-	SickLMS100.cpp)
+#	SickLMS100.cpp
+        )
 
 
 
