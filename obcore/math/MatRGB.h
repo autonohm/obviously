@@ -2,7 +2,7 @@
 #define __MAT_RGB__
 
 #include "obcore/math/AbstractMat.h"
-#include "obcore/rgbColor.h"
+#include "obcore/RGBColor.h"
 
 namespace xmlpp {
 class Node;

@@ -3,7 +3,7 @@
 
 #include <vector>
 #include "obcore/Point3D.h"
-#include "obcore/rgbColor.h"
+#include "obcore/RGBColor.h"
 #include "obcore/math/VecD.h"
 #include "obcore/RgbPoint3D.h"
 
