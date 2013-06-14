@@ -22,6 +22,7 @@ public:
     int height(void) const { return _height; }
     const std::vector<float>& z(void) const { return _z; }
     const std::vector<float>& coords(void) const { return _coords; }
+    const MatRGB& image(void) const { return _rgb; }
 
 private:
     openni::Status _status;
