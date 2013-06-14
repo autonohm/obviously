@@ -2,13 +2,15 @@
 
 #include <iostream>
 
+namespace obvious {
+
 OpenNI2Device::OpenNI2Device(const std::string& deviceURI)
 {
     _status = openni::OpenNI::initialize();
 
     std::cout << "After initialization:" << std::endl << openni::OpenNI::getExtendedError();
 
-    if ((_status = _device.open(deviceURI.c_str())) != openni::STATUS_OK)
+    if ((_status = _device.open(deviceURI.length() ? deviceURI.c_str() : openni::ANY_DEVICE)) != openni::STATUS_OK)
     {
         std::cout << "Device " << deviceURI << " open failed:" << std::endl << openni::OpenNI::getExtendedError();
         openni::OpenNI::shutdown();
@@ -63,6 +65,12 @@ OpenNI2Device::OpenNI2Device(const std::string& deviceURI)
     }
 }
 
+OpenNI2Device::~OpenNI2Device(void)
+{
+    if (_status == openni::STATUS_OK)
+        openni::OpenNI::shutdown();
+}
+
 bool OpenNI2Device::init(void)
 {
     openni::VideoMode depthVideoMode;
@@ -83,6 +91,8 @@ bool OpenNI2Device::init(void)
             _width = depthWidth;
             _height = depthHeight;
             _z.resize(_width * _height);
+            _coords.resize(_width * _height * 3);
+            _rgb = MatRGB(_height, _width);
 
             return true;
         }
@@ -99,6 +109,7 @@ bool OpenNI2Device::init(void)
         _width = depthVideoMode.getResolutionX();
         _height = depthVideoMode.getResolutionY();
         _z.resize(_width * _height);
+        _coords.resize(_width * _height * 3);
 
         return true;
     }
@@ -107,6 +118,7 @@ bool OpenNI2Device::init(void)
         colorVideoMode = _color.getVideoMode();
         _width = colorVideoMode.getResolutionX();
         _height = colorVideoMode.getResolutionY();
+        _rgb = MatRGB(_height, _width);
 
         return true;
     }
@@ -128,10 +140,45 @@ bool OpenNI2Device::grab(void)
         _depth.readFrame(&_frameDepth);
 
         const openni::DepthPixel* data = reinterpret_cast<const openni::DepthPixel*>(_frameDepth.getData());
-        const int size = _width * _height;
         std::vector<float>::iterator itZ(_z.begin());
+        std::vector<float>::iterator itCoords(_coords.begin());
 
-        for (int i = 0; i < size; ++i, ++itZ, ++data)
-            *itZ = *data;
+        for (int row = 0; row < _height; ++row)
+        {
+            for (int col = 0; col < _width; ++col, ++itZ, ++data)
+            {
+                float x;
+                float y;
+                float z;
+
+                openni::CoordinateConverter::convertDepthToWorld(_depth, col, row, *data, &x, &y, &z);
+                *itZ = *data * 0.001;
+                *itCoords++ = x * 0.001;
+                *itCoords++ = y * 0.001;
+                *itCoords++ = z * 0.001;
+            }
+        }
     }
+
+    if (_color.isValid())
+    {
+        _color.readFrame(&_frameColor);
+
+        const openni::RGB888Pixel* data = reinterpret_cast<const openni::RGB888Pixel*>(_frameColor.getData());
+        const int size = _width * _height;
+        MatRGB::iterator red  (_rgb.begin(MatRGB::Red  ));
+        MatRGB::iterator green(_rgb.begin(MatRGB::Green));
+        MatRGB::iterator blue (_rgb.begin(MatRGB::Blue ));
+
+        for (int i = 0; i < size; ++i, ++data, ++red, ++green, ++blue)
+        {
+            *red   = data->r;
+            *green = data->g;
+            *blue  = data->b;
+        }
+    }
+
+    return true;
 }
+
+} // end namespace obvious

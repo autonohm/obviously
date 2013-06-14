@@ -6,10 +6,14 @@
 #include <string>
 #include <vector>
 
+#include "obcore/math/MatRGB.h"
+
+namespace obvious {
+
 class OpenNI2Device
 {
 public:
-    OpenNI2Device(const std::string& deviceURI = std::string(openni::ANY_DEVICE));
+    OpenNI2Device(const std::string& deviceURI = std::string());
     ~OpenNI2Device(void);
 
     bool init(void);
@@ -17,6 +21,7 @@ public:
     int width(void) const { return _width; }
     int height(void) const { return _height; }
     const std::vector<float>& z(void) const { return _z; }
+    const std::vector<float>& coords(void) const { return _coords; }
 
 private:
     openni::Status _status;
@@ -29,6 +34,10 @@ private:
     int _width;
     int _height;
     std::vector<float> _z;
+    std::vector<float> _coords;
+    MatRGB _rgb;
 };
+
+} // end namespace obvious
 
 #endif
