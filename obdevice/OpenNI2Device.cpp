@@ -4,7 +4,8 @@
 
 namespace obvious {
 
-OpenNI2Device::OpenNI2Device(const std::string& deviceURI)
+OpenNI2Device::OpenNI2Device(const Flag flags, const std::string& deviceURI)
+   : _flags(flags)
 {
     _status = openni::OpenNI::initialize();
 
@@ -21,58 +22,67 @@ OpenNI2Device::OpenNI2Device(const std::string& deviceURI)
         std::cout << "Device " << deviceURI << " opened." << std::endl;
     }
 
-    if ((_status = _depth.create(_device, openni::SENSOR_DEPTH)) == openni::STATUS_OK)
+    if (_flags & Depth)
     {
-        std::cout << "Found depth stream." << std::endl;
-
-        if ((_status = _depth.start()) != openni::STATUS_OK)
+        if ((_status = _depth.create(_device, openni::SENSOR_DEPTH)) == openni::STATUS_OK)
         {
-            std::cout << "Couldn't start depth stream:" << std::endl << openni::OpenNI::getExtendedError();
-            openni::OpenNI::shutdown();
-            return;
+            std::cout << "Found depth stream." << std::endl;
+
+            if ((_status = _depth.start()) != openni::STATUS_OK)
+            {
+                std::cout << "Couldn't start depth stream:" << std::endl << openni::OpenNI::getExtendedError();
+                openni::OpenNI::shutdown();
+                return;
+            }
+
+            std::cout << "Depth stream started." << std::endl;
         }
-
-        std::cout << "Depth stream started." << std::endl;
-    }
-    else
-    {
-        std::cout << "Couldn't find depth stream:" << std::endl << openni::OpenNI::getExtendedError();
-    }
-
-    if ((_status = _color.create(_device, openni::SENSOR_COLOR)) == openni::STATUS_OK)
-    {
-        std::cout << "Found color stream." << std::endl;
-
-        if ((_status = _color.start()) != openni::STATUS_OK)
+        else
         {
-            std::cout << "Couldn't start color stream:" << std::endl << openni::OpenNI::getExtendedError();
-            openni::OpenNI::shutdown();
-            return;
+            std::cout << "Couldn't find depth stream:" << std::endl << openni::OpenNI::getExtendedError();
         }
-
-        std::cout << "Color stream started." << std::endl;
-    }
-    else
-    {
-        std::cout << "Couldn't find any color stream:" << std::endl << openni::OpenNI::getExtendedError();
     }
 
-    if ((_status = _ir.create(_device, openni::SENSOR_IR)) == openni::STATUS_OK)
+    if (_flags & Color)
     {
-        std::cout << "Found ir stream." << std::endl;
-
-        if ((_status = _ir.start()) != openni::STATUS_OK)
+        if ((_status = _color.create(_device, openni::SENSOR_COLOR)) == openni::STATUS_OK)
         {
-            std::cout << "Couldn't start ir stream:" << std::endl << openni::OpenNI::getExtendedError();
-            openni::OpenNI::shutdown();
-            return;
-        }
+            std::cout << "Found color stream." << std::endl;
 
-        std::cout << "Ir stream started." << std::endl;
+            if ((_status = _color.start()) != openni::STATUS_OK)
+            {
+                std::cout << "Couldn't start color stream:" << std::endl << openni::OpenNI::getExtendedError();
+                openni::OpenNI::shutdown();
+                return;
+            }
+
+            std::cout << "Color stream started." << std::endl;
+        }
+        else
+        {
+            std::cout << "Couldn't find any color stream:" << std::endl << openni::OpenNI::getExtendedError();
+        }
     }
-    else
+
+    if (_flags & Ir)
     {
-        std::cout << "Couldn't find any ir stream:" << std::endl << openni::OpenNI::getExtendedError();
+        if ((_status = _ir.create(_device, openni::SENSOR_IR)) == openni::STATUS_OK)
+        {
+            std::cout << "Found ir stream." << std::endl;
+
+            if ((_status = _ir.start()) != openni::STATUS_OK)
+            {
+                std::cout << "Couldn't start ir stream:" << std::endl << openni::OpenNI::getExtendedError();
+                openni::OpenNI::shutdown();
+                return;
+            }
+
+            std::cout << "Ir stream started." << std::endl;
+        }
+        else
+        {
+            std::cout << "Couldn't find any ir stream:" << std::endl << openni::OpenNI::getExtendedError();
+        }
     }
 
     if (!_depth.isValid() && !_color.isValid() && !_ir.isValid())
@@ -117,6 +127,9 @@ bool OpenNI2Device::init(void)
             _imgRgb = MatRGB(_height, _width);
             _imgIr = MatRGB(_height, _width);
 
+            if (_flags == Any)
+                _flags = static_cast<Flag>(Depth | Color | Ir);
+
             return true;
         }
 
@@ -137,6 +150,9 @@ bool OpenNI2Device::init(void)
         _coords.resize(_width * _height * 3);
         _imgIr = MatRGB(_height, _width);
 
+        if (_flags == Any)
+            _flags = static_cast<Flag>(Depth | Ir);
+
         return true;
     }
     else if (_color.isValid())
@@ -145,6 +161,9 @@ bool OpenNI2Device::init(void)
         _width = colorVideoMode.getResolutionX();
         _height = colorVideoMode.getResolutionY();
         _imgRgb = MatRGB(_height, _width);
+
+        if (_flags == Any)
+            _flags = Color;
 
         return true;
     }
@@ -216,9 +235,9 @@ bool OpenNI2Device::grab(void)
 
         for (int i = 0; i < size; ++i, ++data, ++red, ++green, ++blue)
         {
-            *red   = *data;
-            *green = *data;
-            *blue  = *data;
+            *red   = *data >> 2;
+            *green = *data >> 2;
+            *blue  = *data >> 2;
         }
     }
 

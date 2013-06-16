@@ -15,6 +15,7 @@ PKG_CHECK_MODULES(XML libxml++-2.6)
 
 INCLUDE_DIRECTORIES(/usr/include/openni
                     /usr/include/ni
+                    /usr/local/include/openni2
                     $ENV{OBVIOUSLY_ROOT}
                     /usr/include/qt4/
                     /usr/include/lua5.1
@@ -47,7 +48,9 @@ if(EXISTS /usr/local/include/LMS1xx.h)
 	TARGET_LINK_LIBRARIES(tsd_grid_lms100 ${VISIONLIBS} ${GRAPHICLIBS} ${DEVICELIBS} -lLMS1xx ${CORELIBS})
 endif()
 
-LINK_DIRECTORIES(/opt/ros/electric/stacks/perception_pcl/flann/lib64/)
+LINK_DIRECTORIES(/opt/ros/electric/stacks/perception_pcl/flann/lib64/
+                 /usr/local/lib
+                 )
 
 ADD_EXECUTABLE(obvious3D_show obvious3D_show.cpp)
 ADD_EXECUTABLE(obvious3D_map obvious3D_map.cpp)
@@ -68,6 +71,7 @@ ADD_EXECUTABLE(read_lua_config read_lua_config.cpp)
 ADD_EXECUTABLE(logging_example logging_example.cpp)
 #ADD_EXECUTABLE(tsd_test tsd_test.cpp)
 ADD_EXECUTABLE(tsd_grid_test tsd_grid_test.cpp)
+#ADD_EXECUTABLE(openni-device-stream openni-device-stream.cpp)
 
 ADD_EXECUTABLE(showCloud showCloud.cpp)
 ADD_EXECUTABLE(filterTest filter_test.cpp)
@@ -99,6 +103,4 @@ TARGET_LINK_LIBRARIES(filterTest ${GRAPHICLIBS} ${CORELIBS})
 TARGET_LINK_LIBRARIES(xtionStream ${VISIONLIBS} ${GRAPHICLIBS} ${DEVICELIBS} ${CORELIBS} ${XML_LIBRARIES})
 #TARGET_LINK_LIBRARIES(cloud2grid ${GRAPHICLIBS} ${CORELIBS})
 #TARGET_LINK_LIBRARIES(obstacleView ${GRAPHICLIBS} ${DEVICELIBS} ${CORELIBS} ${XML_LIBRARIES})
-
-
-
+#TARGET_LINK_LIBRARIES(openni-device-stream ${VISIONLIBS} ${GRAPHICLIBS} ${DEVICELIBS} ${CORELIBS} ${XML_LIBRARIES} OpenNI2)

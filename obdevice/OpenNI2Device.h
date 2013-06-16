@@ -13,17 +13,28 @@ namespace obvious {
 class OpenNI2Device
 {
 public:
-    OpenNI2Device(const std::string& deviceURI = std::string());
+
+    enum Flag {
+        Any   = 0xff,
+        Depth = 1,
+        Color = 2,
+        Ir    = 4,
+        All   = Depth | Color | Ir
+    };
+
+    OpenNI2Device(const Flag flags = Any, const std::string& deviceURI = std::string());
     ~OpenNI2Device(void);
 
+    Flag flags(void) const { return _flags; }
     bool init(void);
     bool grab(void);
     int width(void) const { return _width; }
     int height(void) const { return _height; }
     const std::vector<float>& z(void) const { return _z; }
     const std::vector<float>& coords(void) const { return _coords; }
-    const MatRGB& image(void) const { return _imgRgb; }
+    const MatRGB& image(void) const { return _flags & Color ? _imgRgb : _imgIr; }
     const MatRGB& ir(void) const { return _imgIr; }
+    const MatRGB& rgb(void) const { return _imgRgb; }
 
 private:
     openni::Status _status;
@@ -35,6 +46,7 @@ private:
     openni::VideoFrameRef _frameColor;
     openni::VideoFrameRef _frameIr;
 
+    Flag _flags;
     int _width;
     int _height;
     std::vector<float> _z;
