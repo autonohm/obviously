@@ -57,7 +57,25 @@ OpenNI2Device::OpenNI2Device(const std::string& deviceURI)
         std::cout << "Couldn't find any color stream:" << std::endl << openni::OpenNI::getExtendedError();
     }
 
-    if (!_depth.isValid() || !_color.isValid())
+    if ((_status = _ir.create(_device, openni::SENSOR_IR)) == openni::STATUS_OK)
+    {
+        std::cout << "Found ir stream." << std::endl;
+
+        if ((_status = _ir.start()) != openni::STATUS_OK)
+        {
+            std::cout << "Couldn't start ir stream:" << std::endl << openni::OpenNI::getExtendedError();
+            openni::OpenNI::shutdown();
+            return;
+        }
+
+        std::cout << "Ir stream started." << std::endl;
+    }
+    else
+    {
+        std::cout << "Couldn't find any ir stream:" << std::endl << openni::OpenNI::getExtendedError();
+    }
+
+    if (!_depth.isValid() && !_color.isValid() && !_ir.isValid())
     {
         std::cout << "Device " << deviceURI << ": no valid streams." << std::endl;
         openni::OpenNI::shutdown();
@@ -75,24 +93,29 @@ bool OpenNI2Device::init(void)
 {
     openni::VideoMode depthVideoMode;
     openni::VideoMode colorVideoMode;
+    openni::VideoMode irVideoMode;
 
-    if (_depth.isValid() && _color.isValid())
+    if (_depth.isValid() && _color.isValid() && _ir.isValid())
     {
         depthVideoMode = _depth.getVideoMode();
         colorVideoMode = _color.getVideoMode();
+        irVideoMode    = _ir.getVideoMode();
 
-        int depthWidth = depthVideoMode.getResolutionX();
-        int depthHeight = depthVideoMode.getResolutionY();
-        int colorWidth = colorVideoMode.getResolutionX();
-        int colorHeight = colorVideoMode.getResolutionY();
+        const int depthWidth = depthVideoMode.getResolutionX();
+        const int depthHeight = depthVideoMode.getResolutionY();
+        const int colorWidth = colorVideoMode.getResolutionX();
+        const int colorHeight = colorVideoMode.getResolutionY();
+        const int irWidth = irVideoMode.getResolutionX();
+        const int irHeight = irVideoMode.getResolutionY();
 
-        if (depthWidth == colorWidth && depthHeight == colorHeight)
+        if (depthWidth == colorWidth && colorWidth == irWidth && depthHeight == colorHeight && colorHeight == irHeight)
         {
             _width = depthWidth;
             _height = depthHeight;
             _z.resize(_width * _height);
             _coords.resize(_width * _height * 3);
-            _rgb = MatRGB(_height, _width);
+            _imgRgb = MatRGB(_height, _width);
+            _imgIr = MatRGB(_height, _width);
 
             return true;
         }
@@ -103,13 +126,16 @@ bool OpenNI2Device::init(void)
 
         return false;
     }
-    else if (_depth.isValid())
+    else if (_depth.isValid() && _ir.isValid())
     {
         depthVideoMode = _depth.getVideoMode();
+        irVideoMode = _ir.getVideoMode();
+
         _width = depthVideoMode.getResolutionX();
         _height = depthVideoMode.getResolutionY();
         _z.resize(_width * _height);
         _coords.resize(_width * _height * 3);
+        _imgIr = MatRGB(_height, _width);
 
         return true;
     }
@@ -118,7 +144,7 @@ bool OpenNI2Device::init(void)
         colorVideoMode = _color.getVideoMode();
         _width = colorVideoMode.getResolutionX();
         _height = colorVideoMode.getResolutionY();
-        _rgb = MatRGB(_height, _width);
+        _imgRgb = MatRGB(_height, _width);
 
         return true;
     }
@@ -129,7 +155,7 @@ bool OpenNI2Device::init(void)
 
 bool OpenNI2Device::grab(void)
 {
-    if (!_depth.isValid() && !_color.isValid())
+    if (!_depth.isValid() && !_color.isValid() && !_ir.isValid())
     {
         std::cout << "No stream available." << std::endl;
         return false;
@@ -166,15 +192,33 @@ bool OpenNI2Device::grab(void)
 
         const openni::RGB888Pixel* data = reinterpret_cast<const openni::RGB888Pixel*>(_frameColor.getData());
         const int size = _width * _height;
-        MatRGB::iterator red  (_rgb.begin(MatRGB::Red  ));
-        MatRGB::iterator green(_rgb.begin(MatRGB::Green));
-        MatRGB::iterator blue (_rgb.begin(MatRGB::Blue ));
+        MatRGB::iterator red  (_imgRgb.begin(MatRGB::Red  ));
+        MatRGB::iterator green(_imgRgb.begin(MatRGB::Green));
+        MatRGB::iterator blue (_imgRgb.begin(MatRGB::Blue ));
 
         for (int i = 0; i < size; ++i, ++data, ++red, ++green, ++blue)
         {
             *red   = data->r;
             *green = data->g;
             *blue  = data->b;
+        }
+    }
+
+    if (_ir.isValid())
+    {
+        _ir.readFrame(&_frameIr);
+
+        const uint16_t* data = reinterpret_cast<const uint16_t*>(_frameIr.getData());
+        const int size = _width * _height;
+        MatRGB::iterator red  (_imgIr.begin(MatRGB::Red  ));
+        MatRGB::iterator green(_imgIr.begin(MatRGB::Green));
+        MatRGB::iterator blue (_imgIr.begin(MatRGB::Blue ));
+
+        for (int i = 0; i < size; ++i, ++data, ++red, ++green, ++blue)
+        {
+            *red   = *data;
+            *green = *data;
+            *blue  = *data;
         }
     }
 

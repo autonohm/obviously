@@ -33,7 +33,7 @@ ADD_LIBRARY(obdevice
 	KinectPlayback.cpp
 	UvcCam.cpp
 	UvcVirtualCam.cpp
-#        OpenNI2Device.cpp
+        OpenNI2Device.cpp
 # uncomment this to include the tof camera of PMD
 #    CamNano.cpp
 # uncomment this for include the thermo camera. I know that is not a realy nice solution...

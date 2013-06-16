@@ -98,6 +98,11 @@ public:
             return *_data;
         }
 
+        bool operator<(iterator it)
+        {
+            return _data < it._data;
+        }
+
     private:
         T* _data;
     };
@@ -182,6 +187,11 @@ public:
         {
             _data -= number;
             return *this;
+        }
+
+        bool operator<(const_iterator it)
+        {
+            return _data < it._data;
         }
 
         //! return a ref of data
