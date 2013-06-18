@@ -12,7 +12,14 @@ SET(APPLICATIONS_VERSION_MINOR 1)
 FIND_PACKAGE(VTK REQUIRED)
 INCLUDE(${VTK_USE_FILE})
 PKG_CHECK_MODULES(XML libxml++-2.6)
-PKG_CHECK_MODULES(OPENNI libopenni2)
+
+# if does exists find libopenni2 directories and libs
+EXECUTE_PROCESS(COMMAND pkg-config libopenni2 --exists RESULT_VARIABLE RET_OPENNI_CODE)
+IF("${RET_OPENNI_CODE}" STREQUAL "0")
+    PKG_CHECK_MODULES(OPENNI libopenni2)
+    INCLUDE_DIRECTORIES(${OPENNI_INCLUDE_DIRS})
+    LINK_DIRECTORIES(${OPENNI_LIBRARY_DIRS})
+ENDIF()
 
 INCLUDE_DIRECTORIES(/usr/include/openni
                     /usr/include/ni
@@ -24,7 +31,6 @@ INCLUDE_DIRECTORIES(/usr/include/openni
                     ../obcore/filter
                     ../obcore
                     ${XML_INCLUDE_DIRS}
-                    ${OPENNI_INCLUDE_DIRS}
                     )
 
 SET(CORELIBS obcore gsl gslcblas)
@@ -73,7 +79,6 @@ ADD_EXECUTABLE(read_lua_config read_lua_config.cpp)
 ADD_EXECUTABLE(logging_example logging_example.cpp)
 #ADD_EXECUTABLE(tsd_test tsd_test.cpp)
 ADD_EXECUTABLE(tsd_grid_test tsd_grid_test.cpp)
-ADD_EXECUTABLE(openni-device-stream openni-device-stream.cpp)
 
 ADD_EXECUTABLE(showCloud showCloud.cpp)
 ADD_EXECUTABLE(filterTest filter_test.cpp)
@@ -105,4 +110,8 @@ TARGET_LINK_LIBRARIES(filterTest ${GRAPHICLIBS} ${CORELIBS})
 TARGET_LINK_LIBRARIES(xtionStream ${VISIONLIBS} ${GRAPHICLIBS} ${DEVICELIBS} ${CORELIBS} ${XML_LIBRARIES})
 #TARGET_LINK_LIBRARIES(cloud2grid ${GRAPHICLIBS} ${CORELIBS})
 #TARGET_LINK_LIBRARIES(obstacleView ${GRAPHICLIBS} ${DEVICELIBS} ${CORELIBS} ${XML_LIBRARIES})
-TARGET_LINK_LIBRARIES(openni-device-stream ${VISIONLIBS} ${GRAPHICLIBS} ${DEVICELIBS} ${CORELIBS} ${XML_LIBRARIES} ${OPENNI_LIBRARIES})
+
+IF("${RET_OPENNI_CODE}" STREQUAL "0")
+    ADD_EXECUTABLE(openni-device-stream openni-device-stream.cpp)
+    TARGET_LINK_LIBRARIES(openni-device-stream ${VISIONLIBS} ${GRAPHICLIBS} ${DEVICELIBS} ${CORELIBS} ${XML_LIBRARIES} ${OPENNI_LIBRARIES})
+ENDIF()
