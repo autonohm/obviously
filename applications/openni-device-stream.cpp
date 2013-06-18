@@ -1,13 +1,13 @@
 #include <iostream>
 #include "obgraphic/Obvious3D.h"
-#include "obdevice/OpenNI2Device.h"
+#include "obdevice/OpenNiDevice.h"
 
 using namespace std;
 using namespace obvious;
 
 Obvious3D*     _viewer;
 VtkCloud*      _cloud;
-OpenNI2Device* _device;
+OpenNiDevice*  _device;
 bool           _pause       = false;
 bool           _showNormals = false;
 double*        _coords;
@@ -59,7 +59,7 @@ public:
 
 int main(void)
 {
-    _device = new OpenNI2Device;
+    _device = new OpenNiDevice;
     _device->init();
     _coords = new double[_device->width() * _device->height() * 3];
     _image  = new unsigned char[_device->width() * _device->height() * 3];

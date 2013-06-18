@@ -10,10 +10,11 @@ SET(OBDEVICE_VERSION_MAJOR 0)
 SET(OBDEVICE_VERSION_MINOR 1)
 
 PKG_CHECK_MODULES(XML libxml++-2.6)
+PKG_CHECK_MODULES(OPENNI libopenni2)
 
 INCLUDE_DIRECTORIES(/usr/include/openni
                     /usr/include/ni
-                    /usr/local/include/openni2
+                    ${OPENNI_INCLUDE_DIRS}
                     $ENV{OBVIOUSLY_ROOT}
                     ../obcore/math
                     ../obcore
@@ -33,7 +34,7 @@ ADD_LIBRARY(obdevice
 	KinectPlayback.cpp
 	UvcCam.cpp
 	UvcVirtualCam.cpp
-#        OpenNI2Device.cpp
+        OpenNiDevice.cpp
 # uncomment this to include the tof camera of PMD
 #    CamNano.cpp
 # uncomment this for include the thermo camera. I know that is not a realy nice solution...

@@ -1,10 +1,10 @@
-#include "OpenNI2Device.h"
+#include "OpenNiDevice.h"
 
 #include <iostream>
 
 namespace obvious {
 
-OpenNI2Device::OpenNI2Device(const Flag flags, const std::string& deviceURI)
+OpenNiDevice::OpenNiDevice(const Flag flags, const std::string& deviceURI)
    : _flags(flags)
 {
     _status = openni::OpenNI::initialize();
@@ -93,13 +93,13 @@ OpenNI2Device::OpenNI2Device(const Flag flags, const std::string& deviceURI)
     }
 }
 
-OpenNI2Device::~OpenNI2Device(void)
+OpenNiDevice::~OpenNiDevice(void)
 {
     if (_status == openni::STATUS_OK)
         openni::OpenNI::shutdown();
 }
 
-bool OpenNI2Device::init(void)
+bool OpenNiDevice::init(void)
 {
     openni::VideoMode depthVideoMode;
     openni::VideoMode colorVideoMode;
@@ -172,7 +172,7 @@ bool OpenNI2Device::init(void)
     return false;
 }
 
-bool OpenNI2Device::grab(void)
+bool OpenNiDevice::grab(void)
 {
     if (!_depth.isValid() && !_color.isValid() && !_ir.isValid())
     {

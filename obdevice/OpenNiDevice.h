@@ -1,5 +1,5 @@
-#ifndef __OPEN_NI2_DEVICE__
-#define __OPEN_NI2_DEVICE__
+#ifndef __OPEN_NI_DEVICE__
+#define __OPEN_NI_DEVICE__
 
 #include <OpenNI.h>
 
@@ -10,7 +10,7 @@
 
 namespace obvious {
 
-class OpenNI2Device
+class OpenNiDevice
 {
 public:
 
@@ -22,8 +22,8 @@ public:
         All   = Depth | Color | Ir
     };
 
-    OpenNI2Device(const Flag flags = Any, const std::string& deviceURI = std::string());
-    ~OpenNI2Device(void);
+    OpenNiDevice(const Flag flags = Any, const std::string& deviceURI = std::string());
+    ~OpenNiDevice(void);
 
     Flag flags(void) const { return _flags; }
     bool init(void);
