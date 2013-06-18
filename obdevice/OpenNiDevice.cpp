@@ -64,7 +64,7 @@ OpenNiDevice::OpenNiDevice(const Flag flags, const std::string& deviceURI)
         }
     }
 
-    if (_flags & Ir)
+    if (!_color.isValid() && _flags & Ir)
     {
         if ((_status = _ir.create(_device, openni::SENSOR_IR)) == openni::STATUS_OK)
         {
@@ -152,6 +152,22 @@ bool OpenNiDevice::init(void)
 
         if (_flags == Any)
             _flags = static_cast<Flag>(Depth | Ir);
+
+        return true;
+    }
+    else if (_depth.isValid() && _color.isValid())
+    {
+        depthVideoMode = _depth.getVideoMode();
+        colorVideoMode = _color.getVideoMode();
+
+        _width = depthVideoMode.getResolutionX();
+        _height = depthVideoMode.getResolutionY();
+        _z.resize(_width * _height);
+        _coords.resize(_width * _height * 3);
+        _imgRgb = MatRGB(_height, _width);
+
+        if (_flags == Any)
+            _flags = static_cast<Flag>(Depth | Color);
 
         return true;
     }

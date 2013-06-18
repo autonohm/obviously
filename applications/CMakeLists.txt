@@ -16,7 +16,6 @@ PKG_CHECK_MODULES(OPENNI libopenni2)
 
 INCLUDE_DIRECTORIES(/usr/include/openni
                     /usr/include/ni
-                    /usr/local/include/openni2
                     $ENV{OBVIOUSLY_ROOT}
                     /usr/include/qt4/
                     /usr/include/lua5.1
