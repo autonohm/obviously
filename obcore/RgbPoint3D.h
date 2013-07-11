@@ -12,7 +12,7 @@
 #define __RGB_POINT_3D__
 
 #include "Point3D.h"
-#include "rgbColor.h"
+#include "RGBColor.h"
 
 namespace obvious {
 

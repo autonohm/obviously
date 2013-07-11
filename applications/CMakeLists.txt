@@ -13,6 +13,14 @@ FIND_PACKAGE(VTK REQUIRED)
 INCLUDE(${VTK_USE_FILE})
 PKG_CHECK_MODULES(XML libxml++-2.6)
 
+# if does exists find libopenni2 directories and libs
+EXECUTE_PROCESS(COMMAND pkg-config libopenni2 --exists RESULT_VARIABLE RET_OPENNI_CODE)
+IF("${RET_OPENNI_CODE}" STREQUAL "0")
+    PKG_CHECK_MODULES(OPENNI libopenni2)
+    INCLUDE_DIRECTORIES(${OPENNI_INCLUDE_DIRS})
+    LINK_DIRECTORIES(${OPENNI_LIBRARY_DIRS})
+ENDIF()
+
 INCLUDE_DIRECTORIES(/usr/include/openni
                     /usr/include/ni
                     $ENV{OBVIOUSLY_ROOT}
@@ -25,18 +33,32 @@ INCLUDE_DIRECTORIES(/usr/include/openni
                     ${XML_INCLUDE_DIRS}
                     )
 
+SET(CORELIBS obcore gsl gslcblas)
+SET(DEVICELIBS obdevice OpenNI v4l2 udev)
+SET(GRAPHICLIBS obgraphic vtkHybrid glut GL jpeg)
+SET(VISIONLIBS obvision ann flann)
+
 # check if necessary files for PMD are installed
 if(EXISTS /usr/include/PMDSDK)
 	INCLUDE_DIRECTORIES(/usr/include/PMDSDK)
-	LINK_DIRECTORIES(/home/christian/workspace/CamBoardNano/PMDSDK/lib)
+	LINK_DIRECTORIES(/usr/lib/PMDSDK)
 	MESSAGE("Found PMDSDK. Will build driver for CamBoard Nano.")
-	#ADD_EXECUTABLE(nanoStream nanoStream.cpp)
-	#TARGET_LINK_LIBRARIES(nanoStream obgraphic obdevice obcore vtkHybrid gsl gslcblas -lpmdaccess2 ${XML_LIBRARIES})
-	#ADD_EXECUTABLE(nanoStreamIR nanoStreamIR.cpp)
-   #TARGET_LINK_LIBRARIES(nanoStreamIR obgraphic obdevice obcore v4l2 glut GL -lpmdaccess2)
+#	ADD_EXECUTABLE(nanoStream nanoStream.cpp)
+#	TARGET_LINK_LIBRARIES(nanoStream obgraphic obdevice obcore vtkHybrid gsl gslcblas -lpmdaccess2 ${XML_LIBRARIES})
+#	ADD_EXECUTABLE(nanoStreamIR nanoStreamIR.cpp)
+#   TARGET_LINK_LIBRARIES(nanoStreamIR obgraphic obdevice obcore v4l2 glut GL -lpmdaccess2)
 endif()
 
-LINK_DIRECTORIES(/opt/ros/electric/stacks/perception_pcl/flann/lib64/)
+if(EXISTS /usr/local/include/LMS1xx.h)
+	MESSAGE("Found libLMS. Will build drivers for Sick Laser Scanner.")
+	ADD_EXECUTABLE(tsd_grid_lms100 tsd_grid_lms100.cpp)
+	TARGET_LINK_LIBRARIES(tsd_grid_lms100 ${VISIONLIBS} ${GRAPHICLIBS} ${DEVICELIBS} -lLMS1xx ${CORELIBS})
+endif()
+
+LINK_DIRECTORIES(/opt/ros/electric/stacks/perception_pcl/flann/lib64/
+                 /usr/local/lib
+                 ${OPENNI_LIBRARY_DIRS}
+                 )
 
 ADD_EXECUTABLE(obvious3D_show obvious3D_show.cpp)
 ADD_EXECUTABLE(obvious3D_map obvious3D_map.cpp)
@@ -57,16 +79,13 @@ ADD_EXECUTABLE(read_lua_config read_lua_config.cpp)
 ADD_EXECUTABLE(logging_example logging_example.cpp)
 #ADD_EXECUTABLE(tsd_test tsd_test.cpp)
 ADD_EXECUTABLE(tsd_grid_test tsd_grid_test.cpp)
+#ADD_EXECUTABLE(tsd_grid_lms100 tsd_grid_lms100.cpp)
+
 ADD_EXECUTABLE(showCloud showCloud.cpp)
 ADD_EXECUTABLE(filterTest filter_test.cpp)
 #ADD_EXECUTABLE(cloud2grid  cloud2grid.cpp)
 ADD_EXECUTABLE(xtionStream xtionStream.cpp)
-ADD_EXECUTABLE(obstacleView obstacleView.cpp)
-
-SET(CORELIBS obcore gsl gslcblas)
-SET(DEVICELIBS obdevice OpenNI v4l2 udev)
-SET(GRAPHICLIBS obgraphic vtkHybrid glut GL jpeg)
-SET(VISIONLIBS obvision ann flann)
+#ADD_EXECUTABLE(obstacleView obstacleView.cpp)
 
 TARGET_LINK_LIBRARIES(obvious3D_show ${GRAPHICLIBS} ${CORELIBS})
 TARGET_LINK_LIBRARIES(obvious3D_map ${GRAPHICLIBS} ${CORELIBS})
@@ -87,11 +106,14 @@ TARGET_LINK_LIBRARIES(read_lua_config lua5.1)
 TARGET_LINK_LIBRARIES(logging_example obcore)
 #TARGET_LINK_LIBRARIES(tsd_test ${VISIONLIBS} ${GRAPHICLIBS} ${CORELIBS})
 TARGET_LINK_LIBRARIES(tsd_grid_test ${VISIONLIBS} ${GRAPHICLIBS} ${CORELIBS})
+#TARGET_LINK_LIBRARIES(tsd_grid_lms100 ${VISIONLIBS} ${GRAPHICLIBS} ${DEVICELIBS} ${CORELIBS} LMS1xx)
 TARGET_LINK_LIBRARIES(showCloud ${GRAPHICLIBS} ${CORELIBS})
 TARGET_LINK_LIBRARIES(filterTest ${GRAPHICLIBS} ${CORELIBS})
 TARGET_LINK_LIBRARIES(xtionStream ${VISIONLIBS} ${GRAPHICLIBS} ${DEVICELIBS} ${CORELIBS} ${XML_LIBRARIES})
 #TARGET_LINK_LIBRARIES(cloud2grid ${GRAPHICLIBS} ${CORELIBS})
-TARGET_LINK_LIBRARIES(obstacleView ${GRAPHICLIBS} ${DEVICELIBS} ${CORELIBS} ${XML_LIBRARIES})
+#TARGET_LINK_LIBRARIES(obstacleView ${GRAPHICLIBS} ${DEVICELIBS} ${CORELIBS} ${XML_LIBRARIES})
 
-
-
+IF("${RET_OPENNI_CODE}" STREQUAL "0")
+    ADD_EXECUTABLE(openni-device-stream openni-device-stream.cpp)
+    TARGET_LINK_LIBRARIES(openni-device-stream ${VISIONLIBS} ${GRAPHICLIBS} ${DEVICELIBS} ${CORELIBS} ${XML_LIBRARIES} ${OPENNI_LIBRARIES})
+ENDIF()

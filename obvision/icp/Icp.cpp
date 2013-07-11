@@ -22,12 +22,13 @@ Icp::Icp(PairAssignment* assigner, IRigidEstimator* estimator)
   _sizeModelBuf        = 0;
   _sizeSceneBuf        = 0;
 
-  _Tfinal              = new Matrix(4, 4);
+  _Tfinal4x4           = new Matrix(4, 4);
+  _Tfinal              = new Matrix(_dim+1, _dim+1);
   _Tlast               = new Matrix(4, 4);
-  _Tfinal->setIdentity();
+  _Tfinal4x4->setIdentity();
   _Tlast->setIdentity();
 
-  _convCnt = 3;
+  _convCnt = 5;
 
   this->reset();
 }
@@ -125,8 +126,8 @@ void Icp::setScene(double* coords, double* normals, const unsigned int size)
     memcpy(_normalsS[0], normals, size*_dim*sizeof(double));
   }
 
-  applyTransformation(_scene, _sizeScene, _dim, _Tfinal);
-  if(normals) applyTransformation(_normalsS, _sizeScene, _dim, _Tfinal);
+  applyTransformation(_scene, _sizeScene, _dim, _Tfinal4x4);
+  if(normals) applyTransformation(_normalsS, _sizeScene, _dim, _Tfinal4x4);
 }
 
 void Icp::setScene(gsl_matrix* coords, gsl_matrix* normals)
@@ -158,8 +159,8 @@ void Icp::setScene(gsl_matrix* coords, gsl_matrix* normals)
     }
   }
 
-  applyTransformation(_scene, _sizeScene, _dim, _Tfinal);
-  if(normals) applyTransformation(_normalsS, _sizeScene, _dim, _Tfinal);
+  applyTransformation(_scene, _sizeScene, _dim, _Tfinal4x4);
+  if(normals) applyTransformation(_normalsS, _sizeScene, _dim, _Tfinal4x4);
 }
 
 void Icp::checkMemory(unsigned int rows, unsigned int cols, unsigned int &memsize, double** &mem)
@@ -181,7 +182,7 @@ void Icp::checkMemory(unsigned int rows, unsigned int cols, unsigned int &memsiz
 
 void Icp::reset()
 {
-  _Tfinal->setIdentity();
+  _Tfinal4x4->setIdentity();
   _assigner->reset();
 }
 
@@ -268,8 +269,8 @@ EnumIcpState Icp::step(double* rms, unsigned int* pairs)
 
     // update overall transformation
     gsl_matrix* F_tmp = gsl_matrix_alloc(4, 4);
-    gsl_matrix_memcpy(F_tmp, _Tfinal->getBuffer());
-    gsl_blas_dgemm (CblasNoTrans, CblasNoTrans, 1.0, _Tlast->getBuffer(), F_tmp, 0.0, _Tfinal->getBuffer());
+    gsl_matrix_memcpy(F_tmp, _Tfinal4x4->getBuffer());
+    gsl_blas_dgemm (CblasNoTrans, CblasNoTrans, 1.0, _Tlast->getBuffer(), F_tmp, 0.0, _Tfinal4x4->getBuffer());
     gsl_matrix_free(F_tmp);
   }
   else
@@ -306,8 +307,27 @@ EnumIcpState Icp::iterate(double* rms, unsigned int* pairs, unsigned int* iterat
   return eRetval;
 }	
 
+Matrix* Icp::getFinalTransformation4x4()
+{
+  return _Tfinal4x4;
+}
+
 Matrix* Icp::getFinalTransformation()
 {
+   for(int r=0; r<_dim; r++)
+   {
+      for(int c=0; c<_dim; c++)
+      {
+         (*_Tfinal)[r][c] = (*_Tfinal4x4)[r][c];
+      }
+      (*_Tfinal)[r][_dim] = (*_Tfinal4x4)[r][3];
+   }
+
+   for(int c=0; c<_dim; c++)
+      (*_Tfinal)[_dim][c] = 0;
+
+   (*_Tfinal)[_dim][_dim] = 1;
+
   return _Tfinal;
 }
 
