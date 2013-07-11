@@ -21,9 +21,9 @@ int main(void)
   LOGMSG_CONF("tsd_grid_test.log", Logger::file_off|Logger::screen_on, DBG_DEBUG, DBG_DEBUG);
 
   // Initialization of TSD grid
-  double dimX = 16.0;
-  double dimY = 16.0;
-  double cellSize = 0.05;
+  double dimX = 9.0;
+  double dimY = 9.0;
+  double cellSize = 0.03;
 
   TsdGrid* grid = new TsdGrid(dimX, dimY, cellSize);
   grid->setMaxTruncation(2.0*cellSize);
@@ -35,7 +35,7 @@ int main(void)
   unsigned int h = grid->getCellsY();
   unsigned char* image = new unsigned char[3*w*h];
   double ratio = double(w)/double(h);
-  double screen_width = 600;
+  double screen_width = 900;
   Obvious2D viewer(screen_width, screen_width/ratio, "tsd_grid_lms100");
 
 
@@ -68,14 +68,15 @@ int main(void)
   double* map      = new double[grid->getCellsX()*grid->getCellsY()*2];
 
   // Compose ICP modules
-  int iterations                 = 50;
+  int iterations                 = 100;
   PairAssignment* assigner       = (PairAssignment*)  new AnnPairAssignment(2);
-  IPostAssignmentFilter* filterD = (IPostAssignmentFilter*) new DistanceFilter(1.5, 0.01, iterations);
+  IPostAssignmentFilter* filterD = (IPostAssignmentFilter*) new DistanceFilter(3.0, 0.01, iterations);
   assigner->addPostFilter(filterD);
   IRigidEstimator* estimator     = (IRigidEstimator*) new ClosedFormEstimator2D();
   Icp* icp = new Icp(assigner, estimator);
   icp->setMaxRMS(0.0);
   icp->setMaxIterations(iterations);
+  icp->setConvergenceCounter(30);
 
   // Set first model
   lms.grab();
@@ -107,6 +108,9 @@ int main(void)
     LOGMSG(DBG_DEBUG, "ICP result - RMS: " << rms << " pairs: " << pairs << " iterations: " << it << endl;)
 
     Matrix* T = icp->getFinalTransformation();
+    //T->print();
+    //usleep(2000000);
+
     sensor.setRealMeasurementData(lms.getRanges());
     sensor.transform(T);
 
@@ -130,6 +134,14 @@ int main(void)
         image[idx+2] = 0;
       }
     }
+    double position[2];
+    sensor.getPosition(position);
+    int x, y;
+    double dx, dy;
+    grid->coord2Cell(position, &x, &y, &dx, &dy);
+    image[3*(y*w+x)]   = 255;
+    image[3*(y*w+x)+1] = 0;
+    image[3*(y*w+x)+2] = 0;
     viewer.draw(image, w, h, 3, 0, 0);
 
     delete M;

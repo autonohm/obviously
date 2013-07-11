@@ -28,7 +28,7 @@ Icp::Icp(PairAssignment* assigner, IRigidEstimator* estimator)
   _Tfinal4x4->setIdentity();
   _Tlast->setIdentity();
 
-  _convCnt = 3;
+  _convCnt = 5;
 
   this->reset();
 }

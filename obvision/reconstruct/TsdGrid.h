@@ -103,16 +103,6 @@ public:
    */
   bool interpolateBilinear(double coord[2], double* tsdf);
 
-private:
-
-  /**
-   * Add tsdf value to grid
-   * @param[in] x index in x-dimension
-   * @param[in] y index in y-dimension
-   * @param[in] sdf signed distance function value
-   */
-  void addTsdfValue(const unsigned int x, const unsigned int y, const double sdf);
-
   /**
    * Convert arbitrary coordinate to grid coordinates
    * @param[in] coord 2D query coordinates
@@ -122,6 +112,16 @@ private:
    * @param[out] dy y-coordinate of cell-center in metric space
    */
   bool coord2Cell(double coord[2], int* x, int* y, double* dx, double* dy);
+
+private:
+
+  /**
+   * Add tsdf value to grid
+   * @param[in] x index in x-dimension
+   * @param[in] y index in y-dimension
+   * @param[in] sdf signed distance function value
+   */
+  void addTsdfValue(const unsigned int x, const unsigned int y, const double sdf);
 
   int _cellsX;
 
