@@ -241,7 +241,7 @@ void TsdGrid::addTsdfValue(const unsigned int x, const unsigned int y, const dou
   }
 }
 
-inline bool TsdGrid::coord2Cell(double coord[2], int* x, int* y, double* dx, double* dy)
+bool TsdGrid::coord2Cell(double coord[2], int* x, int* y, double* dx, double* dy)
 {
   // Get cell indices
   double dCoordX = coord[0] * _invCellSize;
