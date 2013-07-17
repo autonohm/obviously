@@ -45,10 +45,13 @@ INCLUDE_DIRECTORIES(/usr/include/openni
 IF(EXISTS /usr/include/PMDSDK)
     MESSAGE(STATUS "Build PMD stuff ...")
     INCLUDE_DIRECTORIES(/usr/include/PMDSDK)
-    SET(${SOURCES}
-        CamNano.cpp
-        SickLMS100.cpp
-        )
+    SET(SOURCES ${SOURCES} CamNano.cpp)
+ENDIF()
+
+# check if necessary files for sick lidar installed
+IF(EXISTS /usr/local/include/LMS1xx.h)
+    message(STATUS "Build Sick stuff ...")
+    set(SOURCES ${SOURCES} SickLMS100.cpp)
 ENDIF()
 
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__OBVIOUSLY__")
