@@ -60,6 +60,30 @@ public:
   double getCellSize();
 
   /**
+   * Get minimum for x-coordinate
+   * @return x-coordinate
+   */
+  double getMinX();
+
+  /**
+   * Get maximum for x-coordinate
+   * @return x-coordinate
+   */
+  double getMaxX();
+
+  /**
+   * Get minimum for y-coordinate
+   * @return y-coordinate
+   */
+  double getMinY();
+
+  /**
+   * Get maximum for y-coordinate
+   * @return y-coordinate
+   */
+  double getMaxY();
+
+  /**
    * Set maximum truncation radius
    * @param[in] val truncation radius
    */
@@ -142,6 +166,15 @@ private:
   double _invCellSize;
 
   double _maxTruncation;
+
+  double _minX;
+
+  double _maxX;
+
+  double _minY;
+
+  double _maxY;
+
 };
 
 }

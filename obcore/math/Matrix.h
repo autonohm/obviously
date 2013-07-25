@@ -43,6 +43,12 @@ public:
 	~Matrix();
 
 	/**
+	 * Copy matrix elements
+	 * @param M source matrix (size must be equal of this instance)
+	 */
+	void copy(const Matrix &M);
+
+	/**
 	 * Assignment operator
 	 * @param M matrix assigned to this one
 	 * @return this matrix instance

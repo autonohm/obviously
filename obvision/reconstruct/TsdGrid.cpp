@@ -44,6 +44,11 @@ TsdGrid::TsdGrid(const unsigned int dimX, const unsigned int dimY, const double 
       (*_cellCoordsHom)[i][2] = 1.0;
     }
   }
+
+  _minX = 0.0;
+  _maxX = ((double)_cellsX + 0.5) * _cellSize;
+  _minY = 0.0;
+  _maxY = ((double)_cellsY + 0.5) * _cellSize;
 }
 
 TsdGrid::~TsdGrid(void)
@@ -65,6 +70,26 @@ unsigned int TsdGrid::getCellsY()
 double TsdGrid::getCellSize()
 {
   return _cellSize;
+}
+
+double TsdGrid::getMinX()
+{
+  return _minX;
+}
+
+double TsdGrid::getMaxX()
+{
+  return _maxX;
+}
+
+double TsdGrid::getMinY()
+{
+  return _minY;
+}
+
+double TsdGrid::getMaxY()
+{
+  return _maxY;
 }
 
 void TsdGrid::setMaxTruncation(double val)

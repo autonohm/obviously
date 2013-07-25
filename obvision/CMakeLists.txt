@@ -21,6 +21,7 @@ add_library(obvision
 	icp/assign/filter/ReciprocalFilter.cpp
 	icp/assign/filter/SubsamplingFilter.cpp
 	icp/assign/filter/DistanceFilter.cpp
+	icp/assign/filter/OutOfBoundsFilter2D.cpp
 	icp/ClosedFormEstimator2D.cpp
 	icp/PointToPointEstimator3D.cpp
 	icp/PointToPlaneEstimator3D.cpp
