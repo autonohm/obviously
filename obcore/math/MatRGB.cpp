@@ -60,20 +60,6 @@ unsigned char MatRGB::at(const unsigned int row, const unsigned int col, const u
     return gsl_matrix_uchar_get(GSL(_data[channel]), row, col);
 }
 
-RGBColor MatRGB::rgb(const unsigned int row, const unsigned int col) const
-{
-    return RGBColor(gsl_matrix_uchar_get(GSL(_data[Red])  , row, col),
-                    gsl_matrix_uchar_get(GSL(_data[Green]), row, col),
-                    gsl_matrix_uchar_get(GSL(_data[Blue]) , row, col));
-}
-
-void MatRGB::setRgb(const unsigned int row, const unsigned int col, const RGBColor& color)
-{
-    gsl_matrix_uchar_set(GSL(_data[Red])  , row, col, color.r());
-    gsl_matrix_uchar_set(GSL(_data[Green]), row, col, color.g());
-    gsl_matrix_uchar_set(GSL(_data[Blue]) , row, col, color.b());
-}
-
 MatRGB::iterator MatRGB::begin(const unsigned int channel)
 {
     if (!_data.size())

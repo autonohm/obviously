@@ -2,7 +2,6 @@
 #define __MAT_RGB__
 
 #include "obcore/math/AbstractMat.h"
-#include "obcore/RGBColor.h"
 
 namespace xmlpp {
 class Node;
@@ -39,10 +38,6 @@ public:
     unsigned char& at(const unsigned int row, const unsigned int col, const unsigned int channel = Red);
     //! get a reference of element by row, col and channel
     unsigned char at(const unsigned int row, const unsigned int col, const unsigned int channel = Red) const;
-    //! get RGBColor class of element by row, col
-    RGBColor rgb(const unsigned int row, const unsigned int col) const;
-    //! set RGBColor to element by row, col
-    void setRgb(const unsigned int row, const unsigned int col, const RGBColor& color);
 
     //! reimplementation of begin()
     virtual iterator begin(const unsigned int channel);
