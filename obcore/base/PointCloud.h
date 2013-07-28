@@ -53,6 +53,8 @@ public:
     inline iterator end(void) { return _points.end(); }
     inline const_iterator end(void) const { return _points.end(); }
     inline unsigned int size(void) const { return _points.size(); }
+    inline void clear(void) { _points.clear(); _width = 0; _height = 0; }
+    inline void resize(const size_t size) { _points.resize(size); _width = 0; _height = 0; }
     inline std::vector<T>& points(void) { return _points; }
     inline const std::vector<T>& points(void) const { return _points; }
 

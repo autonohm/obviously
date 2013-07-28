@@ -1,3 +1,6 @@
+#ifndef __GPU_HOST_POINT_CLOUD__
+#define __GPU_HOST_POINT_CLOUD__
+
 #include <stdint.h>
 
 #include <cuda_runtime_api.h>
@@ -5,15 +8,9 @@
 #include "obcore/base/point-types.h"
 #include "obcore/base/PointCloud.h"
 
-namespace obvious { namespace gpu { namespace device {
+namespace obvious { namespace gpu { namespace host {
 
-struct PointXyz {
-    float x;
-    float y;
-    float z;
-};
-
-class PointCloud
+class HostPointCloud
 {
 public:
 
@@ -31,8 +28,8 @@ public:
         XYZRGBIT = XYZ | RGB | T | I
     };
 
-    PointCloud(void) : _data(0), _type(None), _size(0) { }
-    ~PointCloud(void);
+    HostPointCloud(void) : _data(0), _type(None), _size(0) { }
+    ~HostPointCloud(void);
 
     void upload(const obvious::PointCloud<obvious::PointXyz>& cloud);
     void download(obvious::PointCloud<obvious::PointXyz>& cloud);
@@ -43,8 +40,10 @@ private:
     unsigned int _size;
 };
 
-} // end namespace device
+} // end namespace host
 
 } // end namespace gpu
 
 } // end namespace obvious
+
+#endif

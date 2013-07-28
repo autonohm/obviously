@@ -5,13 +5,14 @@ FIND_PACKAGE(CUDA)
 INCLUDE(FindCUDA)
 
 SET(DEVICE_SRC $ENV{OBVIOUSLY_ROOT}/obgpu/device)
-#add_definitions(-std=gnu++0x)
-
+SET(HOST_SRC $ENV{OBVIOUSLY_ROOT}/obgpu/host)
 
 INCLUDE_DIRECTORIES($ENV{OBVIOUSLY_ROOT})
 
 CUDA_ADD_LIBRARY(obgpu
-                 ${DEVICE_SRC}/PointCloud.cu
+                 ${HOST_SRC}/HostPointCloud.cu
+                 ${DEVICE_SRC}/filter/PassThrough.cu
+                 ${HOST_SRC}/filter/PassThrough.cpp
                  )
 
 # if you need to pass options/flags
