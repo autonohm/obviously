@@ -1,9 +1,8 @@
-#include "obgpu/host/filter/PassThrough.h"
-#include "obgpu/device/filter/PassThrough.cu"
+#include "obgpu/filter/PassThrough.h"
 
 #include <cuda_runtime_api.h>
 
-namespace obvious { namespace gpu { namespace host { namespace filter {
+namespace obvious { namespace gpu { namespace filter {
 
 PassThrough::PassThrough(void)
     : Filter(),
@@ -15,7 +14,7 @@ PassThrough::PassThrough(void)
       _zMax(_xMax),
       _limits(0)
 {
-    cudaMalloc(&_limits, 6 * sizeof(float));
+    cudaMalloc(reinterpret_cast<void**>(&_limits), 6 * sizeof(float));
 }
 
 PassThrough::~PassThrough(void)
@@ -27,13 +26,11 @@ void PassThrough::filter(obvious::gpu::PointCloud* cloud)
 {
     cudaMemcpy(_limits, &_xMin, 6 * sizeof(float), cudaMemcpyHostToDevice);
 
-    obvious::gpu::device::filter::filter(_input.points(), cloud, _limits);
+
 }
 
 
 } // end namespace filter
-
-} // end namespace host
 
 } // end namespace gpu
 

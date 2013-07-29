@@ -3,7 +3,7 @@
 
 #include "obgpu/PointCloud.h"
 
-namespace obvious { namespace gpu { namespace host { namespace filter {
+namespace obvious { namespace gpu { namespace filter {
 
 class Filter
 {
@@ -19,8 +19,6 @@ protected:
 };
 
 } // end namespace filter
-
-} // end namespace host
 
 } // end namespace gpu
 

@@ -1,11 +1,12 @@
-#ifndef __GPU_HOST_PASS_THROUGH__
-#define __GPU_HOST_PASS_THROUGH__
+#ifndef __GPU_PASS_THROUGH__
+#define __GPU_PASS_THROUGH__
 
 #include <limits>
+#include <cstddef>
 
-#include "obgpu/host/filter/Filter.h"
+#include "obgpu/filter/Filter.h"
 
-namespace obvious { namespace gpu { namespace host { namespace filter {
+namespace obvious { namespace gpu { namespace filter {
 
 class PassThrough : public Filter
 {
@@ -31,8 +32,6 @@ private:
 };
 
 } // end namespace filter
-
-} // end namespace host
 
 } // end namespace gpu
 
