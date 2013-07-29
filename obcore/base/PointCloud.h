@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <memory>
+#include <cstddef>
 
 namespace obvious {
 
@@ -15,15 +16,14 @@ public:
     typedef typename std::vector<T>::const_iterator const_iterator;
 
     PointCloud(void)
-    : _points(new std::vector<T>()),
-      _width(0),
+    : _width(0),
       _height(0)
     {
 
     }
 
     PointCloud(const unsigned int size, const T& init = T())
-        : _points(new std::vector<T>(size, init)),
+        : _points(size, init),
           _width(0),
           _height(1)
     {
@@ -31,7 +31,7 @@ public:
     }
 
     PointCloud(const unsigned int width, const unsigned int height, const T& init = T())
-        : _points(new std::vector<T>(width * height, init)),
+        : _points(width * height, init),
           _width(width),
           _height(height)
     {
@@ -52,7 +52,7 @@ public:
     inline const_iterator begin(void) const { return _points.begin(); }
     inline iterator end(void) { return _points.end(); }
     inline const_iterator end(void) const { return _points.end(); }
-    inline unsigned int size(void) const { return _points.size(); }
+    inline size_t size(void) const { return _points.size(); }
     inline void clear(void) { _points.clear(); _width = 0; _height = 0; }
     inline void resize(const size_t size) { _points.resize(size); _width = 0; _height = 0; }
     inline std::vector<T>& points(void) { return _points; }
