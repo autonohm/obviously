@@ -31,6 +31,7 @@ INCLUDE_DIRECTORIES(/usr/include/openni
                     ../obcore/math
                     ../obcore/filter
                     ../obcore
+                    ../obgpu
                     ${XML_INCLUDE_DIRS}
                     )
 
@@ -85,6 +86,7 @@ ADD_EXECUTABLE(showCloud                  showCloud.cpp)
 #ADD_EXECUTABLE(cloud2grid                cloud2grid.cpp)
 ADD_EXECUTABLE(xtionStream                xtionStream.cpp)
 #ADD_EXECUTABLE(obstacleView              obstacleView.cpp)
+ADD_EXECUTABLE(gpu-devices                gpu-devices.cpp)
 
 TARGET_LINK_LIBRARIES(obvious3D_show      ${GRAPHICLIBS} ${CORELIBS})
 TARGET_LINK_LIBRARIES(obvious3D_map       ${GRAPHICLIBS} ${CORELIBS})
@@ -110,6 +112,7 @@ TARGET_LINK_LIBRARIES(showCloud           ${GRAPHICLIBS} ${CORELIBS})
 TARGET_LINK_LIBRARIES(xtionStream         ${VISIONLIBS}  ${GRAPHICLIBS} ${DEVICELIBS} ${CORELIBS} ${XML_LIBRARIES})
 #TARGET_LINK_LIBRARIES(cloud2grid         ${GRAPHICLIBS} ${CORELIBS})
 #TARGET_LINK_LIBRARIES(obstacleView       ${GRAPHICLIBS} ${DEVICELIBS} ${CORELIBS} ${XML_LIBRARIES})
+TARGET_LINK_LIBRARIES(gpu-devices         obgpu)
 
 IF("${RET_OPENNI_CODE}" STREQUAL "0")
     ADD_EXECUTABLE(openni-device-stream openni-device-stream.cpp)

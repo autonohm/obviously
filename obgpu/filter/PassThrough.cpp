@@ -22,13 +22,6 @@ PassThrough::~PassThrough(void)
     cudaFree(_limits);
 }
 
-void PassThrough::filter(obvious::gpu::PointCloud* cloud)
-{
-    cudaMemcpy(_limits, &_xMin, 6 * sizeof(float), cudaMemcpyHostToDevice);
-
-
-}
-
 
 } // end namespace filter
 

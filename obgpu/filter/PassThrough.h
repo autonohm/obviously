@@ -4,6 +4,8 @@
 #include <limits>
 #include <cstddef>
 
+#include "obgpu/point-types.h"
+#include "obgpu/PointCloud.h"
 #include "obgpu/filter/Filter.h"
 
 namespace obvious { namespace gpu { namespace filter {

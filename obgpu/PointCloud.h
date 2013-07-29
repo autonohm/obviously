@@ -3,7 +3,6 @@
 
 #include <stdint.h>
 
-
 #include "obcore/base/point-types.h"
 #include "obcore/base/PointCloud.h"
 
@@ -32,6 +31,9 @@ public:
 
     void upload(const obvious::PointCloud<obvious::PointXyz>& cloud);
     void download(obvious::PointCloud<obvious::PointXyz>& cloud);
+
+    inline void* data(void) { return _data; }
+    inline size_t size(void) const { return _size; }
 
 private:
     void* _data;

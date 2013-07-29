@@ -12,6 +12,7 @@ CUDA_ADD_LIBRARY(obgpu
                  ${SRC_DIR}/PointCloud.cu
                  ${SRC_DIR}/filter/PassThrough.cu
                  ${SRC_DIR}/filter/PassThrough.cpp
+                 ${SRC_DIR}/Device.cpp
                  )
 
 # if you need to pass options/flags
