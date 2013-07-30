@@ -4,6 +4,36 @@
 #include <cuda_runtime_api.h>
 
 namespace obvious { namespace gpu {
+/*
+__global__ void copyInlier(const PointXyz* source, const unsigned int n, const bool* inlier, PointXyz*& target)
+{
+    __device__ unsigned int tarIdx = 0;
+    int i = threadIdx.x + blockIdx.x * blockDim.x;
+
+    if (i < n)
+    {
+        if (inlier.data[i])
+        {
+            target[tarIdx] = source[i];
+            ++tarIdx;
+        }
+    }
+}
+*/
+PointCloud::PointCloud(const PointCloud& cloud, const bool* inlier)
+    : _data(0),
+      _type(cloud._type),
+      _size(0)
+{
+    unsigned int counter = 0;
+
+    for (unsigned int i = 0; i < cloud._size; ++i)
+        if (inlier[i]) counter++;
+
+    _size = counter;
+    cudaMalloc(&_data, _size);
+
+}
 
 PointCloud::~PointCloud(void)
 {

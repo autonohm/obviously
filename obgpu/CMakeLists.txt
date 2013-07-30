@@ -13,6 +13,9 @@ CUDA_ADD_LIBRARY(obgpu
                  ${SRC_DIR}/filter/PassThrough.cu
                  ${SRC_DIR}/filter/PassThrough.cpp
                  ${SRC_DIR}/Device.cpp
+                 ${SRC_DIR}/search/Search.cpp
+                 ${SRC_DIR}/search/BruteForce.cu
+                 ${SRC_DIR}/features/NormalEstimator.cu
                  )
 
 # if you need to pass options/flags

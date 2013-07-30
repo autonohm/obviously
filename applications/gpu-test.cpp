@@ -2,6 +2,7 @@
 #include "obdevice/OpenNiDevice.h"
 #include "obgpu/PointCloud.h"
 #include "obgpu/filter/PassThrough.h"
+#include "obgpu/features/NormalEstimator.h"
 
 #include <iostream>
 #include <ctime>
@@ -31,6 +32,7 @@ int main(void)
     PointCloud<PointXyz> cloud;
     gpu::PointCloud gpuCloud;
     gpu::filter::PassThrough filter;
+    gpu::features::NormalEstimator estimator;
 
     sensor.init();
     cloud.resize(sensor.width() * sensor.height());
@@ -45,8 +47,10 @@ int main(void)
         const int clockBegin = clock();
 
         gpuCloud.upload(cloud);
-        filter.setInput(&gpuCloud);
-        filter.filter(&gpuCloud);
+//        filter.setInput(&gpuCloud);
+//        filter.filter(&gpuCloud);
+        estimator.setSource(&gpuCloud);
+        estimator.estimate();
         gpuCloud.download(cloud);
 
         std::cout << "loop " << i + 1 << ": " << clock() - clockBegin << " clocks needed." << std::endl;

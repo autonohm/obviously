@@ -27,6 +27,7 @@ public:
     };
 
     PointCloud(void) : _data(0), _type(None), _size(0) { }
+    PointCloud(const PointCloud& cloud, const bool* inlier);
     ~PointCloud(void);
 
     void upload(const obvious::PointCloud<obvious::PointXyz>& cloud);
