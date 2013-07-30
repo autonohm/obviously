@@ -12,7 +12,7 @@ class NormalEstimator : public Device
 public:
     NormalEstimator(void) : Device(), h_searchRadius(0.0) { }
 
-    void estimate(void);
+    void estimate(PointCloud& normals);
 
 private:
     float h_searchRadius;

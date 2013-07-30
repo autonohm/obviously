@@ -23,7 +23,8 @@ public:
         XYZT = XYZ | T,
         XYZRGBI = XYZ | RGB | I,
         XYZRGBT = XYZ | RGB | T,
-        XYZRGBIT = XYZ | RGB | T | I
+        XYZRGBIT = XYZ | RGB | T | I,
+        NORMAL = 1 << 4
     };
 
     PointCloud(void) : _data(0), _type(None), _size(0) { }
@@ -31,10 +32,14 @@ public:
     ~PointCloud(void);
 
     void upload(const obvious::PointCloud<obvious::PointXyz>& cloud);
+    void upload(const obvious::PointCloud<obvious::Normal>& normals);
     void download(obvious::PointCloud<obvious::PointXyz>& cloud);
+    void download(obvious::PointCloud<obvious::Normal>& normals);
 
     inline void* data(void) { return _data; }
     inline size_t size(void) const { return _size; }
+    inline int type(void) const { return _type; }
+    inline bool isNormal(void) const { return _type & NORMAL; }
 
 private:
     void* _data;

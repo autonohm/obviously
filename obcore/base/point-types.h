@@ -5,66 +5,66 @@
 
 namespace obvious {
 
-struct PointXyz {
+struct PointXyz
+{
+    PointXyz(void) { }
+    PointXyz(const float valX, const float valY, const float valZ) : x(valX), y(valY), z(valZ) { }
+    PointXyz(const PointXyz& point) : x(point.x), y(point.y), z(point.z) { }
+
+    inline PointXyz& operator=(const PointXyz& point)
+    {
+        x = point.x;
+        y = point.y;
+        z = point.z;
+
+        return *this;
+    }
+
+    inline bool operator==(const PointXyz& point) const { return x == point.x && y == point.y && z == point.z; }
+
     float x;
     float y;
     float z;
 };
 
-struct PointXyzRgb {
-    float x;
-    float y;
-    float z;
-    char r;
-    char g;
-    char b;
+struct Normal : public PointXyz
+{
+    Normal(void) : PointXyz() { }
+    Normal(const float valX, const float valY, const float valZ, const float valCurvature) : PointXyz(valX, valY, valZ), curvature(valCurvature) { }
+    Normal(const Normal& normal) : PointXyz(normal.toPointXyz()), curvature(normal.curvature) { }
+
+    PointXyz& toPointXyz(void) { return *reinterpret_cast<PointXyz*>(this); }
+    const PointXyz& toPointXyz(void) const { return *reinterpret_cast<const PointXyz*>(this); }
+
+    float curvature;
 };
 
-struct PointXyzI {
-    float x;
-    float y;
-    float z;
-    uint16_t i;
+struct _Rgb
+{
+    _Rgb(void) { }
+    _Rgb(unsigned char valR, unsigned char valG, unsigned char valB) : r(valR), g(valG), b(valB) { }
+    _Rgb(const _Rgb& rgb) : r(rgb.r), g(rgb.g), b(rgb.b) { }
+
+    _Rgb& operator=(const _Rgb& rgb)
+    {
+        r = rgb.r;
+        g = rgb.g;
+        b = rgb.b;
+
+        return *this;
+    }
+
+    unsigned char r;
+    unsigned char g;
+    unsigned char b;
 };
 
-struct PointXyzT {
-    float x;
-    float y;
-    float z;
-    uint16_t t;
+struct PointXyzRgb : public PointXyz, public _Rgb
+{
+    PointXyzRgb(void) : PointXyz(), _Rgb() { }
+    PointXyzRgb(const PointXyzRgb& point) : PointXyz(point.x, point.y, point.z), _Rgb(point.r, point.g, point.z) { }
 };
 
-struct PointXyzRgbT {
-    float x;
-    float y;
-    float z;
-    char r;
-    char g;
-    char b;
-    uint16_t t;
-};
-
-struct PointXyzRgbI {
-    float x;
-    float y;
-    float z;
-    char r;
-    char g;
-    char b;
-    uint16_t i;
-};
-
-struct PointXyzRgbIT {
-    float x;
-    float y;
-    float z;
-    char r;
-    char g;
-    char b;
-    uint16_t i;
-    uint16_t t;
-};
-
-}
+} // end namespace obvious
 
 #endif

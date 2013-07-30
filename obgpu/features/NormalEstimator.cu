@@ -5,6 +5,7 @@
 #include <cuda_runtime_api.h>
 
 #include <limits>
+#include <iostream>
 
 namespace obvious { namespace gpu { namespace features {
 
@@ -215,7 +216,7 @@ __device__ bool compute_mean_and_covariance(const gpu::PointXyz* source, const s
         if (neighbor->x == NAN || neighbor->y == NAN || neighbor->z == NAN)
             continue;
 
-        gpu::PointXyz diff = { neighbor->x - point.x, neighbor->y - point.y, neighbor->z - point.z };
+        gpu::PointXyz diff(neighbor->x - point.x, neighbor->y - point.y, neighbor->z - point.z);
 
         if (diff.x * diff.x + diff.y * diff.y + diff.z * diff.z > 0.1)
             continue;
@@ -360,13 +361,13 @@ __device__ void solve_plane_parameters(const Matrix3f& covariance, Vector3f& nor
         curvature = 0.0;
 }
 
-__global__ void estimate_normals(const gpu::PointXyz* source, const size_t n, gpu::PointXyz* normals)
+__global__ void estimate_normals(const gpu::PointXyz* source, const size_t n, gpu::Normal* normals)
 {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
 
     if (i >= n)
         return;
-
+    /*
     Vector3f centroid;
     Matrix3f covariance;
 
@@ -383,20 +384,38 @@ __global__ void estimate_normals(const gpu::PointXyz* source, const size_t n, gp
     float curvature;
 
     solve_plane_parameters(covariance, normal, curvature);
+
+    normals[i].x = normal[0];
+    normals[i].y = normal[1];
+    normals[i].z = normal[2];
+    normals[i].curvature = curvature;
+    */
+    normals[i].x = 1.0f;
+    normals[i].y = 0.0f;
+    normals[i].z = 0.0f;
+    normals[i].curvature = 0.0f;
 }
 
-void NormalEstimator::estimate(void)
+void NormalEstimator::estimate(gpu::PointCloud& normals)
 {
-    if (!d_source)
+    if (!d_source || !normals.isNormal())
+    {
+        std::cout << __PRETTY_FUNCTION__ << std::endl;
+        std::cout << "source not valid or point cloud is not from type normal." << std::endl;
+
         return;
+    }
 
     const size_t n = d_source->size();
-    gpu::PointXyz* normals;
 
-    cudaMalloc(reinterpret_cast<void**>(&normals), n * sizeof(gpu::PointXyz));
-    estimate_normals<<<n / 1024 + 1, 1024>>>(reinterpret_cast<gpu::PointXyz*>(d_source->data()), n, normals);
+    if (normals.size() != d_source->size())
+    {
+        std::cout << __PRETTY_FUNCTION__ << std::endl;
+        std::cout << "source and normal cloud has different size." << std::endl;
+        return;
+    }
 
-    cudaFree(normals);
+    estimate_normals<<<n / 1024 + 1, 1024>>>(reinterpret_cast<gpu::PointXyz*>(d_source->data()), n, reinterpret_cast<gpu::Normal*>(normals.data()));
 }
 
 } // end namespace features

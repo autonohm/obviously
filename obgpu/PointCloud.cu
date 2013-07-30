@@ -54,8 +54,9 @@ void PointCloud::upload(const obvious::PointCloud<obvious::PointXyz>& cloud)
     if (_size < cloud.size())
     {
         cudaFree(_data);
-        cudaMalloc(&_data, cloud.size());
+        cudaMalloc(&_data, cloud.size() * sizeof(obvious::gpu::PointXyz));
         _size = cloud.size();
+        _type = XYZ;
     }
     else if (_size > cloud.size())
     {
@@ -65,12 +66,45 @@ void PointCloud::upload(const obvious::PointCloud<obvious::PointXyz>& cloud)
     cudaMemcpy(_data, cloud.points().data(), cloud.size() * sizeof(obvious::gpu::PointXyz), cudaMemcpyHostToDevice);
 }
 
+void PointCloud::upload(const obvious::PointCloud<obvious::Normal>& cloud)
+{
+    if (_data && _type != NORMAL)
+    {
+        cudaFree(_data);
+        _data = 0;
+        _type = NORMAL;
+        _size = 0;
+    }
+
+    if (_size < cloud.size())
+    {
+        cudaFree(_data);
+        cudaMalloc(&_data, cloud.size() * sizeof(obvious::gpu::Normal));
+        _size = cloud.size();
+        _type = NORMAL;
+    }
+    else if (_size > cloud.size())
+    {
+        _size = cloud.size();
+    }
+
+    cudaMemcpy(_data, cloud.points().data(), cloud.size() * sizeof(obvious::gpu::Normal), cudaMemcpyHostToDevice);
+}
+
 void PointCloud::download(obvious::PointCloud<obvious::PointXyz>& cloud)
 {
     if (cloud.size() != _size)
         cloud.resize(_size);
 
     cudaMemcpy(cloud.points().data(), _data, cloud.size() * sizeof(obvious::gpu::PointXyz), cudaMemcpyDeviceToHost);
+}
+
+void PointCloud::download(obvious::PointCloud<obvious::Normal>& cloud)
+{
+    if (cloud.size() != _size)
+        cloud.resize(_size);
+
+    cudaMemcpy(cloud.points().data(), _data, cloud.size() * sizeof(obvious::gpu::Normal), cudaMemcpyDeviceToHost);
 }
 
 } // end namespace gpu

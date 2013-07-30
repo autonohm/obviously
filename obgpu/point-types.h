@@ -3,23 +3,46 @@
 
 #include <cstddef>
 
+#include <cuda_runtime_api.h>
+
 namespace obvious { namespace gpu {
 
-struct PointXyz {
+struct PointXyz
+{
+    __device__ PointXyz(void) { }
+    __device__ PointXyz(const float valX, const float valY, const float valZ) : x(valX), y(valY), z(valZ) { }
+    __device__ PointXyz(const PointXyz& point) : x(point.x), y(point.y), z(point.z) { }
+
+    __device__ PointXyz& operator=(const PointXyz& point)
+    {
+        x = point.x;
+        y = point.y;
+        z = point.z;
+
+        return *this;
+    }
+
     float x;
     float y;
     float z;
+};
 
-    inline PointXyz operator-(const PointXyz& point)
+struct Normal : public PointXyz
+{
+    __device__ Normal(void) : PointXyz() { }
+    __device__ Normal(const float valX, const float valY, const float valZ, const float valCurvature)
+        : PointXyz(valX, valY, valZ), curvature(valCurvature) { }
+    __device__ Normal(const Normal& normal) : PointXyz(normal.x, normal.y, normal.z), curvature(normal.curvature) { }
+
+    __device__ Normal& operator=(const Normal& normal)
     {
-        PointXyz result;
+        *this = normal;
+        curvature = normal.curvature;
 
-        result.x = x - point.x;
-        result.y = y - point.y;
-        result.z = z - point.z;
-
-        return result;
+        return *this;
     }
+
+    float curvature;
 };
 
 } // end namespace gpu
