@@ -48,11 +48,11 @@ public:
 
     virtual void Execute(vtkObject *vtkNotUsed(caller), unsigned long eventId,  void *vtkNotUsed(callData))
     {
+        const int clockBegin = clock();
+
         if(_sensor.grab())
         {
             this->grab();
-
-            const int clockBegin = clock();
 
             _gpuCloud.upload(_cloud);
             _estimator.setSource(&_gpuCloud);
@@ -61,17 +61,18 @@ public:
 
             this->copyToDouble(_cloud, _coords);
             this->copyToDouble(_normals, _normalsD);
-            std::cout << "loop " << ": " << clock() - clockBegin << " clocks needed." << std::endl;
 
-//            for (PointCloud<Normal>::const_iterator normal(_normals.begin()); normal < _normals.end(); ++normal)
-//                std::cout << normal->x << ", " << normal->y << ", " << normal->z << "; ";
-//            std::cout << std::endl;
+            for (PointCloud<Normal>::const_iterator normal(_normals.begin()); normal < _normals.begin() + 100; ++normal)
+                std::cout << normal->x << ", " << normal->y << ", " << normal->z << "; ";
+            std::cout << std::endl;
 
             _cloudVtk->setCoords(_coords, _cloud.size(), 3);
             _cloudVtk->setNormals(_normalsD, _cloud.size(), 3);
             _cloudVtk->setColors(_image, _cloud.size(), 3);
             _viewer->update();
         }
+
+        std::cout << "loop " << ": " << clock() - clockBegin << " clocks needed." << std::endl;
     }
 
 void grab(void)
@@ -121,10 +122,6 @@ private:
     unsigned char* _image;
 };
 
-namespace {
-const int LOOPS = 1000;
-}
-
 using namespace obvious;
 
 int main(void)
@@ -140,7 +137,7 @@ int main(void)
     vtkSmartPointer<vtkRenderWindowInteractor> interactor = _viewer->getWindowInteractor();
     interactor->AddObserver(vtkCommand::TimerEvent, cb);
 
-    interactor->CreateRepeatingTimer(30);
+    interactor->CreateRepeatingTimer(10);
     _viewer->startRendering();
 
     delete _cloudVtk;

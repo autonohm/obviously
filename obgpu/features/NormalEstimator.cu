@@ -204,15 +204,16 @@ private:
     Vector3f _data[3];
 };
 
-__device__ bool compute_mean_and_covariance(const gpu::PointXyz* source, const size_t n, Matrix3f& covariance, Vector3f& centroid)
+__device__ bool compute_mean_and_covariance(const gpu::PointXyz* source, const size_t n, const gpu::PointXyz& point,
+                                            Matrix3f& covariance, Vector3f& centroid)
 {
     const gpu::PointXyz* end = source + n;
-    const gpu::PointXyz& point = source[blockIdx.x * blockDim.x + threadIdx.x];
     float accu[9] = { 0.0 };
     unsigned int counter = 0;
-
-    for (const gpu::PointXyz* neighbor = source; source < end; ++neighbor)
+    /*
+    for (const gpu::PointXyz* neighbor = source; neighbor < end; ++neighbor)
     {
+
         if (neighbor->x == NAN || neighbor->y == NAN || neighbor->z == NAN)
             continue;
 
@@ -235,8 +236,8 @@ __device__ bool compute_mean_and_covariance(const gpu::PointXyz* source, const s
 
     if (!counter)
         return false;
-
-    for (unsigned int i = 0; i < counter; ++i)
+    /*
+    for (unsigned int i = 0; i < 9; ++i)
         accu[i] /= static_cast<float>(counter);
 
     centroid[0] = accu[6];
@@ -252,7 +253,7 @@ __device__ bool compute_mean_and_covariance(const gpu::PointXyz* source, const s
     covariance(1, 0) = covariance(0, 1);
     covariance(2, 0) = covariance(0, 2);
     covariance(2, 1) = covariance(1, 2);
-
+    */
     return true;
 }
 
@@ -361,17 +362,34 @@ __device__ void solve_plane_parameters(const Matrix3f& covariance, Vector3f& nor
         curvature = 0.0;
 }
 
-__global__ void estimate_normals(const gpu::PointXyz* source, const size_t n, gpu::Normal* normals)
+__global__ void estimate_normals(const gpu::PointXyz* source, const gpu::PointXyz* sourceCpy, const size_t n, float* radiusMatrix, gpu::Normal* normals)
 {
-    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    const int col = blockIdx.x * blockDim.x + threadIdx.x;
+    const int row = blockIdx.y * blockDim.y + threadIdx.y;
+    const int i = row * n + col;
 
-    if (i >= n)
-        return;
+    __shared__ gpu::PointXyz colPoint[10];
+    __shared__ gpu::PointXyz rowPoint[10];
+
+    if (col < n && row < n)
+    {
+        if (!threadIdx.x)
+            rowPoint[threadIdx.y] = sourceCpy[row];
+        if (!threadIdx.y)
+            colPoint[threadIdx.x] = source[col];
+    }
+
+    __syncthreads();
+
+    if (col < n && row < n)
+    {
+        radiusMatrix[i] = (colPoint[threadIdx.x] - rowPoint[threadIdx.y]).quadraticLength();
+    }
     /*
     Vector3f centroid;
     Matrix3f covariance;
 
-    if (!compute_mean_and_covariance(source, n, covariance, centroid))
+    if (!compute_mean_and_covariance(source, n, source[i], covariance, centroid))
     {
         normals[i].x = NAN;
         normals[i].y = NAN;
@@ -379,7 +397,7 @@ __global__ void estimate_normals(const gpu::PointXyz* source, const size_t n, gp
 
         return;
     }
-
+    /*
     Vector3f normal;
     float curvature;
 
@@ -390,10 +408,13 @@ __global__ void estimate_normals(const gpu::PointXyz* source, const size_t n, gp
     normals[i].z = normal[2];
     normals[i].curvature = curvature;
     */
-    normals[i].x = 1.0f;
-    normals[i].y = 0.0f;
-    normals[i].z = 0.0f;
-    normals[i].curvature = 0.0f;
+    if (i < n)
+    {
+        normals[i].x = 1.0f;
+        normals[i].y = 0.0f;
+        normals[i].z = 0.0f;
+        normals[i].curvature = 0.0f;
+    }
 }
 
 void NormalEstimator::estimate(gpu::PointCloud& normals)
@@ -415,7 +436,21 @@ void NormalEstimator::estimate(gpu::PointCloud& normals)
         return;
     }
 
-    estimate_normals<<<n / 1024 + 1, 1024>>>(reinterpret_cast<gpu::PointXyz*>(d_source->data()), n, reinterpret_cast<gpu::Normal*>(normals.data()));
+    float* radiusMatrix;
+    cudaMalloc(reinterpret_cast<void**>(&radiusMatrix), n * n * sizeof(float));
+    gpu::PointXyz* sourceCpy;
+    cudaMalloc(reinterpret_cast<void**>(&sourceCpy), n * sizeof(gpu::PointXyz));
+    cudaMemcpy(sourceCpy, d_source->data(), n * sizeof(gpu::PointXyz), cudaMemcpyDeviceToDevice);
+
+    dim3 grid((n - 1) / 100 + 1, (n - 1) / 100 + 1);
+    dim3 block(10, 10);
+    estimate_normals<<<grid, block>>>(reinterpret_cast<gpu::PointXyz*>(d_source->data()),
+                                      reinterpret_cast<gpu::PointXyz*>(sourceCpy),
+                                      n,
+                                      radiusMatrix,
+                                      reinterpret_cast<gpu::Normal*>(normals.data()));
+    cudaFree(radiusMatrix);
+    cudaFree(sourceCpy);
 }
 
 } // end namespace features

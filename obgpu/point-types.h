@@ -21,6 +21,10 @@ struct PointXyz
 
         return *this;
     }
+    __device__ __forceinline__ PointXyz operator-(const PointXyz& point) const { return PointXyz(x - point.x, y - point.y, z - point.z); }
+    __device__ __forceinline__ PointXyz operator*(const PointXyz& point) const { return PointXyz(x * point.x, y * point.y, z * point.z); }
+    __device__ __forceinline__ float sum(void) const { return x + y + z; }
+    __device__ __forceinline__ float quadraticLength(void) const { return (*this * *this).sum(); }
 
     float x;
     float y;
