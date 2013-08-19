@@ -125,13 +125,13 @@ int main(void)
     grid->grid2ColorImage(image);
     unsigned int mapSize;
     rayCaster.calcCoordsAligned(grid, map, NULL, &mapSize);
-    for(int i=0; i<mapSize/2; i++)
+    for(unsigned int i=0; i<mapSize/2; i++)
     {
       double x = map[2*i];
       double y = map[2*i+1];
       int u = x / cellSize;
       int v = h-(y / cellSize);
-      if(u>0 && u<w && v>0 && v<h)
+      if(u>0 && u<(int)w && v>0 && v<(int)h)
       {
         int idx = 3*(v*w+u);
         image[idx] = 0;

@@ -124,14 +124,7 @@ void TsdGrid::push(SensorPolar2D* sensor)
   {
     for(int x=0; x<_cellsX; x++, i++)
     {
-      // Center of cell
-      //double cellCoords[2];
-      //cellCoords[0] = ((double)x + 0.5) * _cellSize;
-      //cellCoords[1] = ((double)y + 0.5) * _cellSize;
-
       // Index of laser beam
-      //int index = sensor->backProject(cellCoords);
-
       int index = indices[i];
 
       if(index>=0)

@@ -2,6 +2,7 @@
 #define SENSOR_POLAR_2D_H
 
 #include "obcore/math/Matrix.h"
+#include "Sensor.h"
 
 namespace obvious
 {
@@ -11,7 +12,7 @@ namespace obvious
  * @brief Generic class for 2D measurement units using polar sampling
  * @author Stefan May
  */
-class SensorPolar2D
+class SensorPolar2D : public Sensor
 {
 public:
 
@@ -29,18 +30,6 @@ public:
   ~SensorPolar2D();
 
   /**
-   * Transform current sensor pose
-   * @param[in] T 3x3 transformation matrix
-   */
-  void transform(Matrix* T);
-
-  /**
-   * Accessor to sensor pose
-   * @return pose
-   */
-  Matrix* getPose();
-
-  /**
    * Accessor to sensor translation
    * @param[out] tr translation vector
    */
@@ -52,6 +41,10 @@ public:
    */
   unsigned int getRealMeasurementSize();
 
+  /**
+   * Copy measurement data to internal buffer
+   * @param data source with 2D coordinates
+   */
   void setRealMeasurementData(double* data);
 
   /**
@@ -60,6 +53,10 @@ public:
    */
   double* getRealMeasurementData();
 
+  /**
+   * Copy measurement mask
+   * @param mask source mask
+   */
   void setRealMeasurementMask(bool* mask);
 
   /**
@@ -76,13 +73,18 @@ public:
   void calcRay(unsigned int beam, double ray[2]);
 
   /**
-   * Assign an arbitrary coordinate to a measurement beam
+   * Assign an arbitrary 2D coordinate to a measurement beam
    * @param[in] coordinate vector
    * @return beam index
    */
-  int backProject(double* data);
+  int backProject(double data[2]);
 
-   void backProject(Matrix* M, int* indices);
+  /**
+   * Parallel version of back projection
+   * @param[in] M matrix of homogeneous 2D coordinates
+   * @param[out] indices vector of beam indices
+   */
+  void backProject(Matrix* M, int* indices);
 
 private:
 
@@ -100,9 +102,9 @@ private:
 
   double _minPhi;
 
-   double _phiLowerBound;
+  double _phiLowerBound;
 
-   double _phiUpperBound;
+  double _phiUpperBound;
 
 };
 

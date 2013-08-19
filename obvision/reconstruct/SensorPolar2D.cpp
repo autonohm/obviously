@@ -41,16 +41,6 @@ SensorPolar2D::~SensorPolar2D()
   delete [] _mask;
 }
 
-void SensorPolar2D::transform(Matrix* T)
-{
-  (*_Pose) *= (*T);
-}
-
-Matrix* SensorPolar2D::getPose()
-{
-  return _Pose;
-}
-
 void SensorPolar2D::getPosition(double tr[2])
 {
   tr[0] = (*_Pose)[0][2];
@@ -94,7 +84,7 @@ void SensorPolar2D::calcRay(unsigned int beam, double ray[2])
   ray[1] = Rh[1][0];
 }
 
-int SensorPolar2D::backProject(double* data)
+int SensorPolar2D::backProject(double data[2])
 {
   Matrix xh(3, 1);
   xh[0][0] = data[0];

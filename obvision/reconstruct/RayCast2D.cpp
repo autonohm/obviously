@@ -144,7 +144,6 @@ void RayCast2D::calcCoordsAligned(TsdGrid* grid, double* coords, double* normals
   *cnt = 0;
 
   double c[2];
-  double n[2];
 
   double cellSize = grid->getCellSize();
   for (unsigned int y=0; y<grid->getCellsY(); y++)
