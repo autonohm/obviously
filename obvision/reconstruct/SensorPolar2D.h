@@ -30,42 +30,6 @@ public:
   ~SensorPolar2D();
 
   /**
-   * Accessor to sensor translation
-   * @param[out] tr translation vector
-   */
-  void getPosition(double tr[2]);
-
-  /**
-   * Get size of measurement vector
-   * @return number of beams
-   */
-  unsigned int getRealMeasurementSize();
-
-  /**
-   * Copy measurement data to internal buffer
-   * @param data source with 2D coordinates
-   */
-  void setRealMeasurementData(double* data);
-
-  /**
-   * Get measurement vector
-   * @return vector of distance data
-   */
-  double* getRealMeasurementData();
-
-  /**
-   * Copy measurement mask
-   * @param mask source mask
-   */
-  void setRealMeasurementMask(bool* mask);
-
-  /**
-   * Get validity mask
-   * @return validity mask vector. True signals a valid measurement
-   */
-  bool* getRealMeasurementMask();
-
-  /**
    * Calculate ray of specific beam
    * @param[in] beam beam index
    * @param[out] ray vector
@@ -89,14 +53,6 @@ public:
 private:
 
   int phi2Index(double phi);
-
-  Matrix* _Pose;
-
-  double* _data;
-
-  bool* _mask;
-
-  unsigned int _size;
 
   double _angularRes;
 

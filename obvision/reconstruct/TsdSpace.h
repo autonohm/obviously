@@ -2,7 +2,7 @@
 #define TSDSPACE_H
 
 #include "obcore/math/Matrix.h"
-#include "Projection.h"
+#include "Sensor.h"
 
 namespace obvious
 {
@@ -50,7 +50,7 @@ public:
   * @param voxelDim edge length of the Tsd_voxels
   * @param P projection matrix
   */
-  TsdSpace(const unsigned int height, const unsigned int width, const unsigned int depth, const unsigned int cols, const unsigned int rows, const double voxelDim, Matrix P);
+  TsdSpace(const unsigned int height, const unsigned int width, const unsigned int depth, const double voxelDim);
 
  /**
   * Destructor
@@ -94,21 +94,21 @@ public:
   * Function to set the current transformation matrix
   * @param TData content of the new transformation matrix
   */
- void setTransformation(double *TData);
+ //void setTransformation(double *TData);
 
  /**
   * Get current transformation matrix
   * @return current transformation matrix
   */
- double* getTransformation();
+ //double* getTransformation();
 
 
- Matrix *getMTransformation(){return (_T);}
+ //Matrix *getMTransformation(){return (_T);}
 
  /**
   *
   */
- void push(double *depthImage, bool* mask, unsigned char* rgbImage);
+ void push(Sensor* sensor);//double *depthImage, bool* mask, unsigned char* rgbImage);
 
  /**
   * interpolate_trilineary
@@ -132,14 +132,14 @@ public:
 
  bool buildSliceImage(const unsigned int depthIndex, unsigned char* image);
 
- TsdVoxel*** getSpace(void){return(_space);}
+ //TsdVoxel*** getSpace(void){return(_space);}
 
 private:
 
  /**
   *
   */
- void addTsdfValue(const double coordVoxel[3], const unsigned int u, const unsigned int v, const unsigned int col, const unsigned int row, const unsigned int z);
+ void addTsdfValue(const unsigned int col, const unsigned int row, const unsigned int z, double sdf);
 
  /**
   *
@@ -160,31 +160,17 @@ private:
 
  int _depth;
 
- unsigned int _cols;
-
- unsigned int _rows;
-
  TsdVoxel*** _space;
 
- Matrix* _voxelCoords;
+ Matrix* _voxelCoordsHom;
 
  double _voxelSize;
 
  double _invVoxelSize;
 
- Matrix *_T;
-
- Matrix *_Tinv;
-
- double _tr[3];
-
  double _maxTruncation;
 
- double* _depthImage;
-
- unsigned char* _rgbImage;
-
- Matrix* _P;
+ //unsigned char* _rgbImage;
 
  Matrix*** _rays;
 };

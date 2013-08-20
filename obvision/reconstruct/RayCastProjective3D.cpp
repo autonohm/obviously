@@ -10,20 +10,20 @@
 namespace obvious
 {
 
-RayCastProjective3D::RayCastProjective3D(const unsigned int cols, const unsigned int rows, Projection* projection, TsdSpace* space)
+RayCastProjective3D::RayCastProjective3D(const unsigned int cols, const unsigned int rows, SensorProjective3D* sensor, TsdSpace* space)
 {
   _cols = cols;
   _rows = rows;
 
   _space = space;
-  _projection = projection;
+  _sensor = sensor;
 
   System<Matrix*>::allocate(_cols, _rows, _rays);
-  for(int col=0; col<_cols; col++)
-    for(int row=0; row<_rows; row++)
+  for(unsigned int col=0; col<_cols; col++)
+    for(unsigned int row=0; row<_rows; row++)
     {
       _rays[col][row] = new Matrix(4, 1);
-      _projection->project2Space(col, row, 1.0, _rays[col][row]);
+      _sensor->project2Space(col, row, 1.0, _rays[col][row]);
 
       // Normalize ray to size of voxel
       Matrix* M = _rays[col][row];
@@ -34,49 +34,24 @@ RayCastProjective3D::RayCastProjective3D(const unsigned int cols, const unsigned
       (*M)[2][0] /= len;
       (*M)[3][0] = 0.0;
     }
-
-  _T = new Matrix(4, 4);
-  _T->setIdentity();
-
-  _Tinv = new Matrix(4, 4);
-  _Tinv->setIdentity();
-
-  for(int i=0; i<3; i++)
-    _tr[i] = 0;
 }
 
 RayCastProjective3D::~RayCastProjective3D()
 {
-  delete _T;
-  delete _Tinv;
-
-  for(int col=0; col<_cols; col++)
-    for(int row=0; row<_rows; row++)
+  for(unsigned int col=0; col<_cols; col++)
+    for(unsigned int row=0; row<_rows; row++)
       delete _rays[col][row];
   System<Matrix*>::deallocate(_rays);
-}
-
-void RayCastProjective3D::setTransformation(double *TData)
-{
-  Matrix T(4, 4, TData);
-  (*_T)         *= T;
-
-  (*_Tinv) = _T->getInverse();
-
-  _tr[0] = (*_T)[0][3];
-  _tr[1] = (*_T)[1][3];
-  _tr[2] = (*_T)[2][3];
-}
-
-double* RayCastProjective3D::getTransformation()
-{
-  return _T->getBuffer()->data;
 }
 
 void RayCastProjective3D::calcCoordsFromCurrentView(double* coords, double* normals, unsigned char* rgb, unsigned int* ctr, unsigned int subsampling)
 {
   Timer t;
   *ctr = 0;
+
+  Matrix* T = _sensor->getPose();
+  Matrix Tinv(4, 4);
+  Tinv = T->getInverse();
 
 #pragma omp parallel
   {
@@ -106,8 +81,8 @@ void RayCastProjective3D::calcCoordsFromCurrentView(double* coords, double* norm
           N[0][0] = n[0];
           N[1][0] = n[1];
           N[2][0] = n[2];
-          M       = *_Tinv * M;
-          N       = *_Tinv * N;
+          M       = Tinv * M;
+          N       = Tinv * N;
           for (unsigned int i = 0; i < 3; i++)
           {
             c_tmp[cnt_tmp]      = M[i][0];
@@ -136,6 +111,9 @@ void RayCastProjective3D::calcCoordsFromCurrentView(double* coords, double* norm
 
 bool RayCastProjective3D::rayCastFromCurrentView(const unsigned int row, const unsigned int col, double coordinates[3], double normal[3], unsigned char rgb[3], double* depth)
 {
+  double tr[3];
+  _sensor->getPosition(tr);
+
   double dirVec[3];
   double position[3];
   double position_prev[3];
@@ -150,24 +128,24 @@ bool RayCastProjective3D::rayCastFromCurrentView(const unsigned int row, const u
   // Interpolation weight
   double interp;
 
-  double xmin   = ((double)(dirVec[0] > 0.0 ? 0 : (xDim-1)*voxelSize) - _tr[0]) / dirVec[0];
-  double ymin   = ((double)(dirVec[1] > 0.0 ? 0 : (yDim-1)*voxelSize) - _tr[1]) / dirVec[1];
-  double zmin   = ((double)(dirVec[2] > 0.0 ? 0 : (zDim-1)*voxelSize) - _tr[2]) / dirVec[2];
+  double xmin   = ((double)(dirVec[0] > 0.0 ? 0 : (xDim-1)*voxelSize) - tr[0]) / dirVec[0];
+  double ymin   = ((double)(dirVec[1] > 0.0 ? 0 : (yDim-1)*voxelSize) - tr[1]) / dirVec[1];
+  double zmin   = ((double)(dirVec[2] > 0.0 ? 0 : (zDim-1)*voxelSize) - tr[2]) / dirVec[2];
   double idxMin = max(max(xmin, ymin), zmin);
   idxMin        = max(idxMin, 0.0);
 
-  double xmax   = ((double)(dirVec[0] > 0.0 ? (xDim-1)*voxelSize : 0) - _tr[0]) / dirVec[0];
-  double ymax   = ((double)(dirVec[1] > 0.0 ? (yDim-1)*voxelSize : 0) - _tr[1]) / dirVec[1];
-  double zmax   = ((double)(dirVec[2] > 0.0 ? (zDim-1)*voxelSize : 0) - _tr[2]) / dirVec[2];
+  double xmax   = ((double)(dirVec[0] > 0.0 ? (xDim-1)*voxelSize : 0) - tr[0]) / dirVec[0];
+  double ymax   = ((double)(dirVec[1] > 0.0 ? (yDim-1)*voxelSize : 0) - tr[1]) / dirVec[1];
+  double zmax   = ((double)(dirVec[2] > 0.0 ? (zDim-1)*voxelSize : 0) - tr[2]) / dirVec[2];
   double idxMax = min(min(xmax, ymax), zmax);
 
   if (idxMin >= idxMax)
     return false;
 
   double tsdf_prev;
-  position[0] = _tr[0] + idxMin * dirVec[0];
-  position[1] = _tr[1] + idxMin * dirVec[1];
-  position[2] = _tr[2] + idxMin * dirVec[2];
+  position[0] = tr[0] + idxMin * dirVec[0];
+  position[1] = tr[1] + idxMin * dirVec[1];
+  position[2] = tr[2] + idxMin * dirVec[2];
   _space->interpolateTrilinear(position, &tsdf_prev);
 
   bool found = false;
@@ -210,11 +188,12 @@ bool RayCastProjective3D::rayCastFromCurrentView(const unsigned int row, const u
 
 void RayCastProjective3D::calcRayFromCurrentView(const unsigned int row, const unsigned int col, double dirVec[3])
 {
+  Matrix* T = _sensor->getPose();
   Matrix ray(4, 1);
 
   // bring peakpoint in map coordinate system
   ray = *_rays[col][row];
-  ray = *_T * ray;
+  ray = *T * ray;
 
   dirVec[0] = ray[0][0];
   dirVec[1] = ray[1][0];
@@ -222,7 +201,7 @@ void RayCastProjective3D::calcRayFromCurrentView(const unsigned int row, const u
 }
 
 
-bool RayCastProjective3D::generatePointCloud(double **pointCloud, double **cloudNormals, unsigned char **cloudRgb, unsigned int *nbr)
+bool RayCastProjective3D::generatePointCloud(double** pointCloud, double** cloudNormals, unsigned char** cloudRgb, unsigned int* nbr)
 {
   //
   // X_AXS parallel to X-Axis Borders : COL = _zDim, ROW = _yDim
@@ -235,13 +214,11 @@ bool RayCastProjective3D::generatePointCloud(double **pointCloud, double **cloud
   int xDim = _space->getXDimension();
   int yDim = _space->getYDimension();
   int zDim = _space->getZDimension();
-  double voxelSize = _space->getVoxelSize();
 
   std::vector<double> pointCloudVec;
   std::vector<double> cloudNormalsVec;
   std::vector<unsigned char> cloudRgbVec;
 
-  double depth;
   double *footPoint=new double[3];
   double *dirVec=new double[3];
   unsigned int pclSize=0;
@@ -249,20 +226,20 @@ bool RayCastProjective3D::generatePointCloud(double **pointCloud, double **cloud
   unsigned int steps;
 
   //x_parallel
-  cout<<"\nX_AXIS\n";
+  cout << "X_AXIS" << endl;
   for (int row = 0; row < yDim; row++)
   {
     for (int col = 0; col < zDim; col++)
     {
       if(!(calcRayParallelAxis(row,col,footPoint,dirVec,&steps,X_AXS)))
       {
-        cout<<"\nGENPCL: Error calculating X-axis Raycaster!\n";
+        cout << "generatePointCloud: Error calculating X-axis Raycaster!" << endl;
         return(false);
       }
       rayCastParallelAxis(footPoint,dirVec,&pointCloudVec,&cloudNormalsVec,&cloudRgbVec,steps);
       if(!(calcRayParallelAxis(row,col,footPoint,dirVec,&steps,X_AXS_N)))
       {
-        cout<<"\nGENPCL: Error calculating X-axis negative Raycaster!\n";
+        cout << "generatePointCloud: Error calculating X-axis negative Raycaster!" << endl;
         return(false);
       }
       rayCastParallelAxis(footPoint,dirVec,&pointCloudVec,&cloudNormalsVec,&cloudRgbVec,steps);
@@ -271,20 +248,20 @@ bool RayCastProjective3D::generatePointCloud(double **pointCloud, double **cloud
   }
 
   //y_parallel
-  cout<<"\nY_AXIS\n";
+  cout << "Y_AXIS" << endl;
   for (int row = 0; row < zDim; row++)
   {
     for (int col = 0; col < xDim; col++)
     {
       if(!(calcRayParallelAxis(row,col,footPoint,dirVec,&steps,Y_AXS)))
       {
-        cout<<"\nGENPCL: Error calculating Y-axis Raycaster!\n";
+        cout << "generatePointCloud: Error calculating Y-axis Raycaster!" << endl;
         return(false);
       }
       rayCastParallelAxis(footPoint,dirVec,&pointCloudVec,&cloudNormalsVec,&cloudRgbVec,steps);
       if(!(calcRayParallelAxis(row,col,footPoint,dirVec,&steps,Y_AXS_N)))
       {
-        cout<<"\nGENPCL: Error calculating Y-axis negative Raycaster!\n";
+        cout << "generatePointCloud: Error calculating Y-axis negative Raycaster!" << endl;
         return(false);
       }
       rayCastParallelAxis(footPoint,dirVec,&pointCloudVec,&cloudNormalsVec,&cloudRgbVec,steps);
@@ -292,20 +269,20 @@ bool RayCastProjective3D::generatePointCloud(double **pointCloud, double **cloud
   }
 
   //z_parallel
-  cout<<"\nZ_AXIS\n";
+  cout << "Z_AXIS" << endl;
   for (int row = 0; row < yDim; row++)
   {
     for (int col = 0; col < xDim; col++)
     {
       if(!(calcRayParallelAxis(row,col,footPoint,dirVec,&steps,Z_AXS)))
       {
-        cout<<"\nGENPCL: Error calculating Z-axis Raycaster!\n";
+        cout << "generatePointCloud: Error calculating Z-axis Raycaster!" << endl;
         return(false);
       }
       rayCastParallelAxis(footPoint,dirVec,&pointCloudVec,&cloudNormalsVec,&cloudRgbVec,steps);
       if(!(calcRayParallelAxis(row,col,footPoint,dirVec,&steps,Z_AXS_N)))
       {
-        cout<<"\nGENPCL: Error calculating Z-axis negative Raycaster!\n";
+        cout << "generatePointCloud: Error calculating Z-axis negative Raycaster!" << endl;
         return(false);
       }
       rayCastParallelAxis(footPoint,dirVec,&pointCloudVec,&cloudNormalsVec,&cloudRgbVec,steps);
@@ -316,7 +293,7 @@ bool RayCastProjective3D::generatePointCloud(double **pointCloud, double **cloud
 
   if(pclSize!=cloudNormalsize)
   {
-    cout<<"GENPCL: Error! Number of normals != number of points!\n";
+    cout << "generatePointCloud: Error! Number of normals != number of points!" << endl;
     return(false);
   }
   else
@@ -349,7 +326,7 @@ bool RayCastProjective3D::generatePointCloud(double **pointCloud, double **cloud
   return(true);
 }
 
-bool RayCastProjective3D::generatePointCloudPositive(double **pointCloud, double **cloudNormals, unsigned char **cloudRgb, unsigned int *nbr)
+bool RayCastProjective3D::generatePointCloudPositive(double** pointCloud, double** cloudNormals, unsigned char** cloudRgb, unsigned int* nbr)
 {
   // X_AXS parallel to X-Axis Borders : COL = _zDim, ROW = _yDim
   // X_AXS_N parallel to X-Axis negative direction
@@ -361,13 +338,11 @@ bool RayCastProjective3D::generatePointCloudPositive(double **pointCloud, double
   int xDim = _space->getXDimension();
   int yDim = _space->getYDimension();
   int zDim = _space->getZDimension();
-  double voxelSize = _space->getVoxelSize();
 
   std::vector<double> pointCloudVec;
   std::vector<double> cloudNormalsVec;
   std::vector<unsigned char> cloudRgbVec;
 
-  double depth;
   double *footPoint=new double[3];
   double *dirVec=new double[3];
   unsigned int pclSize=0;
@@ -375,14 +350,14 @@ bool RayCastProjective3D::generatePointCloudPositive(double **pointCloud, double
   unsigned int steps;
 
   //x_parallel
-  cout<<"\nX_AXIS\n";
+  cout << "X_AXIS" << endl;
   for (int row = 0; row < yDim; row++)
   {
     for (int col = 0; col < zDim; col++)
     {
       if(!(calcRayParallelAxis(row,col,footPoint,dirVec,&steps,X_AXS)))
       {
-        cout<<"\nGENPCL: Error calculating X-axis Raycaster!\n";
+        cout << "generatePointCloud: Error calculating X-axis Raycaster!" << endl;
         return(false);
       }
       rayCastParallelAxis(footPoint,dirVec,&pointCloudVec,&cloudNormalsVec,&cloudRgbVec,steps);
@@ -397,14 +372,14 @@ bool RayCastProjective3D::generatePointCloudPositive(double **pointCloud, double
   }
 
   //y_parallel
-  cout<<"\nY_AXIS\n";
+  cout << "Y_AXIS" << endl;
   for (int row = 0; row < zDim; row++)
   {
     for (int col = 0; col < xDim; col++)
     {
       if(!(calcRayParallelAxis(row,col,footPoint,dirVec,&steps,Y_AXS)))
       {
-        cout<<"\nGENPCL: Error calculating Y-axis Raycaster!\n";
+        cout << "generatePointCloud: Error calculating Y-axis Raycaster!" << endl;
         return(false);
       }
       rayCastParallelAxis(footPoint,dirVec,&pointCloudVec,&cloudNormalsVec,&cloudRgbVec,steps);
@@ -418,14 +393,14 @@ bool RayCastProjective3D::generatePointCloudPositive(double **pointCloud, double
   }
 
   //z_parallel
-  cout<<"\nZ_AXIS\n";
+  cout << "Z_AXIS" << endl;
   for (int row = 0; row < yDim; row++)
   {
     for (int col = 0; col < xDim; col++)
     {
       if(!(calcRayParallelAxis(row,col,footPoint,dirVec,&steps,Z_AXS)))
       {
-        cout<<"\nGENPCL: Error calculating Z-axis Raycaster!\n";
+        cout << "generatePointCloud: Error calculating Z-axis Raycaster!" << endl;
         return(false);
       }
       rayCastParallelAxis(footPoint,dirVec,&pointCloudVec,&cloudNormalsVec,&cloudRgbVec,steps);
@@ -442,7 +417,7 @@ bool RayCastProjective3D::generatePointCloudPositive(double **pointCloud, double
 
   if(pclSize!=cloudNormalsize)
   {
-    cout<<"GENPCL: Error! Number of normals != number of points!\n";
+    cout << "generatePointCloud: Error! Number of normals != number of points!" << endl;
     return(false);
   }
   else
@@ -476,7 +451,7 @@ bool RayCastProjective3D::generatePointCloudPositive(double **pointCloud, double
   return(true);
 }
 
-bool RayCastProjective3D::rayCastParallelAxis(double *footPoint,double *dirVec,std::vector<double> *pointCloud,std::vector<double> *cloudNormals, std::vector<unsigned char>* cloudRgb,const unsigned int steps)
+bool RayCastProjective3D::rayCastParallelAxis(double* footPoint, double* dirVec,std::vector<double>* pointCloud,std::vector<double>* cloudNormals, std::vector<unsigned char>* cloudRgb, const unsigned int steps)
 {
   double tsdf=0.0;
   double tsdfPrev=0.0;
@@ -531,7 +506,7 @@ bool RayCastProjective3D::rayCastParallelAxis(double *footPoint,double *dirVec,s
   return(true);
 }
 
-bool RayCastProjective3D::calcRayParallelAxis(const unsigned int row,const unsigned int col,double *footPoint,double *dirVec,unsigned int *steps,AXSPARMODE mode)
+bool RayCastProjective3D::calcRayParallelAxis(const unsigned int row, const unsigned int col, double* footPoint, double* dirVec, unsigned int* steps, AXSPARMODE mode)
 {
   int xDim = _space->getXDimension();
   int yDim = _space->getYDimension();
@@ -596,7 +571,7 @@ bool RayCastProjective3D::calcRayParallelAxis(const unsigned int row,const unsig
   }
   else
   {
-    cout<<"\nERROR. Mode "<<mode<<" not found!\n";
+    cout << "ERROR. Mode " << mode << " not found!" << endl;
     return(false);
   }
 

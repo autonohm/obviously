@@ -29,10 +29,10 @@ add_library(obvision
 	normals/NormalsEstimator.cpp
 	mesh/TriangleMesh.cpp
 	reconstruct/Sensor.cpp
-	reconstruct/TsdGrid.cpp
 	reconstruct/SensorPolar2D.cpp
-	reconstruct/RayCast2D.cpp
+	reconstruct/SensorProjective3D.cpp
+	reconstruct/TsdGrid.cpp
 	reconstruct/TsdSpace.cpp
+	reconstruct/RayCast2D.cpp
 	reconstruct/RayCastProjective3D.cpp
-	reconstruct/Projection.cpp
 	)

@@ -8,7 +8,7 @@
 namespace obvious
 {
 
-SensorPolar2D::SensorPolar2D(unsigned int size, double angularRes, double minPhi)
+SensorPolar2D::SensorPolar2D(unsigned int size, double angularRes, double minPhi) : Sensor(2)
 {
   _Pose = new Matrix(3, 3);
   _Pose->setIdentity();
@@ -22,7 +22,7 @@ SensorPolar2D::SensorPolar2D(unsigned int size, double angularRes, double minPhi
   _angularRes = angularRes;
   _minPhi = minPhi;
 
-  // smallest angle to lie in bounds (must be negative)
+  // smallest angle that lies in bounds (must be negative)
   _phiLowerBound = -0.5*_angularRes + _minPhi;
 
   // if angle is too large, it might be projected with modulo 2 PI to a valid index
@@ -39,37 +39,6 @@ SensorPolar2D::~SensorPolar2D()
   delete _Pose;
   delete [] _data;
   delete [] _mask;
-}
-
-void SensorPolar2D::getPosition(double tr[2])
-{
-  tr[0] = (*_Pose)[0][2];
-  tr[1] = (*_Pose)[1][2];
-}
-
-unsigned int SensorPolar2D::getRealMeasurementSize()
-{
-  return _size;
-}
-
-void SensorPolar2D::setRealMeasurementData(double* data)
-{
-  memcpy(_data, data, _size*sizeof(*data));
-}
-
-double* SensorPolar2D::getRealMeasurementData()
-{
-  return _data;
-}
-
-void SensorPolar2D::setRealMeasurementMask(bool* mask)
-{
-  memcpy(_mask, mask, _size*sizeof(*mask));
-}
-
-bool* SensorPolar2D::getRealMeasurementMask()
-{
-  return _mask;
 }
 
 void SensorPolar2D::calcRay(unsigned int beam, double ray[2])
@@ -112,10 +81,6 @@ void SensorPolar2D::backProject(Matrix* M, int* indices)
 
   for(unsigned int i=0; i<M->getRows(); i++)
   {
-    //const double x = gsl_matrix_get(coords2D, 0, i);
-    //const double y = gsl_matrix_get(coords2D, 1, i);
-    //indices[i] = phi2Index(atan2(y, x));
-
     indices[i] = phi2Index(atan2(*(y+i), *(x+i)));
   }
 

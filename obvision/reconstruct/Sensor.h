@@ -17,8 +17,9 @@ public:
 
   /**
    * Standard constructor
+   * @param[in] dim dimensionality of representation
    */
-  Sensor();
+  Sensor(unsigned int dim);
 
   /**
    * Destructor
@@ -41,41 +42,51 @@ public:
    * Accessor to sensor translation
    * @param[out] tr translation vector
    */
-  virtual void getPosition(double* tr) = 0;
+  virtual void getPosition(double* tr);
 
   /**
    * Get size of measurement vector
    * @return number of beams
    */
-  virtual unsigned int getRealMeasurementSize() = 0;
+  virtual unsigned int getRealMeasurementSize();
 
   /**
    * Copy measurement data to internal buffer
    * @param data source with 2D coordinates
    */
-  virtual void setRealMeasurementData(double* data) = 0;
+  virtual void setRealMeasurementData(double* data);
 
   /**
    * Get measurement vector
    * @return vector of distance data
    */
-  virtual double* getRealMeasurementData() = 0;
+  virtual double* getRealMeasurementData();
 
   /**
    * Copy measurement mask
    * @param mask source mask
    */
-  virtual void setRealMeasurementMask(bool* mask) = 0;
+  virtual void setRealMeasurementMask(bool* mask);
 
   /**
    * Get validity mask
    * @return validity mask vector. True signals a valid measurement
    */
-  virtual bool* getRealMeasurementMask() = 0;
+  virtual bool* getRealMeasurementMask();
 
-private:
+  virtual void backProject(Matrix* M, int* indices) = 0;
+
+protected:
 
   Matrix* _Pose;
+
+  unsigned int _dim;
+
+  unsigned int _size;
+
+  double* _data;
+
+  bool* _mask;
 
 };
 
