@@ -1,9 +1,3 @@
-/*
- * tsd_test2.cpp
- *
- *  Created on: 24.07.2012
- *      Author: phil
- */
 #include <iostream>
 #include "obgraphic/Obvious3D.h"
 #include "obcore/base/tools.h"
@@ -11,9 +5,7 @@
 #include "obvision/reconstruct/TsdSpace.h"
 #include "obvision/reconstruct/SensorProjective3D.h"
 #include "obvision/reconstruct/RayCastProjective3D.h"
-//#include "obvision/reconstruct/TsdSpace_utils.h"
 #include "obcore/base/Logger.h"
-//#include "obvision/reconstruct/Projection.h"
 
 using namespace std;
 using namespace obvious;
@@ -121,9 +113,7 @@ int main(void)
 
   Obvious3D viewer("TSD Cloud");
   viewer.addCloud(&vcloud);
-  //_viewer->registerKeyboardCallback("space", cbPushScene);
   viewer.startRendering();
-
 
   delete [] cloud;
   delete [] normals;
