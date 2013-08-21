@@ -74,6 +74,28 @@ public:
    */
   virtual bool* getRealMeasurementMask();
 
+  /**
+   * @return flag indicate availability of RGB data
+   */
+  virtual bool hasRealMeasurmentRGB();
+
+  /**
+   * Copy rgb data to internal buffer
+   * @param rgb color/texture data
+   */
+  virtual void setRealMeasurementRGB(unsigned char* rgb);
+
+  /**
+   * Get color data
+   * @return pointer to internal color data (may be null for certain sensors)
+   */
+  virtual unsigned char* getRealMeasurementRGB();
+
+  /**
+   * Project coordinate back to sensor index
+   * @param[in] M matrix of coordinates (homogeneous)
+   * @param[out] indices vector of projection results (must be allocated outside)
+   */
   virtual void backProject(Matrix* M, int* indices) = 0;
 
 protected:
@@ -87,6 +109,8 @@ protected:
   double* _data;
 
   bool* _mask;
+
+  unsigned char* _rgb;
 
 };
 

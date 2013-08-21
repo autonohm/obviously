@@ -47,10 +47,11 @@ int main(void)
   SensorProjective3D sensor(cols, rows, PData);
   sensor.transform(&T);
 
-  TsdSpace space(1, 1, 1, 0.02);
-  space.setMaxTruncation(0.08);
+  double voxelSize = 0.02;
+  TsdSpace space(1.0, 1.0, 1.0, voxelSize);
+  space.setMaxTruncation(2*voxelSize);
 
-  double distZ[640*480];
+  double distZ[cols*rows];
 
   // Background with distance = 0.8m -> s=0.8
   for(int u=0; u<cols; u++)
@@ -63,7 +64,7 @@ int main(void)
       buf[u][v][0] = x;
       buf[u][v][1] = y;
       buf[u][v][2] = z;
-      distZ[v*640+u] = sqrt(x*x+y*y+z*z);
+      distZ[v*cols+u] = sqrt(x*x+y*y+z*z);
     }
 
   // Centered square with distance = 0.5m -> s=0.5
@@ -77,7 +78,7 @@ int main(void)
       buf[u][v][0] = x;
       buf[u][v][1] = y;
       buf[u][v][2] = z;
-      distZ[v*640+u] = sqrt(x*x+y*y+z*z);
+      distZ[v*cols+u] = sqrt(x*x+y*y+z*z);
     }
 
   /*for(int u=0; u<cols; u++)
@@ -86,7 +87,18 @@ int main(void)
 	      distZ[v*cols+u] -= v * 0.0004;
 	   }*/
 
+  unsigned char* texture = new unsigned char[cols*rows*3];
+  for(int u=0; u<cols; u++)
+     for(int v=0; v<rows; v++)
+     {
+       unsigned int idx = (v*cols+u)*3;
+       texture[idx]   = u;
+       texture[idx+1] = u+v;
+       texture[idx+2] = u+2*v;
+     }
+
   sensor.setRealMeasurementData(distZ);
+  sensor.setRealMeasurementRGB(texture);
   space.push(&sensor);
 
   unsigned char* buffer = new unsigned char[space.getXDimension()*space.getYDimension()*3];
@@ -110,6 +122,7 @@ int main(void)
 
   VtkCloud vcloud;
   vcloud.setCoords(cloud, cnt/3, 3, normals);
+  if(sensor.hasRealMeasurmentRGB()) vcloud.setColors(rgb, cnt/3, 3);
 
   Obvious3D viewer("TSD Cloud");
   viewer.addCloud(&vcloud);
@@ -118,6 +131,7 @@ int main(void)
   delete [] cloud;
   delete [] normals;
   delete [] rgb;
+  delete [] texture;
 }
 
 

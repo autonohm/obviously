@@ -1,4 +1,4 @@
-#include "RayCast2D.h"
+#include "RayCastPolar2D.h"
 
 #include <string.h>
 
@@ -10,17 +10,17 @@
 namespace obvious
 {
 
-RayCast2D::RayCast2D()
+RayCastPolar2D::RayCastPolar2D()
 {
 
 }
 
-RayCast2D::~RayCast2D()
+RayCastPolar2D::~RayCastPolar2D()
 {
 
 }
 
-void RayCast2D::calcCoordsFromCurrentView(TsdGrid* grid, SensorPolar2D* sensor, double* coords, double* normals, unsigned int* cnt)
+void RayCastPolar2D::calcCoordsFromCurrentView(TsdGrid* grid, SensorPolar2D* sensor, double* coords, double* normals, unsigned int* cnt)
 {
   Timer t;
   *cnt = 0;
@@ -58,7 +58,7 @@ void RayCast2D::calcCoordsFromCurrentView(TsdGrid* grid, SensorPolar2D* sensor, 
 }
 
 
-bool RayCast2D::rayCastFromCurrentView(TsdGrid* grid, SensorPolar2D* sensor, const unsigned int beam, double coordinates[2], double normal[2])
+bool RayCastPolar2D::rayCastFromCurrentView(TsdGrid* grid, SensorPolar2D* sensor, const unsigned int beam, double coordinates[2], double normal[2])
 {
   int xDim = grid->getCellsX();
   int yDim = grid->getCellsY();
@@ -138,7 +138,7 @@ bool RayCast2D::rayCastFromCurrentView(TsdGrid* grid, SensorPolar2D* sensor, con
   return true;
 }
 
-void RayCast2D::calcCoordsAligned(TsdGrid* grid, double* coords, double* normals, unsigned int* cnt)
+void RayCastPolar2D::calcCoordsAligned(TsdGrid* grid, double* coords, double* normals, unsigned int* cnt)
 {
   Timer t;
   *cnt = 0;

@@ -4,6 +4,8 @@
 namespace obvious
 {
 
+#define _PARALLEL_VERSION 1
+
   SensorProjective3D::SensorProjective3D(unsigned int cols, unsigned int rows, double PData[12]) : Sensor(3)
   {
     _P = new Matrix(3,4);
@@ -52,20 +54,13 @@ namespace obvious
     double tr[3];
     getPosition(tr);
 
-    //for(unsigned int i=0; i<_cols * _rows; i++)
-    //  _depthImage[i] = depthImage[i] * 0.001;
-
-    //_rgbImage = rgbImage;
-
     gsl_matrix* Pgen = gsl_matrix_alloc(3, 4);
     gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, _P->getBuffer(), PoseInv.getBuffer(), 0.0, Pgen);
 
     // coords2D = P * Tinv * voxelCoords
     gsl_matrix* coords2D = gsl_matrix_alloc(3, sizeOfSpace);
 
-    // Sequential version
-    // gsl_blas_dgemm(CblasNoTrans, CblasTrans, 1.0, Pgen, _voxelCoordsHom->getBuffer(), 0.0, coords2D);
-
+#if _PARALLEL_VERSION
     // OMP version
   #pragma omp parallel
     {
@@ -80,6 +75,9 @@ namespace obvious
         gsl_blas_dgemm(CblasNoTrans, CblasTrans, 1.0, Pgen, &(viewVoxel.matrix), 0.0, &(viewCoords2D.matrix));
       }
     }
+#else
+    gsl_blas_dgemm(CblasNoTrans, CblasTrans, 1.0, Pgen, _voxelCoordsHom->getBuffer(), 0.0, coords2D);
+#endif
 
     const double* du = gsl_matrix_ptr(coords2D, 0, 0);
     const double* dv = gsl_matrix_ptr(coords2D, 1, 0);

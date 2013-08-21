@@ -1,5 +1,5 @@
-#ifndef RAYCAST2D_H
-#define RAYCAST2D_H
+#ifndef RAYCASTPOLAR2D_H
+#define RAYCASTPOLAR2D_H
 
 #include <vector>
 #include "obcore/math/Matrix.h"
@@ -10,17 +10,17 @@ namespace obvious
 {
 
 /**
- * @class RayCast2D
+ * @class RayCastPolar2D
  * @brief
- * @author Stefan May, Philipp Koch
+ * @author Stefan May
  */
-class RayCast2D
+class RayCastPolar2D
 {
 public:
 
-  RayCast2D();
+  RayCastPolar2D();
 
-  ~RayCast2D();
+  ~RayCastPolar2D();
 
   void calcCoordsFromCurrentView(TsdGrid* grid, SensorPolar2D* sensor, double* coords, double* normals, unsigned int* ctr);
 

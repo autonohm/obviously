@@ -97,12 +97,16 @@ double TsdSpace::getMaxTruncation()
   return _maxTruncation;
 }
 
-void TsdSpace::push(Sensor* sensor) //double* depthImage, bool* mask, unsigned char* rgbImage)
+void TsdSpace::push(Sensor* sensor)
 {
   Timer t;
 
   double* data = sensor->getRealMeasurementData();
   bool* mask = sensor->getRealMeasurementMask();
+  unsigned char* rgb = NULL;
+  if(sensor->hasRealMeasurmentRGB())
+    rgb = sensor->getRealMeasurementRGB();
+
   double tr[3];
   sensor->getPosition(tr);
 
@@ -130,42 +134,15 @@ void TsdSpace::push(Sensor* sensor) //double* depthImage, bool* mask, unsigned c
               // calculate distance of current cell to sensor
               double distance = euklideanDistance<double>(tr, (*_voxelCoordsHom)[i], 3);
               double sdf = data[index] - distance;
-
-              addTsdfValue(x, y, z, sdf);
+              unsigned char* color = NULL;
+              if(rgb) color = &(rgb[3*index]);
+              addTsdfValue(x, y, z, sdf, color);
             }
           }
-          /*const double dw = gsl_matrix_get(coords2D, 2, i);
-
-          if(dw > 0.0)
-          {
-            const double inv_dw = 1.0 / dw;
-            const double du = gsl_matrix_get(coords2D, 0, i) * inv_dw;
-            const double dv = gsl_matrix_get(coords2D, 1, i) * inv_dw;
-
-            const unsigned int u = static_cast<unsigned int>(du + 0.5);
-            const unsigned int v = static_cast<unsigned int>(dv + 0.5);
-
-            if(u < _cols && v < _rows && mask[((_rows - 1) - v) * _cols + u])
-            {
-              // calculate distance of current voxel to kinect
-              double distance = euklideanDistance<double>(tr, (double*)(*_voxelCoordsHom)[i], 3);
-
-              double xl = (u - (*_P)[0][2]) / (*_P)[0][0];
-              double yl = (v - (*_P)[1][2]) / (*_P)[1][1];
-              double lambdaInv = 1. / sqrt(xl * xl + yl * yl + 1.);
-              unsigned int idx = ((_rows - 1) - v) * _cols + u;
-              double sdf = depthImage[idx] - distance * lambdaInv; //mm
-
-              addTsdfValue(x, y, z, sdf);
-            }
-          }*/
         }
       }
     }
   }
-
-//  gsl_matrix_free(Pgen);
-//  gsl_matrix_free(coords2D);
 
   delete [] indices;
 
@@ -179,53 +156,56 @@ bool TsdSpace::interpolateNormal(const double* coord, double* normal)
   double depthVarInc = 0;
   double depthVarDec = 0;
 
-  neighbor[0] = coord[0] + _voxelSize;        //interpolate around Voxel in x+1 direction
+  //interpolate around Voxel in x+1 direction
+  neighbor[0] = coord[0] + _voxelSize;
   neighbor[1] = coord[1];
   neighbor[2] = coord[2];
-
   if(!interpolateTrilinear(neighbor, &depthVarInc))
     return false;
 
-  neighbor[0] = coord[0] - _voxelSize;        //interpolate around Voxel in x-1 direction
-  //    neighbor[1] = coord[1];
-  //    neighbor[2] = coord[2];
-
+  //interpolate around Voxel in x-1 direction
+  neighbor[0] = coord[0] - _voxelSize;
+  //neighbor[1] = coord[1];
+  //neighbor[2] = coord[2];
   if(!interpolateTrilinear(neighbor, &depthVarDec))
     return false;
 
-  normal[0] = depthVarInc - depthVarDec;     //x_coordinate of the normal
+  //x-coordinate of normal vector
+  normal[0] = depthVarInc - depthVarDec;
 
+  //interpolate around Voxel in y+1 direction
   neighbor[0] = coord[0];
-  neighbor[1] = coord[1] + _voxelSize;    //interpolate around Voxel in y+1 direction
-  //    neighbor[2] = coord[2];
-
+  neighbor[1] = coord[1] + _voxelSize;
+  //neighbor[2] = coord[2];
   if(!interpolateTrilinear(neighbor, &depthVarInc))
     return false;
 
-  //    neighbor[0] = coord[0];
-  neighbor[1] = coord[1] - _voxelSize;    //interpolate around Voxel in y-1 direction
-  //    neighbor[2] = coord[2];
-
+  //interpolate around Voxel in y-1 direction
+  //neighbor[0] = coord[0];
+  neighbor[1] = coord[1] - _voxelSize;
+  //neighbor[2] = coord[2];
   if(!interpolateTrilinear(neighbor, &depthVarDec))
     return false;
 
-  normal[1] = depthVarInc - depthVarDec;     //y_coordinate of the normal
+  //y-coordinate of normal vector
+  normal[1] = depthVarInc - depthVarDec;
 
-  //    neighbor[0] = coord[0];
+  //interpolate around Voxel in z+1 direction
+  //neighbor[0] = coord[0];
   neighbor[1] = coord[1];
-  neighbor[2] = coord[2] + _voxelSize;         //interpolate around Voxel in z+1 direction
-
+  neighbor[2] = coord[2] + _voxelSize;
   if(!interpolateTrilinear(neighbor, &depthVarInc))
     return false;
 
-  //    neighbor[0] = coord[0];
-  //    neighbor[1] = coord[1];
-  neighbor[2] = coord[2] - _voxelSize;         //interpolate around Voxel in z-1 direction
-
+  //interpolate around Voxel in z-1 direction
+  //neighbor[0] = coord[0];
+  //neighbor[1] = coord[1];
+  neighbor[2] = coord[2] - _voxelSize;
   if(!interpolateTrilinear(neighbor, &depthVarDec))
     return false;
 
-  normal[2] = depthVarInc - depthVarDec;     //z_coordinate of the normal
+  //z-coordinate of normal vector
+  normal[2] = depthVarInc - depthVarDec;
 
   norm3<double>(normal);
 
@@ -318,39 +298,10 @@ bool TsdSpace::interpolateTrilinearRGB(double coord[3], unsigned char rgb[3])
     rgb[2] += pRGB[i][2] * pw[i];
   }
 
-  /*
-    // Interpolate
-    rgb[0] =  _space[z + 0][y + 0][x + 0].rgb[0] * (1. - wX) * (1. - wY) * (1. - wZ)
-                  + _space[z + 1][y + 0][x + 0].rgb[0] * (1. - wX) * (1. - wY) * wZ
-                  + _space[z + 0][y - 1][x + 0].rgb[0] * (1. - wX) * wY * (1. - wZ)
-                  + _space[z + 1][y - 1][x + 0].rgb[0] * (1. - wX) * wY * wZ
-                  + _space[z + 0][y + 0][x + 1].rgb[0] * wX * (1. - wY) * (1. - wZ)
-                  + _space[z + 1][y + 0][x + 1].rgb[0] * wX * (1. - wY) * wZ
-                  + _space[z + 0][y - 1][x + 1].rgb[0] * wX * wY * (1. - wZ)
-                  + _space[z + 1][y - 1][x + 1].rgb[0] * wX * wY * wZ;
-
-    rgb[1] =  _space[z + 0][y + 0][x + 0].rgb[1] * (1. - wX) * (1. - wY) * (1. - wZ)
-                  + _space[z + 1][y + 0][x + 0].rgb[1] * (1. - wX) * (1. - wY) * wZ
-                  + _space[z + 0][y - 1][x + 0].rgb[1] * (1. - wX) * wY * (1. - wZ)
-                  + _space[z + 1][y - 1][x + 0].rgb[1] * (1. - wX) * wY * wZ
-                  + _space[z + 0][y + 0][x + 1].rgb[1] * wX * (1. - wY) * (1. - wZ)
-                  + _space[z + 1][y + 0][x + 1].rgb[1] * wX * (1. - wY) * wZ
-                  + _space[z + 0][y - 1][x + 1].rgb[1] * wX * wY * (1. - wZ)
-                  + _space[z + 1][y - 1][x + 1].rgb[1] * wX * wY * wZ;
-
-    rgb[2] =  _space[z + 0][y + 0][x + 0].rgb[2] * (1. - wX) * (1. - wY) * (1. - wZ)
-                  + _space[z + 1][y + 0][x + 0].rgb[2] * (1. - wX) * (1. - wY) * wZ
-                  + _space[z + 0][y - 1][x + 0].rgb[2] * (1. - wX) * wY * (1. - wZ)
-                  + _space[z + 1][y - 1][x + 0].rgb[2] * (1. - wX) * wY * wZ
-                  + _space[z + 0][y + 0][x + 1].rgb[2] * wX * (1. - wY) * (1. - wZ)
-                  + _space[z + 1][y + 0][x + 1].rgb[2] * wX * (1. - wY) * wZ
-                  + _space[z + 0][y - 1][x + 1].rgb[2] * wX * wY * (1. - wZ)
-                  + _space[z + 1][y - 1][x + 1].rgb[2] * wX * wY * wZ;
-   */
   return true;
 }
 
-void TsdSpace::addTsdfValue(const unsigned int col, const unsigned int row, const unsigned int z, double sdf)
+void TsdSpace::addTsdfValue(const unsigned int col, const unsigned int row, const unsigned int z, double sdf, unsigned char* rgb)
 {
 
   if(sdf >= -_maxTruncation) // Voxel is in front of an object
@@ -361,22 +312,16 @@ void TsdSpace::addTsdfValue(const unsigned int col, const unsigned int row, cons
     double tsdf = sdf / _maxTruncation;
     tsdf = min(tsdf, 1.0);
 
-
     voxel->weight += 1.0;
     const double invWeight = 1.0 / voxel->weight;
-    //const unsigned char* rgbImage = &_rgbImage[idx * 3];
     voxel->tsdf   = (voxel->tsdf * (voxel->weight - 1.0) + tsdf) * invWeight;
-    /*voxel->rgb[0] = voxel->rgb[0] + static_cast<unsigned char>(static_cast<double>(*rgbImage++ - voxel->rgb[0]) * invWeight);
-    voxel->rgb[1] = voxel->rgb[1] + static_cast<unsigned char>(static_cast<double>(*rgbImage++ - voxel->rgb[1]) * invWeight);
-    voxel->rgb[2] = voxel->rgb[2] + static_cast<unsigned char>(static_cast<double>(*rgbImage   - voxel->rgb[2]) * invWeight);*/
 
-    /*
-      voxel->tsdf   = (voxel->tsdf * voxel->weight + 1.0 * tsdf) / (voxel->weight + 1.0);
-      voxel->rgb[0] = (unsigned char)( (((double)voxel->rgb[0]) * voxel->weight + ((double)_rgbImage[idx * 3]) )   / (voxel->weight + 1.0));
-      voxel->rgb[1] = (unsigned char)( (((double)voxel->rgb[1]) * voxel->weight + ((double)_rgbImage[idx * 3+1]) ) / (voxel->weight + 1.0));
-      voxel->rgb[2] = (unsigned char)( (((double)voxel->rgb[2]) * voxel->weight + ((double)_rgbImage[idx * 3+2]) ) / (voxel->weight + 1.0));
-      voxel->weight += 1.0;
-     */
+    if(rgb)
+    {
+      voxel->rgb[0] = (unsigned char)( (((double)voxel->rgb[0]) * (voxel->weight-1.0) + ((double)rgb[0]) ) * invWeight);
+      voxel->rgb[1] = (unsigned char)( (((double)voxel->rgb[1]) * (voxel->weight-1.0) + ((double)rgb[1]) ) * invWeight);
+      voxel->rgb[2] = (unsigned char)( (((double)voxel->rgb[2]) * (voxel->weight-1.0) + ((double)rgb[2]) ) * invWeight);
+    }
 
     voxel->weight = min(voxel->weight, MAXWEIGHT);
   }

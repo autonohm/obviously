@@ -8,7 +8,7 @@
 #include "obdevice/SickLMS100.h"
 
 #include "obvision/reconstruct/TsdGrid.h"
-#include "obvision/reconstruct/RayCast2D.h"
+#include "obvision/reconstruct/RayCastPolar2D.h"
 #include "obvision/icp/icp_def.h"
 
 #include "obgraphic/Obvious2D.h"
@@ -62,7 +62,7 @@ int main(void)
   SensorPolar2D sensor(rays, angularRes, minPhi);
 
 
-  RayCast2D rayCaster;
+  RayCastPolar2D rayCaster;
   double* mCoords = new double[rays*2];
   double* mNormals = new double[rays*2];
   double* map      = new double[grid->getCellsX()*grid->getCellsY()*2];

@@ -139,7 +139,7 @@ private:
  /**
   *
   */
- void addTsdfValue(const unsigned int col, const unsigned int row, const unsigned int z, double sdf);
+ void addTsdfValue(const unsigned int col, const unsigned int row, const unsigned int z, double sdf, unsigned char* rgb);
 
  /**
   *
@@ -169,8 +169,6 @@ private:
  double _invVoxelSize;
 
  double _maxTruncation;
-
- //unsigned char* _rgbImage;
 
  Matrix*** _rays;
 };

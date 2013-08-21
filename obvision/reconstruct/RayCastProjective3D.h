@@ -5,26 +5,17 @@
 #include "obcore/math/Matrix.h"
 #include "TsdSpace.h"
 #include "SensorProjective3D.h"
+#include "RayCast3D.h"
 
 namespace obvious
 {
-
-enum AXSPARMODE
-{
-	X_AXS,
-	X_AXS_N,
-	Y_AXS,
-	Y_AXS_N,
-	Z_AXS,
-	Z_AXS_N
-};
 
 /**
  * @class RayCastProjective3D
  * @brief Implementation of projective ray casting method
  * @author Philipp Koch, Stefan May
  */
-class RayCastProjective3D
+class RayCastProjective3D : public RayCast3D
 {
 public:
 
@@ -43,16 +34,6 @@ public:
 	 */
 	void calcCoordsFromCurrentView(double* coords, double* normals, unsigned char* rgb, unsigned int* ctr, unsigned int subsampling=1);
 
-  /**
-   *
-   */
-	bool generatePointCloud(double** pointCloud, double** cloudNormals, unsigned char** cloudRgb, unsigned int* nbr);
-
-  /**
-   *
-   */
-	bool generatePointCloudPositive(double** pointCloud, double** cloudNormals, unsigned char** cloudRgb, unsigned int* nbr);
-
 private:
 
   /**
@@ -65,15 +46,6 @@ private:
    */
 	void calcRayFromCurrentView(const unsigned int row, const unsigned int col, double dirVec[3]);
 
-  /**
-   *
-   */
-	bool rayCastParallelAxis(double* footPoint,double* dirVec,std::vector<double>* pointCloud, std::vector<double>* cloudNormals, std::vector<unsigned char>* cloudRgb,const unsigned int steps);
-
-  /**
-   *
-   */
-	bool calcRayParallelAxis(const unsigned int row, const unsigned int col, double* footPoint, double* dirVec, unsigned int* steps, AXSPARMODE mode);
 
 	 Matrix*** _rays;
 

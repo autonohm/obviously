@@ -14,11 +14,32 @@ Sensor::Sensor(unsigned int dim)
 
   _Pose = new Matrix(_dim+1, _dim+1);
   _Pose->setIdentity();
+
+  _rgb = NULL;
 }
 
 Sensor::~Sensor()
 {
   delete _Pose;
+  if(_rgb) delete [] _rgb;
+}
+
+void Sensor::transform(Matrix* T)
+{
+  (*_Pose) *= (*T);
+}
+
+Matrix* Sensor::getPose()
+{
+  return _Pose;
+}
+
+void Sensor::getPosition(double* tr)
+{
+  tr[0] = (*_Pose)[0][_dim];
+  tr[1] = (*_Pose)[1][_dim];
+  if(_dim==3)
+    tr[2] = (*_Pose)[2][_dim];
 }
 
 unsigned int Sensor::getRealMeasurementSize()
@@ -46,22 +67,20 @@ bool* Sensor::getRealMeasurementMask()
   return _mask;
 }
 
-void Sensor::transform(Matrix* T)
+bool Sensor::hasRealMeasurmentRGB()
 {
-  (*_Pose) *= (*T);
+  return (_rgb!=NULL);
 }
 
-Matrix* Sensor::getPose()
+void Sensor::setRealMeasurementRGB(unsigned char* rgb)
 {
-  return _Pose;
+  if(!_rgb) _rgb = new unsigned char[_size*3];
+  memcpy(_rgb, rgb, _size*3*sizeof(*rgb));
 }
 
-void Sensor::getPosition(double* tr)
+unsigned char* Sensor::getRealMeasurementRGB()
 {
-  tr[0] = (*_Pose)[0][_dim];
-  tr[1] = (*_Pose)[1][_dim];
-  if(_dim==3)
-    tr[2] = (*_Pose)[2][_dim];
+  return _rgb;
 }
 
 }
