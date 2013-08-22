@@ -8,7 +8,7 @@
 namespace obvious
 {
 
-SensorPolar2D::SensorPolar2D(unsigned int size, double angularRes, double minPhi) : Sensor(2)
+SensorPolar2D::SensorPolar2D(unsigned int size, double angularRes, double phiMin) : Sensor(2)
 {
   _Pose = new Matrix(3, 3);
   _Pose->setIdentity();
@@ -20,15 +20,15 @@ SensorPolar2D::SensorPolar2D(unsigned int size, double angularRes, double minPhi
     _mask[i] = true;
 
   _angularRes = angularRes;
-  _minPhi = minPhi;
+  _phiMin = phiMin;
 
   // smallest angle that lies in bounds (must be negative)
-  _phiLowerBound = -0.5*_angularRes + _minPhi;
+  _phiLowerBound = -0.5*_angularRes + _phiMin;
 
   // if angle is too large, it might be projected with modulo 2 PI to a valid index
   _phiUpperBound = 2.0*M_PI + _phiLowerBound;
 
-  if(minPhi>=180.0)
+  if(_phiMin>=180.0)
   {
     LOGMSG(DBG_ERROR, "Valid minimal angle < 180 degree");
   }
@@ -44,7 +44,7 @@ SensorPolar2D::~SensorPolar2D()
 void SensorPolar2D::calcRay(unsigned int beam, double ray[2])
 {
   Matrix Rh(3, 1);
-  double phi = _minPhi + ((double)beam) * _angularRes;
+  double phi = _phiMin + ((double)beam) * _angularRes;
   Rh[0][0] = cos(phi);
   Rh[1][0] = sin(phi);
   Rh[2][0] = 0.0;
@@ -93,7 +93,7 @@ int SensorPolar2D::phi2Index(double phi)
   if(phi<=_phiLowerBound) return -1;
   if(phi>=_phiUpperBound) phi -= 2.0*M_PI;
 
-  double phiAligned = phi-_minPhi;
+  double phiAligned = phi-_phiMin;
 
   int index = round(phiAligned /_angularRes);
 

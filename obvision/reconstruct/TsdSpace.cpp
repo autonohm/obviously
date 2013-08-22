@@ -11,7 +11,8 @@
 namespace obvious
 {
 
-#define MAXWEIGHT 128.0
+//#define MAXWEIGHT 128.0
+#define MAXWEIGHT 128000.0
 #define RGB_MAX 255
 
 TsdSpace::TsdSpace(const unsigned int height, const unsigned int width, const unsigned int depth, const double voxelSize)
@@ -103,9 +104,7 @@ void TsdSpace::push(Sensor* sensor)
 
   double* data = sensor->getRealMeasurementData();
   bool* mask = sensor->getRealMeasurementMask();
-  unsigned char* rgb = NULL;
-  if(sensor->hasRealMeasurmentRGB())
-    rgb = sensor->getRealMeasurementRGB();
+  unsigned char* rgb = sensor->getRealMeasurementRGB();
 
   double tr[3];
   sensor->getPosition(tr);

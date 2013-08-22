@@ -20,9 +20,9 @@ public:
    * Standard constructor
    * @param[in] beams number of beams
    * @param[in] angularRes angular resolution, i.e. angle between beams in rad
-   * @param[in] minPhi minimum angle from which beams are counted positive counter-clockwisely (rad)
+   * @param[in] phiMin minimum angle from which beams are counted positive counter-clockwisely (rad)
    */
-  SensorPolar2D(unsigned int beams, double angularRes, double minPhi);
+  SensorPolar2D(unsigned int beams, double angularRes, double phiMin);
 
   /**
    * Destructor
@@ -56,7 +56,7 @@ private:
 
   double _angularRes;
 
-  double _minPhi;
+  double _phiMin;
 
   double _phiLowerBound;
 

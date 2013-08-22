@@ -30,6 +30,7 @@ add_library(obvision
 	mesh/TriangleMesh.cpp
 	reconstruct/Sensor.cpp
 	reconstruct/SensorPolar2D.cpp
+	reconstruct/SensorPolar3D.cpp
 	reconstruct/SensorProjective3D.cpp
 	reconstruct/TsdGrid.cpp
 	reconstruct/TsdSpace.cpp
