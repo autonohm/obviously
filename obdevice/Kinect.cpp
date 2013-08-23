@@ -37,7 +37,7 @@ Kinect::Kinect(const char* path)
 
   EnumerationErrors errors;
   ScriptNode snode;
-  XnStatus status = _context.Init();//InitFromXmlFile(path, snode, &errors);
+  XnStatus status = _context.InitFromXmlFile(path, snode, &errors);
 
   if (status == XN_STATUS_NO_NODE_PRESENT)
   {
@@ -64,27 +64,8 @@ Kinect::Kinect(const char* path)
     printf("Enumerating image generators failed: %s", xnGetStatusString (status));
 
   status = _context.FindExistingNode(XN_NODE_TYPE_DEPTH, _depth);
-  if(status) printf("Failed to find depth generator: %s\n", xnGetStatusString(status));
-  status = _depth.Create(_context);
-  if(status) printf("Failed to create depth generator: %s\n", xnGetStatusString(status));
-
-  // Set it to VGA maps at 30 FPS
-  XnMapOutputMode mapMode;
-  mapMode.nXRes = XN_VGA_X_RES;
-  mapMode.nYRes = XN_VGA_Y_RES;
-  mapMode.nFPS = 30;
-  status = _depth.SetMapOutputMode(mapMode);
-  if(status) printf("Failed to set parameters to depth generator: %s\n", xnGetStatusString(status));
-
   status = _context.FindExistingNode(XN_NODE_TYPE_IMAGE, _image);
-  if(status) printf("Failed to find image generator: %s\n", xnGetStatusString(status));
-  status = _image.Create(_context);
-  if(status) printf("Failed to create image generator: %s\n", xnGetStatusString(status));
-
   status = _context.FindExistingNode(XN_NODE_TYPE_IR, _ir);
-  if(status) printf("Failed to find ir generator: %s\n", xnGetStatusString(status));
-  //status = _ir.Create(_context);
-  //if(status) printf("Failed to create ir generator: %s\n", xnGetStatusString(status));
 
 // Check for night vision modus
   _useIR = true;
@@ -93,7 +74,7 @@ Kinect::Kinect(const char* path)
     _useIR = false;
   }
 
-/*#ifdef __i386__
+#ifdef __i386__
   status = _context.FindExistingNode(XN_NODE_TYPE_USER, _user);
   if (status != XN_STATUS_OK) status = _user.Create(_context);
 
@@ -106,7 +87,24 @@ Kinect::Kinect(const char* path)
     XnCallbackHandle hUserCallbacks;
     _user.RegisterUserCallbacks(User_NewUser, User_LostUser, NULL, hUserCallbacks);
   }
-#endif*/
+#endif
+
+  /*if (!_user.IsCapabilitySupported(XN_CAPABILITY_SKELETON))
+  {
+    printf("Supplied user generator doesn't support skeleton\n");
+  }*/
+
+  //_user.GetSkeletonCap().RegisterCalibrationCallbacks(UserCalibration_CalibrationStart, UserCalibration_CalibrationEnd, NULL, hCalibrationCallbacks);
+
+  /*if (_user.GetSkeletonCap().NeedPoseForCalibration())
+  {
+      printf("Pose required, but not supported\n");
+  }
+
+  _user.GetSkeletonCap().SetSkeletonProfile(XN_SKEL_PROFILE_ALL);
+*/
+
+  _context.StartGeneratingAll();
 
   if(_useIR)
   {
@@ -115,15 +113,9 @@ Kinect::Kinect(const char* path)
   }
   else
   {
-    if (_depth.GetFrameSyncCap ().CanFrameSyncWith (_image) && !_depth.GetFrameSyncCap ().IsFrameSyncedWith (_image))
-    {
-      status = _depth.GetFrameSyncCap().FrameSyncWith(_image);
-      if (status != XN_STATUS_OK) cout << "could not turn on frame synchronization. Reason: " << xnGetStatusString (status) << endl;
-    }
+    _depth.GetFrameSyncCap().FrameSyncWith(_image);
     _depth.GetAlternativeViewPointCap().SetViewPoint(_image);
   }
-
-  _context.StartGeneratingAll();
 
   DepthMetaData depthMD;
   _depth.GetMetaData(depthMD);
@@ -174,25 +166,16 @@ bool Kinect::grabRGB()
   _depth.GetMetaData(depthMD);
   _image.GetMetaData(imageMD);
 
-  int retval = _depth.WaitAndUpdateData();
-  if (retval != XN_STATUS_OK)
+  int nRetVal = _context.WaitAnyUpdateAll();
+  _depth.WaitAndUpdateData();
+
+  if (nRetVal != XN_STATUS_OK)
   {
-    printf("UpdateData failed: %s\n", xnGetStatusString(retval));
+    printf("UpdateData failed: %s\n", xnGetStatusString(nRetVal));
     return 0;
   }
 
-  retval = _image.WaitAndUpdateData();
-
-  //int nRetVal = _context.WaitOneUpdateAll(_depth);
-  if (retval != XN_STATUS_OK)
-  {
-    printf("UpdateData failed: %s\n", xnGetStatusString(retval));
-    return 0;
-  }
-
-  cout << "ok " << endl;
-
- // if (!(_image.IsValid() & _depth.IsValid())) return false;
+  if (!(_image.IsValid() & _depth.IsValid())) return false;
 
   const XnRGB24Pixel* pImageMap = imageMD.RGB24Data();
 
@@ -219,21 +202,17 @@ bool Kinect::grabRGB()
     _proj[i].Z = _z[i];
   }
 
-  cout << size << endl;
-
   _depth.ConvertProjectiveToRealWorld(size, _proj, _wrld);
 
   for (size_t i=0; i<size; i++)
   {
-    _coords[3*i]   = _wrld[i].X;
-    _coords[3*i+1] = _wrld[i].Y;
-    _coords[3*i+2] = _wrld[i].Z;
-    if(_coords[3*i]>0.01)
-      cout << _coords[3*i] << endl;
-    _rgb[3*i]      = 255;//pImageMap[i].nRed;
-    _rgb[3*i+1]    = 255;//pImageMap[i].nGreen;
-    _rgb[3*i+2]    = 255;//pImageMap[i].nBlue;
-    _mask[i] = (!isnan(_z[i])) && (fabs(_coords[3*i+2])>10e-6);
+    _coords[3*i]   = _wrld[i].X / 1000.0;
+    _coords[3*i+1] = _wrld[i].Y / 1000.0;
+    _coords[3*i+2] = _wrld[i].Z / 1000.0;
+    _rgb[3*i]      = pImageMap[i].nRed;
+    _rgb[3*i+1]    = pImageMap[i].nGreen;
+    _rgb[3*i+2]    = pImageMap[i].nBlue;
+    _mask[i] = (!isnan(_z[i])) && (_coords[3*i+2]>10e-6);
   }
 
   if(_record)
@@ -260,20 +239,9 @@ bool Kinect::grabIR()
   _ir.GetMetaData(irMD);
 
   int nRetVal = _context.WaitAnyUpdateAll();
-  if (nRetVal != XN_STATUS_OK)
-    {
-      printf("UpdateData failed: %s\n", xnGetStatusString(nRetVal));
-      return 0;
-    }
+  _depth.WaitAndUpdateData();
+  _ir.WaitAndUpdateData();
 
-  nRetVal = _depth.WaitAndUpdateData();
-  if (nRetVal != XN_STATUS_OK)
-  {
-    printf("UpdateData failed: %s\n", xnGetStatusString(nRetVal));
-    return 0;
-  }
-
-  nRetVal = _ir.WaitAndUpdateData();
   if (nRetVal != XN_STATUS_OK)
   {
     printf("UpdateData failed: %s\n", xnGetStatusString(nRetVal));

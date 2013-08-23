@@ -47,9 +47,15 @@ unsigned int Sensor::getRealMeasurementSize()
   return _size;
 }
 
-void Sensor::setRealMeasurementData(double* data)
+void Sensor::setRealMeasurementData(double* data, double scale)
 {
-  memcpy(_data, data, _size*sizeof(*data));
+  if(scale==1.0)
+    memcpy(_data, data, _size*sizeof(*data));
+  else
+  {
+    for(unsigned int i=0; i<_size; i++)
+      _data[i] = data[i] * scale;
+  }
 }
 
 double* Sensor::getRealMeasurementData()

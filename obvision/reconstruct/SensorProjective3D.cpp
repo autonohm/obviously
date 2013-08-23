@@ -24,6 +24,8 @@ namespace obvious
   SensorProjective3D::~SensorProjective3D()
   {
     delete _P;
+    delete[] _data;
+    delete[] _mask;
   }
 
   void SensorProjective3D::project2Space(const unsigned int col, const unsigned int row, const double depth, Matrix* coord)
@@ -99,6 +101,9 @@ namespace obvious
         }
       }
     }
+
+    gsl_matrix_free(coords2D);
+
   }
 
 }

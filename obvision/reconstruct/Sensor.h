@@ -53,8 +53,9 @@ public:
   /**
    * Copy measurement data to internal buffer
    * @param data source with 2D coordinates
+   * @param scale scale factor to multiply distances
    */
-  virtual void setRealMeasurementData(double* data);
+  virtual void setRealMeasurementData(double* data, double scale=1.0);
 
   /**
    * Get measurement vector

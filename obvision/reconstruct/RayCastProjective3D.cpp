@@ -58,7 +58,7 @@ void RayCastProjective3D::calcCoordsFromCurrentView(double* coords, double* norm
     double depth = 0.0;
     double          c[3];
     double          n[3];
-    unsigned char color[3];
+    unsigned char color[3] = {255, 255, 255};
     double* c_tmp             = new double[_rows*_cols*3];
     double* n_tmp             = new double[_rows*_cols*3];
     unsigned char* color_tmp = new unsigned char[_rows*_cols*3];
