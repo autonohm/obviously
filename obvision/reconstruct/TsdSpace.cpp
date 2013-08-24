@@ -11,8 +11,7 @@
 namespace obvious
 {
 
-//#define MAXWEIGHT 128.0
-#define MAXWEIGHT 128000.0
+#define MAXWEIGHT 32.0
 #define RGB_MAX 255
 
 TsdSpace::TsdSpace(const unsigned int height, const unsigned int width, const unsigned int depth, const double voxelSize)
@@ -54,6 +53,13 @@ TsdSpace::TsdSpace(const unsigned int height, const unsigned int width, const un
       }
     }
   }
+
+  _minX = 0.0;
+  _maxX = ((double)_xDim + 0.5) * _voxelSize;
+  _minY = 0.0;
+  _maxY = ((double)_yDim + 0.5) * _voxelSize;
+  _minZ = 0.0;
+  _maxZ = ((double)_zDim + 0.5) * _voxelSize;
 }
 
 TsdSpace::~TsdSpace(void)
@@ -80,6 +86,36 @@ unsigned int TsdSpace::getZDimension()
 double TsdSpace::getVoxelSize()
 {
   return _voxelSize;
+}
+
+double TsdSpace::getMinX()
+{
+  return _minX;
+}
+
+double TsdSpace::getMaxX()
+{
+  return _maxX;
+}
+
+double TsdSpace::getMinY()
+{
+  return _minY;
+}
+
+double TsdSpace::getMaxY()
+{
+  return _maxY;
+}
+
+double TsdSpace::getMinZ()
+{
+  return _minZ;
+}
+
+double TsdSpace::getMaxZ()
+{
+  return _maxZ;
 }
 
 void TsdSpace::setMaxTruncation(double val)

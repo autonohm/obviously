@@ -78,6 +78,42 @@ public:
  double getVoxelSize();
 
  /**
+  * Get minimum for x-coordinate
+  * @return x-coordinate
+  */
+ double getMinX();
+
+ /**
+  * Get maximum for x-coordinate
+  * @return x-coordinate
+  */
+ double getMaxX();
+
+ /**
+  * Get minimum for y-coordinate
+  * @return y-coordinate
+  */
+ double getMinY();
+
+ /**
+  * Get maximum for y-coordinate
+  * @return y-coordinate
+  */
+ double getMaxY();
+
+ /**
+  * Get minimum for z-coordinate
+  * @return z-coordinate
+  */
+ double getMinZ();
+
+ /**
+  * Get maximum for z-coordinate
+  * @return z-coordinate
+  */
+ double getMaxZ();
+
+ /**
   * Set maximum truncation radius
   * Function to set the max truncation
   * @param val new truncation radius
@@ -89,21 +125,6 @@ public:
   * @return truncation radius
   */
  double getMaxTruncation();
-
- /**
-  * Function to set the current transformation matrix
-  * @param TData content of the new transformation matrix
-  */
- //void setTransformation(double *TData);
-
- /**
-  * Get current transformation matrix
-  * @return current transformation matrix
-  */
- //double* getTransformation();
-
-
- //Matrix *getMTransformation(){return (_T);}
 
  /**
   *
@@ -131,8 +152,6 @@ public:
  bool interpolateNormal(const double* coord, double* normal);
 
  bool buildSliceImage(const unsigned int depthIndex, unsigned char* image);
-
- //TsdVoxel*** getSpace(void){return(_space);}
 
 private:
 
@@ -169,6 +188,18 @@ private:
  double _invVoxelSize;
 
  double _maxTruncation;
+
+ double _minX;
+
+ double _maxX;
+
+ double _minY;
+
+ double _maxY;
+
+ double _minZ;
+
+ double _maxZ;
 
  Matrix*** _rays;
 };

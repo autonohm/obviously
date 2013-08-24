@@ -20,10 +20,10 @@
 
 using namespace obvious;
 
-#define X_DIM 2
-#define Y_DIM 2
-#define Z_DIM 2
-#define VXLDIM 0.01
+#define X_DIM 8
+#define Y_DIM 8
+#define Z_DIM 4
+#define VXLDIM 0.04
 
 Matrix* _T;
 Kinect* _kinect;
@@ -112,8 +112,8 @@ void _cbRegNewImage(void)
 
   // Extract model from TSDF space
   unsigned int subsamplingModel = 5;
-  RayCastProjective3D rayCaster(cols, rows, _sensor, _space);
-  rayCaster.calcCoordsFromCurrentView(coords, normals, rgb, &size, subsamplingModel);
+
+  _rayCaster->calcCoordsFromCurrentView(coords, normals, rgb, &size, subsamplingModel);
 
   if(size == 0)
   {
@@ -214,22 +214,6 @@ int main(void)
 
   _dist = new double[cols*rows];
 
-  PairAssignment* assigner = (PairAssignment*)new FlannPairAssignment(3, 0.0);
-//  PairAssignment* assigner = (PairAssignment*)new ProjectivePairAssignment(Pdata, cols, rows);
-  IRigidEstimator* estimator = (IRigidEstimator*)new PointToPlaneEstimator3D();
-  IPreAssignmentFilter* filterS = (IPreAssignmentFilter*)new SubsamplingFilter(50);
-  //assigner->addPreFilter(filterS);
-  IPostAssignmentFilter* filterD = (IPostAssignmentFilter*)new DistanceFilter(0.25, 0.05, 20);
-  assigner->addPostFilter(filterD);
-  //ProjectionFilter* filterP = new ProjectionFilter(P, cols, rows);
-  //assigner->addPreFilter(filterP);
-  _icp = new Icp(assigner, estimator);
-  _icp->setMaxRMS(0.0);
-  _icp->setMaxIterations(25);
-
-  _space = new TsdSpace(Y_DIM, X_DIM, Z_DIM, VXLDIM);
-  _space->setMaxTruncation(2.0 * VXLDIM);
-
   // translation of sensor
   double tx = X_DIM/2.0;
   double ty = Y_DIM/2.0;
@@ -242,6 +226,25 @@ int main(void)
   Matrix Tinit(4, 4);
   Tinit.setData(tf);
 
+  _space = new TsdSpace(Y_DIM, X_DIM, Z_DIM, VXLDIM);
+  _space->setMaxTruncation(2.0 * VXLDIM);
+
+  PairAssignment* assigner = (PairAssignment*)new FlannPairAssignment(3, 0.0);
+//  PairAssignment* assigner = (PairAssignment*)new ProjectivePairAssignment(Pdata, cols, rows);
+  IRigidEstimator* estimator = (IRigidEstimator*)new PointToPlaneEstimator3D();
+  IPreAssignmentFilter* filterS = (IPreAssignmentFilter*)new SubsamplingFilter(50);
+  //assigner->addPreFilter(filterS);
+  OutOfBoundsFilter3D* filterBounds = new OutOfBoundsFilter3D(_space->getMinX(), _space->getMaxX(), _space->getMinY(), _space->getMaxY(), _space->getMinZ(), _space->getMaxZ());
+  filterBounds->setPose(&Tinit);
+  assigner->addPreFilter(filterBounds);
+  IPostAssignmentFilter* filterD = (IPostAssignmentFilter*)new DistanceFilter(0.25, 0.05, 20);
+  assigner->addPostFilter(filterD);
+  //ProjectionFilter* filterP = new ProjectionFilter(P, cols, rows);
+  //assigner->addPreFilter(filterP);
+  _icp = new Icp(assigner, estimator);
+  _icp->setMaxRMS(0.0);
+  _icp->setMaxIterations(25);
+
   _sensor = new SensorProjective3D(cols, rows, Pdata);
   _sensor->transform(&Tinit);
   double* coords = _kinect->getCoords();
@@ -252,6 +255,8 @@ int main(void)
   _sensor->setRealMeasurementRGB(_kinect->getRGB());
 
   _space->push(_sensor);
+
+  _rayCaster = new RayCastProjective3D(cols, rows, _sensor, _space);
 
   _vModel = new VtkCloud();
   _vScene = new VtkCloud();

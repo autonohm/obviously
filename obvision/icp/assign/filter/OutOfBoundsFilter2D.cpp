@@ -45,7 +45,7 @@ void OutOfBoundsFilter2D::filter(double** scene, unsigned int size, bool* mask)
   gsl_vector_add_constant(&x.vector, gsl_vector_get(&tr.vector,0));
   gsl_vector_add_constant(&y.vector, gsl_vector_get(&tr.vector,1));
 
-  for(int i=0; i<size; i++)
+  for(unsigned int i=0; i<size; i++)
   {
     double* pt = gsl_matrix_ptr(&points.matrix, i, 0);
     if(pt[0]<_xMin || pt[0]>_xMax || pt[1]<_yMin || pt[1]>_yMax)
