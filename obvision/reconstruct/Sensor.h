@@ -63,6 +63,12 @@ public:
    */
   virtual double* getRealMeasurementData();
 
+  virtual void setRealMeasurementAccuracy(double* accuracy);
+
+  virtual double* getRealMeasurementAccuracy();
+
+  virtual bool hasRealMeasurmentAccuracy();
+
   /**
    * Copy measurement mask
    * @param mask source mask
@@ -108,6 +114,8 @@ protected:
   unsigned int _size;
 
   double* _data;
+
+  double* _accuracy;
 
   bool* _mask;
 

@@ -16,12 +16,14 @@ Sensor::Sensor(unsigned int dim)
   _Pose->setIdentity();
 
   _rgb = NULL;
+  _accuracy = NULL;
 }
 
 Sensor::~Sensor()
 {
   delete _Pose;
   if(_rgb) delete [] _rgb;
+  if(_accuracy) delete [] _accuracy;
 }
 
 void Sensor::transform(Matrix* T)
@@ -61,6 +63,22 @@ void Sensor::setRealMeasurementData(double* data, double scale)
 double* Sensor::getRealMeasurementData()
 {
   return _data;
+}
+
+void Sensor::setRealMeasurementAccuracy(double* accuracy)
+{
+  if(!_accuracy) _accuracy = new double[_size];
+  memcpy(_accuracy, accuracy, _size*sizeof(*accuracy));
+}
+
+double* Sensor::getRealMeasurementAccuracy()
+{
+  return _accuracy;
+}
+
+bool Sensor::hasRealMeasurmentAccuracy()
+{
+  return (_accuracy!=NULL);
 }
 
 void Sensor::setRealMeasurementMask(bool* mask)

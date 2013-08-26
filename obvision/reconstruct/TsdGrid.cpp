@@ -113,6 +113,8 @@ void TsdGrid::push(SensorPolar2D* sensor)
   Timer t;
   double* data = sensor->getRealMeasurementData();
   bool*   mask = sensor->getRealMeasurementMask();
+  double* accuracy = sensor->getRealMeasurementAccuracy();
+
   double tr[2];
   sensor->getPosition(tr);
 
@@ -134,8 +136,9 @@ void TsdGrid::push(SensorPolar2D* sensor)
           // calculate distance of current cell to sensor
           double distance = euklideanDistance<double>(tr, (*_cellCoordsHom)[i], 2);
           double sdf = data[index] - distance;
-
-          addTsdfValue(x, y, sdf);
+          double weight = 1.0;
+          if(accuracy) weight = accuracy[index];
+          addTsdfValue(x, y, sdf, weight);
         }
       }
     }
@@ -242,7 +245,7 @@ bool TsdGrid::interpolateBilinear(double coord[2], double* tsdf)
   return true;
 }
 
-void TsdGrid::addTsdfValue(const unsigned int x, const unsigned int y, const double sdf)
+void TsdGrid::addTsdfValue(const unsigned int x, const unsigned int y, const double sdf, const double weight)
 {
   // Determine whether sdf/max_truncation = ]-1;1[
   if(sdf >= -_maxTruncation)

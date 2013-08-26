@@ -144,8 +144,9 @@ private:
    * @param[in] x index in x-dimension
    * @param[in] y index in y-dimension
    * @param[in] sdf signed distance function value
+   * @param[in] weight weighting of current measurement
    */
-  void addTsdfValue(const unsigned int x, const unsigned int y, const double sdf);
+  void addTsdfValue(const unsigned int x, const unsigned int y, const double sdf, const double weight);
 
   int _cellsX;
 
