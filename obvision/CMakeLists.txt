@@ -26,6 +26,7 @@ add_library(obvision
 	icp/ClosedFormEstimator2D.cpp
 	icp/PointToPointEstimator3D.cpp
 	icp/PointToPlaneEstimator3D.cpp
+	#icp/PointToLineEstimator2D.cpp
 	icp/Icp.cpp
 	normals/NormalsEstimator.cpp
 	mesh/TriangleMesh.cpp
