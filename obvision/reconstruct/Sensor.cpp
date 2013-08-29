@@ -60,6 +60,12 @@ void Sensor::setRealMeasurementData(double* data, double scale)
   }
 }
 
+void Sensor::setRealMeasurementData(vector<float> data, float scale)
+{
+  for(unsigned int i=0; i<data.size(); i++)
+    _data[i] = data[i] * scale;
+}
+
 double* Sensor::getRealMeasurementData()
 {
   return _data;

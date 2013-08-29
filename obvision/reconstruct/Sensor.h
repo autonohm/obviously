@@ -2,6 +2,7 @@
 #define SENSOR_H_
 
 #include "obcore/math/Matrix.h"
+#include <vector>
 
 namespace obvious
 {
@@ -56,6 +57,8 @@ public:
    * @param scale scale factor to multiply distances
    */
   virtual void setRealMeasurementData(double* data, double scale=1.0);
+
+  virtual void setRealMeasurementData(vector<float> data, float scale=1.f);
 
   /**
    * Get measurement vector

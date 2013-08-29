@@ -169,6 +169,7 @@ void TsdSpace::push(Sensor* sensor)
               // calculate distance of current cell to sensor
               double distance = euklideanDistance<double>(tr, (*_voxelCoordsHom)[i], 3);
               double sdf = data[index] - distance;
+
               unsigned char* color = NULL;
               if(rgb) color = &(rgb[3*index]);
               addTsdfValue(x, y, z, sdf, color);

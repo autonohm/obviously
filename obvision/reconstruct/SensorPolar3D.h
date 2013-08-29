@@ -21,8 +21,9 @@ public:
    * @param[in] beams number of beams in scanning plane
    * @param[in] thetaRes angular resolution, i.e. angle between beams in rad
    * @param[in] thetaMin minimum angle from which beams are counted positive counter-clockwisely (rad)
+   * @param[in] phiRes angular resolution, i.e. angle between scanning planes in rad
    */
-  SensorPolar3D(unsigned int beams, double thetaRes, double thetaMin);
+  SensorPolar3D(unsigned int beams, double thetaRes, double thetaMin, double phiRes=0.25);
 
   /**
    * Destructor
@@ -44,11 +45,11 @@ public:
    */
   void backProject(Matrix* M, int* indices);
 
-  void setPlanes(unsigned int planes);
+  void setDistanceMap(vector<float> phi, vector<float> dist);
 
 private:
 
-  int thetaPhi2Index(double theta, double phi);
+  //int thetaPhi2Index(double theta, double phi);
 
   unsigned int _planes;
 
@@ -56,11 +57,17 @@ private:
 
   double _thetaRes;
 
+  double _phiRes;
+
   double _thetaMin;
 
   double _thetaLowerBound;
 
   double _thetaUpperBound;
+
+  double** _distanceMap;
+
+  int** _indexMap;
 
 };
 
