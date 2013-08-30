@@ -12,4 +12,5 @@
 #include "obvision/icp/PointToPointEstimator3D.h"
 #include "obvision/icp/PointToPlaneEstimator3D.h"
 #include "obvision/icp/ClosedFormEstimator2D.h"
+#include "obvision/icp/PointToLineEstimator2D.h"
 #include "obvision/icp/Icp.h"
