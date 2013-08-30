@@ -8,7 +8,7 @@
 #include "obcore/math/mathbase.h"
 
 #include "obvision/reconstruct/TsdGrid.h"
-#include "obvision/reconstruct/RayCast2D.h"
+#include "obvision/reconstruct/RayCastPolar2D.h"
 
 #include "obgraphic/Obvious2D.h"
 
@@ -82,7 +82,7 @@ int main(void)
   delete[] data;
   delete[] mask;
 
-  RayCast2D rayCaster;
+  RayCastPolar2D rayCaster;
   double* coords = new double[beams*2];
   double* normals = new double[beams*2];
 

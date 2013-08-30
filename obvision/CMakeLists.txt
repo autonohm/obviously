@@ -21,13 +21,22 @@ add_library(obvision
 	icp/assign/filter/ReciprocalFilter.cpp
 	icp/assign/filter/SubsamplingFilter.cpp
 	icp/assign/filter/DistanceFilter.cpp
+	icp/assign/filter/OutOfBoundsFilter2D.cpp
+	icp/assign/filter/OutOfBoundsFilter3D.cpp
 	icp/ClosedFormEstimator2D.cpp
 	icp/PointToPointEstimator3D.cpp
 	icp/PointToPlaneEstimator3D.cpp
+	icp/PointToLineEstimator2D.cpp
 	icp/Icp.cpp
 	normals/NormalsEstimator.cpp
 	mesh/TriangleMesh.cpp
-	reconstruct/TsdGrid.cpp
+	reconstruct/Sensor.cpp
 	reconstruct/SensorPolar2D.cpp
-	reconstruct/RayCast2D.cpp
+	reconstruct/SensorPolar3D.cpp
+	reconstruct/SensorProjective3D.cpp
+	reconstruct/TsdGrid.cpp
+	reconstruct/TsdSpace.cpp
+    reconstruct/RayCastPolar2D.cpp
+	reconstruct/RayCast3D.cpp
+	reconstruct/RayCastProjective3D.cpp
 	)

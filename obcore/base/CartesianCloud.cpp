@@ -9,6 +9,9 @@ namespace obvious
 {
 CartesianCloud3D::CartesianCloud3D(unsigned int size, double* coords, unsigned char* rgb, double* normals)
 {
+  _coords  = NULL;
+  _colors  = NULL;
+  _normals = NULL;
   bool withInfo = (rgb!=NULL);
   init(size, withInfo);
 
@@ -21,7 +24,8 @@ CartesianCloud3D::CartesianCloud3D(unsigned int size, double* coords, unsigned c
     gsl_matrix_memcpy(_normals, &vnormals.matrix);
   }
 
-  memcpy(_colors, rgb, 3*size*sizeof(*_colors));
+  if(rgb)
+    memcpy(_colors, rgb, 3*size*sizeof(*_colors));
 
 }
 

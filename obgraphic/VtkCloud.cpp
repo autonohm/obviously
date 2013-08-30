@@ -29,24 +29,20 @@ using namespace std;
 namespace obvious
 {
 
-VtkCloud::VtkCloud()//double* coords, int size, int tda)
+VtkCloud::VtkCloud()
 {
   _polyData = vtkSmartPointer<vtkPolyData>::New();
 
-  _points    = vtkSmartPointer<vtkPoints>::New();
+  _points   = vtkSmartPointer<vtkPoints>::New();
 
   _normals = vtkSmartPointer<vtkDoubleArray>::New();
   _normals->SetNumberOfComponents(3);
-  //_polyData->GetPointData()->SetNormals(_normals);
 
   _colors  = vtkSmartPointer<vtkUnsignedCharArray>::New();
   _colors->SetNumberOfComponents(3);
   _colors->SetName ("Colors");
 
-  //setCoords(coords, size, tda, NULL);
-
   _triangles = vtkSmartPointer<vtkCellArray>::New();
-
 
   _actor = NULL;
 }
@@ -289,7 +285,7 @@ void VtkCloud::copyData(gsl_matrix* C, gsl_matrix* N, unsigned char* rgb)
   {
     double* dst = gsl_matrix_ptr(C, i, 0);
     points->GetPoint(i, dst);
-    colors->GetTupleValue(i, &rgb[3*i]);
+    if(colors) colors->GetTupleValue(i, &rgb[3*i]);
   }
 
   if(normals)

@@ -41,7 +41,7 @@ void serializeAscii(char* filename, CartesianCloud3D* cloud)
   {
     double* point = (*cloud)[i];
     file << point[0] << " " << point[1] << " " << point[2] << " ";
-    file << (unsigned int)colors[0] << " " << (unsigned int)colors[1] << " " << (unsigned int)colors[2] << endl;
+    if(colors) file << (unsigned int)colors[0] << " " << (unsigned int)colors[1] << " " << (unsigned int)colors[2] << endl;
   }
 
   file.close();

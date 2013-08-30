@@ -49,7 +49,7 @@ IF(EXISTS /usr/include/PMDSDK)
 ENDIF()
 
 # check if necessary files for sick lidar installed
-IF(EXISTS /usr/local/include/LMS1xx.h)
+IF(EXISTS /usr/include/LMS1xx.h)
     message(STATUS "Build Sick stuff ...")
     set(SOURCES ${SOURCES} SickLMS100.cpp)
 ENDIF()

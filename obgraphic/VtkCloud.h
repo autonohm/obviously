@@ -25,13 +25,8 @@ public:
 
   /**
    * Constructor
-   * @param data pointer to dataset ([x1,y1,z1,x2,y2,z2,...] layout)
-   * @param points number of points in dataset
-   * @param tda trailing dimension, i.e., size of row as laid out in memory
-   *        e.g. 00 01 02 03 xx xx xx xx 10 11 12 13 xx xx xx xx
-   *             => tda = 8
    */
-  VtkCloud();//double* data, int points, int tda);
+  VtkCloud();
 
   /**
    * Destructor
@@ -42,7 +37,9 @@ public:
    * Set coordinates
    * @param data Cartesian data set
    * @param points number of points
-   * @param tda trailing dimension (see constructor comment)
+   * @param tda trailing dimension, i.e., size of row as laid out in memory
+   *        e.g. 00 01 02 03 xx xx xx xx 10 11 12 13 xx xx xx xx
+   *             => tda = 8
    */
   void setCoords(double* data, int points, int tda, double* normals=NULL);
 

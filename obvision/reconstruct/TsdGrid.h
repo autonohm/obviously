@@ -60,6 +60,30 @@ public:
   double getCellSize();
 
   /**
+   * Get minimum for x-coordinate
+   * @return x-coordinate
+   */
+  double getMinX();
+
+  /**
+   * Get maximum for x-coordinate
+   * @return x-coordinate
+   */
+  double getMaxX();
+
+  /**
+   * Get minimum for y-coordinate
+   * @return y-coordinate
+   */
+  double getMinY();
+
+  /**
+   * Get maximum for y-coordinate
+   * @return y-coordinate
+   */
+  double getMaxY();
+
+  /**
    * Set maximum truncation radius
    * @param[in] val truncation radius
    */
@@ -120,8 +144,9 @@ private:
    * @param[in] x index in x-dimension
    * @param[in] y index in y-dimension
    * @param[in] sdf signed distance function value
+   * @param[in] weight weighting of current measurement
    */
-  void addTsdfValue(const unsigned int x, const unsigned int y, const double sdf);
+  void addTsdfValue(const unsigned int x, const unsigned int y, const double sdf, const double weight);
 
   int _cellsX;
 
@@ -142,6 +167,15 @@ private:
   double _invCellSize;
 
   double _maxTruncation;
+
+  double _minX;
+
+  double _maxX;
+
+  double _minY;
+
+  double _maxY;
+
 };
 
 }

@@ -29,6 +29,11 @@ Matrix::~Matrix()
   gsl_matrix_free(_work);
 }
 
+void Matrix::copy(const Matrix &M)
+{
+  gsl_matrix_memcpy(_M, M._M);
+}
+
 Matrix&  Matrix::operator =  (const Matrix &M)
 {
   gsl_matrix_memcpy(_M, M._M);

@@ -44,6 +44,11 @@ TsdGrid::TsdGrid(const unsigned int dimX, const unsigned int dimY, const double 
       (*_cellCoordsHom)[i][2] = 1.0;
     }
   }
+
+  _minX = 0.0;
+  _maxX = ((double)_cellsX + 0.5) * _cellSize;
+  _minY = 0.0;
+  _maxY = ((double)_cellsY + 0.5) * _cellSize;
 }
 
 TsdGrid::~TsdGrid(void)
@@ -67,6 +72,26 @@ double TsdGrid::getCellSize()
   return _cellSize;
 }
 
+double TsdGrid::getMinX()
+{
+  return _minX;
+}
+
+double TsdGrid::getMaxX()
+{
+  return _maxX;
+}
+
+double TsdGrid::getMinY()
+{
+  return _minY;
+}
+
+double TsdGrid::getMaxY()
+{
+  return _maxY;
+}
+
 void TsdGrid::setMaxTruncation(double val)
 {
   if(val < 2 * _cellSize)
@@ -88,6 +113,8 @@ void TsdGrid::push(SensorPolar2D* sensor)
   Timer t;
   double* data = sensor->getRealMeasurementData();
   bool*   mask = sensor->getRealMeasurementMask();
+  double* accuracy = sensor->getRealMeasurementAccuracy();
+
   double tr[2];
   sensor->getPosition(tr);
 
@@ -99,14 +126,7 @@ void TsdGrid::push(SensorPolar2D* sensor)
   {
     for(int x=0; x<_cellsX; x++, i++)
     {
-      // Center of cell
-      //double cellCoords[2];
-      //cellCoords[0] = ((double)x + 0.5) * _cellSize;
-      //cellCoords[1] = ((double)y + 0.5) * _cellSize;
-
       // Index of laser beam
-      //int index = sensor->backProject(cellCoords);
-
       int index = indices[i];
 
       if(index>=0)
@@ -116,8 +136,9 @@ void TsdGrid::push(SensorPolar2D* sensor)
           // calculate distance of current cell to sensor
           double distance = euklideanDistance<double>(tr, (*_cellCoordsHom)[i], 2);
           double sdf = data[index] - distance;
-
-          addTsdfValue(x, y, sdf);
+          double weight = 1.0;
+          if(accuracy) weight = accuracy[index];
+          addTsdfValue(x, y, sdf, weight);
         }
       }
     }
@@ -224,7 +245,7 @@ bool TsdGrid::interpolateBilinear(double coord[2], double* tsdf)
   return true;
 }
 
-void TsdGrid::addTsdfValue(const unsigned int x, const unsigned int y, const double sdf)
+void TsdGrid::addTsdfValue(const unsigned int x, const unsigned int y, const double sdf, const double weight)
 {
   // Determine whether sdf/max_truncation = ]-1;1[
   if(sdf >= -_maxTruncation)
