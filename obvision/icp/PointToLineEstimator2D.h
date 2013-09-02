@@ -47,12 +47,18 @@ public:
    * @param T transformation matrix as return parameter
    */
   virtual void estimateTransformation(gsl_matrix* T);
+
+  unsigned int getIterations(void);
+
 private:
   double**                            _model;     //!< model
   double**                            _scene;     //!< scene
   double**                            _normals;   //!< pointer to normals
   std::vector<StrCartesianIndexPair>* _pairs;     //!< index pairs
   double                              _rms;       //!< deviation
+  unsigned int                        _iterations;
+  double                              _cm[3];
+  double                              _cs[3];
 };
 
 }

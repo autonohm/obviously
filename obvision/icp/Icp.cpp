@@ -9,7 +9,7 @@ const char* g_icp_states[] = {"ICP_IDLE", "ICP_PROCESSING", "ICP_NOTMATCHABLE", 
 
 Icp::Icp(PairAssignment* assigner, IRigidEstimator* estimator)
 {
-  _assigner = assigner;
+  _assigner  = assigner;
   _estimator = estimator;
 
   _maxIterations       = 3;
@@ -21,6 +21,8 @@ Icp::Icp(PairAssignment* assigner, IRigidEstimator* estimator)
   _normalsS            = NULL;
   _sizeModelBuf        = 0;
   _sizeSceneBuf        = 0;
+  _sizeModel           = 0;
+  _sizeScene           = 0;
 
   _Tfinal4x4           = new Matrix(4, 4);
   _Tfinal              = new Matrix(_dim+1, _dim+1);
@@ -84,7 +86,6 @@ void Icp::setModel(gsl_matrix* coords, gsl_matrix* normals)
   }
 
   unsigned int size = coords->size1;
-
   unsigned int sizeNormals = _sizeModelBuf;
 
   checkMemory(size, _dim, _sizeModelBuf, _model);
@@ -132,8 +133,7 @@ void Icp::setScene(double* coords, double* normals, const unsigned int size)
 
 void Icp::setScene(gsl_matrix* coords, gsl_matrix* normals)
 {
-  if(coords->size2 != _dim)
-  {
+  if(coords->size2 != _dim) {
     cout << "WARNING: Scene is not of correct dimensionality " << _dim << endl;
   }
 
@@ -203,17 +203,17 @@ void Icp::setMaxIterations(unsigned int iterations)
 
 unsigned int Icp::getMaxIterations()
 {
-	return _maxIterations;
+  return _maxIterations;
 }
 
 void Icp::setConvergenceCounter(unsigned int convCnt)
 {
-	_convCnt = convCnt;
+  _convCnt = convCnt;
 }
 
 unsigned int Icp::getConvergenceCounter()
 {
-	return _convCnt;
+  return _convCnt;
 }
 
 void Icp::applyTransformation(double** data, unsigned int size, unsigned int dim, Matrix* T)
@@ -290,10 +290,10 @@ EnumIcpState Icp::iterate(double* rms, unsigned int* pairs, unsigned int* iterat
   while( eRetval == ICP_PROCESSING )
   {
     eRetval = step(rms, pairs);
-
     iter++;
 
-    if(fabs(*rms-rms_prev) < 10e-6) conv_cnt++;
+    if(fabs(*rms-rms_prev) < 10e-10)
+      conv_cnt++;
     else
       conv_cnt = 0;
     if((*rms <= _maxRMS || conv_cnt>=_convCnt ))

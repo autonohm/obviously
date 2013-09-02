@@ -19,22 +19,23 @@ PointToPlaneEstimator3D::PointToPlaneEstimator3D()
   _scene   = NULL;
   _normals = NULL;
   _pairs   = NULL;
+  _iterations = 0;
 }
 
 PointToPlaneEstimator3D::~PointToPlaneEstimator3D()
 {
-	
+
 }
 
 void PointToPlaneEstimator3D::setModel(double** model, unsigned int size, double** normals)
 {
-	_model   = model;
-	_normals = normals;
+  _model   = model;
+  _normals = normals;
 }
 
 void PointToPlaneEstimator3D::setScene(double** scene, unsigned int size, double** normals)  // normals are ignored in this class
 {
-	_scene = scene;
+  _scene = scene;
 }
 
 void PointToPlaneEstimator3D::setPairs(std::vector<StrCartesianIndexPair>* pairs)
@@ -76,6 +77,7 @@ void PointToPlaneEstimator3D::estimateTransformation(gsl_matrix* T)
   }
   unsigned int i;
 
+  _iterations++;
   int size = _pairs->size();
 
   double A_buf[36];
@@ -114,8 +116,8 @@ void PointToPlaneEstimator3D::estimateTransformation(gsl_matrix* T)
     double a45 = n[0]*n[1];
     double a46 = n[0]*n[2];
     double a56 = n[1]*n[2];
-    A_buf[0]+=pxn[0]*pxn[0];   A_buf[1]+=a12;             A_buf[2]+=a13;             A_buf[3]+=a14;           A_buf[4]+=a15;           A_buf[5]+=a16;
-    A_buf[6]+=a12;             A_buf[7]+=pxn[1]*pxn[1];   A_buf[8]+=a23;             A_buf[9]+=a24;           A_buf[10]+=a25;          A_buf[11]+=a26;
+    A_buf[0] +=pxn[0]*pxn[0];  A_buf[1] +=a12;            A_buf[2] +=a13;            A_buf[3] +=a14;          A_buf[4] +=a15;           A_buf[5]+=a16;
+    A_buf[6] +=a12;            A_buf[7] +=pxn[1]*pxn[1];  A_buf[8] +=a23;            A_buf[9] +=a24;          A_buf[10]+=a25;          A_buf[11]+=a26;
     A_buf[12]+=a13;            A_buf[13]+=a23;            A_buf[14]+=pxn[2]*pxn[2];  A_buf[15]+=a34;          A_buf[16]+=a35;          A_buf[17]+=a36;
     A_buf[18]+=a14;            A_buf[19]+=a24;            A_buf[20]+=a34;            A_buf[21]+=n[0]*n[0];    A_buf[22]+=a45;          A_buf[23]+=a46;
     A_buf[24]+=a15;            A_buf[25]+=a25;            A_buf[26]+=a35;            A_buf[27]+=a45;          A_buf[28]+=n[1]*n[1];    A_buf[29]+=a56;
@@ -150,6 +152,7 @@ void PointToPlaneEstimator3D::estimateTransformation(gsl_matrix* T)
   double psi   = gsl_vector_get(x, 2);
 
   gsl_matrix_view R = gsl_matrix_submatrix(T, 0, 0, 3, 3);
+
   /**
    * This approximation originates from the paper, but the precise calculation of R (see below) provides better results
    */
@@ -183,6 +186,11 @@ void PointToPlaneEstimator3D::estimateTransformation(gsl_matrix* T)
   gsl_matrix_set(&R.matrix, 2, 2, cph*cth);
 
   gsl_vector_free(x);
+}
+
+unsigned int PointToPlaneEstimator3D::getIterations(void)
+{
+  return(_iterations);
 }
 
 }

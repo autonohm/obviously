@@ -20,6 +20,7 @@ ClosedFormEstimator2D::ClosedFormEstimator2D()
   _cs[0] = 0.0;
   _cs[1] = 0.0;
   _pairs = NULL;
+  _iterations = 0;
 }
 
 ClosedFormEstimator2D::~ClosedFormEstimator2D()
@@ -75,18 +76,24 @@ double ClosedFormEstimator2D::getRMS()
   return _rms;
 }
 
+unsigned int ClosedFormEstimator2D::getIterations(void)
+{
+  return _iterations;
+}
+
 void ClosedFormEstimator2D::estimateTransformation(gsl_matrix* T)
 {
   double dNominator = 0.0, dDenominator = 0.0;
   for (unsigned int i = 0; i < (*_pairs).size(); i++)
   {
-    double dXFCm = _model[(*_pairs)[i].indexFirst][0] - _cm[0];
-    double dYFCm = _model[(*_pairs)[i].indexFirst][1] - _cm[1];
+    double dXFCm = _model[(*_pairs)[i].indexFirst][0]  - _cm[0];
+    double dYFCm = _model[(*_pairs)[i].indexFirst][1]  - _cm[1];
     double dXSCs = _scene[(*_pairs)[i].indexSecond][0] - _cs[0];
     double dYSCs = _scene[(*_pairs)[i].indexSecond][1] - _cs[1];
-    dNominator += dYFCm * dXSCs - dXFCm * dYSCs;
+    dNominator   += dYFCm * dXSCs - dXFCm * dYSCs;
     dDenominator += dXFCm * dXSCs + dYFCm * dYSCs;
   }
+  _iterations++;
 
   // compute rotation
   double dDeltaTheta = atan2(dNominator, dDenominator);

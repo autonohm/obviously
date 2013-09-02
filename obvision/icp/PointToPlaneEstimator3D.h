@@ -47,6 +47,8 @@ class PointToPlaneEstimator3D : public IRigidEstimator
 		 * @return RMS error
 		 */
 		virtual double getRMS();
+
+		virtual unsigned int getIterations(void);
 		
 		/**
 		 * Determine the transformation matrix that registers the scene to the model.
@@ -54,6 +56,8 @@ class PointToPlaneEstimator3D : public IRigidEstimator
 		 */
 		virtual void estimateTransformation(gsl_matrix* T);
 		
+
+
 	private:
 	
     /**
@@ -75,6 +79,7 @@ class PointToPlaneEstimator3D : public IRigidEstimator
      * Root mean square error
      */
     double _rms;
+    unsigned int _iterations;
 
     /**
      *  Index pairs
