@@ -48,6 +48,8 @@ class PointToPointEstimator3D : public IRigidEstimator
 		 */
 		virtual double getRMS();
 		
+		virtual unsigned int getIterations(void);
+
 		/**
 		 * Determine the transformation matrix that registers the scene to the model.
 		 * @param T transformation matrix as return parameter
@@ -85,6 +87,8 @@ class PointToPointEstimator3D : public IRigidEstimator
 		 * Root mean square error
 		 */
 		double _rms;
+
+		unsigned int _iterations;
 
 };
 
