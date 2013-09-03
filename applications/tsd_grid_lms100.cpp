@@ -1,4 +1,5 @@
 #include <iostream>
+#include <sstream>
 #include <math.h>
 #include "obcore/base/tools.h"
 #include "obcore/base/System.h"
@@ -16,14 +17,22 @@
 using namespace std;
 using namespace obvious;
 
-int main(void)
+int main(int argc, char* argv[])
 {
-  LOGMSG_CONF("tsd_grid_test.log", Logger::file_off|Logger::screen_on, DBG_DEBUG, DBG_DEBUG);
+  LOGMSG_CONF("tsd_grid_test.log", Logger::file_off|Logger::screen_off, DBG_DEBUG, DBG_DEBUG);
 
   // Initialization of TSD grid
-  double dimX = 18.0;
-  double dimY = 18.0;
-  double cellSize = 0.03;
+  const double dimX = 36.0;
+  const double dimY = 36.0;
+  const double cellSize = 0.06;
+
+  // choose estimator type
+  enum Est{PTP, PTL};
+  Est _estType;
+  if (argc >=1)
+    _estType = PTL;
+  else
+    _estType = PTP;
 
   TsdGrid* grid = new TsdGrid(dimX, dimY, cellSize);
   grid->setMaxTruncation(2.0*cellSize);
@@ -31,11 +40,11 @@ int main(void)
 
   // Initialization of 2D viewer
   // image display is only possible for image dimensions divisible by 4
-  unsigned int w = grid->getCellsX();
-  unsigned int h = grid->getCellsY();
+  const unsigned int w = grid->getCellsX();
+  const unsigned int h = grid->getCellsY();
   unsigned char* image = new unsigned char[3*w*h];
   double ratio = double(w)/double(h);
-  double screen_width = 600;
+  double screen_width = 1000;
   Obvious2D viewer(screen_width, screen_width/ratio, "tsd_grid_lms100");
 
 
@@ -51,6 +60,7 @@ int main(void)
   Matrix Tinit(3, 3);
   Tinit.setData(tf);
 
+  Matrix LastScanPose = Tinit;
 
   // Sensor initialization
   SickLMS100 lms;
@@ -75,7 +85,17 @@ int main(void)
   assigner->addPreFilter(filterBounds);
   DistanceFilter* filterDist = new DistanceFilter(2.0, 0.01, iterations);
   assigner->addPostFilter(filterDist);
-  IRigidEstimator* estimator     = (IRigidEstimator*) new ClosedFormEstimator2D();
+
+//  // choose estimator
+//  IRigidEstimator* estimator;
+//  if (_estType == PTP)
+//    estimator     = (IRigidEstimator*) new ClosedFormEstimator2D();
+//  else
+    IRigidEstimator* estimator    = (IRigidEstimator*) new PointToLine2DEstimator();
+
+//  IRigidEstimator* estimator    = (IRigidEstimator*) new ClosedFormEstimator2D();
+
+
   Icp* icp = new Icp(assigner, estimator);
   icp->setMaxRMS(0.0);
   icp->setMaxIterations(iterations);
@@ -87,21 +107,24 @@ int main(void)
   sensor.transform(&Tinit);
   grid->push(&sensor);
 
+
+  unsigned int initCount = 0;
   while(viewer.isAlive())
   {
     lms.grab();
 
     unsigned int mSize = 0;
     rayCaster.calcCoordsFromCurrentView(grid, &sensor, mCoords, mNormals, &mSize);
-    LOGMSG(DBG_DEBUG, "Raycast resulted in " << mSize << " coordinates");
+//    LOGMSG(DBG_DEBUG, "Raycast resulted in " << mSize << " coordinates");
 
     double* sCoords = lms.getCoords();
 
     Matrix* M = new Matrix(mSize/2, 2, mCoords);
+    Matrix* mNorm = new Matrix(mSize/2, 2, mNormals);
     Matrix* S = new Matrix(rays, 2, sCoords);
 
     icp->reset();
-    icp->setModel(M->getBuffer());
+    icp->setModel(M->getBuffer(), mNorm->getBuffer());
     icp->setScene(S->getBuffer());
 
     double rms;
@@ -109,9 +132,24 @@ int main(void)
     unsigned int it;
 
     icp->iterate(&rms, &pairs, &it);
-    LOGMSG(DBG_DEBUG, "ICP result - RMS: " << rms << " pairs: " << pairs << " iterations: " << it << endl;)
+//    LOGMSG(DBG_DEBUG, "ICP result - RMS: " << rms << " pairs: " << pairs << " iterations: " << it << endl;)
 
     Matrix* T = icp->getFinalTransformation();
+
+    double poseX  = gsl_matrix_get(T->getBuffer(), 0, 2);
+    double poseY  = gsl_matrix_get(T->getBuffer(), 1, 2);
+    double curPhi = acos(gsl_matrix_get(T->getBuffer(), 0, 0));
+    double lastX  = gsl_matrix_get(LastScanPose.getBuffer(), 0, 2);
+    double lastY  = gsl_matrix_get(LastScanPose.getBuffer(), 1, 2);
+    double lastPhi= acos(gsl_matrix_get(LastScanPose.getBuffer(), 0, 0));
+
+    double deltaX   = poseX - lastX;
+    double deltaY   = poseY - lastY;
+    double deltaPhi = fabs(curPhi - lastPhi);
+
+    std::cout << deltaX << std::endl;
+
+
     filterBounds->setPose(sensor.getPose());
 
     /*T->print();
@@ -119,7 +157,16 @@ int main(void)
 
     sensor.setRealMeasurementData(lms.getRanges());
     sensor.transform(T);
-    grid->push(&sensor);
+
+    std::cout << sqrt(deltaX*deltaX + deltaY*deltaY) << std::endl;
+
+    if (sqrt(deltaX*deltaX + deltaY*deltaY) > 0.05 || deltaPhi > 0.05|| initCount < 100)
+    {
+      grid->push(&sensor);
+      LastScanPose = *T;
+      std::cout << "Pushed to grid" << std::endl;
+      initCount++;
+    }
 
     // Visualize data
     grid->grid2ColorImage(image);
