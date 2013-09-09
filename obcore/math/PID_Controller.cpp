@@ -22,13 +22,7 @@ float PID_Controller::controll(const float& isValue)
   // calculate single controller values
   float  p_ctrl_output  = error * _p;
   float  d_ctrl_output  = (error - oldError) * _d;
-  i_ctrl_output += error * _i;
-
-  // Anti wind up control
-  if (i_ctrl_output >= _awu)
-    i_ctrl_output = _awu;
-  else if (i_ctrl_output <= -_awu)
-    i_ctrl_output = -_awu;
+  i_ctrl_output         = _integrator.integrate(error);
 
   // calculate controller value
   _setValue = p_ctrl_output + i_ctrl_output + d_ctrl_output;
@@ -41,7 +35,7 @@ float PID_Controller::controll(const float& isValue)
 
   if (_debug)
   {
-    std::cout << "Error: "   << error         << std::endl;
+    std::cout << "Error : "   << error         << std::endl;
     std::cout << "p value: " << p_ctrl_output << std::endl;
     std::cout << "i value: " << i_ctrl_output << std::endl;
     std::cout << "d value: " << d_ctrl_output << std::endl;

@@ -119,3 +119,6 @@ IF("${RET_OPENNI_CODE}" STREQUAL "0")
     ADD_EXECUTABLE(openni-device-stream openni-device-stream.cpp)
     TARGET_LINK_LIBRARIES(openni-device-stream ${VISIONLIBS} ${GRAPHICLIBS} ${DEVICELIBS} ${CORELIBS} ${XML_LIBRARIES} ${OPENNI_LIBRARIES})
 ENDIF()
+
+add_executable(integrator integrator.cpp)
+target_link_libraries(integrator ${CORELIBS}) 
