@@ -31,6 +31,11 @@ void Sensor::transform(Matrix* T)
   (*_Pose) *= (*T);
 }
 
+void Sensor::setPose(Matrix* T)
+{
+  (*_Pose) = (*T);
+}
+
 Matrix* Sensor::getPose()
 {
   return _Pose;

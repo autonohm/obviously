@@ -11,8 +11,10 @@
 #include "obgraphic/Obvious3D.h"
 #include "obvision/icp/icp_def.h"
 #include "obvision/normals/NormalsEstimator.h"
+#include "obvision/mesh/TriangleMesh.h"
 #include "obcore/base/tools.h"
 #include "obcore/base/Logger.h"
+#include "obcore/math/mathbase.h"
 
 #include "obvision/reconstruct/TsdSpace.h"
 #include "obvision/reconstruct/SensorProjective3D.h"
@@ -20,12 +22,13 @@
 
 using namespace obvious;
 
-#define X_DIM 8
-#define Y_DIM 8
-#define Z_DIM 4
-#define VXLDIM 0.04
+#define X_DIM 1
+#define Y_DIM 1
+#define Z_DIM 1
+#define VXLDIM 0.005
 
 Matrix* _T;
+Matrix _Tinit(4, 4);
 Kinect* _kinect;
 TsdSpace* _space;
 RayCastProjective3D* _rayCaster;
@@ -34,24 +37,24 @@ VtkCloud* _vModel;
 VtkCloud* _vScene;
 Obvious3D* _viewer3D;
 Icp* _icp;
-double* _dist;
-bool _recON;                    //set to true to store all Kinect Clouds on disk
+OutOfBoundsFilter3D* _filterBounds;
 
-
-void StoreKinCloud(const unsigned int id,VtkCloud *kinVcloud)
-{
-	char path[40];
-	std::sprintf(path,"kinClouds/Cloud%04d.vtp",id);
-	kinVcloud->serialize(path,VTKCloud_XML);
-}
-
-void _cbStoreCurrentCloud(void)
+void _cbStoreModel(void)
 {
 	static unsigned int id=0;
 	char path[40];
-	std::sprintf(path,"curClouds/curCloud%04d.vtp",id);
+	std::sprintf(path,"model%04d.vtp",id);
 	_vModel->serialize(path,VTKCloud_XML);
 	id++;
+}
+
+void _cbStoreScene(void)
+{
+  static unsigned int id=0;
+  char path[40];
+  std::sprintf(path,"scene%04d.vtp",id);
+  _vScene->serialize(path,VTKCloud_XML);
+  id++;
 }
 
 void _cbBuildSliceViews(void)
@@ -94,34 +97,32 @@ void _cbGenPointCloud(void)
 
 void _cbRegNewImage(void)
 {
-  obvious::Timer tNewImage;
+  obvious::Timer t;
 
-  static int id=0;
   unsigned int cols = _kinect->getCols();
   unsigned int rows = _kinect->getRows();
 
-  double* normals = new double[cols * rows * 3];
-  double* coords = new double[cols * rows * 3];
+  double* normals    = new double[cols * rows * 3];
+  double* coords     = new double[cols * rows * 3];
   unsigned char* rgb = new unsigned char[cols * rows * 3];
+  bool* mask         = new bool[cols * rows];
 
-  unsigned int size = 0;
-
+  unsigned int size = cols*rows*3;
 
   LOGMSG(DBG_DEBUG, "Current Transformation: ");
   _sensor->getPose()->print();
+  _filterBounds->setPose(_sensor->getPose());
 
   // Extract model from TSDF space
-  unsigned int subsamplingModel = 5;
+  unsigned int subsamplingModel = 1;
 
   _rayCaster->calcCoordsFromCurrentView(coords, normals, rgb, &size, subsamplingModel);
 
-  if(size == 0)
-  {
-    LOGMSG(DBG_ERROR, "RayCasting returned with no coordinates");
-    return;
-  }
+  //_rayCaster->calcCoordsFromCurrentViewMask(coords, normals, rgb, mask);
+  //TriangleMesh* mesh       = new TriangleMesh(rows*cols);
+  //mesh->createMeshFromOrganizedCloud(coords, rows, cols, rgb, mask);
 
-  obvious::Timer t;
+  double timeIcpStart = t.getTime();
 
   // Filter model to ensure proper normal vectors
   _vModel->setCoords(coords, size / 3, 3, normals);
@@ -129,7 +130,20 @@ void _cbRegNewImage(void)
   _vModel->removeInvalidPoints();
   _vModel->copyCoords(coords);
   _vModel->copyNormals(normals);
-  size = _vModel->getSize();for(int i=0; i<cols*rows; i++)
+  size = _vModel->getSize();
+
+  // Display model as mesh -> use calcCoordsFromCurrentViewMask above!!!
+  /*double** mCoords         = mesh->getCoords();
+  unsigned char** mRGB     = mesh->getRGB();
+  unsigned int** mIndices  = mesh->getIndices();
+  unsigned int points      = mesh->getNumberOfPoints();
+  unsigned int triangles   = mesh->getNumberOfTriangles();
+  _vModel->setTriangles(mCoords, mRGB, points, mIndices, triangles);*/
+
+  // Transform model in order to display it in space coordinates
+  double P[16];
+  _sensor->getPose()->getData(P);
+  _vModel->transform(P);
 
   _icp->reset();
   _icp->setModel(coords, normals, size);
@@ -137,27 +151,28 @@ void _cbRegNewImage(void)
   // Acquire scene image
   _kinect->grab();
 
+  double* coordsScene     = _kinect->getCoords();
+  bool* maskScene         = _kinect->getMask();
+  unsigned char* rgbScene = _kinect->getRGB();
+
   // Estimate scene normal vectors
   NormalsEstimator nestimator;
-  nestimator.estimateNormals3DGrid(cols, rows, _kinect->getCoords(), _kinect->getMask(), normals);
+  nestimator.estimateNormals3DGrid(cols, rows, coordsScene, maskScene, normals);
+  LOGMSG(DBG_DEBUG, "Normals estimated");
 
   // Filter scene to ensure proper normal vectors
   unsigned int subsamplingScene = 10;
-  _vScene->setCoords(_kinect->getCoords(), cols * rows, 3, normals);
-  _vScene->setColors(_kinect->getRGB(), cols * rows, 3);
+  _vScene->setCoords(coordsScene, rows*cols, 3, normals);
+  _vScene->setColors(rgbScene, cols*rows, 3);
   _vScene->removeInvalidPoints();
   _vScene->copyCoords(coords, subsamplingScene);
   _vScene->copyNormals(normals, subsamplingScene);
   size = _vScene->getSize();
+  //_vScene->transform(P);
 
+  LOGMSG(DBG_DEBUG, "ICP scene size " << size);
   _icp->setScene(coords, normals, size/subsamplingScene);
-
-  if(_recON)
-  {
-    StoreKinCloud(id,_vScene);
-    id++;
-  }
-
+  LOGMSG(DBG_DEBUG, "ICP scene set");
 
   // Perform ICP registration
   double rms = 0;
@@ -165,7 +180,7 @@ void _cbRegNewImage(void)
   unsigned int iterations = 0;
 
   EnumIcpState state = _icp->iterate(&rms, &pairs, &iterations);
-  LOGMSG(DBG_DEBUG, "Elapsed ICP: " << t.getTime() << "ms, state " << state << ", pairs: " << pairs << ", rms: " << rms);
+  LOGMSG(DBG_DEBUG, "Elapsed ICP: " << t.getTime()-timeIcpStart << "ms, state " << state << ", pairs: " << pairs << ", rms: " << rms);
 
   if(((state == ICP_SUCCESS) && (rms < 0.1)) || ((state == ICP_MAXITERATIONS) && (rms < 0.1)))
   {
@@ -174,34 +189,46 @@ void _cbRegNewImage(void)
     _vScene->transform(T->getBuffer()->data);
     _sensor->transform(T);
     double* coords = _kinect->getCoords();
-    for(int i=0; i<cols*rows; i++)
-      _dist[i] = sqrt(coords[3*i]*coords[3*i]+coords[3*i+1]*coords[3*i+1]+coords[3*i+2]*coords[3*i+2]);
-    _sensor->setRealMeasurementData(_dist);
+    double* dist = new double[cols*rows];
+    for(unsigned int i=0; i<cols*rows; i++)
+      dist[i] = abs3D(&coords[3*i]);
+    _sensor->setRealMeasurementData(dist);
     _sensor->setRealMeasurementMask(_kinect->getMask());
     _sensor->setRealMeasurementRGB(_kinect->getRGB());
     _space->push(_sensor);
+    delete [] dist;
   }
   else
-    LOGMSG(DBG_DEBUG, "RMS " << rms);
+    LOGMSG(DBG_DEBUG, "Registration failed, RMS " << rms);
 
   _viewer3D->update();
 
   delete[] coords;
   delete[] normals;
   delete[] rgb;
-  std::cout << __PRETTY_FUNCTION__ << ": time ellapsed = " << tNewImage.getTime() << " ms" << std::endl;
+  //delete mesh;
+  std::cout << __PRETTY_FUNCTION__ << ": time ellapsed = " << t.getTime() << " ms" << std::endl;
+}
+
+void _cbReset(void)
+{
+  _space->reset();
+  _sensor->setPose(&_Tinit);
+  _space->push(_sensor);
 }
 
 int main(void)
 {
-	_recON=0;           //initialize with no recording
-
   LOGMSG_CONF("mapper3D.log", Logger::screen_on | Logger::file_off, DBG_DEBUG, DBG_DEBUG);
 
+  // Projection matrix (needs to be determined by calibration)
+  // ------------------------------------------------------------------
   double Pdata[12] = {585.05108211, 0.0, 315.83800193, 0.0, 0.0, 585.05108211, 242.94140713, 0., 0.0, 0.0, 1.0, 0.0};
   Matrix P(3, 4, Pdata);
   _kinect = new Kinect("kinect.xml");
 
+  // Check access to kinect device
+  // ------------------------------------------------------------------
   if((_kinect->grab()) != true)
   {
     LOGMSG(DBG_ERROR, "Error grabbing first image!");
@@ -209,65 +236,93 @@ int main(void)
     exit(1);
   }
 
+  // Dismiss first images in order to clear buffer
+  // ------------------------------------------------------------------
+  unsigned int pre = 0;
+  while(pre<5)
+  {
+    if(_kinect->grab()) pre++;
+  }
+
   unsigned int cols = _kinect->getCols();
   unsigned int rows = _kinect->getRows();
 
-  _dist = new double[cols*rows];
-
-  // translation of sensor
+  // Initial transformation of sensor
+  // ------------------------------------------------------------------
   double tx = X_DIM/2.0;
   double ty = Y_DIM/2.0;
-  double tz = 0.1;
-
+  double tz = 0;
   double tf[16]={1,  0, 0, tx,
                  0,  1, 0, ty,
                  0,  0, 1, tz,
                  0,  0, 0, 1};
-  Matrix Tinit(4, 4);
-  Tinit.setData(tf);
+  _Tinit.setData(tf);
 
   _space = new TsdSpace(Y_DIM, X_DIM, Z_DIM, VXLDIM);
   _space->setMaxTruncation(2.0 * VXLDIM);
 
+  // ICP configuration
+  // ------------------------------------------------------------------
+  unsigned int maxIterations = 15;
+
   PairAssignment* assigner = (PairAssignment*)new FlannPairAssignment(3, 0.0);
-//  PairAssignment* assigner = (PairAssignment*)new ProjectivePairAssignment(Pdata, cols, rows);
+  //PairAssignment* assigner = (PairAssignment*)new ProjectivePairAssignment(Pdata, cols, rows);
+
   IRigidEstimator* estimator = (IRigidEstimator*)new PointToPlaneEstimator3D();
+
+  // Subsampling for speeding up runtime
   IPreAssignmentFilter* filterS = (IPreAssignmentFilter*)new SubsamplingFilter(50);
-  //assigner->addPreFilter(filterS);
-  OutOfBoundsFilter3D* filterBounds = new OutOfBoundsFilter3D(_space->getMinX(), _space->getMaxX(), _space->getMinY(), _space->getMaxY(), _space->getMinZ(), _space->getMaxZ());
-  filterBounds->setPose(&Tinit);
-  assigner->addPreFilter(filterBounds);
-  IPostAssignmentFilter* filterD = (IPostAssignmentFilter*)new DistanceFilter(0.25, 0.05, 20);
+  assigner->addPreFilter(filterS);
+
+  // Out-of-Bounds filter to remove measurements outside TSD space
+  _filterBounds = new OutOfBoundsFilter3D(_space->getMinX(), _space->getMaxX(), _space->getMinY(), _space->getMaxY(), _space->getMinZ(), _space->getMaxZ());
+  _filterBounds->setPose(&_Tinit);
+  assigner->addPreFilter(_filterBounds);
+
+  // Decreasing threshhold filter
+  IPostAssignmentFilter* filterD = (IPostAssignmentFilter*)new DistanceFilter(0.5, 0.01, 10);
   assigner->addPostFilter(filterD);
-  //ProjectionFilter* filterP = new ProjectionFilter(P, cols, rows);
-  //assigner->addPreFilter(filterP);
+
   _icp = new Icp(assigner, estimator);
+
+  // Deactivate early termination
   _icp->setMaxRMS(0.0);
-  _icp->setMaxIterations(25);
+  _icp->setMaxIterations(maxIterations);
+  _icp->setConvergenceCounter(maxIterations);
+  // ------------------------------------------------------------------
 
   _sensor = new SensorProjective3D(cols, rows, Pdata);
-  _sensor->transform(&Tinit);
+  _sensor->setPose(&_Tinit);
+
+  // Push first data set at initial pose
+  // ------------------------------------------------------------------
   double* coords = _kinect->getCoords();
+  // Convert to Euklidean distances
+  double* dist = new double[cols*rows];
   for(int i=0; i<cols*rows; i++)
-    _dist[i] = sqrt(coords[3*i]*coords[3*i]+coords[3*i+1]*coords[3*i+1]+coords[3*i+2]*coords[3*i+2]);
-  _sensor->setRealMeasurementData(_dist);
+    dist[i] = abs3D(&coords[3*i]);
+  _sensor->setRealMeasurementData(dist);
   _sensor->setRealMeasurementMask(_kinect->getMask());
   _sensor->setRealMeasurementRGB(_kinect->getRGB());
-
   _space->push(_sensor);
+  delete [] dist;
 
   _rayCaster = new RayCastProjective3D(cols, rows, _sensor, _space);
 
+  // Displaying stuff
+  // ------------------------------------------------------------------
   _vModel = new VtkCloud();
   _vScene = new VtkCloud();
   _viewer3D = new Obvious3D("3DMapper");
   _viewer3D->addCloud(_vModel);
+  _viewer3D->addAxisAlignedCube(0, X_DIM, 0, Y_DIM, 0, Z_DIM);
   //_viewer3D->addCloud(_vScene);
   _viewer3D->registerKeyboardCallback("space", _cbRegNewImage);
-  _viewer3D->registerKeyboardCallback("i", _cbGenPointCloud);
-  _viewer3D->registerKeyboardCallback("s",_cbBuildSliceViews);
-  _viewer3D->registerKeyboardCallback("c",_cbStoreCurrentCloud);
-  _viewer3D->registerFlipVariable("k",&_recON);
+  _viewer3D->registerKeyboardCallback("c", _cbGenPointCloud);
+  _viewer3D->registerKeyboardCallback("v", _cbBuildSliceViews);
+  _viewer3D->registerKeyboardCallback("m", _cbStoreModel);
+  _viewer3D->registerKeyboardCallback("s", _cbStoreScene);
+  _viewer3D->registerKeyboardCallback("i", _cbReset);
   _viewer3D->startRendering();
 
   delete _icp;

@@ -58,6 +58,11 @@ public:
  virtual ~TsdSpace();
 
  /**
+  * Reset space to initial state
+  */
+ void reset();
+
+ /**
   * Get number of voxels in x-direction
   */
  unsigned int getXDimension();

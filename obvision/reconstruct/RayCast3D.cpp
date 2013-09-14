@@ -22,7 +22,6 @@ RayCast3D::~RayCast3D()
 
 bool RayCast3D::generatePointCloud(double** pointCloud, double** cloudNormals, unsigned char** cloudRgb, unsigned int* size)
 {
-
   // X_AXS parallel to X-Axis Borders : COL = _zDim, ROW = _yDim
   // X_AXS_N parallel to X-Axis negative direction
   // Y_AXS parallel to Y-Axis Borders : COL = _xDim, ROW = _zDim

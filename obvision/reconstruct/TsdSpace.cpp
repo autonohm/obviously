@@ -34,8 +34,10 @@ TsdSpace::TsdSpace(const unsigned int height, const unsigned int width, const un
   LOGMSG(DBG_DEBUG, "Creating TsdVoxel Space...");
 
   System<TsdVoxel>::allocate(_zDim, _yDim, _xDim, _space);
+  LOGMSG(DBG_DEBUG, "TsdVoxel Space allocated ... trying to allocate " << _sizeOfSpace << "x4" << " acceleration matrix");
 
   _voxelCoordsHom = new Matrix(_sizeOfSpace, 4);
+  LOGMSG(DBG_DEBUG, "Homogeneous coordinates allocated");
 
   int i=0;
   for (int z = 0; z < _zDim; z++)
@@ -44,8 +46,6 @@ TsdSpace::TsdSpace(const unsigned int height, const unsigned int width, const un
     {
       for (int x = 0; x < _xDim; x++, i++)
       {
-        _space[z][y][x].tsdf   = 1.0;
-        _space[z][y][x].weight = 0.0;
         (*_voxelCoordsHom)[i][0] = ((double)x + 0.5) * _voxelSize;
         (*_voxelCoordsHom)[i][1] = ((double)y + 0.5) * _voxelSize;
         (*_voxelCoordsHom)[i][2] = ((double)z + 0.5) * _voxelSize;
@@ -60,12 +60,29 @@ TsdSpace::TsdSpace(const unsigned int height, const unsigned int width, const un
   _maxY = ((double)_yDim + 0.5) * _voxelSize;
   _minZ = 0.0;
   _maxZ = ((double)_zDim + 0.5) * _voxelSize;
+
+  reset();
 }
 
 TsdSpace::~TsdSpace(void)
 {
   delete _voxelCoordsHom;
   delete [] _space;
+}
+
+void TsdSpace::reset()
+{
+  for (int z = 0; z < _zDim; z++)
+  {
+    for (int y = 0; y < _yDim; y++)
+    {
+      for (int x = 0; x < _xDim; x++)
+      {
+        _space[z][y][x].tsdf   = 0.0;
+        _space[z][y][x].weight = 0.0;
+      }
+    }
+  }
 }
 
 unsigned int TsdSpace::getXDimension()

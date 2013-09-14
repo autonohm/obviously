@@ -34,6 +34,8 @@ public:
 	 */
 	void calcCoordsFromCurrentView(double* coords, double* normals, unsigned char* rgb, unsigned int* ctr, unsigned int subsampling=1);
 
+	void calcCoordsFromCurrentViewMask(double* coords, double* normals, unsigned char* rgb, bool* mask);
+
 private:
 
   /**

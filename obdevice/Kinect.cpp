@@ -285,7 +285,6 @@ bool Kinect::grabIR()
     _rgb[3*i+1]    = _rgb[3*i];
     _rgb[3*i+2]    = _rgb[3*i];
     _mask[i]       = (!isnan(_z[i])) && (_coords[3*i+2]>10e-6);
-
   }
 
   if(_record)

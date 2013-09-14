@@ -34,6 +34,12 @@ public:
   virtual void transform(Matrix* T);
 
   /**
+   * Mutator of sensor pose
+   * @param[in] P pose
+   */
+  virtual void setPose(Matrix* P);
+
+  /**
    * Accessor to sensor pose
    * @return pose
    */

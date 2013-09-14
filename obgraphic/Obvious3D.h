@@ -69,9 +69,13 @@ public:
   void registerIncVariable(const char key[], double* var, double inc);
 
   vtkSmartPointer<vtkRenderer> getRenderer();
+
   vtkSmartPointer<vtkRenderWindowInteractor> getWindowInteractor();
 
   void setFrustum(double xmin, double xmax, double ymin, double ymax, double zmin, double zmax);
+
+  void addAxisAlignedCube(double xmin, double xmax, double ymin, double ymax, double zmin, double zmax);
+
 private:
 
   vtkSmartPointer<vtkRenderer>                _renderer;

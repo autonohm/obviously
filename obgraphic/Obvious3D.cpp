@@ -13,6 +13,8 @@
 #include <vtkInteractorStyleSwitch.h>
 #include <vtkOrientationMarkerWidget.h>
 #include <vtkAxesActor.h>
+#include <vtkLineSource.h>
+#include <vtkLine.h>
 
 #include <iostream>
 #include <string>
@@ -132,6 +134,64 @@ void Obvious3D::setFrustum(double xmin, double xmax, double ymin, double ymax, d
   _frust->Update();
 }
 
+void Obvious3D::addAxisAlignedCube(double xmin, double xmax, double ymin, double ymax, double zmin, double zmax)
+{
+  /**
+   * Lines of frustum bounding box
+   */
+  vtkSmartPointer<vtkLineSource> cube[12];
+
+  for(int i=0; i<12; i++)
+    cube[i] = vtkSmartPointer<vtkLineSource>::New();
+
+  cube[0]->SetPoint1(xmin, ymin, zmin);
+  cube[0]->SetPoint2(xmax, ymin, zmin);
+
+  cube[1]->SetPoint1(xmin, ymax, zmin);
+  cube[1]->SetPoint2(xmax, ymax, zmin);
+
+  cube[2]->SetPoint1(xmin, ymin, zmax);
+  cube[2]->SetPoint2(xmax, ymin, zmax);
+
+  cube[3]->SetPoint1(xmin, ymax, zmax);
+  cube[3]->SetPoint2(xmax, ymax, zmax);
+
+  cube[4]->SetPoint1(xmin, ymin, zmin);
+  cube[4]->SetPoint2(xmin, ymax, zmin);
+
+  cube[5]->SetPoint1(xmin, ymin, zmax);
+  cube[5]->SetPoint2(xmin, ymax, zmax);
+
+  cube[6]->SetPoint1(xmax, ymin, zmin);
+  cube[6]->SetPoint2(xmax, ymax, zmin);
+
+  cube[7]->SetPoint1(xmax, ymin, zmax);
+  cube[7]->SetPoint2(xmax, ymax, zmax);
+
+  cube[8]->SetPoint1(xmin, ymin, zmin);
+  cube[8]->SetPoint2(xmin, ymin, zmax);
+
+  cube[9]->SetPoint1(xmin, ymax, zmin);
+  cube[9]->SetPoint2(xmin, ymax, zmax);
+
+  cube[10]->SetPoint1(xmax, ymin, zmin);
+  cube[10]->SetPoint2(xmax, ymin, zmax);
+
+  cube[11]->SetPoint1(xmax, ymax, zmin);
+  cube[11]->SetPoint2(xmax, ymax, zmax);
+
+  for(int i=0; i<12; i++)
+  {
+    vtkSmartPointer<vtkPolyDataMapper> map = vtkSmartPointer<vtkPolyDataMapper>::New();
+    map->SetInput(cube[i]->GetOutput());
+    vtkActor* actor = vtkActor::New();
+    actor->SetMapper(map);
+    actor->GetProperty()->SetColor(255, 255, 255);
+    actor->GetProperty()->SetLineWidth(1.0);
+    _renderer->AddActor(actor);
+  }
+}
+
 void Obvious3D::registerKeyboardCallback(const char key[], fptrKeyboardCallback fptr)
 {
   std::string skey = std::string(key);
@@ -164,7 +224,7 @@ void Obvious3D::startRendering()
   _renderWindowInteractor->Start();
 }
 
-void Obvious3D::showAxes(bool show )
+void Obvious3D::showAxes(bool show)
 {
   vtkSmartPointer<vtkAxesActor> axes = vtkSmartPointer<vtkAxesActor>::New();
 	if(show)
