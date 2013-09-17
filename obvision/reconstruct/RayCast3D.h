@@ -37,6 +37,8 @@ public:
    */
 	virtual ~RayCast3D();
 
+	virtual bool rayCastFromSensorPose(double ray[3], double coordinates[3], double normal[3], unsigned char rgb[3], double* depth, Sensor* sensor);
+
   /**
    *
    */
@@ -59,7 +61,10 @@ private:
    */
 	bool calcRayParallelAxis(const unsigned int row, const unsigned int col, double* footPoint, double* dirVec, unsigned int* steps, AXSPARMODE mode);
 
+protected:
+
 	 TsdSpace* _space;
+
 };
 
 }

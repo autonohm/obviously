@@ -291,7 +291,7 @@ int main(void)
   _icp->setConvergenceCounter(maxIterations);
   // ------------------------------------------------------------------
 
-  _sensor = new SensorProjective3D(cols, rows, Pdata);
+  _sensor = new SensorProjective3D(cols, rows, Pdata, _space->getVoxelSize());
   _sensor->setPose(&_Tinit);
 
   // Push first data set at initial pose

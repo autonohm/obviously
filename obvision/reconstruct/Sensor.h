@@ -84,6 +84,8 @@ public:
    */
   virtual void setRealMeasurementMask(bool* mask);
 
+  virtual void setRealMeasurementMask(vector<unsigned char> mask);
+
   /**
    * Get validity mask
    * @return validity mask vector. True signals a valid measurement

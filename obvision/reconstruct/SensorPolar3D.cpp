@@ -45,7 +45,17 @@ SensorPolar3D::~SensorPolar3D()
   System<int>::deallocate(_indexMap);
 }
 
-void SensorPolar3D::calcRay(unsigned int beam, unsigned int plane, double ray[3])
+unsigned int SensorPolar3D::getBeams()
+{
+  return _beams;
+}
+
+unsigned int SensorPolar3D::getPlanes()
+{
+  return _planes;
+}
+
+void SensorPolar3D::calcRayFromCurrentPose(unsigned int beam, unsigned int plane, double ray[3])
 {
   Matrix Rh(4, 1);
   double theta = _thetaMin + ((double)beam) * _thetaRes;

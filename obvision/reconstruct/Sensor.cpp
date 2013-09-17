@@ -97,6 +97,12 @@ void Sensor::setRealMeasurementMask(bool* mask)
   memcpy(_mask, mask, _size*sizeof(*mask));
 }
 
+void Sensor::setRealMeasurementMask(vector<unsigned char> mask)
+{
+  for(unsigned int i=0; i<mask.size(); i++)
+    _mask[i] = mask[i];
+}
+
 bool* Sensor::getRealMeasurementMask()
 {
   return _mask;
