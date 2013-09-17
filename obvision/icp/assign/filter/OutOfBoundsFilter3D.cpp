@@ -30,13 +30,7 @@ void OutOfBoundsFilter3D::filter(double** scene, unsigned int size, bool* mask)
 {
   double** sceneAligned;
   System<double>::allocate(size, 3, sceneAligned);
-  for(unsigned int i=0; i<size; i++)
-  {
-    sceneAligned[i][0] = (*scene)[3*i];
-    sceneAligned[i][1] = (*scene)[3*i+1];
-    sceneAligned[i][2] = (*scene)[3*i+2];
-  }
-  //memcpy(&((*sceneAligned)[0]), *scene, size*3);
+  memcpy(*sceneAligned, *scene, size*3*sizeof(double));
 
   // Apply rotation
   gsl_matrix_view points = gsl_matrix_view_array(*sceneAligned, size, 3);

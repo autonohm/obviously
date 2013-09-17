@@ -28,7 +28,7 @@ void OutOfBoundsFilter2D::filter(double** scene, unsigned int size, bool* mask)
 {
   double** sceneAligned;
   System<double>::allocate(size, 2, sceneAligned);
-  memcpy(*sceneAligned, *scene, size*2);
+  memcpy(*sceneAligned, *scene, size*2*sizeof(double));
 
   // Apply rotation
   gsl_matrix_view points = gsl_matrix_view_array(*sceneAligned, size, 2);
