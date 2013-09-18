@@ -387,7 +387,7 @@ inline bool TsdSpace::coord2Voxel(double coord[3], int* x, int* y, int* z, Point
   int yIdx = (int) (coord[1] * _invVoxelSize);
   int zIdx = (int) (coord[2] * _invVoxelSize);
 
-  // check edges / 0 is edge because of voxelfinetuning
+  // check edges / 0 is edge because of voxel fine tuning
   if ((xIdx >= (_xDim - 2)) || (xIdx < 1) || (yIdx >= (_yDim - 2)) || (yIdx < 1) || (zIdx >= (_zDim - 2)) || (zIdx < 1))
     return false;
 

@@ -95,9 +95,6 @@ bool RayCast3D::rayCastFromSensorPose(double ray[3], double coordinates[3], doub
   for (unsigned int i = 0; i < 3; i++)
     coordinates[i] = position_prev[i] + ray[i] * interp;
 
-  //for (unsigned int i = 0; i < 3; i++)
-  //    coordinates[i] = ray[i] * 1.0;
-
   if(!_space->interpolateNormal(coordinates, normal))
     return false;
 
