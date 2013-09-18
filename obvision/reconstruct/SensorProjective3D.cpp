@@ -89,8 +89,6 @@ void SensorProjective3D::backProject(Matrix* M, int* indices)
   Matrix PoseInv = (*_Pose);
   PoseInv.invert();
 
-  unsigned int sizeOfSpace = M->getRows();
-
   double tr[3];
   getPosition(tr);
 
@@ -98,32 +96,14 @@ void SensorProjective3D::backProject(Matrix* M, int* indices)
   gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, _P->getBuffer(), PoseInv.getBuffer(), 0.0, Pgen);
 
   // coords2D = P * Tinv * voxelCoords
-  gsl_matrix* coords2D = gsl_matrix_alloc(3, sizeOfSpace);
-
-#if _PARALLEL_VERSION
-  // OMP version
-#pragma omp parallel
-  {
-#pragma omp for schedule(dynamic)
-    for(int i=0; i<4; i++)
-    {
-      //gsl_matrix_view viewVoxel = gsl_matrix_submatrix (_voxelCoordsHom->getBuffer(), 0, i*_sizeOfSpace/4, 4, _sizeOfSpace/4);
-      gsl_matrix_view viewVoxel = gsl_matrix_submatrix (M->getBuffer(), i*sizeOfSpace/4, 0, sizeOfSpace/4, 4);
-      gsl_matrix_view viewCoords2D = gsl_matrix_submatrix (coords2D, 0, i*sizeOfSpace/4, 3, sizeOfSpace/4);
-
-      //gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, Pgen, &(viewVoxel.matrix), 0.0, &(viewCoords2D.matrix));
-      gsl_blas_dgemm(CblasNoTrans, CblasTrans, 1.0, Pgen, &(viewVoxel.matrix), 0.0, &(viewCoords2D.matrix));
-    }
-  }
-#else
-  gsl_blas_dgemm(CblasNoTrans, CblasTrans, 1.0, Pgen, _voxelCoordsHom->getBuffer(), 0.0, coords2D);
-#endif
+  gsl_matrix* coords2D = gsl_matrix_alloc(3, M->getRows());
+  gsl_blas_dgemm(CblasNoTrans, CblasTrans, 1.0, Pgen, M->getBuffer(), 0.0, coords2D);
 
   const double* du = gsl_matrix_ptr(coords2D, 0, 0);
   const double* dv = gsl_matrix_ptr(coords2D, 1, 0);
   const double* dw = gsl_matrix_ptr(coords2D, 2, 0);
 
-  for(unsigned int i=0; i<sizeOfSpace; i++)
+  for(unsigned int i=0; i<M->getRows(); i++)
   {
     indices[i] = -1;
     if(dw[i] > 0.0)
@@ -141,7 +121,6 @@ void SensorProjective3D::backProject(Matrix* M, int* indices)
   }
 
   gsl_matrix_free(coords2D);
-
 }
 
 }

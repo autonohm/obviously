@@ -186,8 +186,6 @@ private:
 
  TsdVoxel*** _space;
 
- Matrix* _voxelCoordsHom;
-
  double _voxelSize;
 
  double _invVoxelSize;
@@ -205,8 +203,6 @@ private:
  double _minZ;
 
  double _maxZ;
-
- Matrix*** _rays;
 };
 
 }

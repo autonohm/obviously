@@ -4,6 +4,7 @@
 #include "obcore/math/Matrix.h"
 #include "obcore/math/mathbase.h"
 #include "TsdSpace.h"
+#include "SensorProjective3D.h"
 
 #include <cstring>
 #include <omp.h>
@@ -34,25 +35,7 @@ TsdSpace::TsdSpace(const unsigned int height, const unsigned int width, const un
   LOGMSG(DBG_DEBUG, "Creating TsdVoxel Space...");
 
   System<TsdVoxel>::allocate(_zDim, _yDim, _xDim, _space);
-  LOGMSG(DBG_DEBUG, "TsdVoxel Space allocated ... trying to allocate " << _sizeOfSpace << "x4" << " acceleration matrix");
-
-  _voxelCoordsHom = new Matrix(_sizeOfSpace, 4);
-  LOGMSG(DBG_DEBUG, "Homogeneous coordinates allocated");
-
-  int i=0;
-  for (int z = 0; z < _zDim; z++)
-  {
-    for (int y = 0; y < _yDim; y++)
-    {
-      for (int x = 0; x < _xDim; x++, i++)
-      {
-        (*_voxelCoordsHom)[i][0] = ((double)x + 0.5) * _voxelSize;
-        (*_voxelCoordsHom)[i][1] = ((double)y + 0.5) * _voxelSize;
-        (*_voxelCoordsHom)[i][2] = ((double)z + 0.5) * _voxelSize;
-        (*_voxelCoordsHom)[i][3] = 1.0;
-      }
-    }
-  }
+  LOGMSG(DBG_DEBUG, "TSDVoxel Space allocated, " << _zDim*_yDim*_xDim << " voxels");
 
   _minX = 0.0;
   _maxX = ((double)_xDim + 0.5) * _voxelSize;
@@ -66,7 +49,6 @@ TsdSpace::TsdSpace(const unsigned int height, const unsigned int width, const un
 
 TsdSpace::~TsdSpace(void)
 {
-  delete _voxelCoordsHom;
   delete [] _space;
 }
 
@@ -162,18 +144,33 @@ void TsdSpace::push(Sensor* sensor)
   double tr[3];
   sensor->getPosition(tr);
 
-  int* indices = new int[_sizeOfSpace];
-  sensor->backProject(_voxelCoordsHom, indices);
-
 #pragma omp parallel
   {
+    Matrix* V = new Matrix(_yDim*_xDim, 4);
+    int* indices = new int[_yDim*_xDim];
+
+    int i=0;
+    for (int y = 0; y < _yDim; y++)
+    {
+      for (int x = 0; x < _xDim; x++, i++)
+      {
+        (*V)[i][0] = ((double)x + 0.5) * _voxelSize;
+        (*V)[i][1] = ((double)y + 0.5) * _voxelSize;
+        (*V)[i][3] = 1.0;
+      }
+    }
 #pragma omp for schedule(dynamic)
     for(int z=0; z<_zDim; z++)
     {
-      int iz = z*_yDim*_xDim;
+      double zVoxel = ((double)z + 0.5) * _voxelSize;
+      for (i = 0; i < _yDim*_xDim; i++)
+        (*V)[i][2] = zVoxel;
+
+      sensor->backProject(V, indices);
+
+      i = 0;
       for(int y=0; y<_yDim; y++)
       {
-        int i = iz + y*_xDim;
         for(int x=0; x<_xDim; x++, i++)
         {
           // Measurement index
@@ -184,7 +181,7 @@ void TsdSpace::push(Sensor* sensor)
             if(mask[index])
             {
               // calculate distance of current cell to sensor
-              double distance = euklideanDistance<double>(tr, (*_voxelCoordsHom)[i], 3);
+              double distance = euklideanDistance<double>(tr, (*V)[i], 3);
               double sdf = data[index] - distance;
 
               unsigned char* color = NULL;
@@ -195,9 +192,9 @@ void TsdSpace::push(Sensor* sensor)
         }
       }
     }
+    delete V;
+    delete [] indices;
   }
-
-  delete [] indices;
 
   LOGMSG(DBG_DEBUG, "Elapsed push: " << t.getTime() << "ms");
 
