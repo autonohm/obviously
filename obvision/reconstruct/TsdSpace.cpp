@@ -180,6 +180,11 @@ void TsdSpace::push(Sensor* sensor)
           {
             if(mask[index])
             {
+              if(data[index]<10e-2)
+              {
+                cout << "warning: " << data[index] << " " << index << endl;
+                continue;
+              }
               // calculate distance of current cell to sensor
               double distance = euklideanDistance<double>(tr, (*V)[i], 3);
               double sdf = data[index] - distance;
@@ -188,6 +193,8 @@ void TsdSpace::push(Sensor* sensor)
               if(rgb) color = &(rgb[3*index]);
               addTsdfValue(x, y, z, sdf, color);
             }
+            else
+              cout << "filtered" << endl;
           }
         }
       }

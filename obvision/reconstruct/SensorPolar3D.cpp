@@ -103,7 +103,7 @@ void SensorPolar3D::setDistanceMap(vector<float> phi, vector<float> dist)
     }
   }
 
-  char filename[128];
+  /*char filename[128];
   static int cnt = 0;
   sprintf(filename, "/tmp/map%05d.pbm", cnt++);
   unsigned char* map = new unsigned char[_planes*_beams];
@@ -111,7 +111,7 @@ void SensorPolar3D::setDistanceMap(vector<float> phi, vector<float> dist)
     for(unsigned int c=0; c<_planes; c++)
       map[r*_planes+c] = (_indexMap[r][c]!=-1 ? 0 : 255);
   serializePBM(filename, map, _planes, _beams);
-  delete [] map;
+  delete [] map;*/
 }
 
 void SensorPolar3D::backProject(Matrix* M, int* indices)
@@ -119,7 +119,7 @@ void SensorPolar3D::backProject(Matrix* M, int* indices)
   Timer t;
   Matrix PoseInv = (*_Pose);
   PoseInv.invert();
-  PoseInv.print();
+  //PoseInv.print();
   gsl_matrix* coords3D = gsl_matrix_alloc(4, M->getRows());
 
   gsl_blas_dgemm(CblasNoTrans, CblasTrans, 1.0, PoseInv.getBuffer(), M->getBuffer(), 0.0, coords3D);
