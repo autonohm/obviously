@@ -49,7 +49,7 @@ TsdSpace::TsdSpace(const unsigned int height, const unsigned int width, const un
 
 TsdSpace::~TsdSpace(void)
 {
-  delete [] _space;
+  System<TsdVoxel>::deallocate(_space);
 }
 
 void TsdSpace::reset()

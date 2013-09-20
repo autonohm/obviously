@@ -121,6 +121,7 @@ void SensorProjective3D::backProject(Matrix* M, int* indices)
   }
 
   gsl_matrix_free(coords2D);
+  gsl_matrix_free(Pgen);
 }
 
 }

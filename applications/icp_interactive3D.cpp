@@ -117,7 +117,7 @@ void iterateCallback()
   _icp->reset();
   Timer timer;
   EnumIcpState state  = _icp->iterate(&rms, &pairs, &iterations);
-  cout << "elapsed (" << iterations << " iterations): "  << timer.getTime() << " ms , rms = " << rms << ", # of pairs: " << pairs << endl;
+  cout << "ICP state: " << state << ", elapsed (" << iterations << " iterations): "  << timer.getTime() << " ms , rms = " << rms << ", # of pairs: " << pairs << endl;
 
   Matrix* T           = _icp->getFinalTransformation();
   double Tdata[16];
@@ -133,7 +133,7 @@ void stepCallback()
 
   Timer timer;
   EnumIcpState state  = _icp->step(&rms, &pairs);
-  cout << "elapsed (step): " << timer.getTime() << " ms , rms = " << rms << ", # of pairs: " << pairs << endl;
+  cout << "ICP state: " << state << ", elapsed (step): " << timer.getTime() << " ms , rms = " << rms << ", # of pairs: " << pairs << endl;
 
   Matrix* T           = _icp->getLastTransformation();
   double Tdata[16];

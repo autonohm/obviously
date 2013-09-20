@@ -114,11 +114,18 @@ void _cbRegNewImage(void)
   _filterBounds->setPose(_sensor->getPose());
 
   // Extract model from TSDF space
-  unsigned int subsamplingModel = 10;
+  unsigned int subsamplingModel = 20;
 
   _rayCaster->calcCoordsFromCurrentView(coords, normals, rgb, &size, subsamplingModel);
 
-  if(size==0) return;
+  if(size==0)
+  {
+    delete[] coords;
+    delete[] normals;
+    delete[] rgb;
+    delete[] mask;
+    return;
+  }
 
   //_rayCaster->calcCoordsFromCurrentViewMask(coords, normals, rgb, mask);
   //TriangleMesh* mesh       = new TriangleMesh(rows*cols);
@@ -155,10 +162,9 @@ void _cbRegNewImage(void)
 
   double* coordsScene     = _kinect->getCoords();
   bool* maskScene         = _kinect->getMask();
-  unsigned char* rgbScene = _kinect->getRGB();
 
   // Subsample and filter scene
-  unsigned int subsamplingScene = 50;
+  unsigned int subsamplingScene = 20;
   unsigned int idx = 0;
   for(unsigned int i=0; i<cols*rows; i+=subsamplingScene)
   {
@@ -195,7 +201,7 @@ void _cbRegNewImage(void)
     _sensor->setRealMeasurementMask(_kinect->getMask());
     _sensor->setRealMeasurementRGB(_kinect->getRGB());
     _space->push(_sensor);
-    delete [] dist;
+    delete[] dist;
   }
   else
     LOGMSG(DBG_DEBUG, "Registration failed, RMS " << rms);
@@ -205,6 +211,8 @@ void _cbRegNewImage(void)
   delete[] coords;
   delete[] normals;
   delete[] rgb;
+  delete[] mask;
+
   //delete mesh;
   std::cout << __PRETTY_FUNCTION__ << ": time ellapsed = " << t.getTime() << " ms" << std::endl;
 }
@@ -262,9 +270,9 @@ int main(void)
 
   // ICP configuration
   // ------------------------------------------------------------------
-  unsigned int maxIterations = 15;
+  unsigned int maxIterations = 35;
 
-  PairAssignment* assigner = (PairAssignment*)new FlannPairAssignment(3, 0.0);
+  PairAssignment* assigner = (PairAssignment*)new FlannPairAssignment(3, 0.0, true);
   //PairAssignment* assigner = (PairAssignment*)new ProjectivePairAssignment(Pdata, cols, rows);
 
   IRigidEstimator* estimator = (IRigidEstimator*)new PointToPlaneEstimator3D();
