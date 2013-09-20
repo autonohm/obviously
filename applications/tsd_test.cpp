@@ -126,6 +126,8 @@ int main(void)
   if(sensor.hasRealMeasurmentRGB()) vcloud.setColors(rgb, cnt/3, 3);
 
   Obvious3D viewer("TSD Cloud");
+  viewer.showSensorPose(T);
+  viewer.showAxes(true);
   viewer.addCloud(&vcloud);
   viewer.startRendering();
 
