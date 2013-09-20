@@ -277,7 +277,7 @@ void Obvious3D::showSensorPose(const double* T)
   }
 }
 
-void Obvious3D::showSensorPose(Matrix T)
+void Obvious3D::showSensorPose(Matrix& T)
 {
   vtkSmartPointer<vtkTransform> transform = vtkSmartPointer<vtkTransform>::New();
   double T_tmp[16];

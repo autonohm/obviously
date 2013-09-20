@@ -73,7 +73,11 @@ public:
    */
   void showSensorPose(const double* T);
 
-  void showSensorPose(Matrix T);
+  /**
+   * Function to set transformation with Matrix from obcore
+   * @param[in]     T           Transformation matrix
+   */
+  void showSensorPose(Matrix& T);
 
   /**
    * Register a callback function for a specific keypress event

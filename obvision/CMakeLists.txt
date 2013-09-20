@@ -23,6 +23,7 @@ add_library(obvision
 	icp/assign/filter/DistanceFilter.cpp
 	icp/assign/filter/OutOfBoundsFilter2D.cpp
 	icp/assign/filter/OutOfBoundsFilter3D.cpp
+	icp/assign/filter/RobotFootprintFilter3D.cpp
 	icp/ClosedFormEstimator2D.cpp
 	icp/PointToPointEstimator3D.cpp
 	icp/PointToPlaneEstimator3D.cpp
