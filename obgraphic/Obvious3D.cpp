@@ -12,9 +12,9 @@
 #include <vtkProperty.h>
 #include <vtkInteractorStyleSwitch.h>
 #include <vtkOrientationMarkerWidget.h>
-#include <vtkAxesActor.h>
 #include <vtkLineSource.h>
 #include <vtkLine.h>
+#include <vtkTransform.h>
 
 #include <iostream>
 #include <string>
@@ -94,6 +94,8 @@ Obvious3D::Obvious3D(const char* windowName, unsigned int sizx, unsigned int siz
   cb->SetCallback(keypressCallback);
   _renderWindowInteractor->AddObserver (vtkCommand::KeyPressEvent, cb);
   _renderWindowInteractor->Initialize();
+
+  _sensor_axes = NULL;
 
   _renderer->GetActiveCamera()->Yaw(180);
 }
@@ -227,15 +229,76 @@ void Obvious3D::startRendering()
 void Obvious3D::showAxes(bool show)
 {
   vtkSmartPointer<vtkAxesActor> axes = vtkSmartPointer<vtkAxesActor>::New();
-	if(show)
-	{
-	  _renderer->AddActor(axes);
-	}
-	else
-	{
-	  _renderer->RemoveActor(axes);
-	}
+  axes->SetXAxisLabelText("Axes");
+  vtkSmartPointer<vtkTransform> transform = vtkSmartPointer<vtkTransform>::New();
+  transform->Scale(0.2, 0.2, 0.2);
+  axes->SetUserTransform(transform);
+  if(show)
+    _renderer->AddActor(axes);
+  else
+    _renderer->RemoveActor(axes);
 }
+
+void Obvious3D::showSensorPosition(const double* position)
+{
+  vtkSmartPointer<vtkTransform> transform = vtkSmartPointer<vtkTransform>::New();
+  transform->Translate(position);
+  transform->Scale(0.2, 0.2, 0.2);
+
+  if (_sensor_axes == NULL)
+  {
+    _sensor_axes = vtkSmartPointer<vtkAxesActor>::New();
+    _sensor_axes->SetUserTransform(transform);
+    _sensor_axes->SetXAxisLabelText("Sensor");
+   _renderer->AddActor(_sensor_axes);
+  }
+  else
+  {
+    _sensor_axes->SetUserTransform(transform);
+  }
+}
+
+void Obvious3D::showSensorPose(const double* T)
+{
+  vtkSmartPointer<vtkTransform> transform = vtkSmartPointer<vtkTransform>::New();
+  transform->SetMatrix(T);
+  transform->Scale(0.2, 0.2, 0.2);
+
+  if (_sensor_axes == NULL)
+  {
+    _sensor_axes = vtkSmartPointer<vtkAxesActor>::New();
+    _sensor_axes->SetUserTransform(transform);
+    _sensor_axes->SetXAxisLabelText("Sensor");
+   _renderer->AddActor(_sensor_axes);
+  }
+  else
+  {
+    _sensor_axes->SetUserTransform(transform);
+  }
+}
+
+void Obvious3D::showSensorPose(Matrix& T)
+{
+  vtkSmartPointer<vtkTransform> transform = vtkSmartPointer<vtkTransform>::New();
+  double T_tmp[16];
+  T.getData(T_tmp);
+  transform->SetMatrix(T_tmp);
+  transform->Scale(0.2, 0.2, 0.2);
+
+  if (_sensor_axes == NULL)
+  {
+    _sensor_axes = vtkSmartPointer<vtkAxesActor>::New();
+    _sensor_axes->SetUserTransform(transform);
+    _sensor_axes->SetXAxisLabelText("Sensor");
+    _renderer->AddActor(_sensor_axes);
+  }
+  else
+  {
+    _sensor_axes->SetUserTransform(transform);
+  }
+}
+
+
 
 vtkSmartPointer<vtkRenderer> Obvious3D::getRenderer()
 {
