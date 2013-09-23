@@ -19,14 +19,13 @@ namespace obvious
 class FlannPairAssignment : public PairAssignment
 {
 public:
-	FlannPairAssignment(){init(0.0);};
 	
 	/**
 	 * Standard constructor
 	 * @param dimension dimensionality of dataset
 	 * @param eps used for searching eps-approximate neighbors
 	 **/
-	FlannPairAssignment(int dimension, double eps = 0.0) : PairAssignment(dimension) {init(eps);};
+	FlannPairAssignment(int dimension, double eps = 0.0, bool parallelSearch=false);
 	
 	/**
 	 * Standard destructor
@@ -56,10 +55,22 @@ private:
 	 */
 	void init(double eps);
 
+	/**
+	 * Sequential version of NN-search
+	 */
+	void determinePairsSequential(double** scene, bool* mask, int size);
+
+	/**
+   * OpenMP-accelerated version of NN-search
+   */
+	void determinePairsParallel(double** scene, bool* mask, int size);
+
 	flann::Matrix<double>* _dataset;
 	flann::Index<flann::L2<double> >* _index;
 
 	double _eps;
+
+	bool _useParallelVersion;
 };
 
 }

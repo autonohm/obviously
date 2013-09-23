@@ -9,6 +9,7 @@
 #include "obvision/icp/assign/filter/DistanceFilter.h"
 #include "obvision/icp/assign/filter/OutOfBoundsFilter2D.h"
 #include "obvision/icp/assign/filter/OutOfBoundsFilter3D.h"
+#include "obvision/icp/assign/filter/RobotFootprintFilter3D.h"
 #include "obvision/icp/PointToPointEstimator3D.h"
 #include "obvision/icp/PointToPlaneEstimator3D.h"
 #include "obvision/icp/ClosedFormEstimator2D.h"

@@ -114,9 +114,18 @@ void _cbRegNewImage(void)
   _filterBounds->setPose(_sensor->getPose());
 
   // Extract model from TSDF space
-  unsigned int subsamplingModel = 1;
+  unsigned int subsamplingModel = 20;
 
   _rayCaster->calcCoordsFromCurrentView(coords, normals, rgb, &size, subsamplingModel);
+
+  if(size==0)
+  {
+    delete[] coords;
+    delete[] normals;
+    delete[] rgb;
+    delete[] mask;
+    return;
+  }
 
   //_rayCaster->calcCoordsFromCurrentViewMask(coords, normals, rgb, mask);
   //TriangleMesh* mesh       = new TriangleMesh(rows*cols);
@@ -153,26 +162,22 @@ void _cbRegNewImage(void)
 
   double* coordsScene     = _kinect->getCoords();
   bool* maskScene         = _kinect->getMask();
-  unsigned char* rgbScene = _kinect->getRGB();
 
-  // Estimate scene normal vectors
-  NormalsEstimator nestimator;
-  nestimator.estimateNormals3DGrid(cols, rows, coordsScene, maskScene, normals);
-  LOGMSG(DBG_DEBUG, "Normals estimated");
+  // Subsample and filter scene
+  unsigned int subsamplingScene = 20;
+  unsigned int idx = 0;
+  for(unsigned int i=0; i<cols*rows; i+=subsamplingScene)
+  {
+    if(maskScene[i])
+    {
+      coords[3*idx] = coordsScene[3*i];
+      coords[3*idx+1] = coordsScene[3*i+1];
+      coords[3*idx+2] = coordsScene[3*i+2];
+      idx++;
+    }
+  }
 
-  // Filter scene to ensure proper normal vectors
-  unsigned int subsamplingScene = 10;
-  _vScene->setCoords(coordsScene, rows*cols, 3, normals);
-  _vScene->setColors(rgbScene, cols*rows, 3);
-  _vScene->removeInvalidPoints();
-  _vScene->copyCoords(coords, subsamplingScene);
-  _vScene->copyNormals(normals, subsamplingScene);
-  size = _vScene->getSize();
-  //_vScene->transform(P);
-
-  LOGMSG(DBG_DEBUG, "ICP scene size " << size);
-  _icp->setScene(coords, normals, size/subsamplingScene);
-  LOGMSG(DBG_DEBUG, "ICP scene set");
+  _icp->setScene(coords, NULL, idx);
 
   // Perform ICP registration
   double rms = 0;
@@ -196,7 +201,7 @@ void _cbRegNewImage(void)
     _sensor->setRealMeasurementMask(_kinect->getMask());
     _sensor->setRealMeasurementRGB(_kinect->getRGB());
     _space->push(_sensor);
-    delete [] dist;
+    delete[] dist;
   }
   else
     LOGMSG(DBG_DEBUG, "Registration failed, RMS " << rms);
@@ -206,6 +211,8 @@ void _cbRegNewImage(void)
   delete[] coords;
   delete[] normals;
   delete[] rgb;
+  delete[] mask;
+
   //delete mesh;
   std::cout << __PRETTY_FUNCTION__ << ": time ellapsed = " << t.getTime() << " ms" << std::endl;
 }
@@ -263,16 +270,12 @@ int main(void)
 
   // ICP configuration
   // ------------------------------------------------------------------
-  unsigned int maxIterations = 15;
+  unsigned int maxIterations = 35;
 
-  PairAssignment* assigner = (PairAssignment*)new FlannPairAssignment(3, 0.0);
+  PairAssignment* assigner = (PairAssignment*)new FlannPairAssignment(3, 0.0, true);
   //PairAssignment* assigner = (PairAssignment*)new ProjectivePairAssignment(Pdata, cols, rows);
 
   IRigidEstimator* estimator = (IRigidEstimator*)new PointToPlaneEstimator3D();
-
-  // Subsampling for speeding up runtime
-  IPreAssignmentFilter* filterS = (IPreAssignmentFilter*)new SubsamplingFilter(50);
-  assigner->addPreFilter(filterS);
 
   // Out-of-Bounds filter to remove measurements outside TSD space
   _filterBounds = new OutOfBoundsFilter3D(_space->getMinX(), _space->getMaxX(), _space->getMinY(), _space->getMaxY(), _space->getMinZ(), _space->getMaxZ());
@@ -299,7 +302,7 @@ int main(void)
   double* coords = _kinect->getCoords();
   // Convert to Euklidean distances
   double* dist = new double[cols*rows];
-  for(int i=0; i<cols*rows; i++)
+  for(unsigned int i=0; i<cols*rows; i++)
     dist[i] = abs3D(&coords[3*i]);
   _sensor->setRealMeasurementData(dist);
   _sensor->setRealMeasurementMask(_kinect->getMask());

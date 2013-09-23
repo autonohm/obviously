@@ -121,8 +121,8 @@ bool RayCast3D::generatePointCloud(double** pointCloud, double** cloudNormals, u
   std::vector<double> vNormals;
   std::vector<unsigned char> vRGB;
 
-  double *footPoint = new double[3];
-  double *dirVec = new double[3];
+  double footPoint[3];
+  double dirVec[3];
   unsigned int steps;
 
   //parallel to x-axis
@@ -230,8 +230,8 @@ bool RayCast3D::generatePointCloudPositive(double** pointCloud, double** cloudNo
   std::vector<double> vNormals;
   std::vector<unsigned char> vRGB;
 
-  double *footPoint = new double[3];
-  double *dirVec = new double[3];
+  double footPoint[3];
+  double dirVec[3];
   unsigned int steps;
 
   //x_parallel

@@ -52,6 +52,7 @@ void RayCastProjective3D::calcCoordsFromCurrentView(double* coords, double* norm
       {
         double ray[3];
         _sensor->calcRayFromCurrentPose(row, col, ray);
+
         if(rayCastFromSensorPose(ray, c, n, color, &depth, _sensor)) // Ray returned with coordinates
         {
           M[0][0] = c[0];
