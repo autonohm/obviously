@@ -7,6 +7,7 @@
 #include "SensorProjective3D.h"
 
 #include <cstring>
+#include <cmath>
 #include <omp.h>
 
 namespace obvious
@@ -60,7 +61,7 @@ void TsdSpace::reset()
     {
       for (int x = 0; x < _xDim; x++)
       {
-        _space[z][y][x].tsdf   = 0.0;
+        _space[z][y][x].tsdf   = NAN;
         _space[z][y][x].weight = 0.0;
       }
     }
@@ -119,10 +120,10 @@ double TsdSpace::getMaxZ()
 
 void TsdSpace::setMaxTruncation(double val)
 {
-  if(val < 2 * _voxelSize)
+  if(val < 2.0 * _voxelSize)
   {
     LOGMSG(DBG_WARN, "Truncation radius must be at 2 x voxel dimension. Setting minimum size.");
-    val = 2 * _voxelSize;
+    val = 2.0 * _voxelSize;
   }
 
   _maxTruncation = val;
@@ -270,22 +271,25 @@ bool TsdSpace::interpolateTrilinear(double coord[3], double* tsdf)
   Point p;
   if(!coord2Voxel(coord, &x, &y, &z, &p)) return false;
 
+  double tsdf_cell = _space[z][y][x].tsdf;
+  if(isnan(tsdf_cell)) return false;
+
   // get weights
   double wX = (coord[0] - p.x) * _invVoxelSize;
   double wY = (coord[1] - p.y) * _invVoxelSize;
   double wZ = (coord[2] - p.z) * _invVoxelSize;
 
   // Interpolate
-  *tsdf =   _space[z + 0][y + 0][x + 0].tsdf * (1. - wX) * (1. - wY) * (1. - wZ)
-                      + _space[z + 1][y + 0][x + 0].tsdf * (1. - wX) * (1. - wY) * wZ
-                      + _space[z + 0][y - 1][x + 0].tsdf * (1. - wX) * wY * (1. - wZ)
-                      + _space[z + 1][y - 1][x + 0].tsdf * (1. - wX) * wY * wZ
-                      + _space[z + 0][y + 0][x + 1].tsdf * wX * (1. - wY) * (1. - wZ)
-                      + _space[z + 1][y + 0][x + 1].tsdf * wX * (1. - wY) * wZ
-                      + _space[z + 0][y - 1][x + 1].tsdf * wX * wY * (1. - wZ)
-                      + _space[z + 1][y - 1][x + 1].tsdf * wX * wY * wZ;
+  *tsdf =   tsdf_cell * (1. - wX) * (1. - wY) * (1. - wZ)
+        +  _space[z + 1][y + 0][x + 0].tsdf * (1. - wX) * (1. - wY) * wZ
+        +  _space[z + 0][y - 1][x + 0].tsdf * (1. - wX) * wY * (1. - wZ)
+        +  _space[z + 1][y - 1][x + 0].tsdf * (1. - wX) * wY * wZ
+        +  _space[z + 0][y + 0][x + 1].tsdf * wX * (1. - wY) * (1. - wZ)
+        +  _space[z + 1][y + 0][x + 1].tsdf * wX * (1. - wY) * wZ
+        +  _space[z + 0][y - 1][x + 1].tsdf * wX * wY * (1. - wZ)
+        +  _space[z + 1][y - 1][x + 1].tsdf * wX * wY * wZ;
 
-  return true;
+  return(!isnan(*tsdf));
 }
 
 bool TsdSpace::interpolateTrilinearRGB(double coord[3], unsigned char rgb[3])
@@ -356,18 +360,19 @@ bool TsdSpace::interpolateTrilinearRGB(double coord[3], unsigned char rgb[3])
 void TsdSpace::addTsdfValue(const unsigned int col, const unsigned int row, const unsigned int z, double sdf, unsigned char* rgb)
 {
 
-  if(sdf >= -_maxTruncation) // Voxel is in front of an object
+  if(sdf >= -_maxTruncation && sdf <=_maxTruncation) // Voxel is in front of an object
   {
     TsdVoxel* voxel = &_space[z][(_yDim - 1) - row][col];
 
     // determine whether sdf/max_truncation = ]-1;1[
     double tsdf = sdf / _maxTruncation;
-    tsdf = min(tsdf, 1.0);
+    //tsdf = min(tsdf, 1.0);
 
     voxel->weight += 1.0;
     const double invWeight = 1.0 / voxel->weight;
-    voxel->tsdf   = (voxel->tsdf * (voxel->weight - 1.0) + tsdf) * invWeight;
-
+    if(isnan(voxel->tsdf)) voxel->tsdf = tsdf;
+    else
+      voxel->tsdf   = (voxel->tsdf * (voxel->weight - 1.0) + tsdf) * invWeight;
     if(rgb)
     {
       voxel->rgb[0] = (unsigned char)( (((double)voxel->rgb[0]) * (voxel->weight-1.0) + ((double)rgb[0]) ) * invWeight);

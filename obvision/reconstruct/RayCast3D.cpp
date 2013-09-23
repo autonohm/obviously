@@ -74,11 +74,15 @@ bool RayCast3D::rayCastFromSensorPose(double ray[3], double coordinates[3], doub
     position[2] += ray[2];
 
     double tsdf;
-    if (!_space->interpolateTrilinear(position, &tsdf))
+    bool retval = _space->interpolateTrilinear(position, &tsdf);
+    if (!retval)
+    {
+      tsdf_prev = tsdf;
       continue;
+    }
 
     // check sign change
-    if(tsdf_prev > 0 && tsdf_prev < 0.99999 && tsdf < 0)
+    if(tsdf_prev > 0 && tsdf < 0)
     {
       interp = tsdf_prev / (tsdf_prev - tsdf);
       if(sensor->hasRealMeasurmentRGB()) _space->interpolateTrilinearRGB(position, rgb);
@@ -94,9 +98,6 @@ bool RayCast3D::rayCastFromSensorPose(double ray[3], double coordinates[3], doub
   // interpolate between voxels when sign changes
   for (unsigned int i = 0; i < 3; i++)
     coordinates[i] = position_prev[i] + ray[i] * interp;
-
-  //for (unsigned int i = 0; i < 3; i++)
-  //    coordinates[i] = ray[i] * 1.0;
 
   if(!_space->interpolateNormal(coordinates, normal))
     return false;

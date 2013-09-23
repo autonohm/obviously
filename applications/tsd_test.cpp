@@ -50,7 +50,7 @@ int main(void)
   sensor.transform(&T);
 
   TsdSpace space(1.0, 1.0, 1.0, voxelSize);
-  space.setMaxTruncation(2*voxelSize);
+  space.setMaxTruncation(3.0*voxelSize);
 
   double distZ[cols*rows];
 
