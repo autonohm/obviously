@@ -30,13 +30,17 @@ public:
    */
   ~SensorPolar3D();
 
+  unsigned int getBeams();
+
+  unsigned int getPlanes();
+
   /**
    * Calculate ray of specific beam
    * @param[in] beam beam index
    * @param[in] plane scanning plane index
    * @param[out] ray vector
    */
-  void calcRay(unsigned int beam, unsigned int plane, double ray[3]);
+  void calcRayFromCurrentPose(unsigned int beam, unsigned int plane, double ray[3]);
 
   /**
    * Parallel version of back projection

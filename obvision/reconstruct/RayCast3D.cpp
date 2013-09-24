@@ -20,9 +20,93 @@ RayCast3D::~RayCast3D()
 
 }
 
+bool RayCast3D::rayCastFromSensorPose(double ray[3], double coordinates[3], double normal[3], unsigned char rgb[3], double* depth, Sensor* sensor)
+{
+  double tr[3];
+
+  sensor->getPosition(tr);
+
+  double position[3];
+  double position_prev[3];
+
+  int xDim = _space->getXDimension();
+  int yDim = _space->getYDimension();
+  int zDim = _space->getZDimension();
+  double voxelSize = _space->getVoxelSize();
+
+  // Interpolation weight
+  double interp;
+
+  double xmin   = -10e9;
+  double ymin   = -10e9;
+  double zmin   = -10e9;
+  if(fabs(ray[0])>10e-6) xmin = ((double)(ray[0] > 0.0 ? 0 : (xDim-1)*voxelSize) - tr[0]) / ray[0];
+  if(fabs(ray[1])>10e-6) ymin = ((double)(ray[1] > 0.0 ? 0 : (yDim-1)*voxelSize) - tr[1]) / ray[1];
+  if(fabs(ray[2])>10e-6) zmin = ((double)(ray[2] > 0.0 ? 0 : (zDim-1)*voxelSize) - tr[2]) / ray[2];
+  double idxMin = max(max(xmin, ymin), zmin);
+  idxMin        = max(idxMin, 0.0);
+
+  double xmax   = 10e9;
+  double ymax   = 10e9;
+  double zmax   = 10e9;
+  if(fabs(ray[0])>10e-6) xmax = ((double)(ray[0] > 0.0 ? (xDim-1)*voxelSize : 0) - tr[0]) / ray[0];
+  if(fabs(ray[1])>10e-6) ymax = ((double)(ray[1] > 0.0 ? (yDim-1)*voxelSize : 0) - tr[1]) / ray[1];
+  if(fabs(ray[2])>10e-6) zmax = ((double)(ray[2] > 0.0 ? (zDim-1)*voxelSize : 0) - tr[2]) / ray[2];
+  double idxMax = min(min(xmax, ymax), zmax);
+
+  if (idxMin >= idxMax)
+    return false;
+
+  double tsdf_prev;
+  position[0] = tr[0] + idxMin * ray[0];
+  position[1] = tr[1] + idxMin * ray[1];
+  position[2] = tr[2] + idxMin * ray[2];
+  _space->interpolateTrilinear(position, &tsdf_prev);
+
+  bool found = false;
+  for(int i=idxMin; i<idxMax; i++)
+  {
+    // calculate current position
+    memcpy(position_prev, position, 3 * sizeof(*position));
+
+    position[0] += ray[0];
+    position[1] += ray[1];
+    position[2] += ray[2];
+
+    double tsdf;
+    bool retval = _space->interpolateTrilinear(position, &tsdf);
+    if (!retval)
+    {
+      tsdf_prev = tsdf;
+      continue;
+    }
+
+    // check sign change
+    if(tsdf_prev > 0 && tsdf < 0)
+    {
+      interp = tsdf_prev / (tsdf_prev - tsdf);
+      if(sensor->hasRealMeasurmentRGB()) _space->interpolateTrilinearRGB(position, rgb);
+      found = true;
+      break;
+    }
+
+    tsdf_prev = tsdf;
+  }
+
+  if(!found) return false;
+
+  // interpolate between voxels when sign changes
+  for (unsigned int i = 0; i < 3; i++)
+    coordinates[i] = position_prev[i] + ray[i] * interp;
+
+  if(!_space->interpolateNormal(coordinates, normal))
+    return false;
+
+  return true;
+}
+
 bool RayCast3D::generatePointCloud(double** pointCloud, double** cloudNormals, unsigned char** cloudRgb, unsigned int* size)
 {
-
   // X_AXS parallel to X-Axis Borders : COL = _zDim, ROW = _yDim
   // X_AXS_N parallel to X-Axis negative direction
   // Y_AXS parallel to Y-Axis Borders : COL = _xDim, ROW = _zDim
@@ -37,8 +121,8 @@ bool RayCast3D::generatePointCloud(double** pointCloud, double** cloudNormals, u
   std::vector<double> vNormals;
   std::vector<unsigned char> vRGB;
 
-  double *footPoint = new double[3];
-  double *dirVec = new double[3];
+  double footPoint[3];
+  double dirVec[3];
   unsigned int steps;
 
   //parallel to x-axis
@@ -146,8 +230,8 @@ bool RayCast3D::generatePointCloudPositive(double** pointCloud, double** cloudNo
   std::vector<double> vNormals;
   std::vector<unsigned char> vRGB;
 
-  double *footPoint = new double[3];
-  double *dirVec = new double[3];
+  double footPoint[3];
+  double dirVec[3];
   unsigned int steps;
 
   //x_parallel

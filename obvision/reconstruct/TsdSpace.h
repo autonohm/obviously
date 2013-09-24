@@ -58,6 +58,11 @@ public:
  virtual ~TsdSpace();
 
  /**
+  * Reset space to initial state
+  */
+ void reset();
+
+ /**
   * Get number of voxels in x-direction
   */
  unsigned int getXDimension();
@@ -181,8 +186,6 @@ private:
 
  TsdVoxel*** _space;
 
- Matrix* _voxelCoordsHom;
-
  double _voxelSize;
 
  double _invVoxelSize;
@@ -200,8 +203,6 @@ private:
  double _minZ;
 
  double _maxZ;
-
- Matrix*** _rays;
 };
 
 }

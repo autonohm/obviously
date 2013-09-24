@@ -4,6 +4,7 @@
 #include <vector>
 #include <map>
 #include <math.h>
+#include <string>
 
 #include <gsl/gsl_matrix.h>
 #include "obcore/math/Matrix.h"
@@ -164,6 +165,18 @@ namespace obvious
      */
     void createZBuffer(unsigned char* pImage, double* zbuffer, gsl_matrix* P, int nW, int nH);
 
+    /**
+     * Set identifier
+     * @param id string identifier
+     */
+    void setId(const string& id){_id = id;}
+
+    /**
+     * get identifier
+     * @return id string identifier
+     */
+    const string& id(void)const{return(_id);}
+
   private:
 
     void init(unsigned int size, bool withInfo);
@@ -191,6 +204,11 @@ namespace obvious
      * Source info map
      */
     map<int, long> _mSourceInfo;
+
+    /**
+     * string identifier
+     */
+    string _id;
 
   };
 

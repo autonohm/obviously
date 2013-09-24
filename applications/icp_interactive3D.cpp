@@ -72,7 +72,7 @@ int main(int argc, char* argv[])
   double P[12]  = {585.05108211, 0.00000000, 315.83800193, 0., 0.00000000, 585.05108211, 242.94140713, 0., 0.00000000, 0.00000000, 1.00000000, 0.};
 
   OcclusionFilter* filterO = new OcclusionFilter(P, 640, 480);
-  if(pre == 2 | pre == 3)
+  if(pre == 2 || pre == 3)
     assigner->addPreFilter(filterO);
 
   IPreAssignmentFilter* filterS = (IPreAssignmentFilter*) new SubsamplingFilter(25);
@@ -80,7 +80,7 @@ int main(int argc, char* argv[])
 
   ProjectionFilter* filterP = new ProjectionFilter(P, 640, 480);
   filterP->setModel(model);
-  if(pre == 1 | pre == 3)
+  if(pre == 1 || pre == 3)
     assigner->addPreFilter(filterP);
 
   IPostAssignmentFilter* filterD = (IPostAssignmentFilter*) new DistanceFilter(1.5, 0.03, iterations);
@@ -117,7 +117,7 @@ void iterateCallback()
   _icp->reset();
   Timer timer;
   EnumIcpState state  = _icp->iterate(&rms, &pairs, &iterations);
-  cout << "elapsed (" << iterations << " iterations): "  << timer.getTime() << " ms , rms = " << rms << ", # of pairs: " << pairs << endl;
+  cout << "ICP state: " << state << ", elapsed (" << iterations << " iterations): "  << timer.getTime() << " ms , rms = " << rms << ", # of pairs: " << pairs << endl;
 
   Matrix* T           = _icp->getFinalTransformation();
   double Tdata[16];
@@ -133,7 +133,7 @@ void stepCallback()
 
   Timer timer;
   EnumIcpState state  = _icp->step(&rms, &pairs);
-  cout << "elapsed (step): " << timer.getTime() << " ms , rms = " << rms << ", # of pairs: " << pairs << endl;
+  cout << "ICP state: " << state << ", elapsed (step): " << timer.getTime() << " ms , rms = " << rms << ", # of pairs: " << pairs << endl;
 
   Matrix* T           = _icp->getLastTransformation();
   double Tdata[16];

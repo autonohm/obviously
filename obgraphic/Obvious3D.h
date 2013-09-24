@@ -9,6 +9,10 @@
 #include <vtkPolyData.h>
 #include "VtkCloud.h"
 #include <vtkExtractSelectedFrustum.h>
+#include <vtkAxesActor.h>
+#include "../obcore/math/Matrix.h"
+
+
 
 #include "Obvious.h"
 
@@ -58,6 +62,24 @@ public:
   void showAxes(bool show = true);
 
   /**
+   * Function to show position of sensor in viewer
+   * @param[in]     position    position in x,y,z
+   */
+  void showSensorPosition(const double* position);
+
+  /**
+   * Function to set transformation matrix to view sensor
+   * @param[in]     T           Transformation matrix with size 16
+   */
+  void showSensorPose(const double* T);
+
+  /**
+   * Function to set transformation with Matrix from obcore
+   * @param[in]     T           Transformation matrix
+   */
+  void showSensorPose(Matrix& T);
+
+  /**
    * Register a callback function for a specific keypress event
    * @param key key code
    * @param fptr function pointer
@@ -69,15 +91,20 @@ public:
   void registerIncVariable(const char key[], double* var, double inc);
 
   vtkSmartPointer<vtkRenderer> getRenderer();
+
   vtkSmartPointer<vtkRenderWindowInteractor> getWindowInteractor();
 
   void setFrustum(double xmin, double xmax, double ymin, double ymax, double zmin, double zmax);
+
+  void addAxisAlignedCube(double xmin, double xmax, double ymin, double ymax, double zmin, double zmax);
+
 private:
 
   vtkSmartPointer<vtkRenderer>                _renderer;
   vtkSmartPointer<vtkRenderWindow>            _renderWindow;
   vtkSmartPointer<vtkRenderWindowInteractor>  _renderWindowInteractor;
   vtkSmartPointer<vtkExtractSelectedFrustum>  _frust;
+  vtkSmartPointer<vtkAxesActor>               _sensor_axes;
 };
 
 }

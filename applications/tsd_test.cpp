@@ -44,12 +44,13 @@ int main(void)
   double tv = 240;
   double PData[12]  = {su, 0, tu, 0, 0, sv, tv, 0, 0, 0, 1, 0};
 
-  SensorProjective3D sensor(cols, rows, PData);
+  double voxelSize = 0.02;
+
+  SensorProjective3D sensor(cols, rows, PData, voxelSize);
   sensor.transform(&T);
 
-  double voxelSize = 0.02;
   TsdSpace space(1.0, 1.0, 1.0, voxelSize);
-  space.setMaxTruncation(2*voxelSize);
+  space.setMaxTruncation(3.0*voxelSize);
 
   double distZ[cols*rows];
 
@@ -125,6 +126,8 @@ int main(void)
   if(sensor.hasRealMeasurmentRGB()) vcloud.setColors(rgb, cnt/3, 3);
 
   Obvious3D viewer("TSD Cloud");
+  viewer.showSensorPose(T);
+  viewer.showAxes(true);
   viewer.addCloud(&vcloud);
   viewer.startRendering();
 

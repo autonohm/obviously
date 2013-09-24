@@ -10,6 +10,8 @@
 #ifndef __PIDCONTROLLER__
 #define __PIDCONTROLLER__
 
+#include "IntegratorSimpson.h"
+
 /**
  * @namespace of obvious library
  */
@@ -125,6 +127,7 @@ public:
   float controll(const float& isValue);
 
 private:
+  IntegratorSimpson      _integrator;
   float _p;               ///< proportional value of pid controller
   float _i;               ///< integrational value of pid controller
   float _d;               ///< derivation value of pid controller

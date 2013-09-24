@@ -22,40 +22,27 @@ public:
   /**
    *
    */
-	RayCastProjective3D(const unsigned int cols, const unsigned int rows, SensorProjective3D* sensor, TsdSpace* space);
+  RayCastProjective3D(const unsigned int cols, const unsigned int rows, SensorProjective3D* sensor, TsdSpace* space);
 
   /**
    *
    */
-	~RayCastProjective3D();
+  ~RayCastProjective3D();
 
-	/**
-	 *
-	 */
-	void calcCoordsFromCurrentView(double* coords, double* normals, unsigned char* rgb, unsigned int* ctr, unsigned int subsampling=1);
+  /**
+   *
+   */
+  void calcCoordsFromCurrentView(double* coords, double* normals, unsigned char* rgb, unsigned int* ctr, unsigned int subsampling=1);
+
+  void calcCoordsFromCurrentViewMask(double* coords, double* normals, unsigned char* rgb, bool* mask);
 
 private:
 
-  /**
-   *
-   */
-	bool rayCastFromCurrentView(const unsigned int row, const unsigned int col, double coordinates[3], double normal[3], unsigned char rgb[3], double* depth);
+  unsigned int _cols;
 
-  /**
-   *
-   */
-	void calcRayFromCurrentView(const unsigned int row, const unsigned int col, double dirVec[3]);
+  unsigned int _rows;
 
-
-	 Matrix*** _rays;
-
-	 TsdSpace* _space;
-
-	 SensorProjective3D* _sensor;
-
-	 unsigned int _cols;
-
-	 unsigned int _rows;
+  SensorProjective3D* _sensor;
 };
 
 }

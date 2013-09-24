@@ -31,6 +31,11 @@ void Sensor::transform(Matrix* T)
   (*_Pose) *= (*T);
 }
 
+void Sensor::setPose(Matrix* T)
+{
+  (*_Pose) = (*T);
+}
+
 Matrix* Sensor::getPose()
 {
   return _Pose;
@@ -90,6 +95,12 @@ bool Sensor::hasRealMeasurmentAccuracy()
 void Sensor::setRealMeasurementMask(bool* mask)
 {
   memcpy(_mask, mask, _size*sizeof(*mask));
+}
+
+void Sensor::setRealMeasurementMask(vector<unsigned char> mask)
+{
+  for(unsigned int i=0; i<mask.size(); i++)
+    _mask[i] = mask[i];
 }
 
 bool* Sensor::getRealMeasurementMask()

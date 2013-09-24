@@ -21,8 +21,9 @@ public:
    * @param[in] cols number of image columns
    * @param[in] rows number of image rows
    * @param[in] PData 3x4 projection matrix
+   * @param[in] voxelSize edge length of voxel
    */
-  SensorProjective3D(unsigned int cols, unsigned int rows, double PData[12]);
+  SensorProjective3D(unsigned int cols, unsigned int rows, double PData[12], double voxelSize);
 
   /**
    * Destructor
@@ -45,6 +46,11 @@ public:
    */
   void backProject(Matrix* M, int* indices);
 
+  /**
+   *
+   */
+  void calcRayFromCurrentPose(const unsigned int row, const unsigned int col, double dirVec[3]);
+
 private:
 
   unsigned int _cols;
@@ -52,6 +58,8 @@ private:
   unsigned int _rows;
 
   Matrix* _P;
+
+  Matrix*** _rays;
 
 };
 

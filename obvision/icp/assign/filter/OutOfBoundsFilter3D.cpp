@@ -30,7 +30,7 @@ void OutOfBoundsFilter3D::filter(double** scene, unsigned int size, bool* mask)
 {
   double** sceneAligned;
   System<double>::allocate(size, 3, sceneAligned);
-  memcpy(*sceneAligned, *scene, size*3);
+  memcpy(*sceneAligned, *scene, size*3*sizeof(double));
 
   // Apply rotation
   gsl_matrix_view points = gsl_matrix_view_array(*sceneAligned, size, 3);
@@ -51,7 +51,10 @@ void OutOfBoundsFilter3D::filter(double** scene, unsigned int size, bool* mask)
 
   for(unsigned int i=0; i<size; i++)
   {
-    double* pt = gsl_matrix_ptr(&points.matrix, i, 0);
+    //double* pt = gsl_matrix_ptr(&points.matrix, i, 0);
+    //double* pt2 = &((*scene)[3*i]);
+    double* pt = sceneAligned[i];
+    //if(mask[i]) cout << pt[0] << " " << pt[1] << " " << pt[2] << " " << pt2[0] << " " << pt2[1] << " " << pt2[2] << endl;
     if(pt[0]<_xMin || pt[0]>_xMax || pt[1]<_yMin || pt[1]>_yMax || pt[2]<_zMin || pt[2]>_zMax)
       mask[i] = false;
   }

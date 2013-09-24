@@ -23,6 +23,7 @@ add_library(obvision
 	icp/assign/filter/DistanceFilter.cpp
 	icp/assign/filter/OutOfBoundsFilter2D.cpp
 	icp/assign/filter/OutOfBoundsFilter3D.cpp
+	icp/assign/filter/RobotFootprintFilter3D.cpp
 	icp/ClosedFormEstimator2D.cpp
 	icp/PointToPointEstimator3D.cpp
 	icp/PointToPlaneEstimator3D.cpp
@@ -34,9 +35,11 @@ add_library(obvision
 	reconstruct/SensorPolar2D.cpp
 	reconstruct/SensorPolar3D.cpp
 	reconstruct/SensorProjective3D.cpp
+	reconstruct/SensorPolar3D.cpp
 	reconstruct/TsdGrid.cpp
 	reconstruct/TsdSpace.cpp
     reconstruct/RayCastPolar2D.cpp
 	reconstruct/RayCast3D.cpp
 	reconstruct/RayCastProjective3D.cpp
+	reconstruct/RayCastPolar3D.cpp
 	)
