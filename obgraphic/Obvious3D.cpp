@@ -230,6 +230,7 @@ void Obvious3D::showAxes(bool show)
 {
   vtkSmartPointer<vtkAxesActor> axes = vtkSmartPointer<vtkAxesActor>::New();
   axes->SetXAxisLabelText("Axes");
+  axes->AxisLabelsOff();
   vtkSmartPointer<vtkTransform> transform = vtkSmartPointer<vtkTransform>::New();
   transform->Scale(0.2, 0.2, 0.2);
   axes->SetUserTransform(transform);
@@ -250,6 +251,7 @@ void Obvious3D::showSensorPosition(const double* position)
     _sensor_axes = vtkSmartPointer<vtkAxesActor>::New();
     _sensor_axes->SetUserTransform(transform);
     _sensor_axes->SetXAxisLabelText("Sensor");
+    _sensor_axes->AxisLabelsOff();
    _renderer->AddActor(_sensor_axes);
   }
   else
@@ -269,6 +271,7 @@ void Obvious3D::showSensorPose(const double* T)
     _sensor_axes = vtkSmartPointer<vtkAxesActor>::New();
     _sensor_axes->SetUserTransform(transform);
     _sensor_axes->SetXAxisLabelText("Sensor");
+    _sensor_axes->AxisLabelsOff();
    _renderer->AddActor(_sensor_axes);
   }
   else
@@ -290,6 +293,7 @@ void Obvious3D::showSensorPose(Matrix& T)
     _sensor_axes = vtkSmartPointer<vtkAxesActor>::New();
     _sensor_axes->SetUserTransform(transform);
     _sensor_axes->SetXAxisLabelText("Sensor");
+    _sensor_axes->AxisLabelsOff();
     _renderer->AddActor(_sensor_axes);
   }
   else
