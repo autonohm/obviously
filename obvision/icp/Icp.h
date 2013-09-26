@@ -18,6 +18,8 @@ using namespace obvious;
 namespace obvious
 {
 
+typedef void (*fptrAssignmentCallback)(double**, double**, unsigned int);
+
 /**
  * ICP return states
  */
@@ -44,14 +46,15 @@ public:
 	 * @param estimator transformation estimator
 	 * @param pDistanceThreshold thresholding strategy
 	 */
-	Icp(PairAssignment* assigner,
-		 IRigidEstimator* estimator);
+	Icp(PairAssignment* assigner, IRigidEstimator* estimator);
 		 
 	/**
 	 * Destructor
 	 */
 	~Icp();
 	
+	void setAssignmentCallback(fptrAssignmentCallback fptr);
+
 	/**
 	 * convert enumeration to char*
 	 * @param eState state enumeration
@@ -255,6 +258,8 @@ private:
 	int _dim;
 
 	unsigned int _convCnt;
+
+	fptrAssignmentCallback _fptrCallbackPairs;
 };
 
 }

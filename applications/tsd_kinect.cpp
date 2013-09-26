@@ -18,7 +18,7 @@
 
 #include "obvision/reconstruct/TsdSpace.h"
 #include "obvision/reconstruct/SensorProjective3D.h"
-#include "obvision/reconstruct/RayCastProjective3D.h"
+#include "obvision/reconstruct/RayCast3D.h"
 
 using namespace obvious;
 
@@ -31,7 +31,7 @@ Matrix* _T;
 Matrix _Tinit(4, 4);
 Kinect* _kinect;
 TsdSpace* _space;
-RayCastProjective3D* _rayCaster;
+RayCast3D* _rayCaster;
 SensorProjective3D* _sensor;
 VtkCloud* _vModel;
 VtkCloud* _vScene;
@@ -113,10 +113,7 @@ void _cbRegNewImage(void)
   _sensor->getPose()->print();
   _filterBounds->setPose(_sensor->getPose());
 
-  // Extract model from TSDF space
-  unsigned int subsamplingModel = 20;
-
-  _rayCaster->calcCoordsFromCurrentView(coords, normals, rgb, &size, subsamplingModel);
+  _rayCaster->calcCoordsFromCurrentPose(_sensor, coords, normals, rgb, &size);
 
   if(size==0)
   {
@@ -310,7 +307,7 @@ int main(void)
   _space->push(_sensor);
   delete [] dist;
 
-  _rayCaster = new RayCastProjective3D(cols, rows, _sensor, _space);
+  _rayCaster = new RayCast3D(_space);
 
   // Displaying stuff
   // ------------------------------------------------------------------

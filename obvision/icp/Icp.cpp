@@ -32,6 +32,8 @@ Icp::Icp(PairAssignment* assigner, IRigidEstimator* estimator)
 
   _convCnt = 5;
 
+  _fptrCallbackPairs = NULL;
+
   this->reset();
 }
 
@@ -41,6 +43,11 @@ Icp::~Icp()
   if(_scene != NULL) System<double>::deallocate(_scene);
   delete(_Tlast);
   delete(_Tfinal);
+}
+
+void Icp::setAssignmentCallback(fptrAssignmentCallback fptr)
+{
+  _fptrCallbackPairs = fptr;
 }
 
 const char* Icp::state2char(EnumIcpState eState)
@@ -251,6 +258,25 @@ EnumIcpState Icp::step(double* rms, unsigned int* pairs)
 
   pvPairs = _assigner->getPairs();
   *pairs = pvPairs->size();
+
+  if(_fptrCallbackPairs)
+  {
+    double** m;
+    System<double>::allocate(pvPairs->size(), _dim, m);
+    double** s;
+    System<double>::allocate(pvPairs->size(), _dim, s);
+    for(int i=0; i<pvPairs->size(); i++)
+    {
+      unsigned int idxModel = ((*pvPairs)[i]).indexFirst;
+      unsigned int idxScene = ((*pvPairs)[i]).indexSecond;
+      for(unsigned int j=0; j<_dim; j++)
+      {
+        m[i][j] = _model[idxModel][j];
+        s[i][j] = _scene[idxScene][j];
+      }
+    }
+    _fptrCallbackPairs(m, s, pvPairs->size());
+  }
 
   if(pvPairs->size()>2)
   {

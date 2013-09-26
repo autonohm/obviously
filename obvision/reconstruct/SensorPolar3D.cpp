@@ -15,7 +15,7 @@ SensorPolar3D::SensorPolar3D(unsigned int beams, double thetaRes, double thetaMi
   _Pose = new Matrix(4, 4);
   _Pose->setIdentity();
 
-  _beams = beams;
+  _height = beams;
   _size = beams * 1000;
   _data = new double[_size];
   _mask = new bool[_size];
@@ -31,9 +31,9 @@ SensorPolar3D::SensorPolar3D(unsigned int beams, double thetaRes, double thetaMi
   }
 
   _phiRes = phiRes;
-  _planes = M_PI/_phiRes;
-  System<double>::allocate(beams, _planes, _distanceMap);
-  System<int>::allocate(beams, _planes, _indexMap);
+  _width = M_PI/_phiRes;
+  System<double>::allocate(_height, _width, _distanceMap);
+  System<int>::allocate(_height, _width, _indexMap);
 }
 
 SensorPolar3D::~SensorPolar3D()
@@ -45,16 +45,6 @@ SensorPolar3D::~SensorPolar3D()
   System<int>::deallocate(_indexMap);
 }
 
-unsigned int SensorPolar3D::getBeams()
-{
-  return _beams;
-}
-
-unsigned int SensorPolar3D::getPlanes()
-{
-  return _planes;
-}
-
 void SensorPolar3D::calcRayFromCurrentPose(unsigned int beam, unsigned int plane, double ray[3])
 {
   Matrix Rh(4, 1);
@@ -62,7 +52,7 @@ void SensorPolar3D::calcRayFromCurrentPose(unsigned int beam, unsigned int plane
   double x = sin(theta);
   double z = cos(theta);
 
-  double phi = ((double)plane) / ((double)_planes) * M_PI - M_PI;
+  double phi = ((double)plane) / ((double)_width) * M_PI - M_PI;
 
   Rh[0][0] = cos(phi) * x;
   Rh[1][0] = sin(phi) * x;
@@ -78,14 +68,14 @@ void SensorPolar3D::setDistanceMap(vector<float> phi, vector<float> dist)
 {
   LOGMSG(DBG_DEBUG, "SensorPolar3D::setDistanceMap");
 
-  if((_beams*phi.size()) != dist.size())
+  if((_height*phi.size()) != dist.size())
   {
     LOGMSG(DBG_WARN, "SensorPolar3D::setDistanceMap: invalid size of vectors ... skipping");
     return;
   }
 
-  double phi_corr = (M_PI / (double)phi.size() / _beams) * 270.0/360.0;
-  for(unsigned int i=0; i<_planes*_beams; i++)
+  double phi_corr = (M_PI / (double)phi.size() / _height) * 270.0/360.0;
+  for(unsigned int i=0; i<_width*_height; i++)
   {
     _distanceMap[0][i] = -1.0;
     _indexMap[0][i] = -1;
@@ -94,23 +84,23 @@ void SensorPolar3D::setDistanceMap(vector<float> phi, vector<float> dist)
   for(unsigned int c=0; c<phi.size(); c++)
   {
     unsigned int cp = phi[c] / _phiRes;
-    for(unsigned int r=0; r<_beams; r++)
+    for(unsigned int r=0; r<_height; r++)
     {
       unsigned int cpr = cp + (unsigned int)(phi_corr/_phiRes * (double)r);
-      if(cpr>_planes) continue;
-      _distanceMap[r][cpr] = dist[c*_beams+r];
-      _indexMap[r][cpr] = c*_beams+r;
+      if(cpr>_width) continue;
+      _distanceMap[r][cpr] = dist[c*_height+r];
+      _indexMap[r][cpr] = c*_height+r;
     }
   }
 
   /*char filename[128];
   static int cnt = 0;
   sprintf(filename, "/tmp/map%05d.pbm", cnt++);
-  unsigned char* map = new unsigned char[_planes*_beams];
-  for(unsigned int r=0; r<_beams; r++)
-    for(unsigned int c=0; c<_planes; c++)
-      map[r*_planes+c] = (_indexMap[r][c]!=-1 ? 0 : 255);
-  serializePBM(filename, map, _planes, _beams);
+  unsigned char* map = new unsigned char[_width*_height];
+  for(unsigned int r=0; r<_height; r++)
+    for(unsigned int c=0; c<_width; c++)
+      map[r*_width+c] = (_indexMap[r][c]!=-1 ? 0 : 255);
+  serializePBM(filename, map, _width, _height);
   delete [] map;*/
 }
 
@@ -143,9 +133,9 @@ void SensorPolar3D::backProject(Matrix* M, int* indices)
     if(t>0)
     {
       unsigned int r = round(t / _thetaRes);
-      if(r<_beams)
+      if(r<_height)
       {
-        unsigned int c = (unsigned int)((M_PI+phi) / M_PI * (double)_planes);
+        unsigned int c = (unsigned int)((M_PI+phi) / M_PI * (double)_width);
         indices[i] = _indexMap[r][c];
       }
       else

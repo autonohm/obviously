@@ -2,6 +2,7 @@
 #define SENSOR_H
 
 #include "obcore/math/Matrix.h"
+#include "obcore/base/Logger.h"
 #include "Sensor.h"
 #include <string.h>
 
@@ -24,6 +25,21 @@ Sensor::~Sensor()
   delete _Pose;
   if(_rgb) delete [] _rgb;
   if(_accuracy) delete [] _accuracy;
+}
+
+unsigned int Sensor::getWidth()
+{
+  return _width;
+}
+
+unsigned int Sensor::getHeight()
+{
+  if(_dim<3)
+  {
+    LOGMSG(DBG_ERROR, "Sensor does not provide a two-dimensional measurement array");
+    return 0;
+  }
+  return _height;
 }
 
 void Sensor::transform(Matrix* T)
@@ -122,6 +138,11 @@ void Sensor::setRealMeasurementRGB(unsigned char* rgb)
 unsigned char* Sensor::getRealMeasurementRGB()
 {
   return _rgb;
+}
+
+void Sensor::calcRayFromCurrentPose(unsigned int u, unsigned int v, double ray[3])
+{
+  LOGMSG(DBG_WARN, "Method for determining measurement rays are not overwritten");
 }
 
 }
