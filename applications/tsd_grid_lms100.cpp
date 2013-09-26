@@ -104,7 +104,7 @@ int main(int argc, char* argv[])
   OutOfBoundsFilter2D* filterBounds = new OutOfBoundsFilter2D(grid->getMinX(), grid->getMaxX(), grid->getMinY(), grid->getMaxY());
   filterBounds->setPose(&Tinit);
   assigner->addPreFilter(filterBounds);
-  DistanceFilter* filterDist = new DistanceFilter(2.0, 0.01, iterations);
+  DistanceFilter* filterDist = new DistanceFilter(2.0, 0.01, iterations-3);
   assigner->addPostFilter(filterDist);
 
 //  // choose estimator
