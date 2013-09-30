@@ -3,7 +3,7 @@
 #include "obdevice/Kinect.h"
 #include "obvision/normals/NormalsEstimator.h"
 #include "obcore/base/Timer.h"
-
+#include "obcore/base/CartesianCloudFactory.h"
 using namespace std;
 using namespace obvious;
 
@@ -75,6 +75,12 @@ void serializeXML()
   sprintf(filename, "cloud%05d.vtp", cnt++);
   cout << "serializing " << filename << endl;
   _cloud->serialize(filename, VTKCloud_XML);
+
+  /*CartesianCloud3D* cloud = new CartesianCloud3D(640*480, _kinect->getCoords(), _kinect->getRGB(), NULL);
+  for(int i=0; i<640*480; i++)
+    if(fabs((*cloud)[i][0])<1e-6) (cloud->getAttributes())[i] &= ~ePointAttrValid;
+  cloud->removeInvalidPoints();
+  CartesianCloudFactory::serialize("/tmp/serialize.txt", cloud, eFormatAscii);*/
 }
 
 void recordCallback()
@@ -115,7 +121,7 @@ int main(int argc, char* argv[])
   interactor->CreateRepeatingTimer(30);
   _viewer->registerKeyboardCallback("y", serializePLY);
   _viewer->registerKeyboardCallback("x", serializeXML);
-  _viewer->registerKeyboardCallback("s", recordCallback);
+  _viewer->registerKeyboardCallback("w", recordCallback);
   _viewer->registerFlipVariable("space", &_pause);
   _viewer->registerFlipVariable("n",     &_showNormals);
 

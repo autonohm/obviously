@@ -394,7 +394,7 @@ bool Obvious3D::checkVariableRegistration(std::string key)
 bool Obvious3D::registerKeyboardCallback(const char key[], fptrKeyboardCallback fptr, const char desc[])
 {
   std::string skey = std::string(key);
-  if(checkVariableRegistration(skey)) return false;
+  if(!checkVariableRegistration(skey)) return false;
   _mCallback[skey] = fptr;
   _mDesc[skey] = std::string(desc);
   return true;
@@ -403,7 +403,7 @@ bool Obvious3D::registerKeyboardCallback(const char key[], fptrKeyboardCallback 
 bool Obvious3D::registerFlipVariable(const char key[], bool* flip)
 {
   std::string skey = std::string(key);
-  if(checkVariableRegistration(skey)) return false;
+  if(!checkVariableRegistration(skey)) return false;
   _mFlipVariable[skey] = flip;
   return true;
 }
@@ -411,7 +411,7 @@ bool Obvious3D::registerFlipVariable(const char key[], bool* flip)
 bool Obvious3D::registerIncVariable(const char key[], double* var, double inc)
 {
   std::string skey = std::string(key);
-  if(checkVariableRegistration(skey)) return false;
+  if(!checkVariableRegistration(skey)) return false;
   StrIncVariable sinc;
   sinc.ptr = var;
   sinc.inc = inc;
