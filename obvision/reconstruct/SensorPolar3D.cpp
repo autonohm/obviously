@@ -12,33 +12,29 @@ namespace obvious
 
 SensorPolar3D::SensorPolar3D(unsigned int beams, double thetaRes, double thetaMin, double phiRes) : Sensor(3)
 {
-  _Pose = new Matrix(4, 4);
-  _Pose->setIdentity();
+  _thetaRes = thetaRes;
+  _thetaMin = thetaMin;
+  _phiRes = phiRes;
 
+  _width = M_PI/_phiRes;
   _height = beams;
-  _size = beams * 1000;
+  _size = _width*_height;
   _data = new double[_size];
   _mask = new bool[_size];
   for(unsigned int i=0; i<_size; i++)
     _mask[i] = true;
-
-  _thetaRes = thetaRes;
-  _thetaMin = thetaMin;
 
   if(_thetaMin>=M_PI)
   {
     LOGMSG(DBG_ERROR, "Valid minimal angle < M_PI");
   }
 
-  _phiRes = phiRes;
-  _width = M_PI/_phiRes;
   System<double>::allocate(_height, _width, _distanceMap);
   System<int>::allocate(_height, _width, _indexMap);
 }
 
 SensorPolar3D::~SensorPolar3D()
 {
-  delete _Pose;
   delete [] _data;
   delete [] _mask;
   System<double>::deallocate(_distanceMap);

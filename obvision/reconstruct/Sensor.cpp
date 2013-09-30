@@ -83,6 +83,11 @@ void Sensor::setRealMeasurementData(double* data, double scale)
 
 void Sensor::setRealMeasurementData(vector<float> data, float scale)
 {
+  if(data.size()!=_size)
+  {
+    LOGMSG(DBG_WARN, "Size of measurement array wrong, expected " << _size << " obtained: " << data.size());
+  }
+
   for(unsigned int i=0; i<data.size(); i++)
     _data[i] = data[i] * scale;
 }

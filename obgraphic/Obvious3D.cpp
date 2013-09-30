@@ -15,45 +15,109 @@
 #include <vtkLineSource.h>
 #include <vtkLine.h>
 #include <vtkTransform.h>
+#include <vtkPlaneSource.h>
+#include <vtkSphereSource.h>
+#include <vtkLight.h>
+#include <vtkPoints.h>
+#include <vtkCellArray.h>
+#include <vtkWindowToImageFilter.h>
+#include <vtkPNGWriter.h>
 
 #include <iostream>
 #include <string>
-
 #include <map>
+#include <ctime>
+
+#include "obcore/math/mathbase.h"
+#include "obcore/base/Logger.h"
 
 namespace obvious
 {
 
+Obvious3D* _this;
+
 struct StrIncVariable
 {
-	double* ptr;
-	double inc;
+  double* ptr;
+  double inc;
 };
 
 std::map<std::string, fptrKeyboardCallback> _mCallback;
+std::map<std::string, std::string> _mDesc;
 std::map<std::string, bool*> _mFlipVariable;
 std::map<std::string, StrIncVariable> _mIncVariable;
 
-void keypressCallback ( vtkObject* caller, long unsigned int eventId, void* clientData, void* callData )
+void showHelp()
 {
-  vtkRenderWindowInteractor *iren = static_cast<vtkRenderWindowInteractor*>(caller);
-  fptrKeyboardCallback fptr = _mCallback[std::string(iren->GetKeySym())];
-  if(fptr!=NULL)(*fptr)();
+  cout << "Default key table" << endl;
+  cout << "-----------------" << endl;
+  cout << "h: show (h)elp" << endl;
+  cout << "r: (r)eset camera" << endl;
+  cout << "s: (s)ave screenshot (to /tmp directory)" << endl;
+  cout << "q: (q)uit application" << endl;
+  cout << "+: increase point size of added clouds" << endl;
+  cout << "-: decrease point size of added clouds" << endl << endl;
 
-  //cout << std::string(iren->GetKeySym()) << endl;
 
-  bool* flip = _mFlipVariable[std::string(iren->GetKeySym())];
-  if(flip!=NULL)
-    *flip = !*flip;
+  std::map<std::string, fptrKeyboardCallback>::iterator iter = _mCallback.begin();
+  std::map<std::string, std::string>::iterator iter2 = _mDesc.begin();
 
-  StrIncVariable inc = _mIncVariable[std::string(iren->GetKeySym())];
-  if(inc.ptr != NULL)
+  if(iter != _mCallback.end())
   {
-	  *(inc.ptr) += inc.inc;
+    cout << "Custom keys" << endl;
+    cout << "----------------" << endl;
+
+    while(iter != _mCallback.end())
+    {
+        cout << iter->first << ": " << iter2->second << endl;
+        ++iter;
+        ++iter2;
+    }
+    cout << endl;
   }
 }
 
-void cloudCallback ( vtkObject* caller, long unsigned int eventId, void* clientData, void* callData )
+void keypressCallback (vtkObject* caller, long unsigned int eventId, void* clientData, void* callData)
+{
+  vtkRenderWindowInteractor *iren = static_cast<vtkRenderWindowInteractor*>(caller);
+  //cout << "Key pressed: " << std::string(iren->GetKeySym()) << endl;
+
+  if(std::string(iren->GetKeySym()).compare(std::string("h"))==0)
+  {
+    showHelp();
+  }
+  else if(std::string(iren->GetKeySym()).compare(std::string("s"))==0)
+  {
+    _this->screenshot();
+  }
+  else
+  {
+    std::string key = std::string(iren->GetKeySym());
+    if(_mCallback.find(key)!=_mCallback.end())
+    {
+      fptrKeyboardCallback fptr = _mCallback[key];
+      if(fptr!=NULL)(*fptr)();
+    }
+
+    if(_mFlipVariable.find(key)!=_mFlipVariable.end())
+    {
+      bool* flip = _mFlipVariable[key];
+      if(flip!=NULL)
+        *flip = !*flip;
+    }
+
+    if(_mIncVariable.find(key)!=_mIncVariable.end())
+    {
+      StrIncVariable inc = _mIncVariable[key];
+      if(inc.ptr != NULL)
+      {
+        *(inc.ptr) += inc.inc;
+      }
+    }
+  }
+}
+
+void cloudCallback (vtkObject* caller, long unsigned int eventId, void* clientData, void* callData)
 {
   vtkRenderWindowInteractor *iren = static_cast<vtkRenderWindowInteractor*>(caller);
   VtkCloud* cloud  = static_cast<VtkCloud*>(clientData);
@@ -74,10 +138,15 @@ void cloudCallback ( vtkObject* caller, long unsigned int eventId, void* clientD
   }
 }
 
-Obvious3D::Obvious3D(const char* windowName, unsigned int sizx, unsigned int sizy, unsigned int posx, unsigned int posy)
+Obvious3D::Obvious3D(const char* windowName, unsigned int sizx, unsigned int sizy, unsigned int posx, unsigned int posy, double rgb[])
 {
+  _this = this;
+
   _renderer = vtkSmartPointer<vtkRenderer>::New();
-  _renderer->SetBackground(.0, .0, .0);
+  if(rgb)
+    _renderer->SetBackground(rgb[0], rgb[1], rgb[2]);
+  else
+    _renderer->SetBackground(0.0, 0.0, 0.0);
   _renderWindow = vtkSmartPointer<vtkRenderWindow>::New();
   _renderWindow->AddRenderer(_renderer);
   _renderWindow->SetSize(sizx, sizy);
@@ -98,6 +167,9 @@ Obvious3D::Obvious3D(const char* windowName, unsigned int sizx, unsigned int siz
   _sensor_axes = NULL;
 
   _renderer->GetActiveCamera()->Yaw(180);
+
+  _mCallback.clear();
+  _mDesc.clear();
 }
 
 Obvious3D::~Obvious3D()
@@ -126,6 +198,113 @@ void Obvious3D::addCloud(VtkCloud* cloud, bool pickable, unsigned int pointsize)
 
   _renderer->AddActor(actor);
   _renderer->ResetCamera();
+}
+
+void Obvious3D::addLines(double** coordsStart, double** coordsEnd, unsigned int size, double rgb[])
+{
+  vtkSmartPointer<vtkPoints> pts = vtkSmartPointer<vtkPoints>::New();
+  vtkSmartPointer<vtkCellArray> lines = vtkSmartPointer<vtkCellArray>::New();
+  for(unsigned int i=0; i<size; i++)
+  {
+    pts->InsertNextPoint(coordsStart[i][0], coordsStart[i][1], coordsStart[i][2]);
+    pts->InsertNextPoint(coordsEnd[i][0], coordsEnd[i][1], coordsEnd[i][2]);
+    vtkSmartPointer<vtkLine> line = vtkSmartPointer<vtkLine>::New();
+    line->GetPointIds()->SetId(0,2*i);
+    line->GetPointIds()->SetId(1,2*i+1);
+    lines->InsertNextCell(line);
+  }
+
+  vtkSmartPointer<vtkPolyData> polydata = vtkSmartPointer<vtkPolyData>::New();
+  polydata->SetPoints(pts);
+  polydata->SetLines(lines);
+
+  vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+  mapper->SetInput(polydata);
+
+  vtkActor* actor = vtkActor::New();
+  actor->SetMapper(mapper);
+  if(rgb)
+    actor->GetProperty()->SetColor(rgb[0], rgb[1], rgb[2]);
+  else
+    actor->GetProperty()->SetColor(0.0, 0.0, 0.0);
+  actor->GetProperty()->SetLineWidth(2.0);
+  actor->GetProperty()->SetInterpolationToPhong();
+  _renderer->AddActor(actor);
+}
+
+void Obvious3D::addPlane(double origin[3], double axis1[3], double axis2[3], unsigned int resX, unsigned int resY, double rgb[])
+{
+  vtkSmartPointer<vtkPlaneSource> planeSource = vtkSmartPointer<vtkPlaneSource>::New();
+  planeSource->SetOrigin(origin[0], origin[1], origin[2]);
+  planeSource->SetPoint1(axis1[0], axis1[1], axis1[2]);
+  planeSource->SetPoint2(axis2[0], axis2[1], axis2[2]);
+  planeSource->SetResolution(resX, resY);
+  planeSource->Update();
+
+  vtkPolyData* plane = planeSource->GetOutput();
+
+  // Create a mapper and actor
+  vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+#if VTK_MAJOR_VERSION <= 5
+  mapper->SetInput(plane);
+#else
+  mapper->SetInputData(plane);
+#endif
+
+  vtkProperty* prop = vtkProperty::New();
+  //prop->SetRepresentation(VTK_WIREFRAME);
+  if(rgb)
+    prop->SetColor(rgb[0], rgb[1], rgb[2]);
+  else
+    prop->SetColor(0.8, 0.8, 0.95);
+  prop->SetAmbient(0.8);
+  prop->SetDiffuse(0.0);
+  prop->SetSpecular(0.0);
+  prop->SetOpacity(1.0);
+
+  vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
+  actor->SetMapper(mapper);
+  actor->SetProperty(prop);
+  _renderer->AddActor(actor);
+}
+
+void Obvious3D::addSphere(double center[3], double radius, double rgb[])
+{
+  vtkSmartPointer<vtkSphereSource> sphereSource = vtkSmartPointer<vtkSphereSource>::New();
+  sphereSource->SetCenter(center[0], center[1], center[2]);
+  sphereSource->SetRadius(radius);
+  sphereSource->SetStartPhi(-135.0);
+  sphereSource->SetEndPhi(135.0);
+  sphereSource->SetThetaResolution(360);
+  sphereSource->SetPhiResolution(270);
+  vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+  mapper->SetInputConnection(sphereSource->GetOutputPort());
+
+  vtkProperty* prop = vtkProperty::New();
+  //prop->SetRepresentation(VTK_WIREFRAME);
+  if(rgb)
+    prop->SetColor(rgb[0], rgb[1], rgb[2]);
+  else
+    prop->SetColor(0.8, 0.8, 0.95);
+  //prop->SetAmbient(0.3);
+  prop->SetDiffuse(0.8);
+  //prop->SetSpecular(0.4);
+  prop->SetOpacity(1.0);
+
+
+  vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
+  actor->SetMapper(mapper);
+  actor->SetProperty(prop);
+  _renderer->AddActor(actor);
+}
+
+void Obvious3D::addLight(double pos[3], double focal[3])
+{
+  vtkSmartPointer<vtkLight> light = vtkSmartPointer<vtkLight>::New();
+  light->SetFocalPoint(focal[0], focal[1], focal[2]);
+  light->SetPosition(pos[0], pos[1], pos[2]);
+  light->PositionalOff();
+  _renderer->AddLight(light);
 }
 
 void Obvious3D::setFrustum(double xmin, double xmax, double ymin, double ymax, double zmin, double zmax)
@@ -194,25 +373,50 @@ void Obvious3D::addAxisAlignedCube(double xmin, double xmax, double ymin, double
   }
 }
 
-void Obvious3D::registerKeyboardCallback(const char key[], fptrKeyboardCallback fptr)
+bool Obvious3D::checkVariableRegistration(std::string key)
+{
+  bool found = (key.compare("h")==0 ||
+                key.compare("r")==0 ||
+                key.compare("s")==0 ||
+                key.compare("q")==0 ||
+                key.compare("plus")==0 ||
+                key.compare("minus")==0);
+
+  if(found)
+  {
+    LOGMSG(DBG_WARN, "Key " << key << " is already registered ... ignoring");
+    return false;
+  }
+
+  return true;
+}
+
+bool Obvious3D::registerKeyboardCallback(const char key[], fptrKeyboardCallback fptr, const char desc[])
 {
   std::string skey = std::string(key);
+  if(checkVariableRegistration(skey)) return false;
   _mCallback[skey] = fptr;
+  _mDesc[skey] = std::string(desc);
+  return true;
 }
 
-void Obvious3D::registerFlipVariable(const char key[], bool* flip)
+bool Obvious3D::registerFlipVariable(const char key[], bool* flip)
 {
   std::string skey = std::string(key);
+  if(checkVariableRegistration(skey)) return false;
   _mFlipVariable[skey] = flip;
+  return true;
 }
 
-void Obvious3D::registerIncVariable(const char key[], double* var, double inc)
+bool Obvious3D::registerIncVariable(const char key[], double* var, double inc)
 {
   std::string skey = std::string(key);
+  if(checkVariableRegistration(skey)) return false;
   StrIncVariable sinc;
   sinc.ptr = var;
   sinc.inc = inc;
   _mIncVariable[skey] = sinc;
+  return true;
 }
 
 void Obvious3D::update()
@@ -252,7 +456,7 @@ void Obvious3D::showSensorPosition(const double* position)
     _sensor_axes->SetUserTransform(transform);
     _sensor_axes->SetXAxisLabelText("Sensor");
     _sensor_axes->AxisLabelsOff();
-   _renderer->AddActor(_sensor_axes);
+    _renderer->AddActor(_sensor_axes);
   }
   else
   {
@@ -272,7 +476,7 @@ void Obvious3D::showSensorPose(const double* T)
     _sensor_axes->SetUserTransform(transform);
     _sensor_axes->SetXAxisLabelText("Sensor");
     _sensor_axes->AxisLabelsOff();
-   _renderer->AddActor(_sensor_axes);
+    _renderer->AddActor(_sensor_axes);
   }
   else
   {
@@ -302,7 +506,33 @@ void Obvious3D::showSensorPose(Matrix& T)
   }
 }
 
+void Obvious3D::screenshot()
+{
+  vtkSmartPointer<vtkWindowToImageFilter> windowToImageFilter =  vtkSmartPointer<vtkWindowToImageFilter>::New();
+  windowToImageFilter->SetInput(_renderWindow);
+  windowToImageFilter->SetMagnification(2); //set the resolution of the output image (3 times the current resolution of vtk render window)
+  windowToImageFilter->SetInputBufferTypeToRGBA(); //also record the alpha (transparency) channel
+  windowToImageFilter->Update();
 
+  vtkSmartPointer<vtkPNGWriter> writer = vtkSmartPointer<vtkPNGWriter>::New();
+
+  std::string filename = "/tmp/screenshot";
+
+  time_t rawtime;
+  struct tm * timeinfo;
+  char buffer [80];
+  time (&rawtime);
+  timeinfo = localtime (&rawtime);
+
+  strftime(buffer, 80, " %c", timeinfo);
+  filename.append(buffer);
+  filename.append(".png");
+  writer->SetFileName(filename.c_str());
+  writer->SetInputConnection(windowToImageFilter->GetOutputPort());
+  writer->Write();
+
+  LOGMSG(DBG_DEBUG, "Screenshot saved to " << filename);
+}
 
 vtkSmartPointer<vtkRenderer> Obvious3D::getRenderer()
 {
