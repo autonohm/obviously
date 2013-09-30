@@ -114,7 +114,7 @@ void _cbRegNewImage(void)
   _filterBounds->setPose(_sensor->getPose());
 
   // Extract model from TSDF space
-  unsigned int subsamplingModel = 20;
+  unsigned int subsamplingModel = 1;
 
   _rayCaster->calcCoordsFromCurrentView(coords, normals, rgb, &size, subsamplingModel);
 
@@ -162,6 +162,7 @@ void _cbRegNewImage(void)
 
   double* coordsScene     = _kinect->getCoords();
   bool* maskScene         = _kinect->getMask();
+  unsigned char* rgbScene = _kinect->getRGB();
 
   // Subsample and filter scene
   unsigned int subsamplingScene = 20;
@@ -173,9 +174,15 @@ void _cbRegNewImage(void)
       coords[3*idx] = coordsScene[3*i];
       coords[3*idx+1] = coordsScene[3*i+1];
       coords[3*idx+2] = coordsScene[3*i+2];
+      rgb[3*idx] = rgbScene[3*i];
+      rgb[3*idx+1] = rgbScene[3*i+1];
+      rgb[3*idx+2] = rgbScene[3*i+2];
       idx++;
     }
   }
+  _vScene->setCoords(coords, size / 3, 3, normals);
+  _vScene->setColors(rgb, size / 3, 3);
+  _vScene->removeInvalidPoints();
 
   _icp->setScene(coords, NULL, idx);
 
@@ -266,7 +273,7 @@ int main(void)
   _Tinit.setData(tf);
 
   _space = new TsdSpace(Y_DIM, X_DIM, Z_DIM, VXLDIM);
-  _space->setMaxTruncation(2.0 * VXLDIM);
+  _space->setMaxTruncation(3.0 * VXLDIM);
 
   // ICP configuration
   // ------------------------------------------------------------------
@@ -319,7 +326,7 @@ int main(void)
   _viewer3D = new Obvious3D("3DMapper");
   _viewer3D->addCloud(_vModel);
   _viewer3D->addAxisAlignedCube(0, X_DIM, 0, Y_DIM, 0, Z_DIM);
-  //_viewer3D->addCloud(_vScene);
+  _viewer3D->addCloud(_vScene);
   _viewer3D->registerKeyboardCallback("space", _cbRegNewImage);
   _viewer3D->registerKeyboardCallback("c", _cbGenPointCloud);
   _viewer3D->registerKeyboardCallback("v", _cbBuildSliceViews);
