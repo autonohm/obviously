@@ -106,9 +106,9 @@ void KinectPlayback::skip(unsigned int frames)
   {
     string line;
     unsigned int size = _rows*_cols;
-    for(int i=0; i<frames; i++)
+    for(unsigned int i=0; i<frames; i++)
     {
-      for(int j=0; j<size; j++)
+      for(unsigned int j=0; j<size; j++)
       {
         getline(_recfile, line);
       }

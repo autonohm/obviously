@@ -21,6 +21,7 @@
 #include <vtkPointSource.h>
 
 #include "obcore/math/mathbase.h"
+#include "obcore/base/Logger.h"
 
 #include <string>
 
@@ -114,7 +115,7 @@ void VtkCloud::setTriangles(double** coords, unsigned char** rgb, unsigned int p
   _triangles->Reset();
   _colors->Reset();
 
-  for(int i=0; i<points; i++)
+  for(unsigned int i=0; i<points; i++)
   {
     _points->InsertNextPoint(coords[i][0], coords[i][1], coords[i][2]);
     _colors->InsertNextTupleValue(rgb[i]);
@@ -128,7 +129,7 @@ void VtkCloud::setTriangles(double** coords, unsigned char** rgb, unsigned int p
   vtkIdType* pId0 = pIds->GetPointer(0);
   vtkIdType* pId1 = pIds->GetPointer(1);
   vtkIdType* pId2 = pIds->GetPointer(2);
-  for(int i=0; i<triangles; i++)
+  for(unsigned int i=0; i<triangles; i++)
   {
     unsigned int* idx = indices[i];
     *pId0 = idx[0];
@@ -201,7 +202,7 @@ void VtkCloud::removeInvalidPoints()
 
   if(normals==NULL)
   {
-    cout << "WARNING VtkCloud::removeInvalidPoints: Cloud has no normals." << endl;
+    LOGMSG(DBG_WARN, "Cloud has no normals");
     return;
   }
 
@@ -213,7 +214,7 @@ void VtkCloud::removeInvalidPoints()
   double nbuf[3];
   unsigned char cbuf[3];
 
-  for(int i=0; i<size; i++)
+  for(unsigned int i=0; i<size; i++)
   {
     points->GetPoint(i, buf);
     normals->GetTupleValue(i, nbuf);
@@ -267,7 +268,7 @@ void VtkCloud::copyNormals(double* dst, unsigned int subsampling)
 
   if(normals==NULL)
   {
-    cout << "WARNING VtkCloud::copyNormals: Cloud has no normals." << endl;
+    LOGMSG(DBG_WARN, "Cloud has no normals");
     return;
   }
 
@@ -298,7 +299,7 @@ void VtkCloud::copyData(gsl_matrix* C, gsl_matrix* N, unsigned char* rgb)
   }
   else
   {
-    cout << "WARNING VtkCloud::copyData: Cloud has no normals." << endl;
+    LOGMSG(DBG_WARN, "Cloud has no normals");
   }
 }
 
@@ -325,14 +326,14 @@ void VtkCloud::lowlight(std::vector<unsigned int>* indices)
   lut->Build();
   unsigned char* colortbl = new unsigned char[3*size];
   double c[3];
-  for(int i=0; i<size; i++)
+  for(unsigned int i=0; i<size; i++)
   {
     lut->GetColor(0, c);
     colortbl[3*i]   = 255.0*c[0];
     colortbl[3*i+1] = 255.0*c[1];
     colortbl[3*i+2] = 255.0*c[2];
   }
-  for(int i=0; i<indices->size(); i++)
+  for(unsigned int i=0; i<indices->size(); i++)
   {
     unsigned int idx = (*indices)[i];
     lut->GetColor(1, c);
@@ -382,7 +383,7 @@ void VtkCloud::serialize(char* filename, EnumVtkCloudFileFormat format)
   }*/
   default:
   {
-    cout << "WARNING (VtkCloud::serialize): Format not specified properly." << endl;
+    LOGMSG(DBG_WARN, "Format not specified properly");
     return;
   }
   }
@@ -403,7 +404,7 @@ VtkCloud* VtkCloud::load(char* filename, EnumVtkCloudFileFormat format)
     }
     else
     {
-      cout << "WARNING (VtkCloud::load): file type could not be determined." << endl;
+      LOGMSG(DBG_WARN, "file type could not be determined.");
       return NULL;
     }
   }
@@ -425,6 +426,10 @@ VtkCloud* VtkCloud::load(char* filename, EnumVtkCloudFileFormat format)
     r->Update();
     polyData = r->GetOutput();
     break;
+  }
+  default:
+  {
+
   }
   }
   VtkCloud* cloud = new VtkCloud();//NULL, polyData->GetPoints()->GetNumberOfPoints(), 3);

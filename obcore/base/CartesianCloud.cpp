@@ -221,7 +221,7 @@ void CartesianCloud3D::removeInvalidPoints()
 
 void CartesianCloud3D::subsample(unsigned int step)
 {
-  for (int i=0; i<_coords->size1; i++)
+  for (unsigned int i=0; i<_coords->size1; i++)
   {
     if(i%step!=0)
       _attributes[i] &= ~ePointAttrValid;
@@ -274,7 +274,7 @@ void CartesianCloud3D::createProjection(unsigned char* pImage, unsigned char* pM
   memset(pImage, 0, 3*nW*nH*sizeof(unsigned char));
   memset(pMask, 0, nW*nH*sizeof(unsigned char));
 
-  for(int i=0; i<_coords->size1; i++)
+  for(unsigned int i=0; i<_coords->size1; i++)
   {
     double* point = gsl_matrix_ptr(_coords, i, 0);
 
@@ -293,7 +293,7 @@ void CartesianCloud3D::createProjection(unsigned char* pImage, unsigned char* pM
         int u = nW-1-(int)( du / dw + 0.5);
         int v = (int)(dv / dw + 0.5);
 
-        if(u>=0 & u<nW & v>=0 & v<nH)
+        if((u>=0) && (u<nW) && (v>=0) && (v<nH))
         {
           pImage[(v*nW+u)*3]   = _colors[3*i];
           pImage[(v*nW+u)*3+1] = _colors[3*i+1];
@@ -320,7 +320,7 @@ void CartesianCloud3D::createZBuffer(unsigned char* pImage, double* zbuffer, gsl
   for(int i=0; i<nW*nH; i++)
     zbuffer[i] = 0.0;
 
-  for(int i=0; i<_coords->size1; i++)
+  for(unsigned int i=0; i<_coords->size1; i++)
   {
     double* point = gsl_matrix_ptr(_coords, i, 0);
 
@@ -339,7 +339,7 @@ void CartesianCloud3D::createZBuffer(unsigned char* pImage, double* zbuffer, gsl
         int u = (int)( du / dw + 0.5);
         int v = nH-1-(int)(dv / dw + 0.5);
 
-        if(u>=0 & u<nW & v>=0 & v<nH)
+        if((u>=0) && (u<nW) && (v>=0) && (v<nH))
         {
           pImage[(v*nW+u)*3]   = _colors[3*i];
           pImage[(v*nW+u)*3+1] = _colors[3*i+1];

@@ -29,7 +29,7 @@ void ProjectivePairAssignment::setModel(double** model, int size)
 {
   memset(_idx_m, 0, _w*_h*sizeof(*(_idx_m)));
 
-  for(unsigned int i=0; i<size; i++)
+  for(unsigned int i=0; i<(unsigned int)size; i++)
   {
     double dw = _P[8] * model[i][0] + _P[9] * model[i][1] + _P[10] * model[i][2] + _P[11];
     if(fabs(dw)>1e-9)
@@ -40,7 +40,7 @@ void ProjectivePairAssignment::setModel(double** model, int size)
       int v   = (int)(dv + 0.5);
 
       int idx = v*_w + u;
-      if(u<0 || v<0 || u>=_w || v>=_h) continue;
+      if((u<0) || (v<0) || (u>=(int)_w) || (v>=(int)_h)) continue;
       _idx_m[idx] = i;
     }
   }
@@ -51,7 +51,7 @@ void ProjectivePairAssignment::setModel(double** model, int size)
 
 void ProjectivePairAssignment::determinePairs(double** scene, bool* mask, int size)
 {
-  for(unsigned int i=0; i<size; i++)
+  for(unsigned int i=0; i<(unsigned int)size; i++)
   {
     if(mask[i])
     {
@@ -63,7 +63,7 @@ void ProjectivePairAssignment::determinePairs(double** scene, bool* mask, int si
         int u   = (int)(du + 0.5);
         int v   = (int)(dv + 0.5);
 
-        if(u<0 || v<0 || u>=_w || v>=_h)
+        if((u<0) || (v<0) || (u>=(int)_w) || (v>=(int)_h))
         {
           addNonPair(i);
           continue;

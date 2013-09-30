@@ -53,10 +53,6 @@ public:
 
 private:
 
-  unsigned int _cols;
-
-  unsigned int _rows;
-
   Matrix* _P;
 
   Matrix*** _rays;

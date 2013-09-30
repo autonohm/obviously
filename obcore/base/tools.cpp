@@ -38,10 +38,10 @@ void rgb2gray(unsigned char* src, unsigned char* dst, unsigned int width, unsign
 int serializePPM(const char* szFilename, void* pvBuffer, unsigned int nWidth, unsigned int nHeight, bool bInc)
 {
 
-  int nRowInc = 0;
-  int nRowStart = 0;
-  int i = 0;
-  int j = 0;
+  int nRowInc=0;
+  int nRowStart=0;
+  unsigned int i=0;
+  unsigned int j=0;
 
   // increasing order
   if (bInc)
@@ -63,9 +63,9 @@ int serializePPM(const char* szFilename, void* pvBuffer, unsigned int nWidth, un
 
   /* Go to the end of the buffer */
   buffer += nRowStart;
-  for (i = 0; i < nHeight; i++)
+  for (i=0; i<nHeight; i++)
   {
-    for (j = 0; j < nWidth; j++)
+    for (j=0; j<nWidth; j++)
     {
       putc(buffer[0], pFile); /* b */
       putc(buffer[1], pFile); /* g */
@@ -89,10 +89,10 @@ int serializePPM(const char* szFilename, void* pvBuffer, unsigned int nWidth, un
 int serializePGM(const char* szFilename, void* pvBuffer, unsigned int nWidth, unsigned int nHeight, bool bInc)
 {
 
-  int nRowInc = 0;
-  int nRowStart = 0;
-  int i = 0;
-  int j = 0;
+  int nRowInc=0;
+  int nRowStart=0;
+  unsigned int i=0;
+  unsigned int j=0;
 
   // increasing order
   if (bInc)
@@ -114,9 +114,9 @@ int serializePGM(const char* szFilename, void* pvBuffer, unsigned int nWidth, un
 
   /* Go to the end of the buffer */
   buffer += nRowStart;
-  for (i = 0; i < nHeight; i++)
+  for (i=0; i<nHeight; i++)
   {
-    for (j = 0; j < nWidth; j++)
+    for (j=0; j<nWidth; j++)
     {
       putc(buffer[0], pFile); /* b */
       buffer++;
@@ -138,10 +138,10 @@ int serializePGM(const char* szFilename, void* pvBuffer, unsigned int nWidth, un
 int serializePBM(const char* szFilename, void* pvBuffer, unsigned int nWidth, unsigned int nHeight, bool bInc)
 {
 
-  int nRowInc = 0;
-  int nRowStart = 0;
-  int i = 0;
-  int j = 0;
+  int nRowInc=0;
+  int nRowStart=0;
+  unsigned int i=0;
+  unsigned int j=0;
 
   // increasing order
   if (bInc)
@@ -163,9 +163,9 @@ int serializePBM(const char* szFilename, void* pvBuffer, unsigned int nWidth, un
 
   /* Go to the end of the buffer */
   buffer += nRowStart;
-  for (i = 0; i < nHeight; i++)
+  for (i=0; i<nHeight; i++)
   {
-    for (j = 0; j < nWidth; j++)
+    for (j=0; j<nWidth; j++)
     {
       if(j>0) fputs(" ", pFile);
       if(*buffer++) fputs("0", pFile);

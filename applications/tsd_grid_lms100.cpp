@@ -17,6 +17,27 @@
 using namespace std;
 using namespace obvious;
 
+void callbackAssignment(double** m, double** s, unsigned int size)
+{
+  static unsigned int cnt = 0;
+  char filename[64];
+  sprintf(filename, "/tmp/assignment%05d.dat", cnt++);
+
+  ofstream f;
+  f.open(filename);
+
+
+  for(unsigned int i=0; i<size; i++)
+  {
+    f << m[i][0] << " " << m[i][1] << " " << s[i][0] << " " << s[i][1] << endl;
+  }
+
+  f.close();
+
+  delete [] m;
+  delete [] s;
+}
+
 int main(int argc, char* argv[])
 {
   LOGMSG_CONF("tsd_grid_test.log", Logger::file_off|Logger::screen_off, DBG_DEBUG, DBG_DEBUG);
@@ -35,7 +56,7 @@ int main(int argc, char* argv[])
     _estType = PTP;
 
   TsdGrid* grid = new TsdGrid(dimX, dimY, cellSize);
-  grid->setMaxTruncation(2.0*cellSize);
+  grid->setMaxTruncation(4.0*cellSize);
 
 
   // Initialization of 2D viewer
@@ -78,12 +99,12 @@ int main(int argc, char* argv[])
   double* map      = new double[grid->getCellsX()*grid->getCellsY()*2];
 
   // Compose ICP modules
-  int iterations                 = 100;
+  int iterations                 = 25;
   PairAssignment* assigner       = (PairAssignment*)  new AnnPairAssignment(2);
   OutOfBoundsFilter2D* filterBounds = new OutOfBoundsFilter2D(grid->getMinX(), grid->getMaxX(), grid->getMinY(), grid->getMaxY());
   filterBounds->setPose(&Tinit);
   assigner->addPreFilter(filterBounds);
-  DistanceFilter* filterDist = new DistanceFilter(2.0, 0.01, iterations);
+  DistanceFilter* filterDist = new DistanceFilter(2.0, 0.01, iterations-3);
   assigner->addPostFilter(filterDist);
 
 //  // choose estimator
@@ -91,21 +112,24 @@ int main(int argc, char* argv[])
 //  if (_estType == PTP)
 //    estimator     = (IRigidEstimator*) new ClosedFormEstimator2D();
 //  else
-    IRigidEstimator* estimator    = (IRigidEstimator*) new PointToLine2DEstimator();
+//    IRigidEstimator* estimator    = (IRigidEstimator*) new PointToLine2DEstimator();
 
-//  IRigidEstimator* estimator    = (IRigidEstimator*) new ClosedFormEstimator2D();
+  IRigidEstimator* estimator    = (IRigidEstimator*) new ClosedFormEstimator2D();
 
 
   Icp* icp = new Icp(assigner, estimator);
   icp->setMaxRMS(0.0);
   icp->setMaxIterations(iterations);
   icp->setConvergenceCounter(iterations);
+  //icp->setAssignmentCallback(callbackAssignment);
 
   // Set first model
   lms.grab();
   sensor.setRealMeasurementData(lms.getRanges());
   sensor.transform(&Tinit);
-  grid->push(&sensor);
+
+  for(unsigned int i=0; i<10; i++)
+    grid->push(&sensor);
 
 
   unsigned int initCount = 0;
@@ -120,11 +144,11 @@ int main(int argc, char* argv[])
     double* sCoords = lms.getCoords();
 
     Matrix* M = new Matrix(mSize/2, 2, mCoords);
-    Matrix* mNorm = new Matrix(mSize/2, 2, mNormals);
+    Matrix* N = new Matrix(mSize/2, 2, mNormals);
     Matrix* S = new Matrix(rays, 2, sCoords);
 
     icp->reset();
-    icp->setModel(M->getBuffer(), mNorm->getBuffer());
+    icp->setModel(M->getBuffer(), N->getBuffer());
     icp->setScene(S->getBuffer());
 
     double rms;
@@ -149,7 +173,7 @@ int main(int argc, char* argv[])
 
     std::cout << deltaX << std::endl;
 
-
+    //if(deltaX>0.1) abort();
     filterBounds->setPose(sensor.getPose());
 
     /*T->print();
@@ -198,6 +222,7 @@ int main(int argc, char* argv[])
     viewer.draw(image, w, h, 3, 0, 0);
 
     delete M;
+    delete N;
     delete S;
   }
 

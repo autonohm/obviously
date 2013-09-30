@@ -22,7 +22,7 @@ void SubsamplingFilter::filter(double** scene, unsigned int size, bool* mask)
 {
   if(!_active) return;
 
-  for(int i=0; i<size; i++)
+  for(unsigned int i=0; i<size; i++)
   {
     if(mask[i] == 0) continue;
 

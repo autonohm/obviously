@@ -57,7 +57,7 @@ public:
       _triangles->Reset();
       _colors->Reset();
 
-      for(int i=0; i<mesh->getNumberOfPoints(); i++)
+      for(unsigned int i=0; i<mesh->getNumberOfPoints(); i++)
       {
         _points->InsertNextPoint(mCoords[i][0], mCoords[i][1], mCoords[i][2]);
         _colors->InsertNextTupleValue(mRGB[i]);
@@ -71,7 +71,7 @@ public:
       vtkIdType* pId0 = pIds->GetPointer(0);
       vtkIdType* pId1 = pIds->GetPointer(1);
       vtkIdType* pId2 = pIds->GetPointer(2);
-      for(int i=0; i<mesh->getNumberOfTriangles(); i++)
+      for(unsigned int i=0; i<mesh->getNumberOfTriangles(); i++)
       {
         unsigned int* idx = mIndices[i];
         *pId0 = idx[0];

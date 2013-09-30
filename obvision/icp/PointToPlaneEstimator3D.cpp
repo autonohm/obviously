@@ -88,7 +88,7 @@ void PointToPlaneEstimator3D::estimateTransformation(gsl_matrix* T)
   gsl_vector_view b     = gsl_vector_view_array(b_buf, 6);
   gsl_vector_set_zero(&b.vector);
 
-  for(i = 0; i < size; i++)
+  for(i = 0; i < (unsigned int)size; i++)
   {
     StrCartesianIndexPair pair = (*_pairs)[i];
 

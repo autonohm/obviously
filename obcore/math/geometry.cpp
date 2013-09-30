@@ -11,11 +11,6 @@ namespace obvious
 void calculatePerspective(gsl_matrix* P, CartesianCloud3D* cloud, int nW, int nH, int subsample)
 {
 
-  double fx;
-  double fy;
-  double cx;
-  double cy;
-
   int points = cloud->size() / subsample + 1;
 
   gsl_matrix* A = gsl_matrix_alloc(2 * points, 11);
@@ -24,7 +19,7 @@ void calculatePerspective(gsl_matrix* P, CartesianCloud3D* cloud, int nW, int nH
   int k = 0;
   int* indices = cloud->getIndices();
 
-  for (int i = 0; i < cloud->size(); i += subsample)
+  for (unsigned int i = 0; i < cloud->size(); i += subsample)
   {
     int idx = indices[i];
     double* point = (*cloud)[i];
@@ -100,11 +95,6 @@ void calculatePerspective(gsl_matrix* P, CartesianCloud3D* cloud, int nW, int nH
 void calculatePerspective_cblas(gsl_matrix* P, CartesianCloud3D* cloud, int nW, int nH, int subsample)
 {
 
-  double fx;
-  double fy;
-  double cx;
-  double cy;
-
   int points = cloud->size() / subsample + 1;
 
   gsl_matrix* A = gsl_matrix_alloc(2 * points, 11);
@@ -113,7 +103,7 @@ void calculatePerspective_cblas(gsl_matrix* P, CartesianCloud3D* cloud, int nW, 
   int* indices = cloud->getIndices();
 
   int k = 0;
-  for (int i = 0; i < cloud->size(); i += subsample)
+  for (unsigned int i = 0; i < cloud->size(); i += subsample)
   {
     int idx = indices[i];
 
