@@ -89,7 +89,7 @@ double ObstacleGrid::getNearestObstacle(void) const
     enum DIRECTION {DOWN, LEFT, UP, RIGHT};
 
     unsigned int nrPerRow_Col = square * 2;
-    unsigned int nrPerSquare  = square+4 + ((square-1)*8);
+    //unsigned int nrPerSquare  = square+4 + ((square-1)*8);
     unsigned int idxStartY    = floor(_rows/2) - (square-1);
     unsigned int idxStartX    = floor(_cols/2) - (square-1);
 

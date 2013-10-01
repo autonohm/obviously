@@ -28,6 +28,18 @@ public:
   virtual ~Sensor();
 
   /**
+   * Get size of first dimension
+   * @return size
+   */
+  virtual unsigned int getWidth();
+
+  /**
+   * Get size of second dimension
+   * @return size
+   */
+  virtual unsigned int getHeight();
+
+  /**
    * Transform current sensor pose
    * @param[in] T transformation matrix
    */
@@ -116,6 +128,7 @@ public:
    */
   virtual void backProject(Matrix* M, int* indices) = 0;
 
+  virtual void calcRayFromCurrentPose(unsigned int u, unsigned int v, double ray[3]);
 protected:
 
   Matrix* _Pose;
@@ -132,6 +145,9 @@ protected:
 
   unsigned char* _rgb;
 
+  unsigned int _width;
+
+  unsigned int _height;
 };
 
 }

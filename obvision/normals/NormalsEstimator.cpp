@@ -23,12 +23,12 @@ NormalsEstimator::~NormalsEstimator()
  */
 void NormalsEstimator::estimateNormals3DGrid(unsigned int cols, unsigned int rows, double* coords, bool* mask, double* normals)
 {
-  for(int i=0; i<3*rows*cols; i++)
+  for(unsigned int i=0; i<3*rows*cols; i++)
     normals[i]   = 0.0;
 
-  for(int r=0; r<rows; r++)
+  for(int r=0; r<(int)rows; r++)
   {
-    for(int c=0; c<cols; c++)
+    for(int c=0; c<(int)cols; c++)
     {
       int idx      = r*cols + c;
       if(mask[idx])
@@ -42,7 +42,7 @@ void NormalsEstimator::estimateNormals3DGrid(unsigned int cols, unsigned int row
         bool isValid2 = false;
         if(r >= radius && c >= radius)
           isValid1 = mask[idx_up] && mask[idx_lt];
-        if(r+radius < rows && c+radius < cols)
+        if((r+radius<(int)rows) && (c+radius<(int)cols))
           isValid2 = mask[idx_dwn] && mask[idx_rt];
 
         double u[3];
@@ -99,7 +99,7 @@ void NormalsEstimator::estimateNormalsReverseMapping(gsl_matrix* coords, gsl_mat
   for(int i=0; i<w*h; i++)
     buf[i] = -1;
 
-  for(int i=0; i<coords->size1; i++)
+  for(unsigned int i=0; i<coords->size1; i++)
   {
     double* point = gsl_matrix_ptr(coords, i, 0);
 
@@ -116,7 +116,7 @@ void NormalsEstimator::estimateNormalsReverseMapping(gsl_matrix* coords, gsl_mat
       int u = (int)( du / dw + 0.5);
       int v = h-1-(int)(dv / dw + 0.5);
 
-      if(u>=0 & u<w & v>=0 & v<h)
+      if((u>=0) && (u<w) && (v>=0) && (v<h))
       {
           buf[(v*w+u)] = i;
       }
@@ -133,7 +133,7 @@ void NormalsEstimator::estimateNormalsReverseMapping(gsl_matrix* coords, gsl_mat
     for(int c=0; c<w; c++)
     {
       // horizontal vector: left/right pixel
-      double vh[3] = {0.0, 0.0, 0.0};
+      //double vh[3] = {0.0, 0.0, 0.0};
       int idx      = r*w + c;
       int idx_up   = idx - radius*w;
       int idx_dwn  = idx + radius*w;
@@ -245,7 +245,7 @@ void NormalsEstimator::estimateNormalsFLANN(gsl_matrix* coords, gsl_matrix* norm
   gsl_matrix *V    = gsl_matrix_alloc(3, 3);
 
   // determine covariance matrix
-  for(int i=0; i<cnt; i++)
+  for(unsigned int i=0; i<cnt; i++)
   {
     flann::Matrix<double> query(&buf[i][0], 1, dim);
     flann::SearchParams sp;
@@ -358,7 +358,7 @@ void NormalsEstimator::estimateNormalsANN(gsl_matrix* coords, gsl_matrix* normal
   gsl_matrix *V    = gsl_matrix_alloc(3, 3);
 
   // determine covariance matrix
-  for(int i=0; i<cnt; i++)
+  for(unsigned int i=0; i<cnt; i++)
   {
     query[0] = buf[i][0];
     query[1] = buf[i][1];

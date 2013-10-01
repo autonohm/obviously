@@ -101,7 +101,7 @@ void PointToPointEstimator3D::estimateTransformation(gsl_matrix* T)
   System<double>::allocate(size,3, ps);
 
   //Calculate centered point pairs
-  for(i = 0; i < size; i++)
+  for(unsigned i = 0; i<(unsigned int)size; i++)
   {
     StrCartesianIndexPair pair = (*_pairs)[i];
     double* pointModel         = _model[pair.indexFirst];
@@ -121,7 +121,7 @@ void PointToPointEstimator3D::estimateTransformation(gsl_matrix* T)
   for(r = 0; r < 3; r++) {
     for(c = 0; c < 3; c++) {
       double val = 0.0;
-      for(i = 0; i < size; i++) {
+      for(i=0; i<(unsigned int)size; i++) {
         val += ps[i][r] * pm[i][c];
       }
       gsl_matrix_set(H, r, c, val);

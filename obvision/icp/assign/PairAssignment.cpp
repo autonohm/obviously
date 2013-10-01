@@ -37,7 +37,7 @@ void PairAssignment::addPostFilter(IPostAssignmentFilter* filter)
 
 void PairAssignment::determinePairs(double** ppdScene, int nSize)
 {
-  int i;
+  unsigned int i;
   bool* mask = new bool[nSize];
   memset(mask, 1, nSize * sizeof(*mask));
   for(i=0; i<_vPrefilter.size(); i++)

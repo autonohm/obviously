@@ -14,7 +14,7 @@ using namespace obvious;
 
 int main(int argc, char** argv)
 {
-  double dist_between_points = 0.1;
+  //double dist_between_points = 0.1;
   unsigned int nr_of_points = 4;
 
 //  double mdata[nr_of_points * 2];

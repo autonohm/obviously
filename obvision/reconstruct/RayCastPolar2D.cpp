@@ -113,11 +113,12 @@ bool RayCastPolar2D::rayCastFromCurrentView(TsdGrid* grid, SensorPolar2D* sensor
     double tsdf;
     if (!grid->interpolateBilinear(position, &tsdf))
     {
+      tsdf_prev = tsdf;
       continue;
     }
 
     // Check sign change
-    if(tsdf_prev > 0 && tsdf_prev < 0.99999 && tsdf < 0)
+    if(tsdf_prev > 0 && tsdf < 0)
     {
       interp = tsdf_prev / (tsdf_prev - tsdf);
       found = true;
@@ -200,3 +201,4 @@ void RayCastPolar2D::calcCoordsAligned(TsdGrid* grid, double* coords, double* no
 }
 
 }
+

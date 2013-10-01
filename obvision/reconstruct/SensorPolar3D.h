@@ -30,10 +30,6 @@ public:
    */
   ~SensorPolar3D();
 
-  unsigned int getBeams();
-
-  unsigned int getPlanes();
-
   /**
    * Calculate ray of specific beam
    * @param[in] beam beam index
@@ -52,12 +48,6 @@ public:
   void setDistanceMap(vector<float> phi, vector<float> dist);
 
 private:
-
-  //int thetaPhi2Index(double theta, double phi);
-
-  unsigned int _planes;
-
-  unsigned int _beams;
 
   double _thetaRes;
 
