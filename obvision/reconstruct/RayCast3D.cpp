@@ -485,10 +485,12 @@ bool RayCast3D::rayCastParallelAxis(double* footPoint, double* dirVec,std::vecto
       curPosition[i] += dirVec[i];
 
     if (!_space->interpolateTrilinear(curPosition, &tsdf))
+    {
+      tsdfPrev = tsdf;
       continue;
-
+    }
     // check sign change
-    if(tsdfPrev > 0 && tsdfPrev < 0.99999 && tsdf < 0)
+    if((tsdfPrev > 0 && tsdf < 0) || (tsdfPrev < 0 && tsdf > 0))
     {
       // interpolate between voxels when sign change happened
       curPrevInterp = tsdfPrev / (tsdfPrev - tsdf);
@@ -496,9 +498,14 @@ bool RayCast3D::rayCastParallelAxis(double* footPoint, double* dirVec,std::vecto
         zeroCrossing[i] = prevPosition[i] + dirVec[i] * curPrevInterp;
 
       if(!_space->interpolateNormal(zeroCrossing, normal))
+      {
+        tsdfPrev = tsdf;
         continue;
+      }
+
       if(!_space->interpolateTrilinearRGB(curPosition, zerCrossingRgb))
       {
+        tsdfPrev = tsdf;
         continue;
       }
 
