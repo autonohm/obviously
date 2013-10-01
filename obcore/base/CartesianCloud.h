@@ -31,6 +31,7 @@ namespace obvious
   public:
     /**
      * Constructor;
+     * @param size Number of points in the cloud
      */
     CartesianCloud3D(unsigned int size, double* coords, unsigned char* rgb, double* normals);
 
