@@ -93,10 +93,16 @@ namespace obvious
     int hasInfo();
 
     /**
-     * Shows, wether the cloud has normals or not
+     * Shows, whether the cloud has normals or not
      * @return flag
      */
     int hasNormals(void)const{return(_hasNormals);}
+
+    /**
+     * Shows, whether the cloud has colors or not
+     * @return flag
+     */
+    bool hasColors(void)const{return(_hasColors);}
 
     /**
      * Add additional source information
