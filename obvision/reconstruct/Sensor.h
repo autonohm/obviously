@@ -129,6 +129,7 @@ public:
   virtual void backProject(Matrix* M, int* indices) = 0;
 
   virtual void calcRayFromCurrentPose(unsigned int u, unsigned int v, double ray[3]);
+
 protected:
 
   Matrix* _Pose;

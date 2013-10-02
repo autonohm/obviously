@@ -32,7 +32,7 @@ SensorProjective3D::SensorProjective3D(unsigned int cols, unsigned int rows, dou
       // Normalize ray to size of voxel
       Matrix* M = _rays[col][row];
       double len = sqrt((*M)[0][0]*(*M)[0][0] + (*M)[1][0]*(*M)[1][0] + (*M)[2][0]*(*M)[2][0]);
-      len /= voxelSize;
+      //len /= voxelSize;
       (*M)[0][0] /= len;
       (*M)[1][0] /= len;
       (*M)[2][0] /= len;
