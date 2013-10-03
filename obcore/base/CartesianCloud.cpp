@@ -378,7 +378,6 @@ void CartesianCloud3D::setData(const unsigned int size, double* coords,
   }
   else  //new content differs old content -> reallocate matrices
   {
-    std::cout << __PRETTY_FUNCTION__ << " content differs...reallocate matrices!\n";
     _mSourceInfo.clear();
     if(_hasInfo)
     {
