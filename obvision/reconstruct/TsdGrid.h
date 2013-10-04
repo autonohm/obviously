@@ -142,6 +142,12 @@ public:
    * @param filename
    */
   void serialize(const char* filename);
+
+  /**
+   * Method to load values out of a file into the grid
+   * @param filename
+   */
+  void Load(const char* filename);
 private:
 
   /**

@@ -327,4 +327,33 @@ void TsdGrid::serialize(const char* filename)
   }
   f.close();
 }
+
+void TsdGrid::Load(const char* filename)
+{
+  char line[256];
+  double weight, tsdf;
+  unsigned int x, y;
+  ifstream f;
+
+  f.open(filename, ios_base::in);
+
+  if(!f)
+  {
+    std::cout << filename << " is no file!" << std::endl;
+    abort();
+  }
+
+  while(f.getline(line, 256))
+  {
+    if(!f.eof())
+    {
+      f >> y >> x >> tsdf >> weight;
+      TsdCell* cell = &_grid[y][x];
+      cell->weight = weight;
+      cell->tsdf = tsdf;
+    }
+  }
+  f.close();
+}
+
 }
