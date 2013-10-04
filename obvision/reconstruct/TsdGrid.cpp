@@ -310,4 +310,21 @@ bool TsdGrid::coord2Cell(double coord[2], int* x, int* y, double* dx, double* dy
   return true;
 }
 
+void TsdGrid::serialize(const char* filename)
+{
+  ofstream f;
+  f.open(filename);
+
+  for(unsigned int y=0; y<_cellsY; y++)
+  {
+    for(unsigned int x=0; x<_cellsX; x++)
+    {
+      double tsdf = _grid[y][x].tsdf;
+      if(!isnan(tsdf))
+        f << y << " " << x << " " << tsdf << " " << _grid[y][x].weight << endl;
+
+    }
+  }
+  f.close();
+}
 }
