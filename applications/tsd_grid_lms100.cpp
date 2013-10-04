@@ -17,6 +17,8 @@
 using namespace std;
 using namespace obvious;
 
+TsdGrid* _grid;
+
 void callbackAssignment(double** m, double** s, unsigned int size)
 {
   static unsigned int cnt = 0;
@@ -38,6 +40,11 @@ void callbackAssignment(double** m, double** s, unsigned int size)
   delete [] s;
 }
 
+void callbackSerializeTsdGrid()
+{
+  _grid->serialize("/tmp/tsdgrid.dat");
+}
+
 int main(int argc, char* argv[])
 {
   LOGMSG_CONF("tsd_grid_test.log", Logger::file_off|Logger::screen_off, DBG_DEBUG, DBG_DEBUG);
@@ -55,19 +62,19 @@ int main(int argc, char* argv[])
   else
     _estType = PTP;
 
-  TsdGrid* grid = new TsdGrid(dimX, dimY, cellSize);
-  grid->setMaxTruncation(4.0*cellSize);
+  _grid = new TsdGrid(dimX, dimY, cellSize);
+  _grid->setMaxTruncation(4.0*cellSize);
 
 
   // Initialization of 2D viewer
   // image display is only possible for image dimensions divisible by 4
-  const unsigned int w = grid->getCellsX();
-  const unsigned int h = grid->getCellsY();
+  const unsigned int w = _grid->getCellsX();
+  const unsigned int h = _grid->getCellsY();
   unsigned char* image = new unsigned char[3*w*h];
   double ratio = double(w)/double(h);
   double screen_width = 1000;
   Obvious2D viewer(screen_width, screen_width/ratio, "tsd_grid_lms100");
-
+  viewer.registerKeyboardCallback('s', callbackSerializeTsdGrid);
 
   // Translation of sensor
   double tx = dimX/2.0;
@@ -96,12 +103,12 @@ int main(int argc, char* argv[])
   RayCastPolar2D rayCaster;
   double* mCoords = new double[rays*2];
   double* mNormals = new double[rays*2];
-  double* map      = new double[grid->getCellsX()*grid->getCellsY()*2];
+  double* map      = new double[_grid->getCellsX()*_grid->getCellsY()*2];
 
   // Compose ICP modules
   int iterations                 = 25;
   PairAssignment* assigner       = (PairAssignment*)  new AnnPairAssignment(2);
-  OutOfBoundsFilter2D* filterBounds = new OutOfBoundsFilter2D(grid->getMinX(), grid->getMaxX(), grid->getMinY(), grid->getMaxY());
+  OutOfBoundsFilter2D* filterBounds = new OutOfBoundsFilter2D(_grid->getMinX(), _grid->getMaxX(), _grid->getMinY(), _grid->getMaxY());
   filterBounds->setPose(&Tinit);
   assigner->addPreFilter(filterBounds);
   DistanceFilter* filterDist = new DistanceFilter(2.0, 0.01, iterations-3);
@@ -128,9 +135,14 @@ int main(int argc, char* argv[])
   sensor.setRealMeasurementData(lms.getRanges());
   sensor.transform(&Tinit);
 
-  for(unsigned int i=0; i<10; i++)
-    grid->push(&sensor);
+  //sensor.setRealMeasurementAccuracy(sensor.getRealMeasurementAccuracy());
 
+  //for(unsigned int i=0; i<10; i++)
+  _grid->push(&sensor);
+
+  double lastPhi = 0;
+  double lastX = 0;
+  double lastY = 0;
 
   unsigned int initCount = 0;
   while(viewer.isAlive())
@@ -138,7 +150,7 @@ int main(int argc, char* argv[])
     lms.grab();
 
     unsigned int mSize = 0;
-    rayCaster.calcCoordsFromCurrentView(grid, &sensor, mCoords, mNormals, &mSize);
+    rayCaster.calcCoordsFromCurrentView(_grid, &sensor, mCoords, mNormals, &mSize);
 //    LOGMSG(DBG_DEBUG, "Raycast resulted in " << mSize << " coordinates");
 
     double* sCoords = lms.getCoords();
@@ -160,42 +172,48 @@ int main(int argc, char* argv[])
 
     Matrix* T = icp->getFinalTransformation();
 
-    double poseX  = gsl_matrix_get(T->getBuffer(), 0, 2);
-    double poseY  = gsl_matrix_get(T->getBuffer(), 1, 2);
-    double curPhi = acos(gsl_matrix_get(T->getBuffer(), 0, 0));
-    double lastX  = gsl_matrix_get(LastScanPose.getBuffer(), 0, 2);
-    double lastY  = gsl_matrix_get(LastScanPose.getBuffer(), 1, 2);
-    double lastPhi= acos(gsl_matrix_get(LastScanPose.getBuffer(), 0, 0));
+    Matrix* Pose = sensor.getPose();
+    double poseX  = gsl_matrix_get(Pose->getBuffer(), 0, 2);
+    double poseY  = gsl_matrix_get(Pose->getBuffer(), 1, 2);
+    double curPhi = acos(gsl_matrix_get(Pose->getBuffer(), 0, 0));
+    //double lastX  = gsl_matrix_get(LastScanPose.getBuffer(), 0, 2);
+    //double lastY  = gsl_matrix_get(LastScanPose.getBuffer(), 1, 2);
+    //double lastPhi= acos(gsl_matrix_get(LastScanPose.getBuffer(), 0, 0));
 
     double deltaX   = poseX - lastX;
     double deltaY   = poseY - lastY;
     double deltaPhi = fabs(curPhi - lastPhi);
+    double sqrt_delta = sqrt(deltaX*deltaX + deltaY*deltaY);
 
-    std::cout << deltaX << std::endl;
+    //std::cout << deltaX << std::endl;
 
     //if(deltaX>0.1) abort();
     filterBounds->setPose(sensor.getPose());
 
-    /*T->print();
-    usleep(2000000);*/
+    /*T->print();*/
+    //usleep(2000000);
 
     sensor.setRealMeasurementData(lms.getRanges());
     sensor.transform(T);
 
-    std::cout << sqrt(deltaX*deltaX + deltaY*deltaY) << std::endl;
+    //std::cout << sqrt(deltaX*deltaX + deltaY*deltaY) << std::endl;
 
-    if (sqrt(deltaX*deltaX + deltaY*deltaY) > 0.05 || deltaPhi > 0.05|| initCount < 100)
+    if (initCount < 5 || sqrt_delta > 0.05 || deltaPhi > 0.05)
     {
-      grid->push(&sensor);
+      //sensor.setRealMeasurementAccuracy(sensor.getRealMeasurementAccuracy());
+      _grid->push(&sensor);
       LastScanPose = *T;
-      std::cout << "Pushed to grid" << std::endl;
-      initCount++;
+      //std::cout << "Pushed to grid" << std::endl;
+      if(initCount < 5) initCount++;
+      lastPhi = curPhi;
+      lastX = poseX;
+      lastY = poseY;
     }
 
     // Visualize data
-    grid->grid2ColorImage(image);
+    _grid->grid2ColorImage(image);
     unsigned int mapSize;
-    rayCaster.calcCoordsAligned(grid, map, NULL, &mapSize);
+    rayCaster.calcCoordsAligned(_grid, map, NULL, &mapSize);
     for(unsigned int i=0; i<mapSize/2; i++)
     {
       double x = map[2*i];
@@ -214,7 +232,7 @@ int main(int argc, char* argv[])
     sensor.getPosition(position);
     int x, y;
     double dx, dy;
-    grid->coord2Cell(position, &x, &y, &dx, &dy);
+    _grid->coord2Cell(position, &x, &y, &dx, &dy);
     int idx = ((h-y)*w+x);
     image[3*idx]   = 255;
     image[3*idx+1] = 0;
