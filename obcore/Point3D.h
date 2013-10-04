@@ -88,6 +88,7 @@ public:
       }
       else if (idx == Y) return _y;
       else if (idx == Z) return _z;
+      else return _x;
     }
     /**
      * Overloaded comparison operator for class Point3D
