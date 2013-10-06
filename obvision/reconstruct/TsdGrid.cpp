@@ -315,8 +315,8 @@ void TsdGrid::serialize(const char* filename)
   ofstream f;
   f.open(filename);
 
-  for(unsigned int y=0; y<_cellsY; y++)
-  {
+
+  for(unsigned int y=0;   y<_cellsY; y++) {
     for(unsigned int x=0; x<_cellsX; x++)
     {
       double tsdf = _grid[y][x].tsdf;
@@ -349,8 +349,8 @@ void TsdGrid::Load(const char* filename)
     {
       f >> y >> x >> tsdf >> weight;
       TsdCell* cell = &_grid[y][x];
-      cell->weight = weight;
-      cell->tsdf = tsdf;
+      cell->weight  = weight;
+      cell->tsdf    = tsdf;
     }
   }
   f.close();
