@@ -488,8 +488,6 @@ void TsdSpace::serialize(const char* filename)
   ofstream f;
   f.open(filename);
 
-  f
-
   for(unsigned int z=0 ;    z<_zDim; z++) {
     for(unsigned int y=0;   y<_yDim; y++) {
       for(unsigned int x=0; x<_xDim; x++) {
