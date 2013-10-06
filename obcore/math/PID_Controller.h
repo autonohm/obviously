@@ -32,11 +32,7 @@ public:
   /**
    * Standard constructor with default values
    */
-  PID_Controller(void)
-    : _p(0), _i(0), _d(0), _awu(0),
-      _isValue(0), _setValue(0), _debug(false),
-      _minOutput(-100000), _maxOutput(100000) {};
-
+  PID_Controller(void);
   /*---------------------------------------------------------------------------
    * Functions to set
    */

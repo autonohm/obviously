@@ -9,6 +9,13 @@
 #include "PID_Controller.h"
 using namespace obvious;
 
+PID_Controller::PID_Controller(void)
+: _p(0), _i(0), _d(0), _awu(0),
+  _maxOutput(-100000), _minOutput(100000),
+  _setValue(0), _isValue(0), _debug(false)
+{
+
+}
 
 float PID_Controller::controll(const float& isValue)
 {

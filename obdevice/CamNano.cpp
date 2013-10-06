@@ -264,7 +264,7 @@ unsigned char* CamNano::getImage(void) const
 {
   float minMag = 1000;
   float maxMag = 0;
-  for (int i = 0 ; i < _rows*_cols ; i++)
+  for (unsigned int i = 0 ; i < _rows*_cols ; i++)
   {
     if (_imageF[i] < minMag)
       minMag = _imageF[i];
@@ -273,7 +273,7 @@ unsigned char* CamNano::getImage(void) const
   }
 
   float range = minMag - maxMag;
-  for (int i = 0 ; i < _rows*_cols ; i++)
+  for (unsigned int i = 0 ; i < _rows*_cols ; i++)
   {
      _image[i] = (unsigned char)((_imageF[i] - minMag)/range*255);
   }

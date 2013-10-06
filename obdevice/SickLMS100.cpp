@@ -192,13 +192,13 @@ bool SickLMS100::grab(void)
 void SickLMS100::calculateRanges(void)
 {
   cout << _data.dist_len1 << endl;
-  for(unsigned int i=0; i<_data.dist_len1; i++)
+  for(unsigned int i=0; i<(unsigned int)_data.dist_len1; i++)
     _ranges[i] = _data.dist1[i] * 0.001;
 }
 
 void SickLMS100::calculateIntensities(void)
 {
-  for(unsigned int i=0; i<_data.rssi_len1; i++)
+  for(unsigned int i=0; i<(unsigned int)_data.rssi_len1; i++)
     _intensities[i] = _data.rssi1[i];
 }
 

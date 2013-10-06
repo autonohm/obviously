@@ -75,8 +75,6 @@ unsigned char* ObstacleGrid::getImageOfGrid( void)
 
 double ObstacleGrid::getNearestObstacle(void) const
 {
-  unsigned int x = 0;
-  unsigned int y = 0;
   // estimate maximum square calculation
   unsigned int squareMax;
   if (_cols >= _rows)
@@ -124,17 +122,16 @@ double ObstacleGrid::getNearestObstacle(void) const
           idxY = idxStartY + i;
         }
       }
-
-      if (_gGrid->getMat().at(idxX,idxY) != 0.0)
+      else if (_gGrid->getMat().at(idxX,idxY) != 0.0)
       {
-        x = 2.0;//idxX;
-        y = 1.0; //idxY;
+        unsigned int x = 2.0;//idxX;
         std::cout << "found" << std::endl;
         return(x);
         exit(0);
       }
     }
   }
+  return(-1.0);
 }
 
 

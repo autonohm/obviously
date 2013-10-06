@@ -32,8 +32,9 @@ public:
    * @param[in]     widthMap    width of map in meters
    */
   Obvious2DMap(unsigned int width, unsigned int height, const char* title, double lengthMap, double widthMap)
-    : Obvious2D(width, height, title), _lengthMap(lengthMap), _heightMap(lengthMap),
-      _gridActive(false), _circleActive(false), _anglesActive(false) {  }
+    : Obvious2D(width, height, title),
+      _gridActive(false), _circleActive(false), _anglesActive(false),
+      _lengthMap(lengthMap), _heightMap(lengthMap){  }
   /**
    * Function to activate grid
    * @param[in] active    (default=true)
