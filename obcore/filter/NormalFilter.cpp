@@ -32,7 +32,6 @@ FILRETVAL NormalFilter::applyFilter(void)
   }
 
   _validSize      = 0;
-  double distance = 0;
   double *dPtr    = _input;
   double *dPtrN   = _inputNormals;
 

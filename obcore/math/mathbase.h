@@ -453,8 +453,8 @@ namespace obvious {
   inline double getAngleBetweenVec(const T* vec1, const T* vec2)
   {
     T scalar = dot3<T>(vec1, vec2);
-    T v1[3] = {vec1[1], vec1[2], vec1[3]};
-    T v2[3] = {vec2[1], vec2[2], vec2[3]};
+    T v1[3] = {vec1[0], vec1[1], vec1[2]};
+    T v2[3] = {vec2[0], vec2[1], vec2[2]};
     T absValue = abs3D<double>(v1) * abs3D<double>(v2);
     double angle    = (double)acos(scalar / absValue);
     return(angle);

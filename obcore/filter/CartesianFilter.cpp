@@ -22,8 +22,7 @@ FILRETVAL CartesianFilter::applyFilter(void)
   }
 
   _validSize      = 0;
-  double distance = 0;
-  double *dPtr    = _input;
+  double *dPtr   = _input;
 
   // init output array
   for(unsigned int i=0 ; i<_size ; i++)
