@@ -62,11 +62,10 @@ public:
         EnumIcpState state  = _icp->iterate(&rms, &pairs, &it);
 
         Matrix* T           = _icp->getFinalTransformation();
-        /*cout << "print T" << endl;
-        T->print();*/
-        /*cout << "Success: " << state << endl;
-        cout << "Needed iterations: " << it << endl;*/
-
+        //cout << "print T" << endl;
+        //T->print();
+        cout << "Success: " << state << ", found " << pairs << " pairs" << endl;
+        cout << "Needed iterations: " << it << endl;
 
         double Tdata[16];
         T->getData(Tdata);

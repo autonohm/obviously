@@ -13,18 +13,18 @@ SensorProjective3D::SensorProjective3D(unsigned int cols, unsigned int rows, dou
   _P = new Matrix(3,4);
   _P->setData(PData);
 
-  _cols = cols;
-  _rows = rows;
-  _size = _cols*_rows;
+  _width = cols;
+  _height = rows;
+  _size = _width*_height;
 
   _data = new double[_size];
   _mask = new bool[_size];
   for(unsigned int i=0; i<_size; i++)
     _mask[i] = true;
 
-  System<Matrix*>::allocate(_cols, _rows, _rays);
-  for(unsigned int col=0; col<_cols; col++)
-    for(unsigned int row=0; row<_rows; row++)
+  System<Matrix*>::allocate(_width, _height, _rays);
+  for(unsigned int col=0; col<_width; col++)
+    for(unsigned int row=0; row<_height; row++)
     {
       _rays[col][row] = new Matrix(4, 1);
       project2Space(col, row, 1.0, _rays[col][row]);
@@ -32,7 +32,7 @@ SensorProjective3D::SensorProjective3D(unsigned int cols, unsigned int rows, dou
       // Normalize ray to size of voxel
       Matrix* M = _rays[col][row];
       double len = sqrt((*M)[0][0]*(*M)[0][0] + (*M)[1][0]*(*M)[1][0] + (*M)[2][0]*(*M)[2][0]);
-      len /= voxelSize;
+      //len /= voxelSize;
       (*M)[0][0] /= len;
       (*M)[1][0] /= len;
       (*M)[2][0] /= len;
@@ -46,8 +46,8 @@ SensorProjective3D::~SensorProjective3D()
   delete[] _data;
   delete[] _mask;
 
-  for(unsigned int col=0; col<_cols; col++)
-    for(unsigned int row=0; row<_rows; row++)
+  for(unsigned int col=0; col<_width; col++)
+    for(unsigned int row=0; row<_height; row++)
       delete _rays[col][row];
   System<Matrix*>::deallocate(_rays);
 }
@@ -112,9 +112,9 @@ void SensorProjective3D::backProject(Matrix* M, int* indices)
       const unsigned int u = static_cast<unsigned int>(du[i]*inv_dw + 0.5);
       const unsigned int v = static_cast<unsigned int>(dv[i]*inv_dw + 0.5);
 
-      if(u < _cols && v < _rows && _mask[((_rows - 1) - v) * _cols + u])
+      if(u < _width && v < _height && _mask[((_height - 1) - v) * _width + u])
       {
-        unsigned int idx = ((_rows - 1) - v) * _cols + u;
+        unsigned int idx = ((_height - 1) - v) * _width + u;
         indices[i] = idx;
       }
     }

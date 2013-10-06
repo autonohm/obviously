@@ -40,6 +40,4 @@ add_library(obvision
 	reconstruct/TsdSpace.cpp
     reconstruct/RayCastPolar2D.cpp
 	reconstruct/RayCast3D.cpp
-	reconstruct/RayCastProjective3D.cpp
-	reconstruct/RayCastPolar3D.cpp
 	)

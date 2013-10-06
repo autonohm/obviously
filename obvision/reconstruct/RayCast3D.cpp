@@ -20,6 +20,165 @@ RayCast3D::~RayCast3D()
 
 }
 
+void RayCast3D::calcCoordsFromCurrentPose(Sensor* sensor, double* coords, double* normals, unsigned char* rgb, unsigned int* size)
+{
+  Timer t;
+  *size = 0;
+
+  Matrix* T = sensor->getPose();
+
+  Matrix Tinv(4, 4);
+  Tinv = T->getInverse();
+
+  unsigned int width = sensor->getWidth();
+  unsigned int height = sensor->getHeight();
+
+#pragma omp parallel
+  {
+    double depth = 0.0;
+    double c[3];
+    double n[3];
+    unsigned char color[3]   = {255, 255, 255};
+    double* c_tmp            = new double[width*height*3];
+    double* n_tmp            = new double[width*height*3];
+    unsigned char* color_tmp = new unsigned char[width*height*3];
+    unsigned int size_tmp     = 0;
+    Matrix M(4,1);
+    Matrix N(4,1);
+    M[3][0] = 1.0;
+    N[3][0] = 0.0; // no translation for normals
+
+#pragma omp for schedule(dynamic)
+    for (unsigned int v = 0; v < height; v++)
+    {
+      for (unsigned int u = 0; u < width; u++)
+      {
+        double ray[3];
+        sensor->calcRayFromCurrentPose(v, u, ray);
+
+        ray[0] *= _space->getVoxelSize();
+        ray[1] *= _space->getVoxelSize();
+        ray[2] *= _space->getVoxelSize();
+
+        if(rayCastFromSensorPose(ray, c, n, color, &depth, sensor)) // Ray returned with coordinates
+        {
+          M[0][0] = c[0];
+          M[1][0] = c[1];
+          M[2][0] = c[2];
+          N[0][0] = n[0];
+          N[1][0] = n[1];
+          N[2][0] = n[2];
+          M       = Tinv * M;
+          N       = Tinv * N;
+          for (unsigned int i = 0; i < 3; i++)
+          {
+            c_tmp[size_tmp]      = M[i][0];
+            color_tmp[size_tmp]  = color[i];
+            n_tmp[size_tmp++]    = N[i][0];
+          }
+        }
+      }
+    }
+#pragma omp critical
+    {
+      memcpy(&coords[*size],  c_tmp,     size_tmp*sizeof(double));
+      memcpy(&normals[*size], n_tmp,     size_tmp*sizeof(double));
+      memcpy(&rgb[*size],     color_tmp, size_tmp*sizeof(unsigned char));
+      *size += size_tmp;
+    }
+    delete[] c_tmp;
+    delete[] n_tmp;
+    delete[] color_tmp;
+  }
+
+  LOGMSG(DBG_DEBUG, "Elapsed TSDF projection: " << t.getTime() << "ms");
+  LOGMSG(DBG_DEBUG, "Raycasting finished! Found " << *size << " coordinates");
+}
+
+void RayCast3D::calcCoordsFromCurrentPoseMask(Sensor* sensor, double* coords, double* normals, unsigned char* rgb, bool* mask, unsigned int* size)
+{
+  Timer t;
+
+  Matrix* T = sensor->getPose();
+  Matrix Tinv(4, 4);
+  Tinv = T->getInverse();
+  unsigned int ctr = 0;
+
+  unsigned int width = sensor->getWidth();
+  unsigned int height = sensor->getHeight();
+
+#pragma omp parallel
+  {
+    double depth = 0.0;
+    double c[3];
+    double n[3];
+    unsigned char color[3]   = {255, 255, 255};
+    double* c_tmp            = new double[width*height*3];
+    double* n_tmp            = new double[width*height*3];
+    unsigned char* color_tmp = new unsigned char[width*height*3];
+    bool* mask_tmp           = new bool[width*height];
+    Matrix M(4,1);
+    Matrix N(4,1);
+    M[3][0] = 1.0;
+    N[3][0] = 0.0; // no translation for normals
+    unsigned int cnt_tmp = 0;
+
+#pragma omp for schedule(dynamic)
+    for (unsigned int v = 0; v < height; v++)
+    {
+      for (unsigned int u = 0; u < width; u++)
+      {
+        double ray[3];
+        sensor->calcRayFromCurrentPose(v, u, ray);
+        if(rayCastFromSensorPose(ray, c, n, color, &depth, sensor)) // Ray returned with coordinates
+        {
+          M[0][0] = c[0];
+          M[1][0] = c[1];
+          M[2][0] = c[2];
+          N[0][0] = n[0];
+          N[1][0] = n[1];
+          N[2][0] = n[2];
+          M       = Tinv * M;
+          N       = Tinv * N;
+          mask_tmp[cnt_tmp/3] = true;
+          for (unsigned int i = 0; i < 3; i++)
+          {
+            c_tmp[cnt_tmp]      = M[i][0];
+            color_tmp[cnt_tmp]  = color[i];
+            n_tmp[cnt_tmp++]    = N[i][0];
+          }
+        }
+        else
+        {
+          mask_tmp[cnt_tmp/3] = false;
+          for (unsigned int i = 0; i < 3; i++)
+          {
+            c_tmp[cnt_tmp]      = 0;
+            color_tmp[cnt_tmp]  = 0;
+            n_tmp[cnt_tmp++]    = 0;
+          }
+        }
+
+      }
+    }
+#pragma omp critical
+    {
+      memcpy(&coords[ctr],  c_tmp,     cnt_tmp*sizeof(double));
+      memcpy(&normals[ctr], n_tmp,     cnt_tmp*sizeof(double));
+      memcpy(&rgb[ctr],     color_tmp, cnt_tmp*sizeof(unsigned char));
+      memcpy(&mask[ctr/3],  mask_tmp,  cnt_tmp/3*sizeof(bool));
+      ctr += cnt_tmp;
+    }
+    delete[] c_tmp;
+    delete[] n_tmp;
+    delete[] color_tmp;
+    delete[] mask_tmp;
+  }
+
+  LOGMSG(DBG_DEBUG, "Elapsed TSDF projection: " << t.getTime() << "ms");
+  LOGMSG(DBG_DEBUG, "Raycasting finished! Found " << ctr << " coordinates");
+}
+
 bool RayCast3D::rayCastFromSensorPose(double ray[3], double coordinates[3], double normal[3], unsigned char rgb[3], double* depth, Sensor* sensor)
 {
   double tr[3];
@@ -326,10 +485,12 @@ bool RayCast3D::rayCastParallelAxis(double* footPoint, double* dirVec,std::vecto
       curPosition[i] += dirVec[i];
 
     if (!_space->interpolateTrilinear(curPosition, &tsdf))
+    {
+      tsdfPrev = tsdf;
       continue;
-
+    }
     // check sign change
-    if(tsdfPrev > 0 && tsdfPrev < 0.99999 && tsdf < 0)
+    if((tsdfPrev > 0 && tsdf < 0) || (tsdfPrev < 0 && tsdf > 0))
     {
       // interpolate between voxels when sign change happened
       curPrevInterp = tsdfPrev / (tsdfPrev - tsdf);
@@ -337,9 +498,14 @@ bool RayCast3D::rayCastParallelAxis(double* footPoint, double* dirVec,std::vecto
         zeroCrossing[i] = prevPosition[i] + dirVec[i] * curPrevInterp;
 
       if(!_space->interpolateNormal(zeroCrossing, normal))
+      {
+        tsdfPrev = tsdf;
         continue;
+      }
+
       if(!_space->interpolateTrilinearRGB(curPosition, zerCrossingRgb))
       {
+        tsdfPrev = tsdf;
         continue;
       }
 

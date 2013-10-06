@@ -37,10 +37,14 @@ public:
    */
 	virtual ~RayCast3D();
 
+	virtual void calcCoordsFromCurrentPose(Sensor* sensor, double* coords, double* normals, unsigned char* rgb, unsigned int* size);
+
+	virtual void calcCoordsFromCurrentPoseMask(Sensor* sensor, double* coords, double* normals, unsigned char* rgb, bool* mask, unsigned int* size);
+
 	virtual bool rayCastFromSensorPose(double ray[3], double coordinates[3], double normal[3], unsigned char rgb[3], double* depth, Sensor* sensor);
 
   /**
-   *
+   * @param size Contains number of coords found
    */
 	virtual bool generatePointCloud(double** pointCloud, double** cloudNormals, unsigned char** cloudRgb, unsigned int* size);
 

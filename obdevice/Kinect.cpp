@@ -386,7 +386,7 @@ unsigned short* Kinect::getUserMask()
   int valid_points          = 0;
   unsigned short* userMask  = (unsigned short*) _sceneMD.Data();
 
-  for(int i=0; i<_rows*_cols; i++)
+  for(unsigned int i=0; i<_rows*_cols; i++)
   {
     if(userMask[i])
     {
@@ -397,7 +397,7 @@ unsigned short* Kinect::getUserMask()
   if(valid_points > 100)
   {
     zmean /= valid_points;
-    for(int i=0; i<_rows*_cols; i++)
+    for(unsigned int i=0; i<_rows*_cols; i++)
     {
       if( fabs(_z[i]-zmean)> 300)
       {
@@ -430,7 +430,6 @@ void Kinect::filterBilinear(bool* mask, double* z_filtered)
   double distance_range;
   double sigmad = 1.0/(3.0*3.0);
   double sigmar = 1.0/(30.0*30.0);
-  double wd, wr;
 
   _depth.GetMetaData(depthMD);
 
@@ -439,14 +438,14 @@ void Kinect::filterBilinear(bool* mask, double* z_filtered)
      mini = i - radius;
      maxi = i + radius;
      if (mini < 0) mini = 0;
-     if (maxi >= _rows) maxi = _rows - 1;
+     if (maxi >= (int)_rows) maxi = _rows - 1;
 
      for (j = 0; j < _cols; j++)
      {
         minj = j - radius;
         maxj = j + radius;
         if (minj < 0) minj = 0;
-        if (maxj >= _cols) maxj = _cols - 1;
+        if (maxj >= (int)_cols) maxj = _cols - 1;
 
         if (!mask[i*_cols+j]) continue;
 

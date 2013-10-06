@@ -12,6 +12,7 @@ CartesianCloud3D::CartesianCloud3D(unsigned int size, double* coords, unsigned c
   _coords  = NULL;
   _colors  = NULL;
   _normals = NULL;
+  _size    = size;
   bool withInfo = (rgb!=NULL);
   init(size, withInfo);
 
@@ -22,10 +23,14 @@ CartesianCloud3D::CartesianCloud3D(unsigned int size, double* coords, unsigned c
   {
     gsl_matrix_view vnormals = gsl_matrix_view_array(normals, size, 3);
     gsl_matrix_memcpy(_normals, &vnormals.matrix);
+    _hasNormals = 1;
   }
 
   if(rgb)
+  {
     memcpy(_colors, rgb, 3*size*sizeof(*_colors));
+    _hasColors = true;
+  }
 
 }
 
@@ -221,7 +226,7 @@ void CartesianCloud3D::removeInvalidPoints()
 
 void CartesianCloud3D::subsample(unsigned int step)
 {
-  for (int i=0; i<_coords->size1; i++)
+  for (unsigned int i=0; i<_coords->size1; i++)
   {
     if(i%step!=0)
       _attributes[i] &= ~ePointAttrValid;
@@ -274,7 +279,7 @@ void CartesianCloud3D::createProjection(unsigned char* pImage, unsigned char* pM
   memset(pImage, 0, 3*nW*nH*sizeof(unsigned char));
   memset(pMask, 0, nW*nH*sizeof(unsigned char));
 
-  for(int i=0; i<_coords->size1; i++)
+  for(unsigned int i=0; i<_coords->size1; i++)
   {
     double* point = gsl_matrix_ptr(_coords, i, 0);
 
@@ -293,7 +298,7 @@ void CartesianCloud3D::createProjection(unsigned char* pImage, unsigned char* pM
         int u = nW-1-(int)( du / dw + 0.5);
         int v = (int)(dv / dw + 0.5);
 
-        if(u>=0 & u<nW & v>=0 & v<nH)
+        if((u>=0) && (u<nW) && (v>=0) && (v<nH))
         {
           pImage[(v*nW+u)*3]   = _colors[3*i];
           pImage[(v*nW+u)*3+1] = _colors[3*i+1];
@@ -320,7 +325,7 @@ void CartesianCloud3D::createZBuffer(unsigned char* pImage, double* zbuffer, gsl
   for(int i=0; i<nW*nH; i++)
     zbuffer[i] = 0.0;
 
-  for(int i=0; i<_coords->size1; i++)
+  for(unsigned int i=0; i<_coords->size1; i++)
   {
     double* point = gsl_matrix_ptr(_coords, i, 0);
 
@@ -339,7 +344,7 @@ void CartesianCloud3D::createZBuffer(unsigned char* pImage, double* zbuffer, gsl
         int u = (int)( du / dw + 0.5);
         int v = nH-1-(int)(dv / dw + 0.5);
 
-        if(u>=0 & u<nW & v>=0 & v<nH)
+        if((u>=0) && (u<nW) && (v>=0) && (v<nH))
         {
           pImage[(v*nW+u)*3]   = _colors[3*i];
           pImage[(v*nW+u)*3+1] = _colors[3*i+1];
@@ -352,6 +357,55 @@ void CartesianCloud3D::createZBuffer(unsigned char* pImage, double* zbuffer, gsl
 
   gsl_vector_free(ni);
   gsl_vector_free(xi);
+}
+
+void CartesianCloud3D::setData(const unsigned int size, double* coords,
+    double* normals, const unsigned char* const rgb)
+{
+  //new content == old content -> overwrite content
+  if((size == _size) && ((normals == NULL) && (_hasNormals == 0)) && ((rgb == NULL) && (_hasColors == false)))
+  {
+    for(unsigned int i = 0; i < size * 3; i++)
+    {
+      _coords->data[i] = coords[i];
+      if(normals)
+        _normals->data[i] = normals[i];
+      if(rgb)
+        _colors[i] = rgb[i];
+      else
+        _colors[i] = 255;
+    }
+  }
+  else  //new content differs old content -> reallocate matrices
+  {
+    _mSourceInfo.clear();
+    if(_hasInfo)
+    {
+      delete[] _colors;
+      delete[] _attributes;
+      delete[] _indices;
+    }
+    gsl_matrix_free(_coords);
+    gsl_matrix_free(_normals);
+    bool withInfo = (rgb!=NULL);
+    init(size, withInfo);
+    _size = size;
+    gsl_matrix_view vcoords = gsl_matrix_view_array(coords, size, 3);
+    gsl_matrix_memcpy(_coords, &vcoords.matrix);
+
+    if(normals)
+    {
+      gsl_matrix_view vnormals = gsl_matrix_view_array(normals, size, 3);
+      gsl_matrix_memcpy(_normals, &vnormals.matrix);
+      _hasNormals = 1;
+    }
+    if(rgb)
+    {
+      memcpy(_colors, rgb, 3*size*sizeof(*_colors));
+      _hasColors = true;
+    }
+
+  }
 }
 
 }

@@ -6,6 +6,7 @@
 #include "TsdGrid.h"
 
 #include <cstring>
+#include <cmath>
 #include <omp.h>
 
 namespace obvious
@@ -37,7 +38,7 @@ TsdGrid::TsdGrid(const unsigned int dimX, const unsigned int dimY, const double 
   {
     for (int x = 0; x < _cellsX; x++, i++)
     {
-      _grid[y][x].tsdf   = 1.0;
+      _grid[y][x].tsdf   = NAN;
       _grid[y][x].weight = 0.0;
       (*_cellCoordsHom)[i][0] = ((double)x + 0.5) * _cellSize;
       (*_cellCoordsHom)[i][1] = ((double)y + 0.5) * _cellSize;
@@ -231,18 +232,22 @@ bool TsdGrid::interpolateBilinear(double coord[2], double* tsdf)
   int y;
   double dx;
   double dy;
+
   if(!coord2Cell(coord, &x, &y, &dx, &dy)) return false;
+
+  double tsdf_cell = _grid[y][x].tsdf;
+  if(isnan(tsdf_cell)) return false;
 
   double wx = fabs((coord[0] - dx) / (_cellSize));
   double wy = fabs((coord[1] - dy) / (_cellSize));
 
   // Interpolate
-  *tsdf =    _grid[y + 0][x + 0].tsdf * (1. - wy) * (1. - wx)
+  *tsdf =    tsdf_cell * (1. - wy) * (1. - wx)
                     + _grid[y - 1][x + 0].tsdf *       wy  * (1. - wx)
                     + _grid[y + 0][x + 1].tsdf * (1. - wy) *       wx
                     + _grid[y - 1][x + 1].tsdf *       wy  *       wx;
 
-  return true;
+  return (!isnan(*tsdf));
 }
 
 void TsdGrid::addTsdfValue(const unsigned int x, const unsigned int y, const double sdf, const double weight)
@@ -256,9 +261,17 @@ void TsdGrid::addTsdfValue(const unsigned int x, const unsigned int y, const dou
     tsdf = min(tsdf, 1.0);
 
     cell->weight += 1.0;
-    const double invWeight = 1.0 / cell->weight;
-    cell->tsdf   = (cell->tsdf * (cell->weight - 1.0) + tsdf) * invWeight;
-    cell->weight = min(cell->weight, MAXWEIGHT);
+
+    if(isnan(cell->tsdf))
+    {
+      cell->tsdf = tsdf;
+    }
+    else
+    {
+      const double invWeight = 1.0 / cell->weight;
+      cell->tsdf   = (cell->tsdf * (cell->weight - 1.0) + tsdf) * invWeight;
+      cell->weight = min(cell->weight, MAXWEIGHT);
+    }
   }
 }
 
@@ -295,6 +308,52 @@ bool TsdGrid::coord2Cell(double coord[2], int* x, int* y, double* dx, double* dy
   *y = yIdx;
 
   return true;
+}
+
+void TsdGrid::serialize(const char* filename)
+{
+  ofstream f;
+  f.open(filename);
+
+  for(unsigned int y=0; y<_cellsY; y++)
+  {
+    for(unsigned int x=0; x<_cellsX; x++)
+    {
+      double tsdf = _grid[y][x].tsdf;
+      if(!isnan(tsdf))
+        f << y << " " << x << " " << tsdf << " " << _grid[y][x].weight << endl;
+
+    }
+  }
+  f.close();
+}
+
+void TsdGrid::Load(const char* filename)
+{
+  char line[256];
+  double weight, tsdf;
+  unsigned int x, y;
+  ifstream f;
+
+  f.open(filename, ios_base::in);
+
+  if(!f)
+  {
+    std::cout << filename << " is no file!" << std::endl;
+    abort();
+  }
+
+  while(f.getline(line, 256))
+  {
+    if(!f.eof())
+    {
+      f >> y >> x >> tsdf >> weight;
+      TsdCell* cell = &_grid[y][x];
+      cell->weight = weight;
+      cell->tsdf = tsdf;
+    }
+  }
+  f.close();
 }
 
 }

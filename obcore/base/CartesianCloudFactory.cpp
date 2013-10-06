@@ -2,6 +2,8 @@
 #include <iostream>
 #include <fstream>
 
+#include "obcore/base/Logger.h"
+
 namespace obvious
 {
 
@@ -14,6 +16,10 @@ CartesianCloud3D* CartesianCloudFactory::load(char* filename, EnumFileFormat for
   {
   case eFormatAscii:
     return loadAscii(filename);
+    break;
+  default:
+    LOGMSG(DBG_ERROR, "File format unknown");
+    return NULL;
     break;
   }
 }
@@ -37,7 +43,7 @@ void serializeAscii(char* filename, CartesianCloud3D* cloud)
   unsigned int cnt = cloud->size();
   unsigned char* colors = cloud->getColors();
 
-  for(int i=0; i<cnt; i++)
+  for(unsigned int i=0; i<cnt; i++)
   {
     double* point = (*cloud)[i];
     file << point[0] << " " << point[1] << " " << point[2] << " ";

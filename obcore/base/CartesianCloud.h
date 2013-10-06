@@ -31,6 +31,7 @@ namespace obvious
   public:
     /**
      * Constructor;
+     * @param size Number of points in the cloud
      */
     CartesianCloud3D(unsigned int size, double* coords, unsigned char* rgb, double* normals);
 
@@ -90,6 +91,18 @@ namespace obvious
      * @return flag of presence
      */
     int hasInfo();
+
+    /**
+     * Shows, whether the cloud has normals or not
+     * @return flag
+     */
+    int hasNormals(void)const{return(_hasNormals);}
+
+    /**
+     * Shows, whether the cloud has colors or not
+     * @return flag
+     */
+    bool hasColors(void)const{return(_hasColors);}
 
     /**
      * Add additional source information
@@ -177,6 +190,16 @@ namespace obvious
      */
     const string& id(void)const{return(_id);}
 
+    /**
+     * Method to refresh the data in the cloud. If size differs from the size in the cloud,
+     * the buffer is reallocated
+     * @param size Number of points to refreshed
+     * @param coords Cartesian coordinates of the new points
+     * @param normals Normals of the points
+     * @param rgb Colors of the points
+     */
+    void setData(const unsigned int size, double* coords, double* normals, const unsigned char* const rgb);
+
   private:
 
     void init(unsigned int size, bool withInfo);
@@ -201,6 +224,11 @@ namespace obvious
     int _hasNormals;
 
     /**
+     * Info flag signs presence of point color information
+     */
+    bool _hasColors;
+
+    /**
      * Source info map
      */
     map<int, long> _mSourceInfo;
@@ -210,6 +238,10 @@ namespace obvious
      */
     string _id;
 
+    /**
+     * number of points in the cloud
+     */
+    unsigned int _size;
   };
 
 }

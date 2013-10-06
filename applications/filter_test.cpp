@@ -132,7 +132,6 @@ int main(int argc, char *argv[])
   cloud->copyCoords(coords);
   state = RESET;
 
-  IFilter* _filter = NULL;
   filterCartesian = new CartesianFilter;
   filterEuclidean = new EuclideanFilter;
   filterBB        = new BoundingBoxFilter;

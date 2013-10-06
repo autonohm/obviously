@@ -31,8 +31,6 @@ int main(int argc, char *argv[])
   Matrix T(4, 4);
   T.setIdentity();
 
-  int cnt = 0;
-
   while (1)
   {
     char filename[1024];

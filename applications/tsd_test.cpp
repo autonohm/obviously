@@ -4,7 +4,7 @@
 #include "obcore/base/System.h"
 #include "obvision/reconstruct/TsdSpace.h"
 #include "obvision/reconstruct/SensorProjective3D.h"
-#include "obvision/reconstruct/RayCastProjective3D.h"
+#include "obvision/reconstruct/RayCast3D.h"
 #include "obcore/base/Logger.h"
 
 using namespace std;
@@ -100,7 +100,9 @@ int main(void)
 
   sensor.setRealMeasurementData(distZ);
   sensor.setRealMeasurementRGB(texture);
+  Timer t;
   space.push(&sensor);
+  cout << "Push elapsed: " << t.reset() << "ms" << endl;
 
   unsigned char* buffer = new unsigned char[space.getXDimension()*space.getYDimension()*3];
   for(unsigned int i=0; i<space.getZDimension(); i++)
@@ -112,14 +114,16 @@ int main(void)
   }
   delete[] buffer;
 
-  RayCastProjective3D raycaster(cols, rows, &sensor, &space);
+  t.reset();
+  RayCast3D raycaster(&space);
   unsigned int cnt;
   double* cloud = new double[rows*cols*3];
   double* normals = new double[rows*cols*3];
   unsigned char* rgb = new unsigned char[rows*cols*3];
-  raycaster.calcCoordsFromCurrentView(cloud, normals, rgb, &cnt, 1);
+  raycaster.calcCoordsFromCurrentPose(&sensor, cloud, normals, rgb, &cnt);
 
-  cout << "getModel returned with " << cnt << " coordinates" << endl;
+  cout << "Raycasting elapsed: " << t.reset() << "ms" << endl;
+  cout << "Raycasting returned with " << cnt << " coordinates" << endl;
 
   VtkCloud vcloud;
   vcloud.setCoords(cloud, cnt/3, 3, normals);

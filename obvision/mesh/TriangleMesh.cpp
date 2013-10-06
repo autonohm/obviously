@@ -66,7 +66,7 @@ unsigned int TriangleMesh::getNumberOfTriangles()
 double TriangleMesh::computeSurface()
 {
   double surface = 0.0;
-  for(int i=0; i<_triangles; i++)
+  for(unsigned int i=0; i<_triangles; i++)
   {
     double* p1 = _coords[_indices[i][0]];
     double* p2 = _coords[_indices[i][1]];

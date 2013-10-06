@@ -137,6 +137,17 @@ public:
    */
   bool coord2Cell(double coord[2], int* x, int* y, double* dx, double* dy);
 
+  /**
+   * Method to store the content of the grid in a file
+   * @param filename
+   */
+  void serialize(const char* filename);
+
+  /**
+   * Method to load values out of a file into the grid
+   * @param filename
+   */
+  void Load(const char* filename);
 private:
 
   /**

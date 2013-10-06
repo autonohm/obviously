@@ -40,12 +40,12 @@ void OcclusionFilter::filter(double** scene, unsigned int size, bool* mask)
   memset(proj, 0, 3*_w*_h*sizeof(*proj));
 #endif
 
-  for(int i=0; i<_w*_h; i++)
+  for(unsigned int i=0; i<_w*_h; i++)
   {
 	_map[0][i] = -1;
 	_zbuffer[0][i] = 10e6;
   }
-  for(int i=0; i<size; i++)
+  for(unsigned int i=0; i<size; i++)
   {
     double dw = _P[8] * scene[i][0] + _P[9] * scene[i][1] + _P[10] * scene[i][2] + _P[11];
 
@@ -55,7 +55,7 @@ void OcclusionFilter::filter(double** scene, unsigned int size, bool* mask)
       double dv = (_P[4] * scene[i][0] + _P[5] * scene[i][1] + _P[6]  * scene[i][2] + _P[7]) / dw;
       int u = (int)(du + 0.5);
       int v = _h-1-(int)(dv + 0.5);
-      if(u>=0 & u<_w & v>=0 & v<_h)
+      if((u>=0) && (u<(int)_w) && (v>=0) && (v<(int)_h))
       {
     	  int mval = _map[v][u];
     	  // Two points intersect

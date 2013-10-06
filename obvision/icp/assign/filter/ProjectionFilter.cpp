@@ -38,7 +38,7 @@ void ProjectionFilter::setModel(CartesianCloud3D* cloud)
   memcpy(_zbuffer[0], zbuffer, _w*_h*sizeof(*zbuffer));
 
   double zmax = 0.0;
-  for(int i=0; i<_w*_h; i++)
+  for(unsigned int i=0; i<_w*_h; i++)
     if(zbuffer[i]>zmax) zmax = zbuffer[i];
   _zFar = zmax;
 
@@ -70,7 +70,7 @@ void ProjectionFilter::update(double* P, unsigned char* mask, double* zbuffer)
   memcpy(_mask[0], mask, _w*_h*sizeof(*mask));
   memcpy(_zbuffer[0], zbuffer, _w*_h*sizeof(*zbuffer));
   double zmax = 0.0;
-  for(int i=0; i<_w*_h; i++)
+  for(unsigned int i=0; i<_w*_h; i++)
     if(zbuffer[i]>zmax) zmax = zbuffer[i];
   _zFar = zmax;
 }
@@ -91,7 +91,7 @@ void ProjectionFilter::filter(double** scene, unsigned int size, bool* mask)
 
   unsigned int cnt = 0;
 
-  for(int i=0; i<size; i++)
+  for(unsigned int i=0; i<size; i++)
   {
     if(mask[i] == 0) continue;
     if(scene[i][2]>=_zFar)
@@ -107,7 +107,7 @@ void ProjectionFilter::filter(double** scene, unsigned int size, bool* mask)
       double dv = (_P[4] * scene[i][0] + _P[5] * scene[i][1] + _P[6] * scene[i][2] + _P[7]) / dw;
       int u = (int)(du + 0.5);
       int v = _h-1-(int)(dv + 0.5);
-      if(u>=0 & u<_w & v>=0 & v<_h)
+      if((u>=0) && (u<(int)_w) && (v>=0) && (v<(int)_h))
       {
         if(_faultRemovement)
           mask[i] = (_zbuffer[v][u] > 10e-6);
