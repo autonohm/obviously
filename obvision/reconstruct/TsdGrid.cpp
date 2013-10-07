@@ -316,8 +316,8 @@ void TsdGrid::serialize(const char* filename)
   f.open(filename);
 
 
-  for(unsigned int y=0;   y<_cellsY; y++) {
-    for(unsigned int x=0; x<_cellsX; x++)
+  for(int y=0;   y<_cellsY; y++) {
+    for(int x=0; x<_cellsX; x++)
     {
       double tsdf = _grid[y][x].tsdf;
       if(!isnan(tsdf))
