@@ -487,22 +487,26 @@ void TsdSpace::serialize(const char* filename)
 {
   ofstream f;
   f.open(filename);
-
-  for(unsigned int z=0 ;    z<_zDim; z++) {
-    for(unsigned int y=0;   y<_yDim; y++) {
-      for(unsigned int x=0; x<_xDim; x++) {
-        double tsdf = _space[y][x][z].tsdf;
+  for(unsigned int z=0 ;    z<_zDim; z++)
+  {
+    for(unsigned int y=0;   y<_yDim; y++)
+    {
+      for(unsigned int x=0; x<_xDim; x++)
+      {
+        double tsdf = _space[z][y][x].tsdf;
         if(!isnan(tsdf))
         {
-          f << x << " " << y << " " << z << " "
-            << tsdf << " " << _space[x][y][z].weight << " "
-            << _space[x][y][z].rgb[0] << " "
-            << _space[x][y][z].rgb[1] << " "
-            << _space[x][y][z].rgb[2] << endl;
+          f << z << " " << y << " " << x             << " "
+            << tsdf << " " << _space[z][y][x].weight << " "
+            << (unsigned int)_space[z][y][x].rgb[0]  << " "
+            << (unsigned int)_space[z][y][x].rgb[1]  << " "
+            << (unsigned int)_space[z][y][x].rgb[2]  << endl;
         }
       }
     }
   }
+
+  LOGMSG(DBG_WARN, "Saved file.");
   f.close();
 }
 
@@ -526,13 +530,13 @@ void TsdSpace::load(const char* filename)
   {
     if(!f.eof())
     {
-      f >> x >> y >> z >> tsdf >> weight >> rgb[0] >> rgb[1] >> rgb[2];
-      TsdVoxel* cell = &_space[x][y][z];
+      f >> z >> y >> x >> tsdf >> weight >> rgb[0] >> rgb[1] >> rgb[2];
+      TsdVoxel* cell = &_space[z][y][x];
       cell->weight   = weight;
       cell->tsdf     = tsdf;
-      cell->rgb[0]   = rgb[0];
-      cell->rgb[1]   = rgb[1];
-      cell->rgb[2]   = rgb[2];
+      cell->rgb[0]   = 255;
+      cell->rgb[1]   = 255;
+      cell->rgb[2]   = 255;
     }
   }
   f.close();

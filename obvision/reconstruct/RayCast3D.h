@@ -37,7 +37,7 @@ public:
    */
 	virtual ~RayCast3D();
 
-	virtual void calcCoordsFromCurrentPose(Sensor* sensor, double* coords, double* normals, unsigned char* rgb, unsigned int* size);
+	virtual void calcCoordsFromCurrentPose(Sensor* rayCastFromSensorPosesensor, double* coords, double* normals, unsigned char* rgb, unsigned int* size);
 
 	virtual void calcCoordsFromCurrentPoseMask(Sensor* sensor, double* coords, double* normals, unsigned char* rgb, bool* mask, unsigned int* size);
 
