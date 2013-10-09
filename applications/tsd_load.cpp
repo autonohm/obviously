@@ -53,10 +53,10 @@ int main(int argc, char* argv[])
 
   // configuration of space
   ///@todo set up method for tsd configuration
-  double height    = 6.0;
-  double width     = 6.0;
-  double depth     = 4.0;
-  double voxelSize = 0.04;
+  double height    = 2.0;
+  double width     = 2.0;
+  double depth     = 2.5;
+  double voxelSize = 0.02;
   TsdSpace* _space = new TsdSpace(height, width, depth, voxelSize);
 
   // load space from file
@@ -64,15 +64,13 @@ int main(int argc, char* argv[])
 
   // configure raycast
   unsigned int   size;
-//  double*        coords ;
-//  double*        normals;
-//  unsigned char* rgb;
   RayCast3D raycaster(_space);
   double thetaRes = deg2rad(0.25);
   double thetaMin = deg2rad(-135.0);
   double phiRes   = deg2rad(1.0);
   unsigned int _beams  = 1081;
 
+  // set up transformation
   double tf[16]={1, 0, 0, 3,
                  0, 1, 0, 3,
                  0, 0, 1, 2,
@@ -82,9 +80,9 @@ int main(int argc, char* argv[])
 
 
   SensorPolar3D* _sensor = new SensorPolar3D(_beams, thetaRes, thetaMin, phiRes);
-  double* coords      = new double       [_sensor->getWidth() * _sensor->getHeight() * 3];
-  double* normals     = new double       [_sensor->getWidth() * _sensor->getHeight() * 3];
-  unsigned char* rgb  = new unsigned char[_sensor->getWidth() * _sensor->getHeight() * 3];
+  double* coords         = new double       [_sensor->getWidth() * _sensor->getHeight() * 3];
+  double* normals        = new double       [_sensor->getWidth() * _sensor->getHeight() * 3];
+  unsigned char* rgb     = new unsigned char[_sensor->getWidth() * _sensor->getHeight() * 3];
   _sensor->transform(&T);
 //  raycaster.calcCoordsFromCurrentPose(_sensor, coords, normals, rgb, &size);
 
