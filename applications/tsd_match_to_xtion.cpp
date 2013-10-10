@@ -45,8 +45,7 @@ bool      _showNormals  = false;
 bool      _rotationMode = false;
 
 bool      _debug        = true;
-
-double   _alpha = 0.03;
+double    _alpha        = 0.03;
 
 
 void assignmentCallback(double** m, double** s, unsigned int size)
@@ -84,6 +83,7 @@ public:
         unsigned int rows = _xtion->getRows();
 
         double* coords = _xtion->getCoords();
+
         // Convert to Euklidean distances
         double* dist = new double[cols*rows];
         for(unsigned int i=0; i<cols*rows; i++)
@@ -92,10 +92,6 @@ public:
         // flix y coords for correct visualization in vtk
         for(unsigned int i=0 ; i<cols*rows*3 ; i+=3)
           coords[i] = -coords[i];
-
-        _sensor->setRealMeasurementData(dist);
-        _sensor->setRealMeasurementMask(_xtion->getMask());
-        _sensor->setRealMeasurementRGB( _xtion->getRGB());
 
         _cloudXtion->setCoords(coords,              cols*rows, 3);
         _cloudXtion->setColors(_xtion->getRGB(),    cols*rows, 3);
@@ -215,6 +211,7 @@ void _match(void)
   cout << "Received " << size/3 << " from TSD space" << endl;
   _cloudModel->setCoords(coords,   size/3, 3);
   _cloudModel->setNormals(normals, size/3, 3);
+  _cloudModel->setColors(rgb,      size/3, 3);
   _cloudModel->serialize("/tmp/model.vtp");
 
   LOGMSG(DBG_DEBUG, "Current Transformation: ");
@@ -226,9 +223,6 @@ void _match(void)
    */
    double* sceneCoords  = new double[_xtion->getCols()*_xtion->getRows() * 3];
    sceneCoords = _xtion->getCoords();
-
-//   for(unsigned int i=0 ; i< _xtion->getCols()*_xtion->getRows()*3 ; i+=3)
-//     sceneCoords[i] = -sceneCoords[i];
 
   _sensor->getPose()->getData(P);
   _cloudScene->setCoords(sceneCoords, _xtion->getCols()*_xtion->getRows(), 3);
@@ -260,6 +254,57 @@ void _match(void)
   {
     LOGMSG(DBG_DEBUG, "Registration failed, RMS " << rms);
   }
+  delete [] normals;
+  delete [] rgb;
+  delete [] coords;
+}
+
+void _push(void)
+{
+  static unsigned int i = 0;
+  std::cout << "Push to tsd space" << std::endl;
+
+  double P[16];
+
+  // Convert to Euklidean distances
+  double* coordsxtion = _xtion->getCoords();
+  double* dist   = new double[_xtion->getCols()*_xtion->getRows()];
+
+  for(unsigned int j=0; j<_xtion->getCols()*_xtion->getRows(); j++)
+    dist[j] = abs3D(&coordsxtion[3*j]);
+
+  // update sensor
+  _sensor->setRealMeasurementData(dist);
+  _sensor->setRealMeasurementMask(_xtion->getMask());
+  _sensor->setRealMeasurementRGB( _xtion->getRGB());
+  _space->push(_sensor);
+
+  // get model from space
+  RayCast3D raycaster(_space);
+  unsigned int size;
+  double* coords      = new double       [_sensor->getWidth() * _sensor->getHeight() * 3];
+  double* normals     = new double       [_sensor->getWidth() * _sensor->getHeight() * 3];
+  unsigned char* rgb  = new unsigned char[_sensor->getWidth() * _sensor->getHeight() * 3];
+
+  raycaster.calcCoordsFromCurrentPose(_sensor, coords, normals, rgb, &size);
+
+  _cloudTsd->setCoords( coords,  size/3, 3);
+  _cloudTsd->setColors( rgb,     size/3, 3);
+  _cloudTsd->setNormals(normals, size/3, 3);
+
+  // update pose from sensor
+  _sensor->getPose()->getData(P);
+  _cloudTsd->transform(P);
+
+  // save space to file
+  std::stringstream filename;
+  filename << "/tmp/tsd_matched_" << i++;
+  _space->serialize(filename.str().c_str());
+  std::cout << "Saved tsd_space to " << filename.str() << std::endl;
+  delete [] dist;
+  delete [] coords;
+  delete [] rgb;
+  delete [] normals;
 }
 
 // --------------- main -------------------------------
@@ -310,7 +355,6 @@ int main(int argc, char* argv[])
                  0, 1, 0, 1.0,
                  0, 0, 1, 0.8,
                  0, 0, 0, 1};
-
 
   Matrix T(4, 4);
   T.setData(tf);
@@ -380,23 +424,32 @@ int main(int argc, char* argv[])
   _cloudScene = new VtkCloud();
 
   _viewer->addCloud(_cloudTsd);
-  _viewer->update();
   _viewer->addCloud(_cloudXtion);
-  _cloudTsd->setCoords(coords,   size/3, 3);
+  _viewer->update();
+
+  _cloudTsd->setCoords( coords,  size/3, 3);
+  _cloudTsd->setColors( rgb,     size/3, 3);
   _cloudTsd->setNormals(normals, size/3, 3);
 
   // configure keyboard callbacks
   _viewer->registerKeyboardCallback("space", _changeMode);
   _viewer->registerKeyboardCallback("l",     _moveUp);
-  _viewer->registerKeyboardCallback(".",     _moveDown);
+  _viewer->registerKeyboardCallback("j",     _moveDown);
   _viewer->registerKeyboardCallback("Up",    _upPressed);
   _viewer->registerKeyboardCallback("Down",  _downPressed);
   _viewer->registerKeyboardCallback("Left",  _leftPressed);
   _viewer->registerKeyboardCallback("Right", _rightPressed);
   _viewer->registerKeyboardCallback("m",     _match);
+  _viewer->registerKeyboardCallback("t",     _push);
+
+  std::cout << "############################################"        << std::endl;
+  std::cout << "# space     ->      rotation / translation"          << std::endl;
+  std::cout << "# m         ->      new registration "               << std::endl;
+  std::cout << "# t         ->      push to grid from current pose"  << std::endl;
+  std::cout << "############################################"        << std::endl;
 
   // init visualizer
-  _viewer->addAxisAlignedCube(0, width, 0, height, 0, depth);
+//  _viewer->addAxisAlignedCube(0, width, 0, height, 0, depth);
   _viewer->showAxes();
   double P[16];
   _sensor->getPose()->getData(P);

@@ -537,6 +537,9 @@ void TsdSpace::load(const char* filename)
       cell->rgb[0]   = 255;
       cell->rgb[1]   = 255;
       cell->rgb[2]   = 255;
+//      cell->rgb[0]   = (unsigned char)rgb[0];
+//      cell->rgb[1]   = (unsigned char)rgb[1];
+//      cell->rgb[2]   = (unsigned char)rgb[2];
     }
   }
   f.close();

@@ -55,7 +55,7 @@ int main(int argc, char* argv[])
   ///@todo set up method for tsd configuration
   double height    = 2.0;
   double width     = 2.0;
-  double depth     = 2.5;
+  double depth     = 2.0;
   double voxelSize = 0.02;
   TsdSpace* _space = new TsdSpace(height, width, depth, voxelSize);
 
@@ -93,6 +93,7 @@ int main(int argc, char* argv[])
   VtkCloud* _cloud = new VtkCloud();
   _viewer->addCloud(_cloud);
   _cloud->setCoords(coords,   size/3, 3);
+  _cloud->setColors(rgb,      size/3, 3);
   _cloud->setNormals(normals, size/3, 3);
   _viewer->update();
 
