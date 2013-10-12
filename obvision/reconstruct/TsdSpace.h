@@ -157,7 +157,17 @@ public:
  bool interpolateNormal(const double* coord, double* normal);
 
  bool buildSliceImage(const unsigned int depthIndex, unsigned char* image);
+ /**
+  * Method to store the content of the grid in a file
+  * @param filename
+  */
+ void serialize(const char* filename);
 
+ /**
+  * Method to load values out of a file into the grid
+  * @param filename
+  */
+ void load(const char* filename);
 private:
 
  /**
@@ -170,11 +180,11 @@ private:
   */
  bool coord2Voxel(double coord[3], int* x, int* y, int* z, Point* p);
 
- int _xDim;
+ unsigned int _xDim;
 
- int _yDim;
+ unsigned int _yDim;
 
- int _zDim;
+ unsigned int _zDim;
 
  int _sizeOfSpace;
 

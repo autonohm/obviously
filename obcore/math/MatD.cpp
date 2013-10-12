@@ -252,6 +252,8 @@ MatD& MatD::operator/=(const double number)
         for (unsigned int row = 0; row < _rows; row++)
             for (unsigned int col = 0; col < _cols; col++)
                 *gsl_matrix_ptr(GSL(_data[channel]), row, col) /= number;
+
+    return *this;
 }
 
 double MatD::det(const unsigned int channel) const

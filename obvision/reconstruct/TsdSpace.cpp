@@ -55,11 +55,9 @@ TsdSpace::~TsdSpace(void)
 
 void TsdSpace::reset()
 {
-  for (int z = 0; z < _zDim; z++)
-  {
-    for (int y = 0; y < _yDim; y++)
-    {
-      for (int x = 0; x < _xDim; x++)
+  for (unsigned int z = 0;     z < _zDim; z++){
+    for (unsigned int y = 0;   y < _yDim; y++){
+      for (unsigned int x = 0; x < _xDim; x++)
       {
         _space[z][y][x].tsdf   = NAN;
         _space[z][y][x].weight = 0.0;
@@ -150,10 +148,10 @@ void TsdSpace::push(Sensor* sensor)
     Matrix* V = new Matrix(_yDim*_xDim, 4);
     int* indices = new int[_yDim*_xDim];
 
-    int i=0;
-    for (int y = 0; y < _yDim; y++)
+    unsigned int i=0;
+    for (unsigned int y = 0; y < _yDim; y++)
     {
-      for (int x = 0; x < _xDim; x++, i++)
+      for (unsigned int x = 0; x < _xDim; x++, i++)
       {
         (*V)[i][0] = ((double)x + 0.5) * _voxelSize;
         (*V)[i][1] = ((double)y + 0.5) * _voxelSize;
@@ -161,7 +159,7 @@ void TsdSpace::push(Sensor* sensor)
       }
     }
 #pragma omp for schedule(dynamic)
-    for(int z=0; z<_zDim; z++)
+    for(unsigned int z=0; z<_zDim; z++)
     {
       double zVoxel = ((double)z + 0.5) * _voxelSize;
       for (i = 0; i < _yDim*_xDim; i++)
@@ -170,9 +168,9 @@ void TsdSpace::push(Sensor* sensor)
       sensor->backProject(V, indices);
 
       i = 0;
-      for(int y=0; y<_yDim; y++)
+      for(unsigned int y=0; y<_yDim; y++)
       {
-        for(int x=0; x<_xDim; x++, i++)
+        for(unsigned int x=0; x<_xDim; x++, i++)
         {
           // Measurement index
           int index = indices[i];
@@ -347,7 +345,7 @@ bool TsdSpace::interpolateTrilinearRGB(double coord[3], unsigned char rgb[3])
   pw[7] = wX * wY * wZ;
 
   memset(rgb,0,3);
-  for(int i=0; i<8; i++)
+  for(unsigned int i=0; i<8; i++)
   {
     rgb[0] += pRGB[i][0] * pw[i];
     rgb[1] += pRGB[i][1] * pw[i];
@@ -438,7 +436,7 @@ bool TsdSpace::buildSliceImage(const unsigned int depthIndex, unsigned char* ima
   double cTsdf;
 
   // initialize arrays for RGB
-  for (int i = 0; i < _xDim * _yDim; i++)
+  for (unsigned int i = 0; i < _xDim * _yDim; i++)
   {
     R[i] = 0;
     G[i] = 0;
@@ -446,9 +444,9 @@ bool TsdSpace::buildSliceImage(const unsigned int depthIndex, unsigned char* ima
   }
 
   // iterate over given slice, generate 2D-Picture
-  for (int row = 0; row < _yDim; row++)
+  for (unsigned int row = 0; row < _yDim; row++)
   {
-    for (int col = 0; col < _xDim; col++)
+    for (unsigned int col = 0; col < _xDim; col++)
     {
       // Get current tsdf
       cTsdf = _space[depthIndex][row][col].tsdf;
@@ -474,7 +472,7 @@ bool TsdSpace::buildSliceImage(const unsigned int depthIndex, unsigned char* ima
   }
 
   //put components together to complete picture
-  for (int i = 0; i < _xDim * _yDim * 3; i++)
+  for (unsigned int i = 0; i < _xDim * _yDim * 3; i++)
   {
     image[i]   = R[ctr];
     image[++i] = G[ctr];
@@ -483,6 +481,68 @@ bool TsdSpace::buildSliceImage(const unsigned int depthIndex, unsigned char* ima
   }
 
   return (true);
+}
+
+void TsdSpace::serialize(const char* filename)
+{
+  ofstream f;
+  f.open(filename);
+  for(unsigned int z=0 ;    z<_zDim; z++)
+  {
+    for(unsigned int y=0;   y<_yDim; y++)
+    {
+      for(unsigned int x=0; x<_xDim; x++)
+      {
+        double tsdf = _space[z][y][x].tsdf;
+        if(!isnan(tsdf))
+        {
+          f << z << " " << y << " " << x             << " "
+            << tsdf << " " << _space[z][y][x].weight << " "
+            << (unsigned int)_space[z][y][x].rgb[0]  << " "
+            << (unsigned int)_space[z][y][x].rgb[1]  << " "
+            << (unsigned int)_space[z][y][x].rgb[2]  << endl;
+        }
+      }
+    }
+  }
+
+  LOGMSG(DBG_WARN, "Saved file.");
+  f.close();
+}
+
+void TsdSpace::load(const char* filename)
+{
+  char line[256];
+  double weight, tsdf;
+  unsigned char rgb[3];
+  unsigned int x, y, z;
+  ifstream f;
+
+  f.open(filename, ios_base::in);
+
+  if(!f)
+  {
+    std::cout << filename << " is no file!" << std::endl;
+    abort();
+  }
+
+  while(f.getline(line, 256))
+  {
+    if(!f.eof())
+    {
+      f >> z >> y >> x >> tsdf >> weight >> rgb[0] >> rgb[1] >> rgb[2];
+      TsdVoxel* cell = &_space[z][y][x];
+      cell->weight   = weight;
+      cell->tsdf     = tsdf;
+      cell->rgb[0]   = 255;
+      cell->rgb[1]   = 255;
+      cell->rgb[2]   = 255;
+//      cell->rgb[0]   = (unsigned char)rgb[0];
+//      cell->rgb[1]   = (unsigned char)rgb[1];
+//      cell->rgb[2]   = (unsigned char)rgb[2];
+    }
+  }
+  f.close();
 }
 
 }

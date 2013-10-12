@@ -129,7 +129,13 @@ void RayCast3D::calcCoordsFromCurrentPoseMask(Sensor* sensor, double* coords, do
       for (unsigned int u = 0; u < width; u++)
       {
         double ray[3];
+
         sensor->calcRayFromCurrentPose(v, u, ray);
+
+        ray[0] *= _space->getVoxelSize();
+        ray[1] *= _space->getVoxelSize();
+        ray[2] *= _space->getVoxelSize();
+
         if(rayCastFromSensorPose(ray, c, n, color, &depth, sensor)) // Ray returned with coordinates
         {
           M[0][0] = c[0];

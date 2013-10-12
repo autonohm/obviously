@@ -22,10 +22,10 @@
 
 using namespace obvious;
 
-#define X_DIM 1
-#define Y_DIM 1
-#define Z_DIM 1
-#define VXLDIM 0.005
+#define X_DIM 2
+#define Y_DIM 2
+#define Z_DIM 2
+#define VXLDIM 0.01
 
 Matrix* _T;
 Matrix _Tinit(4, 4);
@@ -117,6 +117,7 @@ void _cbRegNewImage(void)
   //unsigned int subsamplingModel = 1;
   //_rayCaster->calcCoordsFromCurrentView(coords, normals, rgb, &size, subsamplingModel);
   _rayCaster->calcCoordsFromCurrentPose(_sensor, coords, normals, rgb, &size);
+  //_rayCaster->calcCoordsFromCurrentPoseMask(_sensor, coords, normals, rgb, mask, &size);
 
   if(size==0)
   {
@@ -127,9 +128,18 @@ void _cbRegNewImage(void)
     return;
   }
 
-  //_rayCaster->calcCoordsFromCurrentViewMask(coords, normals, rgb, mask);
-  //TriangleMesh* mesh       = new TriangleMesh(rows*cols);
-  //mesh->createMeshFromOrganizedCloud(coords, rows, cols, rgb, mask);
+
+  /*TriangleMesh* mesh       = new TriangleMesh(rows*cols);
+  mesh->createMeshFromOrganizedCloud(coords, rows, cols, rgb, mask);
+
+  if(mesh->getNumberOfTriangles()==0)
+  {
+    delete[] coords;
+    delete[] normals;
+    delete[] rgb;
+    delete[] mask;
+    return;
+  }*/
 
   double timeIcpStart = t.getTime();
 
@@ -213,7 +223,10 @@ void _cbRegNewImage(void)
   else
     LOGMSG(DBG_DEBUG, "Registration failed, RMS " << rms);
 
+  //LOGMSG(DBG_ERROR, "Update viewer");
+  //static int cnt = 0;
   _viewer3D->update();
+  //LOGMSG(DBG_ERROR, "ok");
 
   delete[] coords;
   delete[] normals;
@@ -221,7 +234,7 @@ void _cbRegNewImage(void)
   delete[] mask;
 
   //delete mesh;
-  std::cout << __PRETTY_FUNCTION__ << ": time ellapsed = " << t.getTime() << " ms" << std::endl;
+  std::cout << __PRETTY_FUNCTION__ << ": time elapsed = " << t.getTime() << " ms" << std::endl;
 }
 
 void _cbReset(void)
@@ -326,12 +339,12 @@ int main(void)
   _viewer3D = new Obvious3D("3DMapper");
   _viewer3D->addCloud(_vModel);
   _viewer3D->addAxisAlignedCube(0, X_DIM, 0, Y_DIM, 0, Z_DIM);
-  _viewer3D->addCloud(_vScene);
+  //_viewer3D->addCloud(_vScene);
   _viewer3D->registerKeyboardCallback("space", _cbRegNewImage);
   _viewer3D->registerKeyboardCallback("c", _cbGenPointCloud);
   _viewer3D->registerKeyboardCallback("v", _cbBuildSliceViews);
   _viewer3D->registerKeyboardCallback("m", _cbStoreModel);
-  _viewer3D->registerKeyboardCallback("s", _cbStoreScene);
+  _viewer3D->registerKeyboardCallback("n", _cbStoreScene);
   _viewer3D->registerKeyboardCallback("i", _cbReset);
   _viewer3D->startRendering();
 
