@@ -358,13 +358,13 @@ bool TsdSpace::interpolateTrilinearRGB(double coord[3], unsigned char rgb[3])
 void TsdSpace::addTsdfValue(const unsigned int col, const unsigned int row, const unsigned int z, double sdf, unsigned char* rgb)
 {
 
-  if(sdf >= -_maxTruncation && sdf <=_maxTruncation) // Voxel is in front of an object
+  if(sdf >= -_maxTruncation) // Voxel is in front of an object
   {
     TsdVoxel* voxel = &_space[z][(_yDim - 1) - row][col];
 
     // determine whether sdf/max_truncation = ]-1;1[
     double tsdf = sdf / _maxTruncation;
-    //tsdf = min(tsdf, 1.0);
+    tsdf = min(tsdf, 1.0);
 
     voxel->weight += 1.0;
     const double invWeight = 1.0 / voxel->weight;
