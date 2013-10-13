@@ -86,7 +86,7 @@ int main(int argc, char* argv[])
   _sensor->transform(&T);
 //  raycaster.calcCoordsFromCurrentPose(_sensor, coords, normals, rgb, &size);
 
-  raycaster.generatePointCloudPositive(&coords, &normals, &rgb, &size);
+  raycaster.calcCoordsAxisParallel(&coords, &normals, &rgb, &size);
   std::cout << "Raycast returned: " << size << "points. " << std::endl;
 
   // set up cloud

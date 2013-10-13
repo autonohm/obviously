@@ -78,7 +78,7 @@ void _cbGenPointCloud(void)
   unsigned char* rgb=NULL;
   unsigned int size;
 
-  if(!(_rayCaster->generatePointCloud(&cloud, &normals, &rgb, &size)))
+  if(!(_rayCaster->calcCoordsAxisParallel(&cloud, &normals, &rgb, &size)))
   {
     LOGMSG(DBG_ERROR, "Error generating global point cloud");
     return;
@@ -95,10 +95,8 @@ void _cbGenPointCloud(void)
   delete rgb;
 }
 
-void _cbRegNewImage(void)
+void _cbGenMesh(void)
 {
-  obvious::Timer t;
-
   unsigned int cols = _kinect->getCols();
   unsigned int rows = _kinect->getRows();
 
@@ -109,27 +107,9 @@ void _cbRegNewImage(void)
 
   unsigned int size = cols*rows*3;
 
-  LOGMSG(DBG_DEBUG, "Current Transformation: ");
-  _sensor->getPose()->print();
-  _filterBounds->setPose(_sensor->getPose());
+  _rayCaster->calcCoordsFromCurrentPoseMask(_sensor, coords, normals, rgb, mask, &size);
 
-  // Extract model from TSDF space
-  //unsigned int subsamplingModel = 1;
-  //_rayCaster->calcCoordsFromCurrentView(coords, normals, rgb, &size, subsamplingModel);
-  _rayCaster->calcCoordsFromCurrentPose(_sensor, coords, normals, rgb, &size);
-  //_rayCaster->calcCoordsFromCurrentPoseMask(_sensor, coords, normals, rgb, mask, &size);
-
-  if(size==0)
-  {
-    delete[] coords;
-    delete[] normals;
-    delete[] rgb;
-    delete[] mask;
-    return;
-  }
-
-
-  /*TriangleMesh* mesh       = new TriangleMesh(rows*cols);
+  TriangleMesh* mesh       = new TriangleMesh(rows*cols);
   mesh->createMeshFromOrganizedCloud(coords, rows, cols, rgb, mask);
 
   if(mesh->getNumberOfTriangles()==0)
@@ -139,7 +119,72 @@ void _cbRegNewImage(void)
     delete[] rgb;
     delete[] mask;
     return;
-  }*/
+  }
+
+  // Filter model to ensure proper normal vectors
+  _vModel->setCoords(coords, size / 3, 3, normals);
+  _vModel->setColors(rgb, size / 3, 3);
+  _vModel->removeInvalidPoints();
+  _vModel->copyCoords(coords);
+  _vModel->copyNormals(normals);
+
+  // Display model as mesh -> use calcCoordsFromCurrentViewMask above!!!
+  double** mCoords         = mesh->getCoords();
+  unsigned char** mRGB     = mesh->getRGB();
+  unsigned int** mIndices  = mesh->getIndices();
+  unsigned int points      = mesh->getNumberOfPoints();
+  unsigned int triangles   = mesh->getNumberOfTriangles();
+  _vModel->setTriangles(mCoords, mRGB, points, mIndices, triangles);
+
+  // Transform model in order to display it in space coordinates
+  double P[16];
+  _sensor->getPose()->getData(P);
+  _vModel->transform(P);
+  double lightPos[3];
+  double lightLookAt[3];
+  lightPos[0] = X_DIM / 2.0;
+  lightPos[1] = Y_DIM / 2.0;
+  lightPos[2] = 0;
+  lightLookAt[0] = X_DIM / 2.0;
+  lightLookAt[1] = Y_DIM / 2.0;
+  lightLookAt[2] = Z_DIM / 2.0;
+  _viewer3D->addLight(lightPos, lightLookAt);
+  _viewer3D->update();
+
+  delete[] coords;
+  delete[] normals;
+  delete[] rgb;
+  delete[] mask;
+  delete mesh;
+}
+
+void _cbRegNewImage(void)
+{
+  obvious::Timer t;
+
+  unsigned int cols = _kinect->getCols();
+  unsigned int rows = _kinect->getRows();
+
+  double* normals    = new double[cols * rows * 3];
+  double* coords     = new double[cols * rows * 3];
+  unsigned char* rgb = new unsigned char[cols * rows * 3];
+
+  unsigned int size = cols*rows*3;
+
+  LOGMSG(DBG_DEBUG, "Current Transformation: ");
+  _sensor->getPose()->print();
+  _filterBounds->setPose(_sensor->getPose());
+
+  // Extract model from TSDF space
+  _rayCaster->calcCoordsFromCurrentPose(_sensor, coords, normals, rgb, &size);
+
+  if(size==0)
+  {
+    delete[] coords;
+    delete[] normals;
+    delete[] rgb;
+    return;
+  }
 
   double timeIcpStart = t.getTime();
 
@@ -151,14 +196,6 @@ void _cbRegNewImage(void)
   _vModel->copyNormals(normals);
   size = _vModel->getSize();
 
-  // Display model as mesh -> use calcCoordsFromCurrentViewMask above!!!
-  /*double** mCoords         = mesh->getCoords();
-  unsigned char** mRGB     = mesh->getRGB();
-  unsigned int** mIndices  = mesh->getIndices();
-  unsigned int points      = mesh->getNumberOfPoints();
-  unsigned int triangles   = mesh->getNumberOfTriangles();
-  _vModel->setTriangles(mCoords, mRGB, points, mIndices, triangles);*/
-
   // Transform model in order to display it in space coordinates
   double P[16];
   _sensor->getPose()->getData(P);
@@ -168,14 +205,15 @@ void _cbRegNewImage(void)
   _icp->setModel(coords, normals, size);
 
   // Acquire scene image
-  _kinect->grab();
+  for(unsigned int i=0; i<5; i++)
+    _kinect->grab();
 
   double* coordsScene     = _kinect->getCoords();
   bool* maskScene         = _kinect->getMask();
   unsigned char* rgbScene = _kinect->getRGB();
 
   // Subsample and filter scene
-  unsigned int subsamplingScene = 20;
+  unsigned int subsamplingScene = 25;
   unsigned int idx = 0;
   for(unsigned int i=0; i<cols*rows; i+=subsamplingScene)
   {
@@ -190,6 +228,16 @@ void _cbRegNewImage(void)
       idx++;
     }
   }
+
+  if(idx==0)
+  {
+    LOGMSG(DBG_ERROR, "Invalid scene");
+    delete[] coords;
+    delete[] normals;
+    delete[] rgb;
+    return;
+  }
+
   _vScene->setCoords(coords, size / 3, 3, normals);
   _vScene->setColors(rgb, size / 3, 3);
   _vScene->removeInvalidPoints();
@@ -223,18 +271,13 @@ void _cbRegNewImage(void)
   else
     LOGMSG(DBG_DEBUG, "Registration failed, RMS " << rms);
 
-  //LOGMSG(DBG_ERROR, "Update viewer");
-  //static int cnt = 0;
   _viewer3D->update();
-  //LOGMSG(DBG_ERROR, "ok");
 
   delete[] coords;
   delete[] normals;
   delete[] rgb;
-  delete[] mask;
 
-  //delete mesh;
-  std::cout << __PRETTY_FUNCTION__ << ": time elapsed = " << t.getTime() << " ms" << std::endl;
+  LOGMSG(DBG_ERROR, ": time elapsed = " << t.getTime() << " ms");
 }
 
 void _cbReset(void)
@@ -293,6 +336,7 @@ int main(void)
   unsigned int maxIterations = 35;
 
   PairAssignment* assigner = (PairAssignment*)new FlannPairAssignment(3, 0.0, true);
+  //PairAssignment* assigner = (PairAssignment*)new AnnPairAssignment(3);
   //PairAssignment* assigner = (PairAssignment*)new ProjectivePairAssignment(Pdata, cols, rows);
 
   IRigidEstimator* estimator = (IRigidEstimator*)new PointToPlaneEstimator3D();
@@ -302,9 +346,11 @@ int main(void)
   _filterBounds->setPose(&_Tinit);
   assigner->addPreFilter(_filterBounds);
 
-  // Decreasing threshhold filter
+  // Decreasing threshold filter
   IPostAssignmentFilter* filterD = (IPostAssignmentFilter*)new DistanceFilter(0.5, 0.01, 10);
+  IPostAssignmentFilter* filterR = (IPostAssignmentFilter*)new ReciprocalFilter();
   assigner->addPostFilter(filterD);
+  assigner->addPostFilter(filterR);
 
   _icp = new Icp(assigner, estimator);
 
@@ -340,12 +386,13 @@ int main(void)
   _viewer3D->addCloud(_vModel);
   _viewer3D->addAxisAlignedCube(0, X_DIM, 0, Y_DIM, 0, Z_DIM);
   //_viewer3D->addCloud(_vScene);
-  _viewer3D->registerKeyboardCallback("space", _cbRegNewImage);
-  _viewer3D->registerKeyboardCallback("c", _cbGenPointCloud);
-  _viewer3D->registerKeyboardCallback("v", _cbBuildSliceViews);
-  _viewer3D->registerKeyboardCallback("m", _cbStoreModel);
-  _viewer3D->registerKeyboardCallback("n", _cbStoreScene);
-  _viewer3D->registerKeyboardCallback("i", _cbReset);
+  _viewer3D->registerKeyboardCallback("space", _cbRegNewImage, "Register new image");
+  _viewer3D->registerKeyboardCallback("c", _cbGenPointCloud, "Generate point cloud");
+  _viewer3D->registerKeyboardCallback("d", _cbGenMesh, "Generate mesh");
+  _viewer3D->registerKeyboardCallback("v", _cbBuildSliceViews, "Build slice views");
+  _viewer3D->registerKeyboardCallback("m", _cbStoreModel, "Save model");
+  _viewer3D->registerKeyboardCallback("n", _cbStoreScene, "Save scene");
+  _viewer3D->registerKeyboardCallback("i", _cbReset, "Reset TSD space");
   _viewer3D->startRendering();
 
   delete _icp;

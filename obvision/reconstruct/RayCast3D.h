@@ -11,11 +11,8 @@ namespace obvious
 enum AXSPARMODE
 {
 	X_AXS,
-	X_AXS_N,
 	Y_AXS,
-	Y_AXS_N,
 	Z_AXS,
-	Z_AXS_N
 };
 
 /**
@@ -41,19 +38,14 @@ public:
 
 	virtual void calcCoordsFromCurrentPoseMask(Sensor* sensor, double* coords, double* normals, unsigned char* rgb, bool* mask, unsigned int* size);
 
-	virtual bool rayCastFromSensorPose(double ray[3], double coordinates[3], double normal[3], unsigned char rgb[3], double* depth, Sensor* sensor);
-
   /**
    * @param size Contains number of coords found
    */
-	virtual bool generatePointCloud(double** pointCloud, double** cloudNormals, unsigned char** cloudRgb, unsigned int* size);
-
-  /**
-   *
-   */
-	virtual bool generatePointCloudPositive(double** pointCloud, double** cloudNormals, unsigned char** cloudRgb, unsigned int* size);
+  virtual bool calcCoordsAxisParallel(double** pointCloud, double** cloudNormals, unsigned char** cloudRgb, unsigned int* size);
 
 private:
+
+  bool rayCastFromSensorPose(double ray[3], double coordinates[3], double normal[3], unsigned char rgb[3], double* depth, Sensor* sensor);
 
   /**
    *
@@ -63,7 +55,7 @@ private:
   /**
    *
    */
-	bool calcRayParallelAxis(const unsigned int row, const unsigned int col, double* footPoint, double* dirVec, unsigned int* steps, AXSPARMODE mode);
+	void calcRayParallelAxis(const unsigned int row, const unsigned int col, double* footPoint, double* dirVec, unsigned int* steps, AXSPARMODE mode);
 
 protected:
 

@@ -121,6 +121,11 @@ void Icp::setModel(gsl_matrix* coords, gsl_matrix* normals)
 
 void Icp::setScene(double* coords, double* normals, const unsigned int size)
 {
+  if(size==0)
+  {
+    cout << "Scene of size 0 passed ... ignoring" << endl;
+    return;
+  }
   _sizeScene = size;
 
   unsigned int sizeNormals = _sizeSceneBuf;
@@ -276,6 +281,8 @@ EnumIcpState Icp::step(double* rms, unsigned int* pairs)
       }
     }
     _fptrCallbackPairs(m, s, pvPairs->size());
+    System<double>::deallocate(m);
+    System<double>::deallocate(s);
   }
 
   if(pvPairs->size()>2)
@@ -294,10 +301,7 @@ EnumIcpState Icp::step(double* rms, unsigned int* pairs)
       applyTransformation(_normalsS, _sizeScene, _dim, _Tlast);
 
     // update overall transformation
-    gsl_matrix* F_tmp = gsl_matrix_alloc(4, 4);
-    gsl_matrix_memcpy(F_tmp, _Tfinal4x4->getBuffer());
-    gsl_blas_dgemm (CblasNoTrans, CblasNoTrans, 1.0, _Tlast->getBuffer(), F_tmp, 0.0, _Tfinal4x4->getBuffer());
-    gsl_matrix_free(F_tmp);
+    (*_Tfinal4x4) = (*_Tlast) * (*_Tfinal4x4);
   }
   else
   {

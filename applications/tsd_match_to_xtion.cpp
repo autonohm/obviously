@@ -386,7 +386,7 @@ int main(int argc, char* argv[])
   double*        normals;
   unsigned char* rgb;
   RayCast3D raycaster(_space);
-  raycaster.generatePointCloudPositive(&coords, &normals, &rgb, &size);
+  raycaster.calcCoordsAxisParallel(&coords, &normals, &rgb, &size);
   std::cout << "Raycast returned: " << size << "points. " << std::endl;
 
   // ICP configuration

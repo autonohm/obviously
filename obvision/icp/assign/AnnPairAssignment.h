@@ -26,7 +26,7 @@ public:
 	/**
 	 * Standard constructor
 	 **/
-	AnnPairAssignment(int nDimension) : PairAssignment(nDimension) {init();};
+	AnnPairAssignment(int dimension) : PairAssignment(dimension) {init();};
 	
 	/**
 	 * Standard destructor
@@ -36,25 +36,25 @@ public:
 	/**
 	 * Set maximum number of point to be visited until interruption.
 	 * This option enhances the performance, but can raise non-optimal matches.
-	 * @param unVisitPoints number of points to be visited
+	 * @param visitPoints number of points to be visited
 	 */
-	void setMaxVisitPoints(unsigned int unVisitPoints);
+	void setMaxVisitPoints(unsigned int visitPoints);
 		
 	/**
 	 * Set model as matching base
-	 * @param ppdModel array of xy values
-	 * @param nSize number of points
+	 * @param model array of xy values
+	 * @param size number of points
 	 **/
-	void setModel(double** ppdModel, int nSize);
+	void setModel(double** model, int size);
 	
 	/**
 	 * Determine point pairs (nearest neighbors)
-	 * @param ppdScene scene to be compared
-	 * @param nSize nr of points in scene
+	 * @param scene scene to be compared
+	 * @param size nr of points in scene
 	 * @param pairs return value of neighbors
 	 * @param nonPairs return value of points with no neighbors
 	 */
-	void determinePairs(double** ppdScene, bool* msk, int nSize);
+	void determinePairs(double** scene, bool* msk, int size);
 	
 	/**
 	 * Get the constructed kd-tree

@@ -139,6 +139,9 @@ void PointToPlaneEstimator3D::estimateTransformation(gsl_matrix* T)
   gsl_permutation* perm = gsl_permutation_alloc(6);
   int sig;
   gsl_linalg_LU_decomp(&A.matrix, perm, &sig);
+
+  //double det = gsl_linalg_LU_det(&A.matrix , sig);
+
   gsl_linalg_LU_solve(&A.matrix, perm, &b.vector, x);
   gsl_permutation_free(perm);
 
