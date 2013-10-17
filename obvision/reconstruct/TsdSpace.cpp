@@ -451,23 +451,17 @@ bool TsdSpace::buildSliceImage(const unsigned int depthIndex, unsigned char* ima
       // Get current tsdf
       cTsdf = _space[depthIndex][row][col].tsdf;
 
-      // Blue for depth behind Voxel
-      if (cTsdf > 0)
-      {
-        if (cTsdf > 0.999)
+
+      if (isnan(cTsdf))
           G[im_ctr++] = (unsigned char) 150; //row*_xDim+col
-        else
+      // Blue for depth behind Voxel
+      else if (cTsdf > 0)
           B[im_ctr++] = (unsigned char) (cTsdf * RGB_MAX + 0.5); //row*_xDim+col
-      }
+
 
       // Red for depth in front of Voxel
       else if (cTsdf < 0)
-      {
-        if (cTsdf < -0.9999)
-          G[im_ctr++] = (unsigned char) 50;
-        else
           R[im_ctr++] = (unsigned char) ((cTsdf * -1.0) * RGB_MAX + 0.5); //row*_xDim+col
-      }
     }
   }
 
