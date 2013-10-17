@@ -343,16 +343,15 @@ void TsdGrid::Load(const char* filename)
     abort();
   }
 
-  while(f.getline(line, 256))
+  do
   {
-    if(!f.eof())
-    {
       f >> y >> x >> tsdf >> weight;
       TsdCell* cell = &_grid[y][x];
       cell->weight  = weight;
       cell->tsdf    = tsdf;
-    }
-  }
+
+  }while(f.getline(line, 256).good());
+
   f.close();
 }
 
