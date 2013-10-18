@@ -181,6 +181,7 @@ void RayCast3D::calcCoordsFromCurrentPoseMask(Sensor* sensor, double* coords, do
     delete[] mask_tmp;
   }
 
+  *size = ctr;
   LOGMSG(DBG_DEBUG, "Elapsed TSDF projection: " << t.getTime() << "ms");
   LOGMSG(DBG_DEBUG, "Raycasting finished! Found " << ctr << " coordinates");
 }
