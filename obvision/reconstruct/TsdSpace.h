@@ -50,7 +50,7 @@ public:
   * @param voxelDim edge length of the Tsd_voxels
   * @param P projection matrix
   */
-  TsdSpace(const unsigned int height, const unsigned int width, const unsigned int depth, const double voxelDim);
+  TsdSpace(const double height, const double width, const double depth, const double voxelDim);
 
  /**
   * Destructor
@@ -187,12 +187,6 @@ private:
  unsigned int _zDim;
 
  int _sizeOfSpace;
-
- int _height;
-
- int _width;
-
- int _depth;
 
  TsdVoxel*** _space;
 

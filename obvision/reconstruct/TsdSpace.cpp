@@ -16,20 +16,17 @@ namespace obvious
 #define MAXWEIGHT 32.0
 #define RGB_MAX 255
 
-TsdSpace::TsdSpace(const unsigned int height, const unsigned int width, const unsigned int depth, const double voxelSize)
+TsdSpace::TsdSpace(const double height, const double width, const double depth, const double voxelSize)
 {
   _voxelSize = voxelSize;
   _invVoxelSize = 1.0 / _voxelSize;
 
   // determine number of voxels in each dimension
-  _xDim = ((double)width * _invVoxelSize + 0.5);
-  _yDim = ((double)height * _invVoxelSize + 0.5);
-  _zDim = ((double)depth * _invVoxelSize + 0.5);
+  _xDim = (width * _invVoxelSize + 0.5);
+  _yDim = (height * _invVoxelSize + 0.5);
+  _zDim = (depth * _invVoxelSize + 0.5);
   _sizeOfSpace = _zDim * _yDim * _xDim;
 
-  _height = height;
-  _width = width;
-  _depth = depth;
   _maxTruncation = 2*voxelSize;
 
   LOGMSG(DBG_DEBUG, "Dimensions are (x/y/z) (" << _xDim << "/" << _yDim << "/" << _zDim << ")");
