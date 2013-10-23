@@ -388,8 +388,8 @@ inline bool TsdSpace::coord2Voxel(double coord[3], int* x, int* y, int* z, Point
   int zIdx = (int) (coord[2] * _invVoxelSize);
 
   // check edges / 0 is edge because of voxel fine tuning
-  if ((xIdx >= (_xDim - 2)) || (xIdx < 1) || (yIdx >= (_yDim - 2)) || (yIdx < 1) || (zIdx >= (_zDim - 2)) || (zIdx < 1))
-    return false;
+  //if ((xIdx >= (_xDim - 2)) || (xIdx < 1) || (yIdx >= (_yDim - 2)) || (yIdx < 1) || (zIdx >= (_zDim - 2)) || (zIdx < 1))
+  //  return false;
 
   // get center point of current voxel
   p->x = (double(xIdx) + 0.5) * _voxelSize;
@@ -412,6 +412,10 @@ inline bool TsdSpace::coord2Voxel(double coord[3], int* x, int* y, int* z, Point
     zIdx--;
     p->z -= _voxelSize;
   }
+
+  // check edges / 0 is edge because of voxel fine tuning
+  if ((xIdx >= (_xDim - 1)) || (xIdx < 0) || (yIdx >= (_yDim - 1)) || (yIdx < 0) || (zIdx >= (_zDim - 1)) || (zIdx < 0))
+    return false;
 
   // turn y-axis
   yIdx = (_yDim - 1) - yIdx;
