@@ -45,8 +45,9 @@ public:
    * @param cloud point cloud
    * @param pickable flag stating whether cloud can be picked and moved within the viewer
    * @param pointsize size of points
+   * @param opacity opacity of points (0.0 = transparent, 1.0 = solid)
    */
-  void addCloud(VtkCloud* cloud, bool pickable=true, unsigned int pointsize=1);
+  void addCloud(VtkCloud* cloud, bool pickable=true, unsigned int pointsize=1, double opacity=0.7);
 
   /**
    * Add array of lines
