@@ -37,15 +37,15 @@
 namespace obvious {
 
 /// @def maximum threshold for distance filter
-#define DIST_THRESHOLD_MAX  2.0
+#define DIST_THRESHOLD_MAX  1.5
 /// @def minimum threshold for distance filter
-#define DIST_THRESHOLD_MIN  0.05
+#define DIST_THRESHOLD_MIN  0.1
 /// @def threshold for amplitude
-#define AMP_THRESHOLD       120
 /// @def maximal integration time
+#define AMP_THRESHOLD       120
 #define MAX_INTEGRATIONTIME 2000
 /// @def minimal integration time
-#define MIN_INTEGRATIONTIME 100
+#define MIN_INTEGRATIONTIME 50
 
 /**
  * @class CamNano

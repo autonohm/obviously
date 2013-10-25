@@ -26,9 +26,10 @@ public:
     {
       if(_nano->grab())
       {
-        std::cout << "Frame rate: \t\t" << _nano->getFrameRate() << std::endl;
-        _cloud->setCoords(_nano->getCoords(), _nano->getCols()*_nano->getRows(), 3);
-        _cloud->setColors(_nano->getRGB(),    _nano->getCols()*_nano->getRows(), 3);
+//        std::cout << "Frame rate: \t\t" << _nano->getFrameRate() << std::endl;
+        _cloud->setCoords(_nano->getValidCoords(), _nano->getValidSize(), 3);
+        std::cout << "valid size: " << _nano->getValidSize() << std::endl;
+//        _cloud->setColors(_nano->getRGB(),    _nano->getCols()*_nano->getRows(), 3);
         _viewer->update();
       }
     }

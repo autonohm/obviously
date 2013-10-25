@@ -71,7 +71,7 @@ CamNano::CamNano()
 
   // init of pid controller
   _ctrl.setDebug(_debug);
-  _ctrl.setP(3.0f);
+  _ctrl.setP(2.0f);
   _ctrl.setI(0.5f);
   _ctrl.setD(0.0f);
   _ctrl.setAWU(30.f);
@@ -146,7 +146,7 @@ bool CamNano::grab()
   }
 
   // get array with distances
-  _res = pmdGetDistances(_hnd, _dist, sizeof(_dist));
+  _res = pmdGetDistances(_hnd, _dist, _rows*_cols * sizeof(float));
   if (_res != PMD_OK)
   {
     LOGMSG(DBG_ERROR, "Error getting the distance");
@@ -155,7 +155,7 @@ bool CamNano::grab()
   }
 
   // get array with amplitudes from sensor
-  _res = pmdGetAmplitudes(_hnd, _amp, sizeof(_amp));
+  _res = pmdGetAmplitudes(_hnd, _amp, _rows*_cols * sizeof(float));
   if (_res != PMD_OK)
   {
     LOGMSG(DBG_ERROR, "Error getting the amplitudes");
@@ -193,10 +193,10 @@ bool CamNano::grab()
     _rgb[i+1]     = (_amp[k]-minval) * 255 / (maxval);
     _rgb[i+2]     = (_amp[k]-minval) * 255 / (maxval);
     _z[k]         = _coords[i+2] / 1000.0;
-    _mask[k]      = (!isnan(_z[k])) &&
-                    (_amp[k]>AMP_THRESHOLD) &&
-                    (_z[k] < DIST_THRESHOLD_MAX) &&
-                    (_z[k] > DIST_THRESHOLD_MIN);
+    _mask[k]      = (!isnan(_z[k]))                &&
+                    (_amp[k]>AMP_THRESHOLD)        &&
+                    (_z[k] < DIST_THRESHOLD_MAX); /*&&
+                    (_z[k] > DIST_THRESHOLD_MIN); */
   }
 
   if (_autoIntegrat)
