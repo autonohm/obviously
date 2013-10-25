@@ -72,14 +72,21 @@ public:
    * @return  valid size
    */
   unsigned int getValidSize(void) const;
-
+  /**
+   * Function to return valid points from mask
+   * @return
+   */
   double* getValidCoords(void);
+  /**
+   * Function to return distance image from camera
+   * @return    distance image in float with unit meter
+   */
+  double* getDistImage(void);
   /**
    * Function to return image of tof camera.
    * @return image
    */
   unsigned char* getImage(void) const;
-
   /**
    * Function to get integration time of camera
    */
@@ -142,6 +149,8 @@ private:
 
   float               _meanAmp;       ///< mean amplitude for controller
   float               _intTime;
+  float*              _dist;          //!< distance image
+  float*              _amp;           //!< amplitude image
 
   float*              _coordsF;
   double*             _coordsV;
