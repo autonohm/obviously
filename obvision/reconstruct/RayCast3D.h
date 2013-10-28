@@ -36,13 +36,18 @@ public:
 
 	virtual void calcCoordsFromCurrentPose(Sensor* rayCastFromSensorPosesensor, double* coords, double* normals, unsigned char* rgb, unsigned int* size);
 
+	virtual void calcCoordsFromCurrentPose(Sensor* sensor, double* coords, double* normals, unsigned char* rgb, const std::vector<TsdSpace*>& spaces,
+											const std::vector<unsigned int>& coloums, const std::vector<unsigned int>& rows);
+
 	virtual void calcCoordsFromCurrentPoseMask(Sensor* sensor, double* coords, double* normals, unsigned char* rgb, bool* mask, unsigned int* size);
+
 
   /**
    * @param size Contains number of coords found
    */
   virtual bool calcCoordsAxisParallel(double** pointCloud, double** cloudNormals, unsigned char** cloudRgb, unsigned int* size);
 
+  void setSpace(TsdSpace* space){_space = space;}
 private:
 
   bool rayCastFromSensorPose(double ray[3], double coordinates[3], double normal[3], unsigned char rgb[3], double* depth, Sensor* sensor);
