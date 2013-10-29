@@ -95,27 +95,28 @@ void RayCast3D::calcCoordsFromCurrentPose(Sensor* sensor, double* coords, double
   LOGMSG(DBG_DEBUG, "Raycasting finished! Found " << *size << " coordinates");
 }
 
-bool RayCast3D::calcCoordsFromCurrentPose(Sensor* sensor, double* coords, double* normals, unsigned char* rgb, std::vector<TsdSpace*>& spaces,
-                                          const unsigned int u, const unsigned int v)
+bool RayCast3D::calcCoordsFromCurrentPose(Sensor* sensor, double* coords, double* normals, unsigned char* rgb, const std::vector<TsdSpace*>& spaces,
+                                              const std::vector<double>& offsets, const unsigned int u, const unsigned int v)
 {
   double depthVar = 0.0;
   double coordVar[3];
   double normalVar[3];
   unsigned char colorVar[3]   = {255, 255, 255};
   double ray[3];
-  Matrix* T = sensor->getPose();
+  //Matrix* T = sensor->getPose();
   Matrix Tinv(4, 4);
-  Tinv = T->getInverse();
+  Tinv = *sensor->getPose();
+  unsigned int spaceCtr = 0;
   Matrix M(4,1);
   Matrix N(4,1);
   M[3][0] = 1.0;
   N[3][0] = 0.0; // no translation for normals  -> no homogenous coordinates???
   bool found = false;
-
-  for(std::vector<TsdSpace*>::const_iterator iter   = spaces.begin(); iter != spaces.end(); iter++)
+  std::vector<double>::const_iterator offIter = offsets.begin();
+  for(std::vector<TsdSpace*>::const_iterator spaIter = spaces.begin(); spaIter != spaces.end(); spaIter++)
   {
-    this->setSpace(*iter);
-    sensor->calcRayFromCurrentPose(v, u, ray);
+    this->setSpace(*spaIter);
+    sensor->calcRayFromCurrentPose(u, v, ray);
     ray[0] *= _space->getVoxelSize();
     ray[1] *= _space->getVoxelSize();
     ray[2] *= _space->getVoxelSize();
@@ -124,19 +125,30 @@ bool RayCast3D::calcCoordsFromCurrentPose(Sensor* sensor, double* coords, double
       found = true;
       break;
     }
+    offIter += 3;
+    spaceCtr++;
   }
   if(!found)
   {
-    std::cout << __PRETTY_FUNCTION__ << " no coordinates found!\n";
+  //  std::cout << __PRETTY_FUNCTION__ << " no coordinates found!\n";
     return(false);
   }
-  std::cout << __PRETTY_FUNCTION__ << " found coordinates!\n";
-  M[0][0] = coordVar[0];
-  M[1][0] = coordVar[1];
-  M[2][0] = coordVar[2];
+  //std::cout << __PRETTY_FUNCTION__ << " coordinates found in the " << spaceCtr << "st space!\n";
+  //std::cout << __PRETTY_FUNCTION__ << " offset:\n\tx = " << *offIter;
+  M[0][0] = coordVar[0] + *offIter;
+  offIter++;
+  //std::cout << "\n\ty = " << *offIter;
+  M[1][0] = coordVar[1] + *offIter;
+  offIter++;
+  //std::cout << "\n\tz = " << *offIter << "\n";
+  M[2][0] = coordVar[2] + *offIter;
   N[0][0] = normalVar[0];
   N[1][0] = normalVar[1];
   N[2][0] = normalVar[2];
+//  Tinv[0][3] += *offIter++;
+//  Tinv[1][3] += *offIter++;
+//  Tinv[2][3] += *offIter;
+  Tinv.invert();
   M       = Tinv * M;
   N       = Tinv * N;
   for (unsigned int i = 0; i < 3; i++)
