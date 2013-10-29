@@ -113,9 +113,24 @@ bool RayCast3D::calcCoordsFromCurrentPose(Sensor* sensor, double* coords, double
   N[3][0] = 0.0; // no translation for normals  -> no homogenous coordinates???
   bool found = false;
   std::vector<double>::const_iterator offIter = offsets.begin();
-  for(std::vector<TsdSpace*>::const_iterator spaIter = spaces.begin(); spaIter != spaces.end(); spaIter++)
+  //unsigned int offCtr = 0;
+  double offset[3];
+  obvious::Matrix T(4,4);
+  for(std::vector<TsdSpace*>::const_iterator spaIter = spaces.begin(); spaIter != spaces.end(); spaIter++)//, offIter += 3)
   {
     this->setSpace(*spaIter);
+
+    offset[0] = *offIter;
+    offIter++;
+    offset[1] = *offIter;
+    offIter++;
+    offset[2] = *offIter;
+    offIter++;
+    T.setIdentity();
+    T[0][3] = (-1.0) * offset[0];
+    T[1][3] = (-1.0) * offset[1];
+    T[2][3] = (-1.0) * offset[2];
+    sensor->transform(&T);
     sensor->calcRayFromCurrentPose(u, v, ray);
     ray[0] *= _space->getVoxelSize();
     ray[1] *= _space->getVoxelSize();
@@ -125,7 +140,8 @@ bool RayCast3D::calcCoordsFromCurrentPose(Sensor* sensor, double* coords, double
       found = true;
       break;
     }
-    offIter += 3;
+    T.invert();
+    sensor->transform(&T);
     spaceCtr++;
   }
   if(!found)
@@ -134,21 +150,24 @@ bool RayCast3D::calcCoordsFromCurrentPose(Sensor* sensor, double* coords, double
     return(false);
   }
   //std::cout << __PRETTY_FUNCTION__ << " coordinates found in the " << spaceCtr << "st space!\n";
-  //std::cout << __PRETTY_FUNCTION__ << " offset:\n\tx = " << *offIter;
-  M[0][0] = coordVar[0] + *offIter;
-  offIter++;
-  //std::cout << "\n\ty = " << *offIter;
-  M[1][0] = coordVar[1] + *offIter;
-  offIter++;
-  //std::cout << "\n\tz = " << *offIter << "\n";
-  M[2][0] = coordVar[2] + *offIter;
+
+//  std::cout << __PRETTY_FUNCTION__ << " raycaster through u = " << u << " v = " << v << "\n";
+//  std::cout << __PRETTY_FUNCTION__ << " offset:\n";
+//  for(unsigned int i = 0; i < 3; i++)
+//     std::cout << offset[i] << "\n";
+
+  M[0][0] = coordVar[0];// + offset[0];
+  M[1][0] = coordVar[1];// + offset[1];
+  M[2][0] = coordVar[2];// + offset[2];
   N[0][0] = normalVar[0];
   N[1][0] = normalVar[1];
   N[2][0] = normalVar[2];
 //  Tinv[0][3] += *offIter++;
 //  Tinv[1][3] += *offIter++;
 //  Tinv[2][3] += *offIter;
+  T.invert();
   Tinv.invert();
+  M       =  T * M;
   M       = Tinv * M;
   N       = Tinv * N;
   for (unsigned int i = 0; i < 3; i++)
@@ -157,6 +176,8 @@ bool RayCast3D::calcCoordsFromCurrentPose(Sensor* sensor, double* coords, double
     rgb[i]     = colorVar[i];
     normals[i] = N[i][0];
   }
+
+  sensor->transform(&T);
   return(true);
 }
 
@@ -364,6 +385,8 @@ bool RayCast3D::rayCastFromSensorPose(double ray[3], double coordinates[3], doub
     tsdf_prev = NAN;
 
   bool found = false;
+//  std::cout << __PRETTY_FUNCTION__ << " starting position:\n\tx = " << position[0] << "\n\ty = " << position[1]
+//            << "\n\tz = " << position[1] << "\n";
   for(int i=idxMin; i<idxMax; i++)
   {
     // calculate current position
@@ -372,6 +395,8 @@ bool RayCast3D::rayCastFromSensorPose(double ray[3], double coordinates[3], doub
     position[0] += ray[0];
     position[1] += ray[1];
     position[2] += ray[2];
+//    std::cout << __PRETTY_FUNCTION__ << " position:\n\tx = " << position[0] << "\n\ty = " << position[1]
+//              << "\n\tz = " << position[1] << "\n";
 
     double tsdf;
     bool retval = _space->interpolateTrilinear(position, &tsdf);
@@ -401,7 +426,8 @@ bool RayCast3D::rayCastFromSensorPose(double ray[3], double coordinates[3], doub
 
   if(!_space->interpolateNormal(coordinates, normal))
     return false;
-
+//  std::cout << __PRETTY_FUNCTION__ << " end position:\n\tx = " << position[0] << "\n\ty = " << position[1]
+//            << "\n\tz = " << position[1] << "\n";
   return true;
 }
 

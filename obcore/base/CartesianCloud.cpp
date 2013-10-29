@@ -372,8 +372,8 @@ void CartesianCloud3D::setData(const unsigned int size, double* coords,
         _normals->data[i] = normals[i];
       if(rgb)
         _colors[i] = rgb[i];
-      else
-        _colors[i] = 255;
+//      else
+//        _colors[i] = 255;
     }
   }
   else  //new content differs old content -> reallocate matrices
