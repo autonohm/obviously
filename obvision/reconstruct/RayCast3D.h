@@ -36,8 +36,8 @@ public:
 
 	virtual void calcCoordsFromCurrentPose(Sensor* rayCastFromSensorPosesensor, double* coords, double* normals, unsigned char* rgb, unsigned int* size);
 
-	virtual void calcCoordsFromCurrentPose(Sensor* sensor, double* coords, double* normals, unsigned char* rgb, const std::vector<TsdSpace*>& spaces,
-											const std::vector<unsigned int>& coloums, const std::vector<unsigned int>& rows);
+	virtual bool calcCoordsFromCurrentPose(Sensor* sensor, double* coords, double* normals, unsigned char* rgb, std::vector<TsdSpace*>& spaces,
+											const unsigned int u, const unsigned int v);
 
 	virtual void calcCoordsFromCurrentPoseMask(Sensor* sensor, double* coords, double* normals, unsigned char* rgb, bool* mask, unsigned int* size);
 
