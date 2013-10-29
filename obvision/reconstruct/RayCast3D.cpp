@@ -95,17 +95,10 @@ void RayCast3D::calcCoordsFromCurrentPose(Sensor* sensor, double* coords, double
   LOGMSG(DBG_DEBUG, "Raycasting finished! Found " << *size << " coordinates");
 }
 
-void RayCast3D::calcCoordsFromCurrentPose(Sensor* sensor, double* coords, double* normals, unsigned char* rgb, const std::vector<TsdSpace*>& spaces,
-                                               const std::vector<unsigned int>& coloums, const std::vector<unsigned int>& rows)
+bool RayCast3D::calcCoordsFromCurrentPose(Sensor* sensor, double* coords, double* normals, unsigned char* rgb, std::vector<TsdSpace*>& spaces,
+                                          const unsigned int u, const unsigned int v)
 {
-  if((spaces.size() != coloums.size()) || (coloums.size() != rows.size()) || (spaces.size() != rows.size()))
-  {
-    std::cout << __PRETTY_FUNCTION__ << " error! Input vectors differ in size!\n";
-    return;
-  }
-  std::vector<TsdSpace*>::const_iterator spIter   = spaces.begin();
-  std::vector<unsigned int>::const_iterator uIter = coloums.begin();
-  std::vector<unsigned int>::const_iterator vIter = rows.begin();
+
   double depthVar = 0.0;
   double coordVar[3];
   double normalVar[3];
@@ -120,10 +113,10 @@ void RayCast3D::calcCoordsFromCurrentPose(Sensor* sensor, double* coords, double
   N[3][0] = 0.0; // no translation for normals  -> no homogenous coordinates???
   bool found = false;
 
-  while(spIter != spaces.end())
+  for(std::vector<TsdSpace*>::const_iterator iter   = spaces.begin(); iter != spaces.end(); iter++)
   {
-    this->setSpace(*spIter);
-    sensor->calcRayFromCurrentPose(*vIter, *uIter, ray);
+    this->setSpace(*iter);
+    sensor->calcRayFromCurrentPose(v, u, ray);
     ray[0] *= _space->getVoxelSize();
     ray[1] *= _space->getVoxelSize();
     ray[2] *= _space->getVoxelSize();
@@ -136,8 +129,9 @@ void RayCast3D::calcCoordsFromCurrentPose(Sensor* sensor, double* coords, double
   if(!found)
   {
     std::cout << __PRETTY_FUNCTION__ << " no coordinates found!\n";
-    return;
+    return(false);
   }
+  std::cout << __PRETTY_FUNCTION__ << " found coordinates!\n";
   M[0][0] = coordVar[0];
   M[1][0] = coordVar[1];
   M[2][0] = coordVar[2];
@@ -152,6 +146,7 @@ void RayCast3D::calcCoordsFromCurrentPose(Sensor* sensor, double* coords, double
     rgb[i]     = colorVar[i];
     normals[i] = N[i][0];
   }
+  return(true);
 }
 
 void RayCast3D::calcCoordsFromCurrentPoseMask(Sensor* sensor, double* coords, double* normals, unsigned char* rgb, bool* mask, unsigned int* size)
