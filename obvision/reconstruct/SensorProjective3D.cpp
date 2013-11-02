@@ -43,8 +43,8 @@ SensorProjective3D::SensorProjective3D(unsigned int cols, unsigned int rows, dou
 SensorProjective3D::~SensorProjective3D()
 {
   delete _P;
-  delete[] _data;
-  delete[] _mask;
+  delete[] _data; _data = NULL;
+  delete[] _mask; _mask = NULL;
 
   for(unsigned int col=0; col<_width; col++)
     for(unsigned int row=0; row<_height; row++)
@@ -70,11 +70,11 @@ void SensorProjective3D::project2Space(const unsigned int col, const unsigned in
 {
   double fx = (*_P)[0][0];
   double fy = (*_P)[1][1];
-  double Tx = (*_P)[0][2];
-  double Ty = (*_P)[1][2];
+  double tx = (*_P)[0][2];
+  double ty = (*_P)[1][2];
 
-  double x = (depth/fx)*(col-Tx);
-  double y = (depth/fy)*(row-Ty);
+  double x = (depth/fx)*(col-tx);
+  double y = (depth/fy)*(row-ty);
   //double lambda_inv = 1./sqrt(x * x + y * y + 1.);
   //double z = depth * lambda_inv;
 
@@ -89,19 +89,16 @@ void SensorProjective3D::backProject(Matrix* M, int* indices)
   Matrix PoseInv = (*_Pose);
   PoseInv.invert();
 
-  double tr[3];
-  getPosition(tr);
-
-  gsl_matrix* Pgen = gsl_matrix_alloc(3, 4);
-  gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, _P->getBuffer(), PoseInv.getBuffer(), 0.0, Pgen);
+  Matrix Pgen(3, 4);
+  Pgen = (*_P) * PoseInv;
 
   // coords2D = P * Tinv * voxelCoords
-  gsl_matrix* coords2D = gsl_matrix_alloc(3, M->getRows());
-  gsl_blas_dgemm(CblasNoTrans, CblasTrans, 1.0, Pgen, M->getBuffer(), 0.0, coords2D);
+  Matrix coords2D(3, M->getRows());
+  gsl_blas_dgemm(CblasNoTrans, CblasTrans, 1.0, Pgen.getBuffer(), M->getBuffer(), 0.0, coords2D.getBuffer());
 
-  const double* du = gsl_matrix_ptr(coords2D, 0, 0);
-  const double* dv = gsl_matrix_ptr(coords2D, 1, 0);
-  const double* dw = gsl_matrix_ptr(coords2D, 2, 0);
+  const double* du = coords2D[0];
+  const double* dv = coords2D[1];
+  const double* dw = coords2D[2];
 
   for(unsigned int i=0; i<M->getRows(); i++)
   {
@@ -119,9 +116,6 @@ void SensorProjective3D::backProject(Matrix* M, int* indices)
       }
     }
   }
-
-  gsl_matrix_free(coords2D);
-  gsl_matrix_free(Pgen);
 }
 
 }

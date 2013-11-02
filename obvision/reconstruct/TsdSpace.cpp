@@ -142,7 +142,7 @@ void TsdSpace::push(Sensor* sensor)
 
 #pragma omp parallel
   {
-    Matrix* V = new Matrix(_yDim*_xDim, 4);
+    Matrix V(_yDim*_xDim, 4);
     int* indices = new int[_yDim*_xDim];
 
     unsigned int i=0;
@@ -150,9 +150,9 @@ void TsdSpace::push(Sensor* sensor)
     {
       for (unsigned int x = 0; x < _xDim; x++, i++)
       {
-        (*V)[i][0] = ((double)x + 0.5) * _voxelSize;
-        (*V)[i][1] = ((double)y + 0.5) * _voxelSize;
-        (*V)[i][3] = 1.0;
+        V[i][0] = ((double)x + 0.5) * _voxelSize;
+        V[i][1] = ((double)y + 0.5) * _voxelSize;
+        V[i][3] = 1.0;
       }
     }
 #pragma omp for schedule(dynamic)
@@ -160,9 +160,9 @@ void TsdSpace::push(Sensor* sensor)
     {
       double zVoxel = ((double)z + 0.5) * _voxelSize;
       for (i = 0; i < _yDim*_xDim; i++)
-        (*V)[i][2] = zVoxel;
+        V[i][2] = zVoxel;
 
-      sensor->backProject(V, indices);
+      sensor->backProject(&V, indices);
 
       i = 0;
       for(unsigned int y=0; y<_yDim; y++)
@@ -177,7 +177,7 @@ void TsdSpace::push(Sensor* sensor)
             if(mask[index])
             {
               // calculate distance of current cell to sensor
-              double distance = euklideanDistance<double>(tr, (*V)[i], 3);
+              double distance = euklideanDistance<double>(tr, V[i], 3);
               double sdf = data[index] - distance;
 
               unsigned char* color = NULL;
@@ -190,7 +190,6 @@ void TsdSpace::push(Sensor* sensor)
         }
       }
     }
-    delete V;
     delete [] indices;
   }
 

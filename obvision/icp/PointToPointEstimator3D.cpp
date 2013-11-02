@@ -137,7 +137,6 @@ void PointToPointEstimator3D::estimateTransformation(Matrix* T)
   tmp = R * tmp;
   Matrix tr(3, 1, _cm);
   tr -= tmp;
-  tr.print();
 
   (*T)[0][0] = R[0][0];  (*T)[0][1] = R[0][1];  (*T)[0][2] = R[0][2];  (*T)[0][3] = tr[0][0];
   (*T)[1][0] = R[1][0];  (*T)[1][1] = R[1][1];  (*T)[1][2] = R[1][2];  (*T)[1][3] = tr[1][0];

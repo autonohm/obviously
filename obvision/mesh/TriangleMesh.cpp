@@ -1,7 +1,6 @@
 #include "TriangleMesh.h"
 
 #include "obcore/base/System.h"
-#include <gsl/gsl_matrix.h>
 #include "obcore/math/mathbase.h"
 #include "obcore/math/Matrix.h"
 #include <string.h>

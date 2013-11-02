@@ -68,8 +68,8 @@ void RayCast3D::calcCoordsFromCurrentPose(Sensor* sensor, double* coords, double
           N[0][0] = n[0];
           N[1][0] = n[1];
           N[2][0] = n[2];
-          M       = Tinv * M;
-          N       = Tinv * N;
+          M = Tinv * M;
+          N = Tinv * N;
           for (unsigned int i = 0; i < 3; i++)
           {
             c_tmp[size_tmp]      = M[i][0];
@@ -86,9 +86,9 @@ void RayCast3D::calcCoordsFromCurrentPose(Sensor* sensor, double* coords, double
       memcpy(&rgb[*size],     color_tmp, size_tmp*sizeof(unsigned char));
       *size += size_tmp;
     }
-    delete[] c_tmp;
-    delete[] n_tmp;
-    delete[] color_tmp;
+    delete[] c_tmp;     c_tmp = NULL;
+    delete[] n_tmp;     n_tmp = NULL;
+    delete[] color_tmp; color_tmp = NULL;
   }
 
   LOGMSG(DBG_DEBUG, "Elapsed TSDF projection: " << t.getTime() << "ms");

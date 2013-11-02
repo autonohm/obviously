@@ -153,14 +153,28 @@ void Matrix::invert()
 
 void Matrix::transpose()
 {
+  if(_M->size1 != _M->size2)
+  {
+    LOGMSG(DBG_ERROR, "Matrix must be square to be transposed");
+    return;
+  }
   gsl_matrix_transpose(_M);
 }
 
 Matrix Matrix::getTranspose()
 {
-  Matrix Mt = *this;
-  Mt.transpose();
-  return Mt;
+  if(_M->size1 != _M->size2)
+  {
+    Matrix Mt(_M->size2, _M->size1);
+    gsl_matrix_transpose_memcpy(Mt.getBuffer(), _M);
+    return Mt;
+  }
+  else
+  {
+    Matrix Mt = *this;
+    Mt.transpose();
+    return Mt;
+  }
 }
 
 double Matrix::trace()
@@ -183,20 +197,6 @@ double Matrix::trace()
   return trace;
 }
 
-gsl_vector* Matrix::centroid()
-{
-  gsl_vector* c = gsl_vector_alloc(_M->size2);
-
-  for(size_t i=0; i<_M->size2; i++)
-  {
-    gsl_vector_view col = gsl_matrix_column(_M, i);
-    double m = gsl_stats_mean(col.vector.data,_M->size2,_M->size1);
-    gsl_vector_set(c, i, m);
-  }
-
-  return c;
-}
-
 Matrix* Matrix::pcaAnalysis()
 {
 
@@ -212,7 +212,16 @@ Matrix* Matrix::pcaAnalysis()
   Matrix* axes = new Matrix(dim, 2*dim);
 
   gsl_matrix* V = gsl_matrix_alloc(dim, dim);
-  gsl_vector* vcent = this->centroid();
+
+  // calculate centroid
+  gsl_vector* vcent = gsl_vector_alloc(_M->size2);
+  for(size_t i=0; i<_M->size2; i++)
+  {
+    gsl_vector_view col = gsl_matrix_column(_M, i);
+    double m = gsl_stats_mean(col.vector.data,_M->size2,_M->size1);
+    gsl_vector_set(vcent, i, m);
+  }
+
   double* cent = vcent->data;
 
   for(i=0; i<dim; i++)
@@ -299,11 +308,8 @@ void Matrix::svd(Matrix* U, double* s, Matrix* V)
   }
   U->copy(*this);
   gsl_vector* work = gsl_vector_alloc(getRows());
-  gsl_vector* vs    = gsl_vector_alloc(getRows());
-  gsl_linalg_SV_decomp(U->getBuffer(), V->getBuffer(), vs, work);
-  for(int i=0; i<getRows(); i++)
-    s[i] = gsl_vector_get(vs, i);
-  gsl_vector_free(vs);
+  gsl_vector_view vs = gsl_vector_view_array(s, getRows());
+  gsl_linalg_SV_decomp(U->getBuffer(), V->getBuffer(), &vs.vector, work);
   gsl_vector_free(work);
 }
 
@@ -330,6 +336,37 @@ Matrix* Matrix::TranslationMatrix44(double tx, double ty, double tz)
   gsl_matrix_set(buf, 1, 3, ty);
   gsl_matrix_set(buf, 2, 3, tz);
   return M;
+}
+
+void Matrix::transform(Matrix T)
+{
+  unsigned int dim = getCols();
+
+  if(dim!=2 && dim!=3)
+  {
+    LOGMSG(DBG_ERROR, "Matrix dimension invalid");
+    return;
+  }
+
+  // Apply rotation
+  gsl_matrix* points_tmp = gsl_matrix_alloc(getRows(), dim);
+  gsl_matrix_view R = gsl_matrix_submatrix(T.getBuffer(), 0, 0, dim, dim);
+  gsl_blas_dgemm(CblasNoTrans, CblasTrans, 1.0, _M, &R.matrix, 0.0, points_tmp);
+  gsl_matrix_memcpy(_M, points_tmp);
+  gsl_matrix_free(points_tmp);
+
+  // Add translation
+  gsl_vector_view x  = gsl_matrix_column(_M, 0);
+  gsl_vector_view y  = gsl_matrix_column(_M, 1);
+  gsl_vector_view tr = gsl_matrix_column(T.getBuffer(), dim);
+  gsl_vector_add_constant(&x.vector, gsl_vector_get(&tr.vector,0));
+  gsl_vector_add_constant(&y.vector, gsl_vector_get(&tr.vector,1));
+
+  if(dim==3)
+  {
+    gsl_vector_view z  = gsl_matrix_column(_M, 2);
+    gsl_vector_add_constant(&z.vector, gsl_vector_get(&tr.vector,2));
+  }
 }
 
 void Matrix::print()

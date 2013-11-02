@@ -291,9 +291,11 @@ int main(void)
 {
   LOGMSG_CONF("mapper3D.log", Logger::screen_on | Logger::file_off, DBG_DEBUG, DBG_DEBUG);
 
-  // Projection matrix (needs to be determined by calibration)
+  // Projection matrix (needs to be determined by calibration) (tx smaller leftward -> ty smaller -> upwards
   // ------------------------------------------------------------------
-  double Pdata[12] = {585.05108211, 0.0, 315.83800193, 0.0, 0.0, 585.05108211, 242.94140713, 0., 0.0, 0.0, 1.0, 0.0};
+  double Pdata[12] = {585.05108211, 0.0, 316.83800193, 0.0, 0.0, 585.05108211, 238.94140713, 0., 0.0, 0.0, 1.0, 0.0};
+  //double Pdata[12] = {585.05108211, 0.0, 315.83800193, 0.0, 0.0, 585.05108211, 242.94140713, 0., 0.0, 0.0, 1.0, 0.0};
+
   Matrix P(3, 4, Pdata);
   _kinect = new Kinect("kinect.xml");
 
@@ -340,6 +342,7 @@ int main(void)
   //PairAssignment* assigner = (PairAssignment*)new ProjectivePairAssignment(Pdata, cols, rows);
 
   IRigidEstimator* estimator = (IRigidEstimator*)new PointToPlaneEstimator3D();
+  //IRigidEstimator* estimator = (IRigidEstimator*)new PointToPointEstimator3D();
 
   // Out-of-Bounds filter to remove measurements outside TSD space
   _filterBounds = new OutOfBoundsFilter3D(_space->getMinX(), _space->getMaxX(), _space->getMinY(), _space->getMaxY(), _space->getMinZ(), _space->getMaxZ());

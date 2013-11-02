@@ -105,14 +105,13 @@ void SensorPolar3D::backProject(Matrix* M, int* indices)
   Timer t;
   Matrix PoseInv = (*_Pose);
   PoseInv.invert();
-  //PoseInv.print();
-  gsl_matrix* coords3D = gsl_matrix_alloc(4, M->getRows());
 
-  gsl_blas_dgemm(CblasNoTrans, CblasTrans, 1.0, PoseInv.getBuffer(), M->getBuffer(), 0.0, coords3D);
+  Matrix coords3D(4, M->getRows());
+  gsl_blas_dgemm(CblasNoTrans, CblasTrans, 1.0, PoseInv.getBuffer(), M->getBuffer(), 0.0, coords3D.getBuffer());
 
-  double* x = gsl_matrix_ptr(coords3D, 0, 0);
-  double* y = gsl_matrix_ptr(coords3D, 1, 0);
-  double* z = gsl_matrix_ptr(coords3D, 2, 0);
+  const double* x = coords3D[0];
+  const double* y = coords3D[1];
+  const double* z = coords3D[2];
 
   for(unsigned int i=0; i<M->getRows(); i++)
   {
@@ -140,7 +139,6 @@ void SensorPolar3D::backProject(Matrix* M, int* indices)
     else
       indices[i] = -1;
   }
-  gsl_matrix_free(coords3D);
 }
 
 }

@@ -94,8 +94,7 @@ void calculatePerspective(gsl_matrix* P, CartesianCloud3D* cloud, int nW, int nH
 
 void calculatePerspective_cblas(gsl_matrix* P, CartesianCloud3D* cloud, int nW, int nH, int subsample)
 {
-
-  int points = cloud->size() / subsample + 1;
+  int points = cloud->size() / subsample;
 
   gsl_matrix* A = gsl_matrix_alloc(2 * points, 11);
   gsl_vector* b = gsl_vector_alloc(2 * points);
@@ -113,6 +112,7 @@ void calculatePerspective_cblas(gsl_matrix* P, CartesianCloud3D* cloud, int nW, 
     double xk = point[0];
     double yk = point[1];
     double zk = point[2];
+    if(zk<=0) continue;
 
     gsl_matrix_set(A, k, 0, xk);
     gsl_matrix_set(A, k, 1, yk);
@@ -176,7 +176,131 @@ void calculatePerspective_cblas(gsl_matrix* P, CartesianCloud3D* cloud, int nW, 
   gsl_matrix_free(A);
   gsl_vector_free(b);
   gsl_vector_free(x);
+}
 
+void calculatePerspectiveUndistorted_cblas(gsl_matrix* P, CartesianCloud3D* cloud, int nW, int nH, int subsample)
+{
+  int points = cloud->size() / subsample;
+
+  Matrix A(2*points, 4);
+  double* b = new double[2*points];
+  double x[4];
+
+  int* indices = cloud->getIndices();
+
+  int k = 0;
+  for (unsigned int i = 0; i < cloud->size(); i += subsample)
+  {
+    int idx = indices[i];
+
+    double* point = (*cloud)[i];
+    double ik = (double) (idx % nW);
+    double jk = 480-(double) (idx / nW);
+    double xk = point[0];
+    double yk = point[1];
+    double zk = point[2];
+    if(fabs(zk)<=1e-12)
+    {
+      A[k][0] = 0.0;
+      A[k][1] = 0.0;
+      A[k][2] = 0.0;
+      A[k][3] = 0.0;
+
+      A[k+1][0] = 0.0;
+      A[k+1][1] = 0.0;
+      A[k+1][2] = 0.0;
+      A[k+1][3] = 0.0;
+
+      b[k] = 0.0;
+      b[k+1] = 0.0;
+    }
+    else
+    {
+      A[k][0] = xk/zk;
+      A[k][1] = 0.0;
+      A[k][2] = 1.0;
+      A[k][3] = 0.0;
+
+      A[k+1][0] = 0.0;
+      A[k+1][1] = yk/zk;
+      A[k+1][2] = 0.0;
+      A[k+1][3] = 1.0;
+
+      b[k] = ik;
+      b[k+1] = jk;
+    }
+    k += 2;
+  }
+
+  /*
+
+  Matrix M(4, 4);
+  M = A.getTranspose() * A;
+  M.print();
+  M.solve(b, x);*/
+  /* Calculate x  = (At * A)^-1 * At * b
+   *           M  = (At * A)
+   *           Mi = M^-1
+   *           N  = Mi * At
+   *           x  = N * b
+   */
+
+  gsl_vector_view vx = gsl_vector_view_array(x, 4);
+  gsl_vector_view vb = gsl_vector_view_array(b, k);
+
+  gsl_matrix* M = gsl_matrix_alloc(4, 4);
+  gsl_blas_dgemm(CblasTrans, CblasNoTrans, 1.0, A.getBuffer(), A.getBuffer(), 0.0, M);
+
+  for(int i=0; i<4; i++)
+  {
+    for(int j=0; j<4; j++)
+      cout << gsl_matrix_get(M, i, j) << " ";
+    cout << endl;
+  }
+
+  int s;
+  gsl_permutation * p = gsl_permutation_alloc(4);
+
+  gsl_linalg_LU_decomp(M, p, &s);
+  gsl_matrix* Mi = gsl_matrix_alloc(4, 4);
+  gsl_linalg_LU_invert(M, p, Mi);
+
+  cout << "Mi" << endl;
+  for(int i=0; i<4; i++)
+  {
+    for(int j=0; j<4; j++)
+      cout << gsl_matrix_get(Mi, i, j) << " ";
+    cout << endl;
+  }
+
+  gsl_matrix* N = gsl_matrix_alloc(4, k);
+  cout << Mi->size1 << "x" << Mi->size2 << " * " << A.getBuffer()->size1 << "x" << A.getBuffer()->size2 << " = " << N->size1 << "x" << N->size2 << endl;
+  gsl_blas_dgemm(CblasNoTrans, CblasTrans, 1.0, Mi, A.getBuffer(), 0.0, N);
+
+  cout << "test" << endl;
+
+  gsl_blas_dgemv(CblasNoTrans, 1.0, N, &(vb.vector), 0.0, &(vx.vector));
+
+  gsl_matrix_set(P, 0, 0, x[0]);
+  gsl_matrix_set(P, 0, 1, 0.0);
+  gsl_matrix_set(P, 0, 2, x[2]);
+  gsl_matrix_set(P, 0, 3, 0.0);
+  gsl_matrix_set(P, 1, 0, 0.0);
+  gsl_matrix_set(P, 1, 1, x[1]);
+  gsl_matrix_set(P, 1, 2, 0.0);
+  gsl_matrix_set(P, 1, 3, x[3]);
+  gsl_matrix_set(P, 2, 0, 0.0);
+  gsl_matrix_set(P, 2, 1, 0.0);
+  gsl_matrix_set(P, 2, 2, 1.0);
+  gsl_matrix_set(P, 2, 3, 0.0);
+
+  gsl_matrix_free(N);
+  gsl_matrix_free(Mi);
+  gsl_matrix_free(M);
+/*  gsl_matrix_free(A);
+  gsl_vector_free(b);
+  gsl_vector_free(x);*/
+  delete [] b;
 }
 
 bool axisAngle(Matrix M, gsl_vector* axis, double* angle)

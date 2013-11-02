@@ -72,19 +72,13 @@ void SensorPolar2D::backProject(Matrix* M, int* indices)
   Timer t;
   Matrix PoseInv = (*_Pose);
   PoseInv.invert();
-  gsl_matrix* coords2D = gsl_matrix_alloc(3, M->getRows());
-
-  gsl_blas_dgemm(CblasNoTrans, CblasTrans, 1.0, PoseInv.getBuffer(), M->getBuffer(), 0.0, coords2D);
-
-  double* x = gsl_matrix_ptr(coords2D, 0, 0);
-  double* y = gsl_matrix_ptr(coords2D, 1, 0);
-
+  Matrix coords2D(3, M->getRows());
+  Matrix Mt = M->getTranspose();
+  coords2D = PoseInv * Mt;
   for(unsigned int i=0; i<M->getRows(); i++)
   {
-    indices[i] = phi2Index(atan2(*(y+i), *(x+i)));
+    indices[i] = phi2Index(atan2(coords2D[1][i], coords2D[0][i]));
   }
-
-  gsl_matrix_free(coords2D);
 }
 
 int SensorPolar2D::phi2Index(double phi)

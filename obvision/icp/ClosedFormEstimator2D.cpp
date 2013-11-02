@@ -3,10 +3,6 @@
 #include "obcore/base/System.h"
 #include "obcore/math/mathbase.h"
 
-#include <gsl/gsl_matrix.h>
-#include <gsl/gsl_blas.h>
-#include <gsl/gsl_linalg.h>
-
 using namespace obvious;
 
 namespace obvious

@@ -161,12 +161,6 @@ public:
 	double trace();
 
 	/**
-	 * Calculate centroid of matrix
-	 * @return c-dimensional centroid vector, where c is the number of matrix columns
-	 */
-	gsl_vector* centroid();
-
-	/**
 	 * perform principle component analysis
 	 * @return matrix in layout [x1_from x1_to y1_from y1_to z1_from z1_to; x2...]
 	 */
@@ -180,6 +174,11 @@ public:
 	 */
 	void svd(Matrix* U, double* s, Matrix* V);
 
+	/**
+	 * Solve A x = b
+	 * @param[in] b b must have elements = number of rows of current matrix
+	 * @param[out] x x must have elements = number of rows of current matrix
+	 */
 	void solve(double* b, double* x);
 
 	/**
@@ -189,6 +188,12 @@ public:
 	 * @param tz z-component of translation
 	 */
 	static Matrix* TranslationMatrix44(double tx, double ty, double tz);
+
+	/**
+	 * Transform current matrix, i.e. homogeneous coordinates with transformation matrix
+	 * @param[in] T transformation matrix
+	 */
+	void transform(Matrix T);
 
 	/**
 	 * Print matrix to output stream

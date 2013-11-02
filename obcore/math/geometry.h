@@ -10,6 +10,8 @@ void calculatePerspective(gsl_matrix* P, CartesianCloud3D* cloud, int nW, int nH
 
 void calculatePerspective_cblas(gsl_matrix* P, CartesianCloud3D* cloud, int nW, int nH, int subsample);
 
+void calculatePerspectiveUndistorted_cblas(gsl_matrix* P, CartesianCloud3D* cloud, int nW, int nH, int subsample);
+
 bool axisAngle(Matrix M, gsl_vector* axis, double* angle);
 
 }
