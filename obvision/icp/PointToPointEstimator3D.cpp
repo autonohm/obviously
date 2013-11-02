@@ -2,10 +2,7 @@
 #include <iostream>
 #include "obcore/base/System.h"
 #include "obcore/math/mathbase.h"
-
-#include <gsl/gsl_matrix.h>
-#include <gsl/gsl_blas.h>
-#include <gsl/gsl_linalg.h>
+#include "obcore/math/Matrix.h"
 
 using namespace obvious;
 
@@ -86,7 +83,7 @@ unsigned int PointToPointEstimator3D::getIterations(void)
   return _iterations;
 }
 
-void PointToPointEstimator3D::estimateTransformation(gsl_matrix* T)
+void PointToPointEstimator3D::estimateTransformation(Matrix* T)
 {
   unsigned int i;
   int          r, c;
@@ -114,9 +111,7 @@ void PointToPointEstimator3D::estimateTransformation(gsl_matrix* T)
     ps[i][2]                   = pointScene[2] - _cs[2];
   }
 
-  //Fill H matrix
-  gsl_matrix* H = gsl_matrix_alloc(3,3);
-  gsl_matrix_set_zero(H);
+  Matrix H(3, 3);
 
   for(r = 0; r < 3; r++) {
     for(c = 0; c < 3; c++) {
@@ -124,41 +119,29 @@ void PointToPointEstimator3D::estimateTransformation(gsl_matrix* T)
       for(i=0; i<(unsigned int)size; i++) {
         val += ps[i][r] * pm[i][c];
       }
-      gsl_matrix_set(H, r, c, val);
+      H[r][c] = val;
     }
   }
 
-  // compute singular value decomposition
-  gsl_vector* s    = gsl_vector_alloc(3);
-  gsl_matrix* V    = gsl_matrix_alloc(3,3);
-  gsl_vector* work = gsl_vector_alloc(3);
-  gsl_linalg_SV_decomp(H, V, s, work);
-  gsl_vector_free(work);
+  double s[3];
+  Matrix U(3, 3);
+  Matrix V(3, 3);
+  H.svd(&U, s, &V);
 
   // R = V * U'
-  gsl_matrix_set_identity(T);
-  gsl_matrix_view R = gsl_matrix_submatrix(T, 0, 0, 3, 3);
-  gsl_vector_view t = gsl_matrix_subcolumn(T, 3, 0, 3);
-  gsl_blas_dgemm(CblasNoTrans, CblasTrans, 1.0, V, H, 0.0, &R.matrix);
+  Matrix R(3, 3);
+  U.transpose();
+  R = V * U;
 
-  // Calculate translation
-  gsl_vector* col = gsl_vector_alloc(3);
-  for(i = 0; i < 3; i++)
-    gsl_vector_set(col, i, _cs[i]);
-  gsl_vector* tmp = gsl_vector_alloc(3);
-  gsl_blas_dgemv(CblasNoTrans, 1.0, &R.matrix, col, 0.0, tmp);
+  Matrix tmp(3, 1, _cs);
+  tmp = R * tmp;
+  Matrix tr(3, 1, _cm);
+  tr -= tmp;
+  tr.print();
 
-  gsl_vector_set(&t.vector, 0, _cm[0]);
-  gsl_vector_set(&t.vector, 1, _cm[1]);
-  gsl_vector_set(&t.vector, 2, _cm[2]);
-  gsl_vector_sub(&t.vector, tmp);
-
-  gsl_vector_free(tmp);
-  gsl_vector_free(col);
-
-  gsl_matrix_free(V);
-  gsl_vector_free(s);
-  gsl_matrix_free(H);
+  (*T)[0][0] = R[0][0];  (*T)[0][1] = R[0][1];  (*T)[0][2] = R[0][2];  (*T)[0][3] = tr[0][0];
+  (*T)[1][0] = R[1][0];  (*T)[1][1] = R[1][1];  (*T)[1][2] = R[1][2];  (*T)[1][3] = tr[1][0];
+  (*T)[2][0] = R[2][0];  (*T)[2][1] = R[2][1];  (*T)[2][2] = R[2][2];  (*T)[2][3] = tr[2][0];
 
   System<double>::deallocate(pm);
   System<double>::deallocate(ps);

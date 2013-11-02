@@ -42,9 +42,6 @@ public:
         if(_showNormals)
         {
           _nestimator->estimateNormals3DGrid(cols, rows, coords, mask, _normals);
-          //gsl_matrix_view vcoords = gsl_matrix_view_array (coords, size, 3);
-          //gsl_matrix_view vnormals = gsl_matrix_view_array (_normals, size, 3);
-          //_nestimator->estimateNormalsFLANN(&vcoords.matrix, &vnormals.matrix);
           _cloud->setCoords(coords, size, 3, _normals);
         }
         else

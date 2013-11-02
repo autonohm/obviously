@@ -173,21 +173,15 @@ int main(int argc, char* argv[])
     Matrix* T = icp->getFinalTransformation();
 
     Matrix* Pose = sensor.getPose();
-    double poseX  = gsl_matrix_get(Pose->getBuffer(), 0, 2);
-    double poseY  = gsl_matrix_get(Pose->getBuffer(), 1, 2);
-    double curPhi = acos(gsl_matrix_get(Pose->getBuffer(), 0, 0));
-    //double lastX  = gsl_matrix_get(LastScanPose.getBuffer(), 0, 2);
-    //double lastY  = gsl_matrix_get(LastScanPose.getBuffer(), 1, 2);
-    //double lastPhi= acos(gsl_matrix_get(LastScanPose.getBuffer(), 0, 0));
+    double poseX  = (*Pose)[0][2];
+    double poseY  = (*Pose)[1][2];
+    double curPhi = acos((*Pose)[0][0]);
 
     double deltaX   = poseX - lastX;
     double deltaY   = poseY - lastY;
     double deltaPhi = fabs(curPhi - lastPhi);
     double sqrt_delta = sqrt(deltaX*deltaX + deltaY*deltaY);
 
-    //std::cout << deltaX << std::endl;
-
-    //if(deltaX>0.1) abort();
     filterBounds->setPose(sensor.getPose());
 
     /*T->print();*/
@@ -195,8 +189,6 @@ int main(int argc, char* argv[])
 
     sensor.setRealMeasurementData(lms.getRanges());
     sensor.transform(T);
-
-    //std::cout << sqrt(deltaX*deltaX + deltaY*deltaY) << std::endl;
 
     if (initCount < 5 || sqrt_delta > 0.05 || deltaPhi > 0.05)
     {

@@ -81,7 +81,7 @@ unsigned int ClosedFormEstimator2D::getIterations(void)
   return _iterations;
 }
 
-void ClosedFormEstimator2D::estimateTransformation(gsl_matrix* T)
+void ClosedFormEstimator2D::estimateTransformation(Matrix* T)
 {
   double dNominator = 0.0, dDenominator = 0.0;
   for (unsigned int i = 0; i < (*_pairs).size(); i++)
@@ -106,16 +106,16 @@ void ClosedFormEstimator2D::estimateTransformation(gsl_matrix* T)
   double dDeltaY = (_cm[1] - (dCosDeltaTheta * _cs[1] + dSinDeltaTheta * _cs[0]));
 
   // fill result matrix
-  gsl_matrix_set_identity(T);
-  gsl_matrix_set(T, 0, 0, dCosDeltaTheta);
-  gsl_matrix_set(T, 0, 1, -dSinDeltaTheta);
-  gsl_matrix_set(T, 0, 3, dDeltaX);
+  T->setIdentity();
+  (*T)[0][0] = dCosDeltaTheta;
+  (*T)[0][1] = -dSinDeltaTheta;
+  (*T)[0][3] = dDeltaX;
 
-  gsl_matrix_set(T, 1, 0, dSinDeltaTheta);
-  gsl_matrix_set(T, 1, 1, dCosDeltaTheta);
-  gsl_matrix_set(T, 1, 3, dDeltaY);
+  (*T)[1][0] = dSinDeltaTheta;
+  (*T)[1][1] = dCosDeltaTheta;
+  (*T)[1][3] = dDeltaY;
 
-  gsl_matrix_set(T, 2, 3, 0);
+  (*T)[2][3] = 0;
 }
 
 }

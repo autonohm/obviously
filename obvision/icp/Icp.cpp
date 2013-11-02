@@ -294,7 +294,7 @@ EnumIcpState Icp::step(double* rms, unsigned int* pairs)
     *rms = _estimator->getRMS();
 
     // estimate transformation
-    _estimator->estimateTransformation(_Tlast->getBuffer());
+    _estimator->estimateTransformation(_Tlast);
 
     applyTransformation(_scene, _sizeScene, _dim, _Tlast);
     if(_normalsS)

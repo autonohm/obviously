@@ -5,8 +5,6 @@
 
 #include "obvision/icp/icp_def.h"
 
-#include <gsl/gsl_blas.h>
-
 #include <sstream>
 
 #include "obgraphic/Obvious3D.h"

@@ -1,4 +1,5 @@
 #include "Matrix.h"
+#include "obcore/base/Logger.h"
 
 #include <gsl/gsl_permutation.h>
 #include <gsl/gsl_statistics_double.h>
@@ -150,6 +151,18 @@ void Matrix::invert()
   gsl_permutation_free(perm);
 }
 
+void Matrix::transpose()
+{
+  gsl_matrix_transpose(_M);
+}
+
+Matrix Matrix::getTranspose()
+{
+  Matrix Mt = *this;
+  Mt.transpose();
+  return Mt;
+}
+
 double Matrix::trace()
 {
   int rows = _M->size1;
@@ -275,6 +288,37 @@ Matrix* Matrix::pcaAnalysis()
   gsl_matrix_free(M);
 
   return axes;
+}
+
+void Matrix::svd(Matrix* U, double* s, Matrix* V)
+{
+  if(U->getCols() != getCols() || U->getRows() != getRows())
+  {
+    LOGMSG(DBG_ERROR, "Matrix U must have same dimension");
+    return;
+  }
+  U->copy(*this);
+  gsl_vector* work = gsl_vector_alloc(getRows());
+  gsl_vector* vs    = gsl_vector_alloc(getRows());
+  gsl_linalg_SV_decomp(U->getBuffer(), V->getBuffer(), vs, work);
+  for(int i=0; i<getRows(); i++)
+    s[i] = gsl_vector_get(vs, i);
+  gsl_vector_free(vs);
+  gsl_vector_free(work);
+}
+
+void Matrix::solve(double* b, double* x)
+{
+  unsigned int dim = getRows();
+  gsl_vector_view vx = gsl_vector_view_array(x, dim);
+  gsl_vector_view vb = gsl_vector_view_array(b, dim);
+
+  gsl_permutation* perm = gsl_permutation_alloc(getRows());
+  int sig;
+  gsl_linalg_LU_decomp(_M, perm, &sig);
+
+  gsl_linalg_LU_solve(_M, perm, &vb.vector, &vx.vector);
+  gsl_permutation_free(perm);
 }
 
 Matrix* Matrix::TranslationMatrix44(double tx, double ty, double tz)

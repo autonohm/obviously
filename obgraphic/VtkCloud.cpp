@@ -222,15 +222,18 @@ void VtkCloud::removeInvalidPoints()
     if(buf[2]>10e-6 && len>10e-6)
     {
       newPoints->InsertNextPoint(buf);
-      colors->GetTupleValue(i, cbuf);
-      newColors->InsertNextTupleValue(cbuf);
+      if(colors)
+      {
+        colors->GetTupleValue(i, cbuf);
+        newColors->InsertNextTupleValue(cbuf);
+      }
       norm3(nbuf);
       newNormals->InsertNextTuple(nbuf);
     }
   }
 
   points->ShallowCopy(newPoints);
-  colors->DeepCopy(newColors);
+  if(colors) colors->DeepCopy(newColors);
   normals->DeepCopy(newNormals);
 
   vtkSmartPointer<vtkVertexGlyphFilter> glyphFilter =  vtkSmartPointer<vtkVertexGlyphFilter>::New();
