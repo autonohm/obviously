@@ -17,7 +17,7 @@ using namespace obvious;
 CamNano::CamNano()
   : ParentDevice3D(165,120)
 {
-   _res = pmdOpen (&_hnd, SOURCE_PLUGIN, SOURCE_PARAM, PROC_PLUGIN, PROC_PARAM);
+   _res = pmdOpen(&_hnd, SOURCE_PLUGIN, SOURCE_PARAM, PROC_PLUGIN, PROC_PARAM);
    sleep(2);
    if (_res != PMD_OK)
    {
@@ -31,52 +31,53 @@ CamNano::CamNano()
 //   pmdSourceCommand(&_hnd, loaded, 8, “IsCalibrationDataLoaded”);
 
 
-   /*
-    * config pmd processing
-    */
-   char lens[128];
-   pmdProcessingCommand(_hnd, lens, 128,  "GetLensParameters");
-   pmdProcessingCommand(_hnd, 0, 0,       "SetAveraging On");
-   pmdProcessingCommand(_hnd, 0, 0,       "SetAveragingFrames 2");
-   pmdProcessingCommand(_hnd, 0, 0,       "SetConsistencyThreshold 0.5");
-   pmdProcessingCommand(_hnd, 0, 0,       "SetBilateralFilterKernelSize 10");
-   pmdProcessingCommand(_hnd, 0, 0,       "SetBilateralFilter on");
-   pmdProcessingCommand(_hnd, 0, 0,       "SetBilateralFitlerSigmaRange 15");
-   pmdProcessingCommand(_hnd, 0, 0,       "SetBilateralFilterenhanceImage off");
-   pmdProcessingCommand(_hnd, 0, 0,       "SetSignalStrengthCheck On");
+  /*
+  * config pmd processing
+  */
+  char lens[128];
+  pmdProcessingCommand(_hnd, lens, 128,  "GetLensParameters");
+  pmdProcessingCommand(_hnd, 0, 0,       "SetAveraging On");
+  pmdProcessingCommand(_hnd, 0, 0,       "SetAveragingFrames 2");
+  pmdProcessingCommand(_hnd, 0, 0,       "SetConsistencyThreshold 0.5");
+  pmdProcessingCommand(_hnd, 0, 0,       "SetBilateralFilterKernelSize 10");
+  pmdProcessingCommand(_hnd, 0, 0,       "SetBilateralFilter on");
+  pmdProcessingCommand(_hnd, 0, 0,       "SetBilateralFitlerSigmaRange 15");
+  pmdProcessingCommand(_hnd, 0, 0,       "SetBilateralFilterenhanceImage off");
+  pmdProcessingCommand(_hnd, 0, 0,       "SetSignalStrengthCheck On");
 
-   /*
-    * config logging messages
-    */
-   LOGMSG_CONF("CamNano.log", Logger::file_off|Logger::screen_on, DBG_DEBUG, DBG_ERROR);
+  /*
+  * config logging messages
+  */
+  LOGMSG_CONF("CamNano.log", Logger::file_off|Logger::screen_on, DBG_DEBUG, DBG_ERROR);
 
-	_points = _rows*_cols;
+  _points    = _rows*_cols;
+  _coordsV   = new double[_points*3];
+  _coordsF   = new float [_points*3];
+  _image     = new unsigned char [_points];
+  _imageF    = new float [_points];
+  _dist      = new float [_points];
+  _amp       = new float [_points];
 
-	_coordsV   = new double[_rows*_cols*3];
-	_coordsF   = new float[_rows*_cols*3];
-	_image     = new unsigned char [_rows*_cols];
-	_imageF    = new float[_rows*_cols];
+  _meanAmp      = 0.0f;
+  _intTime      = 0.0f;
+  _autoIntegrat = true;
+  _rawSet       = false;
+  _intrinsic    = true;
+  _init         = true;
+  _debug        = false;
 
-	_meanAmp      = 0.0f;
-	_intTime      = 0.0f;
-	_autoIntegrat = true;
-	_rawSet       = false;
-	_intrinsic    = true;
-	_init         = true;
-	_debug        = false;
+//  _cols = 165;
+//  _rows = 120;
 
-	_cols = 165;
-	_rows = 120;
-
-	// init of pid controller
-	_ctrl.setDebug(_debug);
-	_ctrl.setP(3.0f);
-	_ctrl.setI(0.5f);
-	_ctrl.setD(0.0f);
-	_ctrl.setAWU(30.f);
-	_ctrl.setSetValue(250);
-	_ctrl.setMinValue(MIN_INTEGRATIONTIME);
-	_ctrl.setMaxValue(MAX_INTEGRATIONTIME);
+  // init of pid controller
+  _ctrl.setDebug(_debug);
+  _ctrl.setP(2.0f);
+  _ctrl.setI(0.5f);
+  _ctrl.setD(0.0f);
+  _ctrl.setAWU(30.f);
+  _ctrl.setSetValue(250);
+  _ctrl.setMinValue(MIN_INTEGRATIONTIME);
+  _ctrl.setMaxValue(MAX_INTEGRATIONTIME);
 }
 
 /*
@@ -84,12 +85,19 @@ CamNano::CamNano()
  */
 CamNano::~CamNano()
 {
-	//delete [] _coords;
-	delete [] _coordsF;
-	delete [] _image;
-	delete [] _imageF;
-	delete [] _coordsV;
-	pmdClose(_hnd);
+  //delete [] _coords;
+  delete [] _coordsF;
+  delete [] _image;
+  delete [] _imageF;
+  delete [] _coordsV;
+  delete [] _dist;
+  delete [] _amp;
+  pmdClose(_hnd);
+}
+
+double* CamNano::getDistImage()
+{
+  return (double*)_dist;
 }
 
 unsigned int CamNano::getValidSize(void) const
@@ -110,6 +118,7 @@ void CamNano::setRaw(bool raw)
  */
 bool CamNano::grab()
 {
+  // check if sensor initialized
   if (!_init)
   {
     LOGMSG(DBG_ERROR, "Sensor uninitialized");
@@ -119,6 +128,7 @@ bool CamNano::grab()
 
   this->estimateFrameRate();
 
+  // update sensor
   _res = pmdUpdate(_hnd);
   if (_res != PMD_OK)
   {
@@ -127,25 +137,25 @@ bool CamNano::grab()
     return(false);
   }
 
-	_res = pmdGetSourceDataDescription(_hnd, &_dd);
-	if (_res != PMD_OK)
-	{
-	  LOGMSG(DBG_ERROR, "Error updating data description");
-	  pmdClose (_hnd);
-	  return(false);
-	}
+  _res = pmdGetSourceDataDescription(_hnd, &_dd);
+  if (_res != PMD_OK)
+  {
+    LOGMSG(DBG_ERROR, "Error updating data description");
+    pmdClose (_hnd);
+    return(false);
+  }
 
-	float  dist[_rows*_cols];
-	_res = pmdGetDistances(_hnd, dist, sizeof(dist));
-	if (_res != PMD_OK)
-	{
-	  LOGMSG(DBG_ERROR, "Error getting the distance");
-	  pmdClose(_hnd);
-	  return(false);
-	}
+  // get array with distances
+  _res = pmdGetDistances(_hnd, _dist, _rows*_cols * sizeof(float));
+  if (_res != PMD_OK)
+  {
+    LOGMSG(DBG_ERROR, "Error getting the distance");
+    pmdClose(_hnd);
+    return(false);
+  }
 
-  float  amp[_rows*_cols];
-	_res = pmdGetAmplitudes(_hnd, amp, sizeof(amp));
+  // get array with amplitudes from sensor
+  _res = pmdGetAmplitudes(_hnd, _amp, _rows*_cols * sizeof(float));
   if (_res != PMD_OK)
   {
     LOGMSG(DBG_ERROR, "Error getting the amplitudes");
@@ -153,6 +163,7 @@ bool CamNano::grab()
     return(false);
   }
 
+  // calculate 3d coordinates
   _res = pmdGet3DCoordinates(_hnd, _coordsF, _rows*_cols * sizeof(float) * 3);
   if (_res != PMD_OK)
   {
@@ -161,33 +172,36 @@ bool CamNano::grab()
     return(false);
   }
 
-	_imageF = amp;
+  _imageF = _amp;
 
   unsigned int maxval = 0;
   unsigned int minval = 10000;
   for (unsigned int i=0; i<_rows*_cols; i++) {
-    if(amp[i] > maxval)
-      maxval = amp[i];
-    if(amp[i] < minval)
-      minval = amp[i];
+    if(_amp[i] > maxval)
+      maxval = _amp[i];
+    if(_amp[i] < minval)
+      minval = _amp[i];
   }
 
-	unsigned int k=0;
-	for(unsigned int i=0 ; i<_rows*_cols*3 ; i+=3, k++)
-	{
-	  _coords[i]    = -(double)_coordsF[i];
-	  _coords[i+1]  = (double)_coordsF[i+1];
-	  _coords[i+2]  = (double)_coordsF[i+2];
-	  _rgb[i]       = (amp[k]-minval) * 255 / (maxval);
-	  _rgb[i+1]     = (amp[k]-minval) * 255 / (maxval);
-	  _rgb[i+2]     = (amp[k]-minval) * 255 / (maxval);
-	  _z[k]         = _coords[i+2] / 1000.0;
-	  _mask[k]      = (!isnan(_z[k])) && (amp[k]>AMP_THRESHOLD) && (_z[k] < DIST_THRESHOLD_MAX) && (_z[k] > DIST_THRESHOLD_MIN);
-	}
+  unsigned int k=0;
+  for(unsigned int i=0 ; i<_rows*_cols*3 ; i+=3, k++)
+  {
+    _coords[i]    = -(double)_coordsF[i];
+    _coords[i+1]  = (double)_coordsF[i+1];
+    _coords[i+2]  = (double)_coordsF[i+2];
+    _rgb[i]       = (_amp[k]-minval) * 255 / (maxval);
+    _rgb[i+1]     = (_amp[k]-minval) * 255 / (maxval);
+    _rgb[i+2]     = (_amp[k]-minval) * 255 / (maxval);
+    _z[k]         = _coords[i+2] / 1000.0;
+    _mask[k]      = (!isnan(_z[k]))                &&
+                    (_amp[k]>AMP_THRESHOLD)        &&
+                    (_z[k] < DIST_THRESHOLD_MAX); /*&&
+                    (_z[k] > DIST_THRESHOLD_MIN); */
+  }
 
-	if (_autoIntegrat)
-	  this->setAutoIntegration();
-	return(true);
+  if (_autoIntegrat)
+    this->setAutoIntegration();
+  return(true);
 }
 
 /*

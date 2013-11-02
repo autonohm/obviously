@@ -15,6 +15,7 @@ namespace obvious
 TriangleMesh::TriangleMesh(unsigned int maxsize, double maxDiscontinuity)
 {
   System<double>::allocate(maxsize, 3, _coords);
+  System<double>::allocate(maxsize, 3, _normals);
   System<unsigned char>::allocate(maxsize, 3, _rgb);
   System<unsigned int>::allocate(2*maxsize, 3, _indices);
   System<unsigned int>::allocate(2*maxsize, 3, _inputIndices);
@@ -27,6 +28,7 @@ TriangleMesh::TriangleMesh(unsigned int maxsize, double maxDiscontinuity)
 TriangleMesh::~TriangleMesh()
 {
   System<double>::deallocate(_coords);
+  System<double>::deallocate(_normals);
   System<unsigned char>::deallocate(_rgb);
   System<unsigned int>::deallocate(_indices);
   System<unsigned int>::deallocate(_inputIndices);
@@ -34,6 +36,11 @@ TriangleMesh::~TriangleMesh()
 }
 
 double** TriangleMesh::getCoords()
+{
+  return _coords;
+}
+
+double** TriangleMesh::getNormals()
 {
   return _coords;
 }
@@ -87,7 +94,7 @@ double TriangleMesh::computeSurface()
   return surface;
 }
 
-void TriangleMesh::createMeshFromOrganizedCloud(double* coords, unsigned int rows, unsigned cols, unsigned char* rgb, bool* mask)
+void TriangleMesh::createMeshFromOrganizedCloud(double* coords, unsigned int rows, unsigned cols, unsigned char* rgb, bool* mask, double* normals)
 {
   _size = 0;
   _triangles = 0;
@@ -100,7 +107,8 @@ void TriangleMesh::createMeshFromOrganizedCloud(double* coords, unsigned int row
     if(mask[i])
     {
       memcpy(_coords[_size], &coords[3*i], 3*sizeof(*coords));
-      memcpy(_rgb[_size],    &rgb[3*i],    3*sizeof(*rgb));
+      if(rgb) memcpy(_rgb[_size],    &rgb[3*i],    3*sizeof(*rgb));
+      if(normals) memcpy(_normals[_size],&normals[3*i],3*sizeof(*normals));
       _size++;
     }
   }

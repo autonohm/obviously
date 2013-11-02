@@ -37,15 +37,15 @@
 namespace obvious {
 
 /// @def maximum threshold for distance filter
-#define DIST_THRESHOLD_MAX  2.0
+#define DIST_THRESHOLD_MAX  1.5
 /// @def minimum threshold for distance filter
-#define DIST_THRESHOLD_MIN  0.05
+#define DIST_THRESHOLD_MIN  0.1
 /// @def threshold for amplitude
-#define AMP_THRESHOLD       120
 /// @def maximal integration time
+#define AMP_THRESHOLD       120
 #define MAX_INTEGRATIONTIME 2000
 /// @def minimal integration time
-#define MIN_INTEGRATIONTIME 100
+#define MIN_INTEGRATIONTIME 50
 
 /**
  * @class CamNano
@@ -72,14 +72,21 @@ public:
    * @return  valid size
    */
   unsigned int getValidSize(void) const;
-
+  /**
+   * Function to return valid points from mask
+   * @return
+   */
   double* getValidCoords(void);
+  /**
+   * Function to return distance image from camera
+   * @return    distance image in float with unit meter
+   */
+  double* getDistImage(void);
   /**
    * Function to return image of tof camera.
    * @return image
    */
   unsigned char* getImage(void) const;
-
   /**
    * Function to get integration time of camera
    */
@@ -142,6 +149,8 @@ private:
 
   float               _meanAmp;       ///< mean amplitude for controller
   float               _intTime;
+  float*              _dist;          //!< distance image
+  float*              _amp;           //!< amplitude image
 
   float*              _coordsF;
   double*             _coordsV;

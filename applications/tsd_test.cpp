@@ -49,7 +49,7 @@ int main(void)
   SensorProjective3D sensor(cols, rows, PData, voxelSize);
   sensor.transform(&T);
 
-  TsdSpace space(1.0, 1.0, 1.0, voxelSize);
+  TsdSpace space(0.99, 0.99, 0.99, voxelSize);
   space.setMaxTruncation(3.0*voxelSize);
 
   double distZ[cols*rows];

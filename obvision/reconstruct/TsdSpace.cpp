@@ -16,20 +16,17 @@ namespace obvious
 #define MAXWEIGHT 32.0
 #define RGB_MAX 255
 
-TsdSpace::TsdSpace(const unsigned int height, const unsigned int width, const unsigned int depth, const double voxelSize)
+TsdSpace::TsdSpace(const double height, const double width, const double depth, const double voxelSize)
 {
   _voxelSize = voxelSize;
   _invVoxelSize = 1.0 / _voxelSize;
 
   // determine number of voxels in each dimension
-  _xDim = ((double)width * _invVoxelSize + 0.5);
-  _yDim = ((double)height * _invVoxelSize + 0.5);
-  _zDim = ((double)depth * _invVoxelSize + 0.5);
+  _xDim = (width * _invVoxelSize + 0.5);
+  _yDim = (height * _invVoxelSize + 0.5);
+  _zDim = (depth * _invVoxelSize + 0.5);
   _sizeOfSpace = _zDim * _yDim * _xDim;
 
-  _height = height;
-  _width = width;
-  _depth = depth;
   _maxTruncation = 2*voxelSize;
 
   LOGMSG(DBG_DEBUG, "Dimensions are (x/y/z) (" << _xDim << "/" << _yDim << "/" << _zDim << ")");
@@ -409,8 +406,8 @@ inline bool TsdSpace::coord2Voxel(double coord[3], int* x, int* y, int* z, Point
   int zIdx = (int) (coord[2] * _invVoxelSize);
 
   // check edges / 0 is edge because of voxel fine tuning
-  if ((xIdx >= (_xDim - 2)) || (xIdx < 1) || (yIdx >= (_yDim - 2)) || (yIdx < 1) || (zIdx >= (_zDim - 2)) || (zIdx < 1))
-    return false;
+  //if ((xIdx >= (_xDim - 2)) || (xIdx < 1) || (yIdx >= (_yDim - 2)) || (yIdx < 1) || (zIdx >= (_zDim - 2)) || (zIdx < 1))
+  //  return false;
 
   // get center point of current voxel
   p->x = (double(xIdx) + 0.5) * _voxelSize;
@@ -433,6 +430,10 @@ inline bool TsdSpace::coord2Voxel(double coord[3], int* x, int* y, int* z, Point
     zIdx--;
     p->z -= _voxelSize;
   }
+
+  // check edges / 0 is edge because of voxel fine tuning
+  if ((xIdx >= (_xDim - 1)) || (xIdx < 0) || (yIdx >= (_yDim - 1)) || (yIdx < 0) || (zIdx >= (_zDim - 1)) || (zIdx < 0))
+    return false;
 
   // turn y-axis
   yIdx = (_yDim - 1) - yIdx;
@@ -469,23 +470,17 @@ bool TsdSpace::buildSliceImage(const unsigned int depthIndex, unsigned char* ima
       // Get current tsdf
       cTsdf = _space[depthIndex][row][col].tsdf;
 
-      // Blue for depth behind Voxel
-      if (cTsdf > 0)
-      {
-        if (cTsdf > 0.999)
+
+      if (isnan(cTsdf))
           G[im_ctr++] = (unsigned char) 150; //row*_xDim+col
-        else
+      // Blue for depth behind Voxel
+      else if (cTsdf > 0)
           B[im_ctr++] = (unsigned char) (cTsdf * RGB_MAX + 0.5); //row*_xDim+col
-      }
+
 
       // Red for depth in front of Voxel
       else if (cTsdf < 0)
-      {
-        if (cTsdf < -0.9999)
-          G[im_ctr++] = (unsigned char) 50;
-        else
           R[im_ctr++] = (unsigned char) ((cTsdf * -1.0) * RGB_MAX + 0.5); //row*_xDim+col
-      }
     }
   }
 

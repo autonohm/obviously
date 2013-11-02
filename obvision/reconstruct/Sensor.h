@@ -46,6 +46,12 @@ public:
   virtual void transform(Matrix* T);
 
   /**
+   * Translate current sensor pose
+   * @param tr[in] tr translation vector
+   */
+  virtual void translate(double* tr);
+
+  /**
    * Mutator of sensor pose
    * @param[in] P pose
    */

@@ -45,8 +45,10 @@ if(EXISTS /usr/include/PMDSDK)
   SET(DEVICELIBS ${DEVICELIBS} pmdaccess2)
 	INCLUDE_DIRECTORIES(/usr/include/PMDSDK)
 	LINK_DIRECTORIES(/usr/lib/PMDSDK)
-	#ADD_EXECUTABLE(nanoStream nanoStream.cpp)
-	#TARGET_LINK_LIBRARIES(nanoStream  ${VISIONLIBS} ${GRAPHICLIBS} ${DEVICELIBS} ${XML_LIBRARIES})
+	ADD_EXECUTABLE(nanoStream          nanoStream.cpp)
+	ADD_EXECUTABLE(tsd_camnano        tsd_camNano.cpp)
+	TARGET_LINK_LIBRARIES(tsd_camnano ${VISIONLIBS}  ${DEVICELIBS}  ${GRAPHICLIBS} ${CORELIBS} ${XML_LIBRARIES})
+	TARGET_LINK_LIBRARIES(nanoStream  ${VISIONLIBS} ${GRAPHICLIBS} ${DEVICELIBS} ${CORELIBS} ${XML_LIBRARIES})
 endif()
 
 if(EXISTS /usr/local/include/LMS1xx.h)
@@ -95,6 +97,8 @@ ADD_EXECUTABLE(filterTest                 filter_test.cpp)
 ADD_EXECUTABLE(xtionStream                xtionStream.cpp)
 SET_TARGET_PROPERTIES(xtionStream PROPERTIES COMPILE_FLAGS "-Wno-unknown-pragmas -Wno-reorder")
 #ADD_EXECUTABLE(obstacleView              obstacleView.cpp)
+
+
 
 TARGET_LINK_LIBRARIES(obvious3D_show           ${GRAPHICLIBS} ${CORELIBS})
 TARGET_LINK_LIBRARIES(obvious3D_map            ${GRAPHICLIBS} ${CORELIBS})

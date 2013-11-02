@@ -47,6 +47,14 @@ void Sensor::transform(Matrix* T)
   (*_Pose) *= (*T);
 }
 
+void Sensor::translate(double* tr)
+{
+  (*_Pose)[0][_dim] += tr[0];
+  (*_Pose)[1][_dim] += tr[1];
+  if(_dim==3)
+    (*_Pose)[2][_dim] += tr[2];
+}
+
 void Sensor::setPose(Matrix* T)
 {
   (*_Pose) = (*T);

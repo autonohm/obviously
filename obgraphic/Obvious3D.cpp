@@ -177,7 +177,7 @@ Obvious3D::~Obvious3D()
 
 }
 
-void Obvious3D::addCloud(VtkCloud* cloud, bool pickable, unsigned int pointsize)
+void Obvious3D::addCloud(VtkCloud* cloud, bool pickable, unsigned int pointsize, double opacity)
 {
   vtkSmartPointer<vtkPolyData> polyData = cloud->getPolyData();
 
@@ -193,6 +193,7 @@ void Obvious3D::addCloud(VtkCloud* cloud, bool pickable, unsigned int pointsize)
   if(!pickable)actor->PickableOff();
   actor->SetMapper(mapper);
   actor->GetProperty()->SetPointSize(pointsize);
+  actor->GetProperty()->SetOpacity(opacity);
 
   cloud->setActor(actor);
 

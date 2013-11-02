@@ -44,12 +44,14 @@ public:
    * @param[in] rgb RGB data of a point cloud in grid layout
    * @param[in] mask Validity mask of a point cloud in grid layout
    */
-  void createMeshFromOrganizedCloud(double* coords, unsigned int rows, unsigned cols, unsigned char* rgb=NULL, bool* mask=NULL);
+  void createMeshFromOrganizedCloud(double* coords, unsigned int rows, unsigned cols, unsigned char* rgb=NULL, bool* mask=NULL, double* normals=NULL);
 
   /**
    * Accessor to coordinates of valid points (grid layout is not given anymore)
    */
   double** getCoords();
+
+  double** getNormals();
 
   /**
    * Accessor to RGB data of valid points (grid layout is not given anymore)
@@ -86,6 +88,8 @@ private:
    * Coordinate array of only valid points (grid layout is not given anymore)
    */
   double**        _coords;
+
+  double**        _normals;
 
   /**
    * RGB array of only valid points (grid layout is not given anymore)
