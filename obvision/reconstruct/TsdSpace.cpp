@@ -366,6 +366,24 @@ void TsdSpace::addTsdfValue(const unsigned int col, const unsigned int row, cons
     double tsdf = sdf / _maxTruncation;
     tsdf = min(tsdf, 1.0);
 
+    /** The following lines were proposed by
+     *  E. Bylow, J. Sturm, C. Kerl, F. Kahl, and D. Cremers.
+     *  Real-time camera tracking and 3d reconstruction using signed distance functions.
+     *  In Robotics: Science and Systems Conference (RSS), June 2013.
+     *
+     *  SM: Improvements in tracking need to be verified, for the moment this is commented due to runtime improvements
+     */
+    /*
+    double w = 1.0;
+    const double eps = -_maxTruncation/4.0;
+    if(sdf <= eps)
+    {
+      const double span = -_maxTruncation - eps;
+      const double sigma = 3.0/(span*span);
+      w = exp(-sigma*(sdf-eps)*(sdf-eps));
+    }
+    voxel->weight += w;*/
+
     voxel->weight += 1.0;
     const double invWeight = 1.0 / voxel->weight;
     if(isnan(voxel->tsdf)) voxel->tsdf = tsdf;
