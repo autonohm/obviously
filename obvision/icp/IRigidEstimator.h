@@ -4,7 +4,7 @@
 #include <math.h>
 
 #include "obvision/icp/assign/assignbase.h"
-#include <gsl/gsl_matrix.h>
+#include <obcore/math/Matrix.h>
 #include <vector>
 
 namespace obvious
@@ -62,7 +62,7 @@ class IRigidEstimator
 		 * Determine the transformation matrix that registers the scene to the model.
 		 * @param transformation matrix as return parameter 
 		 */
-		virtual void estimateTransformation(gsl_matrix* T) = 0;
+		virtual void estimateTransformation(Matrix* T) = 0;
 };
 
 }

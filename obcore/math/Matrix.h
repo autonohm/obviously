@@ -144,6 +144,17 @@ public:
 	void invert();
 
 	/**
+	 * Instantiate the transpose matrix of present matrix
+	 * @return transposed matrix as new instance
+	 */
+	Matrix getTranspose();
+
+	/**
+	 * Transpose current matrix
+	 */
+	void transpose();
+
+	/**
 	 * Calculate trace of matrix
 	 * @return trace
 	 */
@@ -160,6 +171,16 @@ public:
 	 * @return matrix in layout [x1_from x1_to y1_from y1_to z1_from z1_to; x2...]
 	 */
 	Matrix* pcaAnalysis();
+
+	/**
+	 * perform singular value decomposition A = U S V'
+	 * @param U orthogonal matrix U
+	 * @param s singular values
+	 * @param V orthogonal square matrix
+	 */
+	void svd(Matrix* U, double* s, Matrix* V);
+
+	void solve(double* b, double* x);
 
 	/**
 	 * Instantiate a 4x4 translation matrix, i.e. identity with last column set to translational input
