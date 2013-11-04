@@ -25,6 +25,7 @@ CamNano*   _nano      = NULL;
 
 VtkCloud*                        _cloud        = NULL;
 VtkCloud*                        _cloudScene   = NULL;
+VtkCloud*                        _liveSensor   = NULL;
 obvious::SensorProjective3D*     _sensor       = NULL;
 obvious::TsdSpace*               _space        = NULL;
 obvious::Icp*                    _icp          = NULL;
@@ -47,7 +48,37 @@ public:
 
   virtual void Execute(vtkObject *vtkNotUsed(caller), unsigned long eventId,  void *vtkNotUsed(callData))
   {
-    // wait for key callback
+    if(_nano->grab())
+    {
+      unsigned int cols = _nano->getCols();
+      unsigned int rows = _nano->getRows();
+
+      double* coords = _nano->getCoords();
+      bool*   mask   = _nano->getMask();
+
+      // Convert to Euklidean distances
+      double* dist = new double[cols*rows];
+      for(unsigned int i=0; i<cols*rows; i++)
+        dist[i] = abs3D(&coords[3*i]);
+
+      // flip y coords for correct visualization in vtk
+      for(unsigned int i=0 ; i<cols*rows*3 ; i+=3)
+      {
+        coords[i]   = -coords[i];
+        coords[i+1] = -coords[i+1];
+      }
+
+      _liveSensor->setCoords(_nano->getValidCoords(), _nano->getValidSize(), 3);
+      double P[16];
+      _sensor->getPose()->getData(P);
+      _liveSensor->transform(P);
+      _viewer->update();
+      delete [] dist;
+    }
+    else
+    {
+      LOGMSG(DBG_WARN, "Can't grab Kinect.");
+    }
   }
 
 private:
@@ -102,7 +133,7 @@ void init(void)
   const double volumeSizeX = 1.0;
   const double volumeSizeY = 1.0;
   const double volumeSizeZ = 1.0;
-  const double voxelSize   = 0.01;
+  const double voxelSize   = 0.01      ;
   double d_maxIterations   = 50;
   double d_subSampling     = 30;
 
@@ -111,13 +142,18 @@ void init(void)
 
   _cloud      = new VtkCloud();
   _cloudScene = new VtkCloud();
+  _liveSensor = new VtkCloud();
 
   // TSD Space configuration
   _space = new TsdSpace(volumeSizeY, volumeSizeX, volumeSizeZ, voxelSize);
-  _space->setMaxTruncation(10.0*voxelSize);
+  _space->setMaxTruncation(2.0*voxelSize);
+
+  std::cout << "CamNano with " << _nano->getCols() << " x " << _nano->getRows() << std::endl;
 
   // configure sensor
-  double Pdata[12] = {90.1, 0.0, 82.0, 0.0, 0.0, 90.1, 59.5, 0., 0.0, 0.0, 1.0, 0.0};
+  double Pdata[12] = {90.1, 0.0,  82.0, 0.0,
+                      0.0,   90.1, 59.5, 0.0,
+                      0.0,   0.0,  1.0,  0.0};
   _sensor = new SensorProjective3D(_nano->getCols(), _nano->getRows(), Pdata, _space->getVoxelSize());
   _dists  = new double[_sensor->getRealMeasurementSize()];
 
@@ -162,6 +198,7 @@ void init(void)
   _cloud      = new VtkCloud();
   _cloudScene = new VtkCloud();
   _viewer->addCloud(_cloud);
+  _viewer->addCloud(_liveSensor);
 //  _viewer->addCloud(_cloudScene);
 
   double P[16];
@@ -188,6 +225,7 @@ void _calc(void)
     _nano->grab();
     _sensor->setRealMeasurementData(_nano->getDistImage());
 //    _sensor->setRealMeasurementMask(_nano->getMask());
+//    _sensor->setRealMeasurementAccuracy()                     --> what is this?
 
     // only push if not registration
 //    if(_push) _space->push(_sensor);
@@ -207,7 +245,7 @@ void _calc(void)
     cout << "Received " << size/3 << " from TSD space" << endl;
     _cloud->setCoords(coords,   size/3, 3);
 //    _cloud->setNormals(normals, size/3, 3);
-    _cloud->serialize("model.vtp");
+//    _cloud->serialize("model.vtp");
 
     // update pose from sensor
     _sensor->getPose()->getData(P);
@@ -225,7 +263,7 @@ void _calc(void)
       _cloudScene->setColors(rgb,                _nano->getCols()*_nano->getRows(), 3);
       _sensor->getPose()->getData(P);
       _cloudScene->transform(P);
-      _cloudScene->serialize("scene.vtp");
+//      _cloudScene->serialize("scene.vtp");
 
       _icp->reset();
       _icp->setScene(_nano->getCoords(), NULL, _nano->getCols()*_nano->getRows());
@@ -271,7 +309,7 @@ int main(int argc, char* argv[])
   interactor->CreateRepeatingTimer(30);
 
   _nano = new CamNano();
-  _nano->setIntegrationTime(200);
+  _nano->setIntegrationTime(300);
 
   init();
 

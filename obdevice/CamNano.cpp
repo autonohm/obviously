@@ -53,7 +53,7 @@ CamNano::CamNano()
   _points    = _rows*_cols;
   _coordsV   = new double[_points*3];
   _coordsF   = new float [_points*3];
-  _image     = new unsigned char [_points];
+  _image     = new unsigned char [3*_points];
   _imageF    = new float [_points];
   _dist      = new float [_points];
   _amp       = new float [_points];
@@ -97,7 +97,10 @@ CamNano::~CamNano()
 
 double* CamNano::getDistImage()
 {
-  return (double*)_dist;
+  double* _distD = new double [_cols * _rows];
+  for(unsigned int i=0 ; i<_cols*_rows ; i++)
+    _distD[i] = _dist[i];
+  return _distD;
 }
 
 unsigned int CamNano::getValidSize(void) const
@@ -276,9 +279,9 @@ void CamNano::showParameters(void)
  */
 unsigned char* CamNano::getImage(void) const
 {
-  float minMag = 1000;
+  float minMag = NAN;
   float maxMag = 0;
-  for (unsigned int i = 0 ; i < _rows*_cols ; i++)
+  for (unsigned int i=0 ; i<_rows*_cols ; i++)
   {
     if (_imageF[i] < minMag)
       minMag = _imageF[i];
@@ -287,9 +290,12 @@ unsigned char* CamNano::getImage(void) const
   }
 
   float range = minMag - maxMag;
-  for (unsigned int i = 0 ; i < _rows*_cols ; i++)
+  for (unsigned int i=0 ; i < _rows*_cols ; i++)
   {
-     _image[i] = (unsigned char)((_imageF[i] - minMag)/range*255);
+     _image[3*i]   = (unsigned char)((_imageF[3*i]   - minMag)/range*255);
+     _image[3*i+1] = (unsigned char)((_imageF[3*i+1] - minMag)/range*255);
+     _image[3*i+2] = (unsigned char)((_imageF[3*i+2] - minMag)/range*255);
+
   }
   return _image;
 }
