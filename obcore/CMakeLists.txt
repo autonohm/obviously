@@ -23,21 +23,16 @@ add_library(obcore
 	base/Timer.cpp
 	base/Logger.cpp
 	base/tools.cpp
-   	base/Cloud.cpp
 	math/geometry.cpp
 	math/Matrix.cpp
    	math/PID_Controller.cpp
    	math/IntegratorSimpson.cpp
-   	math/MatD.cpp
-   	math/MatRGB.cpp
-   	math/VecD.cpp
-   	math/VectorRefD.cpp
 	filter/EuclideanFilter.cpp
 	filter/CartesianFilter.cpp
 	filter/NormalFilter.cpp
 	filter/BoundingBoxFilter.cpp
-   	grid/Grid2D.cpp
-   	grid/GradientGrid.cpp
-   	grid/HeightGrid.cpp
-   	grid/ObstacleGrid.cpp
+#   	grid/Grid2D.cpp
+#   	grid/GradientGrid.cpp
+#   	grid/HeightGrid.cpp
+#   	grid/ObstacleGrid.cpp
 	)

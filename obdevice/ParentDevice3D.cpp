@@ -33,36 +33,6 @@ ParentDevice3D::~ParentDevice3D()
   delete [] _rgb;
 }
 
-MatD ParentDevice3D::getMatZ(void) const
-{
-  const double* z = _z;
-  MatD mat(_rows, _cols);
-
-  for (unsigned int row = 0; row < _rows; row++)
-      for (unsigned int col = 0; col < _cols; col++)
-          mat.at(row, col) = *z++;
-
-  return mat;
-}
-
-MatRGB ParentDevice3D::getMatRGB(void) const
-{
-    const unsigned char* rgb = _rgb;
-    MatRGB mat(_rows, _cols);
-
-    for (unsigned int row = 0; row < _rows; row++)
-    {
-        for (unsigned int col = 0; col < _cols; col++)
-        {
-            mat.at(row, col, MatRGB::Red)   = *rgb++;
-            mat.at(row, col, MatRGB::Green) = *rgb++;
-            mat.at(row, col, MatRGB::Blue)  = *rgb++;
-        }
-    }
-
-    return mat;
-}
-
 /*
  * Function to estimate frame rate
  */

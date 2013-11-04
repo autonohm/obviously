@@ -9,8 +9,6 @@
 #ifndef PARENTDEVICE3D_H_
 #define PARENTDEVICE3D_H_
 
-#include "obcore/math/MatD.h"
-#include "obcore/math/MatRGB.h"
 #include "obcore/base/Timer.h"
 #include <iostream>
 #include <fstream>
@@ -56,20 +54,10 @@ public:
    */
   double* getZ() const          { return _z; }
   /**
-   * Get Z buffer
-   * @return MatD
-   */
-  MatD getMatZ(void) const;
-  /**
    * Accessor to pointer of color data
    * @return pointer to color buffer (layout r1g1b1r2...)
    */
   unsigned char* getRGB()     { return _rgb; }
-  /**
-   * Get Matrix containing RGB data
-   * @return MatRGB
-   */
-  MatRGB getMatRGB(void) const;
   /**
    * Function to get the frame rate of sensor
    * @return   frame rate in pictures per second

@@ -343,36 +343,6 @@ unsigned char* Kinect::getRGB()
   return _rgb;
 }
 
-MatD Kinect::getMatZ(void) const
-{
-    const double* z = _z;
-    MatD mat(_rows, _cols);
-
-    for (unsigned int row = 0; row < _rows; row++)
-        for (unsigned int col = 0; col < _cols; col++)
-            mat.at(row, col) = *z++;
-
-    return mat;
-}
-
-MatRGB Kinect::getMatRGB(void) const
-{
-    const unsigned char* rgb = _rgb;
-    MatRGB mat(_rows, _cols);
-
-    for (unsigned int row = 0; row < _rows; row++)
-    {
-        for (unsigned int col = 0; col < _cols; col++)
-        {
-            mat.at(row, col, MatRGB::Red)   = *rgb++;
-            mat.at(row, col, MatRGB::Green) = *rgb++;
-            mat.at(row, col, MatRGB::Blue)  = *rgb++;
-        }
-    }
-
-    return mat;
-}
-
 unsigned short* Kinect::getUserMask()
 {
   if(_user.GetNumberOfUsers()<1)

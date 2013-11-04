@@ -9,9 +9,6 @@
 #include <iostream>
 #include <fstream>
 
-#include "obcore/math/MatRGB.h"
-#include "obcore/math/MatD.h"
-
 using namespace xn;
 using namespace std;
 
@@ -85,23 +82,11 @@ public:
    */
   double* getZ();
 
-    /**
-     * Get Z buffer
-     * @return MatD
-     */
-    MatD getMatZ(void) const;
-
   /**
    * Accessor to pointer of color data
    * @return pointer to color buffer (layout r1g1b1r2...)
    */
   unsigned char* getRGB();
-
-  /**
-   * Get Matrix containing RGB data
-   * @return MatRGB
-   */
-  MatRGB getMatRGB(void) const;
 
   /**
    * Experimental: Skeleton tracking - get mask of valid points
