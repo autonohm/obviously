@@ -39,6 +39,9 @@ public:
 	virtual bool calcCoordsFromCurrentPose(Sensor* sensor, double* coords, double* normals, unsigned char* rgb, const std::vector<TsdSpace*>& spaces,
 											                    const std::vector<double>& offsets, const unsigned int u, const unsigned int v);
 
+	virtual bool calcCoordsFromCurrentPose(Sensor* sensor, double* coords, double* normals, unsigned char* rgb, TsdSpace& space,
+	                                                                const double offset[3], const unsigned int u, const unsigned int v);
+
 	virtual void calcCoordsFromCurrentPoseMask(Sensor* sensor, double* coords, double* normals, unsigned char* rgb, bool* mask, unsigned int* size);
 
 

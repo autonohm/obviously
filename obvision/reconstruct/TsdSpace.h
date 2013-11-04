@@ -118,6 +118,7 @@ public:
   */
  double getMaxZ();
 
+ TsdVoxel*** getSpace(void){return(_space);}
  /**
   * Set maximum truncation radius
   * Function to set the max truncation
