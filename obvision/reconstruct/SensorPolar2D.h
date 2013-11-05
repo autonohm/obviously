@@ -50,6 +50,17 @@ public:
    */
   void backProject(Matrix* M, int* indices);
 
+  /**
+   * Get angular resolution
+   * @return angular resolution
+   */
+  double angularRes(void);
+
+  /**
+   * Get the minimum angle
+   * @return minimum angle
+   */
+  double phiMin(void);
 private:
 
   int phi2Index(double phi);
