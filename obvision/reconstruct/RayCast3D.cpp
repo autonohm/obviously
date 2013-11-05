@@ -103,7 +103,6 @@ bool RayCast3D::calcCoordsFromCurrentPose(Sensor* sensor, double* coords, double
   double normalVar[3];
   unsigned char colorVar[3]   = {255, 255, 255};
   double ray[3];
-  //Matrix* T = sensor->getPose();
   Matrix Tinv(4, 4);
   Tinv = *sensor->getPose();
   unsigned int spaceCtr = 0;
@@ -116,10 +115,9 @@ bool RayCast3D::calcCoordsFromCurrentPose(Sensor* sensor, double* coords, double
   //unsigned int offCtr = 0;
   double offset[3];
   obvious::Matrix T(4,4);
-  for(std::vector<TsdSpace*>::const_iterator spaIter = spaces.begin(); spaIter != spaces.end(); spaIter++)//, offIter += 3)
+  for(std::vector<TsdSpace*>::const_iterator spaIter = spaces.begin(); spaIter != spaces.end(); spaIter++)
   {
     this->setSpace(*spaIter);
-
     offset[0] = *offIter;
     offIter++;
     offset[1] = *offIter;
@@ -145,26 +143,13 @@ bool RayCast3D::calcCoordsFromCurrentPose(Sensor* sensor, double* coords, double
     spaceCtr++;
   }
   if(!found)
-  {
-    //  std::cout << __PRETTY_FUNCTION__ << " no coordinates found!\n";
     return(false);
-  }
-  //std::cout << __PRETTY_FUNCTION__ << " coordinates found in the " << spaceCtr << "st space!\n";
-
-  //  std::cout << __PRETTY_FUNCTION__ << " raycaster through u = " << u << " v = " << v << "\n";
-  //  std::cout << __PRETTY_FUNCTION__ << " offset:\n";
-  //  for(unsigned int i = 0; i < 3; i++)
-  //     std::cout << offset[i] << "\n";
-
-  M[0][0] = coordVar[0];// + offset[0];
-  M[1][0] = coordVar[1];// + offset[1];
-  M[2][0] = coordVar[2];// + offset[2];
+  M[0][0] = coordVar[0];
+  M[1][0] = coordVar[1];
+  M[2][0] = coordVar[2];
   N[0][0] = normalVar[0];
   N[1][0] = normalVar[1];
   N[2][0] = normalVar[2];
-  //  Tinv[0][3] += *offIter++;
-  //  Tinv[1][3] += *offIter++;
-  //  Tinv[2][3] += *offIter;
   T.invert();
   Tinv.invert();
   M       =  T * M;
@@ -179,67 +164,6 @@ bool RayCast3D::calcCoordsFromCurrentPose(Sensor* sensor, double* coords, double
 
   sensor->transform(&T);
   return(true);
-}
-
-bool RayCast3D::calcCoordsFromCurrentPose(Sensor* sensor, double* coords, double* normals, unsigned char* rgb, TsdSpace& space,
-    const double offset[3], const unsigned int u, const unsigned int v)
-{
-  double depthVar = 0.0;
-  double coordVar[3];
-  double normalVar[3];
-  unsigned char colorVar[3]   = {255, 255, 255};
-  double ray[3];
-  //Matrix* T = sensor->getPose();
-  Matrix Tinv(4, 4);
-  Tinv = *sensor->getPose();
-  Matrix M(4,1);
-  Matrix N(4,1);
-  M[3][0] = 1.0;
-  N[3][0] = 0.0; // no translation for normals  -> no homogenous coordinates???
-  bool found = false;
-  this->setSpace(&space);
-  obvious::Matrix T(4,4);
-  T.setIdentity();
-  T[0][3] = (-1.0) * offset[0];
-  T[1][3] = (-1.0) * offset[1];
-  T[2][3] = (-1.0) * offset[2];
-  sensor->transform(&T);
-  sensor->calcRayFromCurrentPose(u, v, ray);
-  ray[0] *= _space->getVoxelSize();
-  ray[1] *= _space->getVoxelSize();
-  ray[2] *= _space->getVoxelSize();
-  if(rayCastFromSensorPose(ray, coordVar, normalVar, colorVar, &depthVar, sensor)) // Ray returned with coordinates
-  {
-    M[0][0] = coordVar[0];// + offset[0];
-    M[1][0] = coordVar[1];// + offset[1];
-    M[2][0] = coordVar[2];// + offset[2];
-    N[0][0] = normalVar[0];
-    N[1][0] = normalVar[1];
-    N[2][0] = normalVar[2];
-    //  Tinv[0][3] += *offIter++;
-    //  Tinv[1][3] += *offIter++;
-    //  Tinv[2][3] += *offIter;
-    T.invert();
-    Tinv.invert();
-    M       =  T * M;
-    M       = Tinv * M;
-    N       = Tinv * N;
-    for (unsigned int i = 0; i < 3; i++)
-    {
-      coords[i]  = M[i][0];
-      rgb[i]     = colorVar[i];
-      normals[i] = N[i][0];
-    }
-    sensor->transform(&T);
-    return(true);
-  }
-  else
-  {
-    sensor->transform(&T);
-    return(false);
-  }
-
-
 }
 
 void RayCast3D::calcCoordsFromCurrentPoseMask(Sensor* sensor, double* coords, double* normals, unsigned char* rgb, bool* mask, unsigned int* size)
