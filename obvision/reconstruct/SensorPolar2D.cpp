@@ -96,4 +96,13 @@ int SensorPolar2D::phi2Index(double phi)
   return index;
 }
 
+double SensorPolar2D::angularRes(void)
+{
+  return(_angularRes);
+}
+
+double SensorPolar2D::phiMin(void)
+{
+  return(_phiMin);
+}
 }
