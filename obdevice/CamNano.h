@@ -37,12 +37,12 @@
 namespace obvious {
 
 /// @def maximum threshold for distance filter
-#define DIST_THRESHOLD_MAX  1.5
+#define DIST_THRESHOLD_MAX  1.0
 /// @def minimum threshold for distance filter
 #define DIST_THRESHOLD_MIN  0.1
 /// @def threshold for amplitude
 /// @def maximal integration time
-#define AMP_THRESHOLD       120
+#define AMP_THRESHOLD       320
 #define MAX_INTEGRATIONTIME 2000
 /// @def minimal integration time
 #define MIN_INTEGRATIONTIME 50
@@ -132,6 +132,7 @@ private:
    * @param[in] amplitudes  amplitude values of sensor
    */
   void filterPoints(const float* points, const float* distances, const float* amplitudes);
+
   /**
    * Function to set integration value automatically
    */

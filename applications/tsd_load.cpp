@@ -53,10 +53,10 @@ int main(int argc, char* argv[])
 
   // configuration of space
   ///@todo set up method for tsd configuration
-  double height    = 2.0;
-  double width     = 2.0;
-  double depth     = 2.0;
-  double voxelSize = 0.02;
+  double height    = 0.5;
+  double width     = 0.5;
+  double depth     = 0.5;
+  double voxelSize = 0.004;
   TsdSpace* _space = new TsdSpace(height, width, depth, voxelSize);
 
   // load space from file

@@ -37,6 +37,8 @@ bool _push;
 bool _reg;
 bool _showSpace;
 
+void calc(void);
+
 class vtkTimerCallback : public vtkCommand
 {
 public:
@@ -73,6 +75,9 @@ public:
       _sensor->getPose()->getData(P);
       _liveSensor->transform(P);
       _viewer->update();
+
+      calc();
+
       delete [] dist;
     }
     else
@@ -130,12 +135,12 @@ void _saveTsdToTmp(void)
 void init(void)
 {
 
-  const double volumeSizeX = 1.0;
-  const double volumeSizeY = 1.0;
-  const double volumeSizeZ = 1.0;
-  const double voxelSize   = 0.01      ;
+  const double volumeSizeX = 0.5;
+  const double volumeSizeY = 0.5;
+  const double volumeSizeZ = 0.5;
+  const double voxelSize   = 0.004;
   double d_maxIterations   = 50;
-  double d_subSampling     = 30;
+  double d_subSampling     = 1;
 
   const unsigned int maxIterations = (unsigned int)(d_maxIterations);
   const unsigned int subSampling   = (unsigned int)(d_subSampling);
@@ -146,7 +151,7 @@ void init(void)
 
   // TSD Space configuration
   _space = new TsdSpace(volumeSizeY, volumeSizeX, volumeSizeZ, voxelSize);
-  _space->setMaxTruncation(2.0*voxelSize);
+  _space->setMaxTruncation(3.0*voxelSize);
 
   std::cout << "CamNano with " << _nano->getCols() << " x " << _nano->getRows() << std::endl;
 
@@ -185,7 +190,7 @@ void init(void)
   assigner->addPreFilter(filterS);
 
   // Decreasing threshhold filter
-  IPostAssignmentFilter* filterD = (IPostAssignmentFilter*)new DistanceFilter(1.5, 0.01, maxIterations);
+  IPostAssignmentFilter* filterD = (IPostAssignmentFilter*)new DistanceFilter(0.10, 0.01, maxIterations);
   assigner->addPostFilter(filterD);
 
   // Deactivate early termination
@@ -213,24 +218,23 @@ void init(void)
   _push      = false;
 }
 
-void _calc(void)
+void calc(void)
 {
   obvious::Timer t;
   double P[16];
 
   // in case of new push or registration
-  if(1)//_push || _reg)
+  if(_push || _reg)
   {
     // update sensor
     _nano->grab();
     _sensor->setRealMeasurementData(_nano->getDistImage());
-//    _sensor->setRealMeasurementMask(_nano->getMask());
+    _sensor->setRealMeasurementMask(_nano->getMask());
 //    _sensor->setRealMeasurementAccuracy()                     --> what is this?
 
     // only push if not registration
-//    if(_push) _space->push(_sensor);
-//      _push = false;
-    _space->push(_sensor);
+    if(_push) _space->push(_sensor);
+    _push = false;
 
     // get model from space
     RayCast3D raycaster(_space);
@@ -245,7 +249,7 @@ void _calc(void)
     cout << "Received " << size/3 << " from TSD space" << endl;
     _cloud->setCoords(coords,   size/3, 3);
 //    _cloud->setNormals(normals, size/3, 3);
-//    _cloud->serialize("model.vtp");
+    _cloud->serialize("model.vtp");
 
     // update pose from sensor
     _sensor->getPose()->getData(P);
@@ -254,19 +258,33 @@ void _calc(void)
     // registration
     if (_reg)
     {
+      unsigned int cols = _nano->getCols();
+      unsigned int rows = _nano->getRows();
+
+      double* coordsT = _nano->getCoords();
+
+      // flip y coords for correct visualization in vtk
+      for(unsigned int i=0 ; i<cols*rows*3 ; i+=3)
+      {
+        coordsT[i]   = -coordsT[i];
+        coordsT[i+1] = -coordsT[i+1];
+      }
+
+
       _reg = false;
       LOGMSG(DBG_DEBUG, "Current Transformation: ");
       _sensor->getPose()->print();
       _filterBounds->setPose(_sensor->getPose());
 
-      _cloudScene->setCoords(_nano->getCoords(), _nano->getCols()*_nano->getRows(), 3);
-      _cloudScene->setColors(rgb,                _nano->getCols()*_nano->getRows(), 3);
+//      _cloudScene->setCoords(_nano->getValidCoords(), _nano->getValidSize(), 3);
+      _cloudScene->setCoords(coordsT, _nano->getCols()*_nano->getRows(), 3);
       _sensor->getPose()->getData(P);
       _cloudScene->transform(P);
-//      _cloudScene->serialize("scene.vtp");
+      _cloudScene->serialize("scene.vtp");
 
       _icp->reset();
-      _icp->setScene(_nano->getCoords(), NULL, _nano->getCols()*_nano->getRows());
+//
+      _icp->setScene(coordsT, NULL, _nano->getCols()*_nano->getRows());
       _icp->setModel(coords, normals, size/3);
 
       // Perform ICP registration
@@ -285,7 +303,7 @@ void _calc(void)
         _sensor->transform(T);
         _sensor->getPose()->getData(P);
         _viewer->showSensorPose(P);
-        _space->push(_sensor);
+//        _space->push(_sensor);
       }
       else
       {
@@ -309,11 +327,11 @@ int main(int argc, char* argv[])
   interactor->CreateRepeatingTimer(30);
 
   _nano = new CamNano();
-  _nano->setIntegrationTime(300);
+  _nano->setIntegrationTime(400);
 
   init();
 
-  _viewer->registerKeyboardCallback("space", _calc);
+  _viewer->registerKeyboardCallback("space", _newPush);
   _viewer->registerKeyboardCallback("m",     _newReg);
   _viewer->registerKeyboardCallback("a",     _showSpaceFromAxesRayCast);
   _viewer->registerKeyboardCallback("c",     _saveTsdToTmp);

@@ -8,6 +8,9 @@
 
 #include "CamNano.h"
 #include "obcore/base/Logger.h"
+#include "obcore/math/mathbase.h"
+#include <math.h>
+
 
 using namespace obvious;
 
@@ -196,9 +199,55 @@ bool CamNano::grab()
     _rgb[i+1]     = (_amp[k]-minval) * 255 / (maxval);
     _rgb[i+2]     = (_amp[k]-minval) * 255 / (maxval);
     _z[k]         = _coords[i+2] / 1000.0;
+
+    double n[24];
+
+    int idx[8];
+    idx[0] = {i-_rows-3};       // up left
+    idx[1] = {i-_rows  };       // up
+    idx[2] = {i-_rows+3};       // up right
+    idx[3] = {i-3};             // left
+    idx[4] = {i+3};             // right
+    idx[5] = {i+_rows-3};       // down left
+    idx[6] = {i+_rows  };       // down
+    idx[7] = {i+_rows+3};       // down right
+
+    // caluclate indices of neighbours
+    for(unsigned int j=0 ; j<8 ; j++) {
+      if(idx[j]>=0 && idx[j] <=_rows*_cols*3)
+        memcpy(&n[3*j],      &(_coords[idx[j]]), 3*sizeof(double));
+    }
+
+    double dist      = abs3D(&_coords[i]);
+    double alpha_max = 0.0;
+    // check for eigth neighbours
+    for(unsigned int j=0 ; j<8 ; j++)
+    {
+      double n2[3];
+      n2[0] = n[3*j+0]  - _coords[i+0];
+      n2[1] = n[3*j+1]  - _coords[i+1];
+      n2[2] = n[3*j+2]  - _coords[i+2];
+
+      double dotProduct = dot3<double>(&_coords[i], n2);
+      if(dotProduct<0)
+      {
+        double alpha = acos(dotProduct / (abs3D(n2) * dist));
+        if(alpha_max<alpha) alpha_max = alpha;
+      }
+    }
+    bool angleFilter = false;
+    if(alpha_max>deg2rad(160.0))
+      angleFilter = true;
+
+    bool edge = false;
+    if (i%(3*_cols)==0 || i%(3*_cols)==3 || i%(3*_cols)==6 || i%(3*_cols)==9 || i%(3*_cols)==12)
+        edge = true;
+
     _mask[k]      = (!isnan(_z[k]))                &&
                     (_amp[k]>AMP_THRESHOLD)        &&
-                    (_z[k] < DIST_THRESHOLD_MAX); /*&&
+                    (_z[k] < DIST_THRESHOLD_MAX)   &&
+                    !angleFilter && !edge;
+                    /*
                     (_z[k] > DIST_THRESHOLD_MIN); */
   }
 
