@@ -230,16 +230,22 @@ unsigned int Icp::getConvergenceCounter()
 
 void Icp::applyTransformation(double** data, unsigned int size, unsigned int dim, Matrix* T)
 {
+  Matrix R(*T, 0, 0, dim, dim);
+  R.print();
+  T->print();
+  Matrix P(size, dim, *data, false);
+  P *= R;
+
   // Apply rotation
-  gsl_matrix_view points = gsl_matrix_view_array(*data, size, dim);
+  /*gsl_matrix_view points = gsl_matrix_view_array(*data, size, dim);
   gsl_matrix* points_tmp = gsl_matrix_alloc(size, dim);
   gsl_matrix_view R = gsl_matrix_submatrix(T->getBuffer(), 0, 0, dim, dim);
   gsl_blas_dgemm(CblasNoTrans, CblasTrans, 1.0, &points.matrix, &R.matrix, 0.0, points_tmp);
   gsl_matrix_memcpy(&points.matrix, points_tmp);
-  gsl_matrix_free(points_tmp);
+  gsl_matrix_free(points_tmp);*/
 
   // Add translation
-  gsl_vector_view x  = gsl_matrix_column(&points.matrix, 0);
+  /*gsl_vector_view x  = gsl_matrix_column(&points.matrix, 0);
   gsl_vector_view y  = gsl_matrix_column(&points.matrix, 1);
   gsl_vector_view tr = gsl_matrix_column(T->getBuffer(), 3);
   gsl_vector_add_constant(&x.vector, gsl_vector_get(&tr.vector,0));
@@ -249,7 +255,7 @@ void Icp::applyTransformation(double** data, unsigned int size, unsigned int dim
   {
     gsl_vector_view z = gsl_matrix_column(&points.matrix, 2);
     gsl_vector_add_constant(&z.vector, gsl_vector_get(&tr.vector,2));
-  }
+  }*/
 }
 
 

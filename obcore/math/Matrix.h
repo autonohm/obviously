@@ -28,14 +28,18 @@ public:
 	 * Constructor
 	 * @param rows number of matrix rows
 	 * @param cols number of matrix columns
+	 * @param data data buffer to be copied ore linked to matrix representation
+	 * @param deepCopy copy (true) or link (false) data.
 	 */
-	Matrix(unsigned int rows, unsigned int cols, const double* data = NULL);
+	Matrix(unsigned int rows, unsigned int cols, double* data = NULL, bool deepCopy=true);
 
 	/**
 	 * Copy constructor
 	 * @param M matrix to be copied
 	 */
 	Matrix(const Matrix &M);
+
+	Matrix(Matrix M, unsigned int i, unsigned int j, unsigned int rows, unsigned int cols);
 
 	/**
 	 * Destructor
@@ -211,6 +215,13 @@ private:
 	 * Internal GSL work buffer
 	 */
 	gsl_matrix* _work;
+
+	/**
+	 * Internal GSL matrix view
+	 */
+	gsl_matrix_view _V;
+
+	bool _deepCopy;
 };
 
 }
