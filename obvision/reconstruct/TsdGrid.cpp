@@ -138,7 +138,8 @@ void TsdGrid::push(SensorPolar2D* sensor)
           double distance = euklideanDistance<double>(tr, (*_cellCoordsHom)[i], 2);
           double sdf = data[index] - distance;
           double weight = 1.0;
-          if(accuracy) weight = accuracy[index];
+          if(accuracy)
+            weight = accuracy[index];
           addTsdfValue(x, y, sdf, weight);
         }
       }
@@ -256,9 +257,14 @@ void TsdGrid::addTsdfValue(const unsigned int x, const unsigned int y, const dou
   if(sdf >= -_maxTruncation)
   {
     TsdCell* cell = &_grid[y][x];
-
-    double tsdf = sdf / _maxTruncation;
-    tsdf = min(tsdf, 1.0);
+    double tsdf = 0.0;
+    if(sdf < 0.0)
+    {
+      tsdf = sdf / _maxTruncation;
+      tsdf = min(tsdf, 1.0);
+    }
+    else
+      tsdf = sdf;
 
     cell->weight += 1.0;
 

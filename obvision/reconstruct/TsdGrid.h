@@ -148,6 +148,8 @@ public:
    * @param filename
    */
   void Load(const char* filename);
+
+  TsdCell** getData(void)const{return(_grid);}
 private:
 
   /**
