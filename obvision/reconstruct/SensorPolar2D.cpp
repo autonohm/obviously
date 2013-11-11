@@ -36,7 +36,6 @@ SensorPolar2D::SensorPolar2D(unsigned int size, double angularRes, double phiMin
 
 SensorPolar2D::~SensorPolar2D()
 {
-  delete _Pose;
   delete [] _data;
   delete [] _mask;
 }
