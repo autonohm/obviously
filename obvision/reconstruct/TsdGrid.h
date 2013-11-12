@@ -113,6 +113,8 @@ public:
    */
   void grid2ColorImage(unsigned char* image);
 
+  void grid2HighColorImage(unsigned short int* image);
+
   /**
    * Calculates normal of plain element hit by a ray caster
    * @param[out] coordinates

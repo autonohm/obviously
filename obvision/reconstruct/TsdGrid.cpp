@@ -8,6 +8,7 @@
 #include <cstring>
 #include <cmath>
 #include <omp.h>
+#include <climits>
 
 namespace obvious
 {
@@ -172,17 +173,17 @@ void TsdGrid::grid2ColorImage(unsigned char* image)
     {
 
       double tsd = _grid[y][x].tsdf;
-      if(tsd>0.0 && tsd<0.999)
+      if(tsd>0.0)
       {
-        rgb[0] = 127;
-        rgb[1] = 127 + (unsigned char)(128.0*tsd);
-        rgb[2] = 127;
+        rgb[0] = 0;
+        rgb[1] = static_cast<unsigned char>(tsd * (255.0 / 10.0));    //127 + (unsigned char)(128.0*tsd);  //max distance 10 m
+        rgb[2] = 0;
       }
       else if(tsd<0.0 && tsd>-0.999)
       {
-        rgb[0] = 127 + (unsigned char)(-128.0*tsd);
-        rgb[1] = 127;
-        rgb[2] = 127;
+        rgb[0] = static_cast<unsigned char>(255.0 * tsd);
+        rgb[1] = 0;
+        rgb[2] = 0;
       }
       else
       {
@@ -192,6 +193,38 @@ void TsdGrid::grid2ColorImage(unsigned char* image)
       }
 
       memcpy(&image[3*i], rgb, 3*sizeof(unsigned char));
+    }
+  }
+}
+
+void TsdGrid::grid2HighColorImage(unsigned short int* image)
+{
+  unsigned short int rgb[3] = {USHRT_MAX / 2};
+  for(int y = 0; y < _cellsY; y++)
+  {
+    int i = (_cellsY - 1 - y) * _cellsX;
+    for(int x = 0; x < _cellsX; x++, i++)
+    {
+      double tsd = _grid[y][x].tsdf;
+      if(tsd > 0.0)
+      {
+        rgb[0] = 0;
+        rgb[1] = static_cast<unsigned short int>(tsd * 10000);       //distances up to 6,5 m are possible
+        rgb[2] = 0;
+      }
+      else if(tsd < 0.0 && tsd > - 0.999)
+      {
+        rgb[0] = static_cast<unsigned short>(tsd * (USHRT_MAX - 1));
+        rgb[1] = 0;
+        rgb[2] = 0;
+      }
+      else if(isnan(tsd))
+      {
+        rgb[0] = USHRT_MAX;
+        rgb[1] = USHRT_MAX;
+        rgb[2] = USHRT_MAX;
+      }
+      memcpy(&image[3 * i], rgb, 3 * sizeof(unsigned short int));
     }
   }
 }
@@ -244,9 +277,9 @@ bool TsdGrid::interpolateBilinear(double coord[2], double* tsdf)
 
   // Interpolate
   *tsdf =    tsdf_cell * (1. - wy) * (1. - wx)
-                    + _grid[y - 1][x + 0].tsdf *       wy  * (1. - wx)
-                    + _grid[y + 0][x + 1].tsdf * (1. - wy) *       wx
-                    + _grid[y - 1][x + 1].tsdf *       wy  *       wx;
+                        + _grid[y - 1][x + 0].tsdf *       wy  * (1. - wx)
+                        + _grid[y + 0][x + 1].tsdf * (1. - wy) *       wx
+                        + _grid[y - 1][x + 1].tsdf *       wy  *       wx;
 
   return (!isnan(*tsdf));
 }
@@ -351,10 +384,10 @@ void TsdGrid::Load(const char* filename)
 
   do
   {
-      f >> y >> x >> tsdf >> weight;
-      TsdCell* cell = &_grid[y][x];
-      cell->weight  = weight;
-      cell->tsdf    = tsdf;
+    f >> y >> x >> tsdf >> weight;
+    TsdCell* cell = &_grid[y][x];
+    cell->weight  = weight;
+    cell->tsdf    = tsdf;
 
   }while(f.getline(line, 256).good());
 
