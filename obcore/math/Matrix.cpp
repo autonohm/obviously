@@ -8,24 +8,11 @@
 namespace obvious
 {
 
-Matrix::Matrix(unsigned int rows, unsigned int cols, double* data, bool deepCopy)
+Matrix::Matrix(unsigned int rows, unsigned int cols, double* data)
 {
-  _M = NULL;
-  _deepCopy = deepCopy;
-  if(_deepCopy)
-  {
-    _M = gsl_matrix_alloc(rows, cols);
-    if(data != NULL) setData(data);
-  }
-  else
-  {
-    if(data == NULL)
-      LOGMSG(DBG_ERROR, "Expected valid buffer");
-    _V = gsl_matrix_view_array(data, rows, cols);
-    _M = &(_V.matrix);
-  }
+  _M = gsl_matrix_alloc(rows, cols);
+  if(data != NULL) setData(data);
   _work = gsl_matrix_alloc(rows, cols);
-
 }
 
 Matrix::Matrix(const Matrix &M)
@@ -39,15 +26,15 @@ Matrix::Matrix(const Matrix &M)
 
 Matrix::Matrix(Matrix M, unsigned int i, unsigned int j, unsigned int rows, unsigned int cols)
 {
-  _V = gsl_matrix_submatrix(M._M, i, j, i+rows, j+cols);
-  _M = &(_V.matrix);
+  gsl_matrix_view V = gsl_matrix_submatrix(M._M, i, j, i+rows, j+cols);
+  _M = gsl_matrix_alloc(rows, cols);
+  gsl_matrix_memcpy(_M, &(V.matrix));
   _work = gsl_matrix_alloc(rows, cols);
-  _deepCopy = false;
 }
 
 Matrix::~Matrix()
 {
-  if(_deepCopy) gsl_matrix_free(_M);
+  gsl_matrix_free(_M);
   gsl_matrix_free(_work);
 }
 

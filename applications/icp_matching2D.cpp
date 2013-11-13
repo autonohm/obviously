@@ -32,8 +32,8 @@ int main(int argc, char** argv)
 //  for (unsigned int i=0 ; i<8 ; i++)
 //    std::cout << sdata[i] << std::endl;
 
-  gsl_matrix_view model = gsl_matrix_view_array(mdata, 4, 2);
-  gsl_matrix_view scene = gsl_matrix_view_array(sdata, 4, 2);
+  //gsl_matrix_view model = gsl_matrix_view_array(mdata, 4, 2);
+  //gsl_matrix_view scene = gsl_matrix_view_array(sdata, 4, 2);
 
   /**
    * Compose ICP modules
@@ -45,8 +45,10 @@ int main(int argc, char** argv)
   IRigidEstimator* estimator     = (IRigidEstimator*) new ClosedFormEstimator2D();
 
   Icp* icp = new Icp(assigner, estimator);
-  icp->setModel(&model.matrix);
-  icp->setScene(&scene.matrix);
+  //icp->setModel(&model.matrix);
+  //icp->setScene(&scene.matrix);
+  icp->setModel(mdata, NULL, 4);
+  icp->setScene(sdata, NULL, 4);
   icp->setMaxRMS(0.0);
   icp->setMaxIterations(iterations);
 

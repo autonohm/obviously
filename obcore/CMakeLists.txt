@@ -25,6 +25,7 @@ add_library(obcore
 	base/tools.cpp
 	math/geometry.cpp
 	math/Matrix.cpp
+	math/MatrixView.cpp
    	math/PID_Controller.cpp
    	math/IntegratorSimpson.cpp
 	filter/EuclideanFilter.cpp
