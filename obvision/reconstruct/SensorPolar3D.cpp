@@ -106,8 +106,9 @@ void SensorPolar3D::backProject(Matrix* M, int* indices)
   Matrix PoseInv = (*_Pose);
   PoseInv.invert();
 
-  Matrix coords3D(4, M->getRows());
-  gsl_blas_dgemm(CblasNoTrans, CblasTrans, 1.0, PoseInv.getBuffer(), M->getBuffer(), 0.0, coords3D.getBuffer());
+  Matrix coords3D = Matrix::multiply(PoseInv, *M, false, true);
+  //Matrix coords3D(4, M->getRows());
+  //gsl_blas_dgemm(CblasNoTrans, CblasTrans, 1.0, PoseInv.getBuffer(), M->getBuffer(), 0.0, coords3D.getBuffer());
 
   const double* x = coords3D[0];
   const double* y = coords3D[1];

@@ -12,7 +12,6 @@ Matrix::Matrix(unsigned int rows, unsigned int cols, double* data)
 {
   _M = gsl_matrix_alloc(rows, cols);
   if(data != NULL) setData(data);
-  _work = gsl_matrix_alloc(rows, cols);
 }
 
 Matrix::Matrix(const Matrix &M)
@@ -20,7 +19,6 @@ Matrix::Matrix(const Matrix &M)
   int r = M._M->size1;
   int c = M._M->size2;
   _M = gsl_matrix_alloc(r, c);
-  _work = gsl_matrix_alloc(r, c);
   gsl_matrix_memcpy(_M, M._M);
 }
 
@@ -29,13 +27,11 @@ Matrix::Matrix(Matrix M, unsigned int i, unsigned int j, unsigned int rows, unsi
   gsl_matrix_view V = gsl_matrix_submatrix(M._M, i, j, i+rows, j+cols);
   _M = gsl_matrix_alloc(rows, cols);
   gsl_matrix_memcpy(_M, &(V.matrix));
-  _work = gsl_matrix_alloc(rows, cols);
 }
 
 Matrix::~Matrix()
 {
   gsl_matrix_free(_M);
-  gsl_matrix_free(_work);
 }
 
 void Matrix::copy(const Matrix &M)
@@ -51,8 +47,10 @@ Matrix&  Matrix::operator =  (const Matrix &M)
 
 Matrix&  Matrix::operator *=  (const Matrix &M)
 {
-  gsl_matrix_memcpy(_work, _M);
-  gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, _work, M._M, 0.0, _M);
+  gsl_matrix* work = gsl_matrix_alloc(_M->size1, _M->size2);
+  gsl_matrix_memcpy(work, _M);
+  gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, work, M._M, 0.0, _M);
+  gsl_matrix_free(work);
   return *this;
 }
 
@@ -72,6 +70,29 @@ Matrix operator * (const Matrix &M1, const Matrix &M2)
   Matrix Mnew(M1._M->size1, M2._M->size2);
   gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, M1._M, M2._M, 0.0, Mnew._M);
   return Mnew;
+}
+
+Matrix Matrix::multiply(const Matrix &M1, const Matrix &M2, bool transposeArg1, bool transposeArg2)
+{
+  Matrix Mnew(M1._M->size1, M2._M->size2);
+  enum CBLAS_TRANSPOSE t1 = CblasNoTrans;
+  enum CBLAS_TRANSPOSE t2 = CblasNoTrans;
+  if(transposeArg1) t1 = CblasTrans;
+  if(transposeArg2) t2 = CblasTrans;
+  gsl_blas_dgemm(t1, t2, 1.0, M1._M, M2._M, 0.0, Mnew._M);
+  return Mnew;
+}
+
+void Matrix::multiplyRight(const Matrix &M, bool transposeArg1, bool transposeArg2)
+{
+  gsl_matrix* work = gsl_matrix_alloc(_M->size1, _M->size2);
+  enum CBLAS_TRANSPOSE t1 = CblasNoTrans;
+  enum CBLAS_TRANSPOSE t2 = CblasNoTrans;
+  if(transposeArg1) t1 = CblasTrans;
+  if(transposeArg2) t2 = CblasTrans;
+  gsl_blas_dgemm(t1, t2, 1.0, _M, M._M, 0.0, work);
+  gsl_matrix_memcpy(_M, work);
+  gsl_matrix_free(work);
 }
 
 ostream& operator <<(ostream &os, Matrix &M)
@@ -153,9 +174,11 @@ void Matrix::invert()
   int r = _M->size1;
   int sig;
   gsl_permutation* perm = gsl_permutation_alloc(r);
-  gsl_matrix_memcpy(_work, _M);
-  gsl_linalg_LU_decomp (_work, perm ,&sig);
-  gsl_linalg_LU_invert (_work, perm, _M);
+  gsl_matrix* work = gsl_matrix_alloc(_M->size1, _M->size2);
+  gsl_matrix_memcpy(work, _M);
+  gsl_linalg_LU_decomp (work, perm ,&sig);
+  gsl_linalg_LU_invert (work, perm, _M);
+  gsl_matrix_free(work);
   gsl_permutation_free(perm);
 }
 

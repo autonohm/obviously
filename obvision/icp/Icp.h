@@ -13,6 +13,7 @@ using namespace std;
 #include <gsl/gsl_matrix.h>
 #include "obcore/math/Matrix.h"
 #include "obcore/math/MatrixView.h"
+#include "obcore/math/VectorView.h"
 
 using namespace obvious;
 

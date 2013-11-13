@@ -23,6 +23,8 @@ namespace obvious
  */
 class Matrix
 {
+friend class MatrixView;
+friend class VectorView;
 public:
 	/**
 	 * Constructor
@@ -88,6 +90,10 @@ public:
 	 * @return matrix product
 	 */
 	friend Matrix operator * (const Matrix &M1, const Matrix &M2);
+
+  static Matrix multiply(const Matrix &M1, const Matrix &M2, bool transposeArg1, bool transposeArg2);
+
+  void multiplyRight(const Matrix &M, bool transposeArg1, bool transposeArg2);
 
 	/**
 	 * Stream operator
@@ -211,11 +217,6 @@ protected:
 	 * Internal GSL representation
 	 */
 	gsl_matrix* _M;
-
-	/**
-	 * Internal GSL work buffer
-	 */
-	gsl_matrix* _work;
 
 };
 
