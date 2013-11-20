@@ -40,12 +40,28 @@ public:
 	 */
 	Matrix(const Matrix &M);
 
+	/**
+	 * Copy constructor of submatrix
+	 * @param M source matrix
+	 * @param i start row
+	 * @param j start column
+	 * @param rows number of rows
+	 * @param cols number of columns
+	 */
 	Matrix(Matrix M, unsigned int i, unsigned int j, unsigned int rows, unsigned int cols);
 
-	Matrix(){};
-
+	/**
+	 * Get vector view of a column
+	 * @param index column index
+	 * @return vector view
+	 */
 	VectorView getColumnView(unsigned int index);
 
+  /**
+   * Get vector view of a row
+   * @param index row index
+   * @return vector view
+   */
 	VectorView getRowView(unsigned int index);
 
 	/**
@@ -89,12 +105,13 @@ public:
 	 */
 	friend Matrix operator * (const Matrix &M1, const Matrix &M2);
 
-  static Matrix multiply(const Matrix &M1, const Matrix &M2, bool transposeArg1, bool transposeArg2);
-
+  /**
+   * Multiply matrix from right to this one (A), i.e. A = A * M
+   * @param M matrix instance
+   * @param transposeArg1 transpose matrix A
+   * @param transposeArg2 transpose matrix M
+   */
   void multiplyRight(const Matrix &M, bool transposeArg1, bool transposeArg2);
-
-  //friend Vector& operator * (const Matrix &M, const VectorView &V);
-  static Vector multiply(const Matrix &M, const Vector &V, bool transpose);
 
 	/**
 	 * Stream operator
@@ -102,13 +119,6 @@ public:
 	 * @param M matrix to be streamed, e.g. printed out
 	 */
 	friend ostream& operator <<(ostream &os, Matrix &M);
-
-	/**
-	 * GSL matrix accessor
-	 * @brief get access to internal matrix representation
-	 * @return GSL matrix
-	 */
-	gsl_matrix* getBuffer();
 
 	/**
 	 * Data accessor
@@ -178,13 +188,6 @@ public:
 	 */
 	Matrix* pcaAnalysis();
 
-  /**
-   * perform singular value decomposition A = U S V'. A is replaced with content of U.
-   * @param s singular values
-   * @param V orthogonal square matrix
-   */
-	void svd(double* s, Matrix* V);
-
 	/**
 	 * perform singular value decomposition A = U S V'
 	 * @param U orthogonal matrix U
@@ -201,15 +204,14 @@ public:
 	void solve(double* b, double* x);
 
 	/**
-	 * Instantiate a 4x4 translation matrix, i.e. identity with last column set to translational input
-	 * @param tx x-component of translation
-	 * @param ty y-component of translation
-	 * @param tz z-component of translation
-	 */
-	static Matrix* TranslationMatrix44(double tx, double ty, double tz);
+   * Transform current matrix, i.e. with homogeneous transformation
+   * @param[in] T transformation matrix
+   * @return transformed matrix instance
+   */
+	Matrix createTransform(Matrix T);
 
 	/**
-	 * Transform current matrix, i.e. homogeneous coordinates with transformation matrix
+	 * Transform current matrix, i.e. with homogeneous transformation
 	 * @param[in] T transformation matrix
 	 */
 	void transform(Matrix T);
@@ -218,6 +220,10 @@ public:
 	 * Print matrix to output stream
 	 */
 	void print();
+
+  static Matrix multiply(const Matrix &M1, const Matrix &M2, bool transposeArg1, bool transposeArg2);
+
+  static Vector multiply(const Matrix &M, const Vector &V, bool transpose);
 
 private:
 

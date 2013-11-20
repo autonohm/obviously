@@ -7,7 +7,6 @@ using namespace std;
 #include "obcore/base/CartesianCloud.h"
 #include "obcore/base/System.h"
 
-#include <gsl/gsl_matrix.h>
 #include "obcore/math/Matrix.h"
 
 using namespace obvious;
@@ -41,13 +40,13 @@ public:
 	/**
    *
    */
-	void estimateNormalsReverseMapping(gsl_matrix* coords, gsl_matrix* P, int w, int h, gsl_matrix* normals);
+	void estimateNormalsReverseMapping(Matrix* coords, Matrix* P, int w, int h, Matrix* normals);
 
 	/**
 	 *
 	 */
-	void estimateNormalsFLANN(gsl_matrix* coords, gsl_matrix* normals);
-	void estimateNormalsANN(gsl_matrix* coords, gsl_matrix* normals);
+	void estimateNormalsFLANN(Matrix* coords, Matrix* normals);
+	void estimateNormalsANN(Matrix* coords, Matrix* normals);
 
 private:
 

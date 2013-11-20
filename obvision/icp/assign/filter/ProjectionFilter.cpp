@@ -42,10 +42,10 @@ void ProjectionFilter::setModel(CartesianCloud3D* cloud)
     if(zbuffer[i]>zmax) zmax = zbuffer[i];
   _zFar = zmax;
 
-//#ifndef NDEBUG
+#ifndef NDEBUG
   serializePPM("/tmp/proj.ppm", proj, 640, 480);
   serializePBM("/tmp/msk.pbm", msk, 640, 480);
-//#endif
+#endif
 
   delete [] proj;
   delete [] msk;

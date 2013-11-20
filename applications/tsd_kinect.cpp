@@ -256,7 +256,9 @@ void _cbRegNewImage(void)
   {
     Matrix* T = _icp->getFinalTransformation();
     T->print();
-    _vScene->transform(T->getBuffer()->data);
+    double Tdata[16];
+    T->getData(Tdata);
+    _vScene->transform(Tdata);
     _sensor->transform(T);
     double* coords = _kinect->getCoords();
     double* dist = new double[cols*rows];

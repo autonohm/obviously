@@ -7,6 +7,7 @@
 #include <string.h>
 #include <iostream>
 
+#include "obcore/math/MatrixFactory.h"
 #include "obvision/icp/icp_def.h"
 
 using namespace std;
@@ -14,21 +15,14 @@ using namespace obvious;
 
 int main(int argc, char** argv)
 {
-  double mdata[] = { 0.0, 1.0,
-                     0.0, 0.0,
-                     1.0, 0.0,
-                     2.0, 0.0 };
-  double sdata[8];
+  Matrix M(4, 2);
+  M[0][0] = 0.0;  M[0][1] = 1.0;
+  M[1][0] = 0.0;  M[1][1] = 0.0;
+  M[2][0] = 1.0;  M[2][1] = 0.0;
+  M[3][0] = 2.0;  M[3][1] = 0.0;
 
-  double T[] = { 0.98769, -0.1564, 0.4,
-                 0.1564,  0.98769, 0.35,
-                 0.0,     0.0,     1.0 };
-
-  for(int i = 0; i<4; i++)
-  {
-    sdata[2*i]   = mdata[2*i] * T[0] + mdata[2*i+1] * T[1] + T[2];
-    sdata[2*i+1] = mdata[2*i] * T[3] + mdata[2*i+1] * T[4] + T[5];
-  }
+  Matrix* T = MatrixFactory::TransformationMatrix33(deg2rad(9.0), 0.4, 0.35);
+  Matrix S = M.createTransform(*T);
 
   /**
    * Compose ICP modules
@@ -40,8 +34,8 @@ int main(int argc, char** argv)
   IRigidEstimator* estimator     = (IRigidEstimator*) new ClosedFormEstimator2D();
 
   Icp* icp = new Icp(assigner, estimator);
-  icp->setModel(mdata, NULL, 4);
-  icp->setScene(sdata, NULL, 4);
+  icp->setModel(&M, NULL);
+  icp->setScene(&S, NULL);
   icp->setMaxRMS(0.0);
   icp->setMaxIterations(iterations);
 
@@ -51,9 +45,13 @@ int main(int argc, char** argv)
   icp->iterate(&rms, &pairs, &it);
   Matrix* F = icp->getFinalTransformation();
   F->invert();
+
+  cout << "Applied transformation:" << endl;
+  T->print();
+  cout << endl << "Estimated transformation:" << endl;
   F->print();
 
-  cout << "Error: " << estimator->getRMS() << endl;
+  cout << endl << "Error: " << estimator->getRMS() << endl;
   cout << "Iterations: " << estimator->getIterations() << endl;
 
   delete icp;

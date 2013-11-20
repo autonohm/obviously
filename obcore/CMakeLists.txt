@@ -25,6 +25,7 @@ add_library(obcore
 	base/tools.cpp
 	math/geometry.cpp
 	math/Matrix.cpp
+	math/MatrixFactory.cpp
 	math/MatrixView.cpp
 	math/Vector.cpp
 	math/VectorView.cpp

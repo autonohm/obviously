@@ -1,7 +1,7 @@
 /**
  * Sample application showing the usage of the OBVIOUS ICP implementation.
- * @author Stefan May
- * @date 05.05.2011
+ * @author Christian Pfitzner
+ * @date 2013
  */
 
 #include <string.h>

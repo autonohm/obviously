@@ -144,7 +144,7 @@ void Icp::setScene(double* coords, double* normals, const unsigned int size)
 
 void Icp::setScene(Matrix* coords, Matrix* normals)
 {
-  if(coords->getRows()!=(size_t)_dim) {
+  if(coords->getCols()!=(size_t)_dim) {
     cout << "WARNING: Scene is not of correct dimensionality " << _dim << endl;
     return;
   }

@@ -4,9 +4,6 @@
 #include <flann/flann.hpp>
 #include <ANN/ANN.h>
 
-#include <gsl/gsl_linalg.h>
-#include <gsl/gsl_blas.h>
-
 namespace obvious
 {
 
@@ -90,30 +87,27 @@ void NormalsEstimator::estimateNormals3DGrid(unsigned int cols, unsigned int row
   }
 }
 
-void NormalsEstimator::estimateNormalsReverseMapping(gsl_matrix* coords, gsl_matrix* P, int w, int h, gsl_matrix* normals)
+void NormalsEstimator::estimateNormalsReverseMapping(Matrix* coords, Matrix* P, int w, int h, Matrix* normals)
 {
   int *buf = (int*) malloc(w * h * sizeof(int));
 
   int radius = 4;
-  gsl_vector* xi = gsl_vector_alloc(4);
-  gsl_vector* ni = gsl_vector_alloc(3);
-  gsl_vector_set(xi, 3, 1.0);
+  Vector xi(4);
+  xi[3] = 1.0;
 
   for(int i=0; i<w*h; i++)
     buf[i] = -1;
 
-  for(unsigned int i=0; i<coords->size1; i++)
+  for(unsigned int i=0; i<coords->getRows(); i++)
   {
-    double* point = gsl_matrix_ptr(coords, i, 0);
-
-    gsl_vector_set(xi, 0, point[0]);
-    gsl_vector_set(xi, 1, point[1]);
-    gsl_vector_set(xi, 2, point[2]);
-
-    gsl_blas_dgemv(CblasNoTrans, 1.0, P, xi, 0.0, ni);
-    double du = gsl_vector_get(ni,0);
-    double dv = gsl_vector_get(ni,1);
-    double dw = gsl_vector_get(ni,2);
+    double* point = (*coords)[i];
+    xi[0] = point[0];
+    xi[1] = point[1];
+    xi[2] = point[2];
+    Vector ni = Matrix::multiply(*P, xi, false);
+    double du = ni[0];
+    double dv = ni[1];
+    double dw = ni[2];
     if(dw > 10e-6)
     {
       int u = (int)( du / dw + 0.5);
@@ -125,11 +119,7 @@ void NormalsEstimator::estimateNormalsReverseMapping(gsl_matrix* coords, gsl_mat
       }
     }
   }
-
-  gsl_vector_free(ni);
-  gsl_vector_free(xi);
-
-  gsl_matrix_set_zero(normals);
+  normals->setZero();
 
   for(int r=0; r<h; r++)
   {
@@ -170,12 +160,12 @@ void NormalsEstimator::estimateNormalsReverseMapping(gsl_matrix* coords, gsl_mat
 
       if(isValid1)
       {
-        u[0]            = gsl_matrix_get(coords, idx_up, 0) - gsl_matrix_get(coords, idx, 0);
-        u[1]            = gsl_matrix_get(coords, idx_up, 1) - gsl_matrix_get(coords, idx, 1);
-        u[2]            = gsl_matrix_get(coords, idx_up, 2) - gsl_matrix_get(coords, idx, 2);
-        v[0]            = gsl_matrix_get(coords, idx, 0)    - gsl_matrix_get(coords, idx_lt, 0);
-        v[1]            = gsl_matrix_get(coords, idx, 1)    - gsl_matrix_get(coords, idx_lt, 1);
-        v[2]            = gsl_matrix_get(coords, idx, 2)    - gsl_matrix_get(coords, idx_lt, 2);
+        u[0]            = (*coords)[idx_up][0] - (*coords)[idx][0];
+        u[1]            = (*coords)[idx_up][1] - (*coords)[idx][1];
+        u[2]            = (*coords)[idx_up][2] - (*coords)[idx][2];
+        v[0]            = (*coords)[idx][0]    - (*coords)[idx_lt][0];
+        v[1]            = (*coords)[idx][1]    - (*coords)[idx_lt][1];
+        v[2]            = (*coords)[idx][2]    - (*coords)[idx_lt][2];
 
         cross3<double>(cr, u, v);
         norm3<double>(cr);
@@ -184,12 +174,12 @@ void NormalsEstimator::estimateNormalsReverseMapping(gsl_matrix* coords, gsl_mat
 
       if(isValid2)
       {
-        u[0]            = gsl_matrix_get(coords, idx, 0)    - gsl_matrix_get(coords, idx_dwn, 0);
-        u[1]            = gsl_matrix_get(coords, idx, 1)    - gsl_matrix_get(coords, idx_dwn, 1);
-        u[2]            = gsl_matrix_get(coords, idx, 2)    - gsl_matrix_get(coords, idx_dwn, 2);
-        v[0]            = gsl_matrix_get(coords, idx_rt, 0) - gsl_matrix_get(coords, idx, 0);
-        v[1]            = gsl_matrix_get(coords, idx_rt, 1) - gsl_matrix_get(coords, idx, 1);
-        v[2]            = gsl_matrix_get(coords, idx_rt, 2) - gsl_matrix_get(coords, idx, 2);
+        u[0]            = (*coords)[idx][0]    - (*coords)[idx_dwn][0];
+        u[1]            = (*coords)[idx][1]    - (*coords)[idx_dwn][1];
+        u[2]            = (*coords)[idx][2]    - (*coords)[idx_dwn][2];
+        v[0]            = (*coords)[idx_rt][0] - (*coords)[idx][0];
+        v[1]            = (*coords)[idx_rt][1] - (*coords)[idx][1];
+        v[2]            = (*coords)[idx_rt][2] - (*coords)[idx][2];
 
         cross3<double>(cr, u, v);
         norm3<double>(cr);
@@ -201,17 +191,17 @@ void NormalsEstimator::estimateNormalsReverseMapping(gsl_matrix* coords, gsl_mat
 
       // Normalize
       norm3<double>(n);
-      gsl_matrix_set(normals, idx, 0, n[0]);
-      gsl_matrix_set(normals, idx, 1, n[1]);
-      gsl_matrix_set(normals, idx, 2, n[2]);
+      (*normals)[idx][0] = n[0];
+      (*normals)[idx][1] = n[1];
+      (*normals)[idx][2] = n[2];
     }
   }
 }
 
-void NormalsEstimator::estimateNormalsFLANN(gsl_matrix* coords, gsl_matrix* normals)
+void NormalsEstimator::estimateNormalsFLANN(Matrix* coords, Matrix* normals)
 {
-  unsigned int size = coords->size1;
-  unsigned int dim  = coords->size2;
+  unsigned int size = coords->getRows();
+  unsigned int dim  = coords->getCols();
   double** buf;
   System<double>::allocate(size, dim, buf);
 
@@ -220,7 +210,7 @@ void NormalsEstimator::estimateNormalsFLANN(gsl_matrix* coords, gsl_matrix* norm
   unsigned int* map = new unsigned int[size];
   for(unsigned int i=0; i<size; i++)
   {
-    double* c = gsl_matrix_ptr(coords, i, 0);
+    double* c = (*coords)[i];
     if(distSqr3D<double>(c, origin)>10e-3)
     {
       memcpy(&buf[cnt][0], c, dim*sizeof(double));
@@ -239,13 +229,8 @@ void NormalsEstimator::estimateNormalsFLANN(gsl_matrix* coords, gsl_matrix* norm
   flann::Matrix<double> dists(new double[1*nn], 1, nn);
 
   double mean[3];
-  double** cov;
-  System<double>::allocate(dim, dim, cov);
-  gsl_matrix_view vcov = gsl_matrix_view_array (&cov[0][0], dim, dim);
 
-  gsl_vector *work = gsl_vector_alloc(3);
-  gsl_vector *S    = gsl_vector_alloc(3);
-  gsl_matrix *V    = gsl_matrix_alloc(3, 3);
+  Matrix C(dim, dim);
 
   // determine covariance matrix
   for(unsigned int i=0; i<cnt; i++)
@@ -254,7 +239,7 @@ void NormalsEstimator::estimateNormalsFLANN(gsl_matrix* coords, gsl_matrix* norm
     flann::SearchParams sp;
     index->knnSearch(query, indices, dists, nn, sp);
 
-    gsl_matrix_set_zero(&vcov.matrix);
+    C.setZero();
     mean[0] = 0.0; mean[1] = 0.0; mean[2] = 0.0;
     for(int j=0; j<nn; j++)
     {
@@ -268,14 +253,14 @@ void NormalsEstimator::estimateNormalsFLANN(gsl_matrix* coords, gsl_matrix* norm
       mean[1] += y;
       mean[2] += z;
 
-      cov[0][0] += x*x;
+      C[0][0] += x*x;
 
-      cov[1][0] += y*x;
-      cov[1][1] += y*y;
+      C[1][0] += y*x;
+      C[1][1] += y*y;
 
-      cov[2][0] += z*x;
-      cov[2][1] += z*y;
-      cov[2][2] += z*z;
+      C[2][0] += z*x;
+      C[2][1] += z*y;
+      C[2][2] += z*z;
     }
 
     mean[0] /= (double)nn;
@@ -286,18 +271,21 @@ void NormalsEstimator::estimateNormalsFLANN(gsl_matrix* coords, gsl_matrix* norm
     {
       for(int l = 0; l <= k; l++)
       {
-        cov[k][l] /= (double)nn;
-        cov[k][l] -= mean[k]*mean[l];
-        cov[l][k] = cov[k][l];
+        C[k][l] /= (double)nn;
+        C[k][l] -= mean[k]*mean[l];
+        C[l][k] = C[k][l];
       }
     }
 
-    gsl_linalg_SV_decomp(&vcov.matrix, V, S, work);
+    Matrix U(dim, dim);
+    Matrix V(3, 3);
+    double s[3];
+    C.svd(&U, s, &V);
 
     double normal[3];
-    normal[0] = gsl_matrix_get(V, 0, 2);
-    normal[1] = gsl_matrix_get(V, 1, 2);
-    normal[2] = gsl_matrix_get(V, 2, 2);
+    normal[0] = V[0][2];
+    normal[1] = V[1][2];
+    normal[2] = V[2][2];
     norm3<double>(normal);
 
     // test facing
@@ -311,22 +299,22 @@ void NormalsEstimator::estimateNormalsFLANN(gsl_matrix* coords, gsl_matrix* norm
       normal[1] = -normal[1];
       normal[2] = -normal[2];
     }
-    gsl_matrix_set(normals, map[i], 0, normal[0]);
-    gsl_matrix_set(normals, map[i], 1, normal[1]);
-    gsl_matrix_set(normals, map[i], 2, normal[2]);
+    (*normals)[map[i]][0] = normal[0];
+    (*normals)[map[i]][1] = normal[1];
+    (*normals)[map[i]][2] = normal[2];
   }
+
+  delete index;
+  delete dataset;
 
   System<double>::deallocate(buf);
   delete [] map;
-  delete index;
-  delete [] buf;
-  delete dataset;
 }
 
-void NormalsEstimator::estimateNormalsANN(gsl_matrix* coords, gsl_matrix* normals)
+void NormalsEstimator::estimateNormalsANN(Matrix* coords, Matrix* normals)
 {
-  unsigned int size = coords->size1;
-  unsigned int dim  = coords->size2;
+  unsigned int size = coords->getRows();
+  unsigned int dim  = coords->getCols();
   double** buf;
   System<double>::allocate(size, dim, buf);
 
@@ -335,7 +323,7 @@ void NormalsEstimator::estimateNormalsANN(gsl_matrix* coords, gsl_matrix* normal
   unsigned int* map = new unsigned int[size];
   for(unsigned int i=0; i<size; i++)
   {
-    double* c = gsl_matrix_ptr(coords, i, 0);
+    double* c = (*coords)[i];
     if(distSqr3D<double>(c, origin)>10e-3)
     {
       memcpy(&buf[cnt][0], c, dim*sizeof(double));
@@ -352,13 +340,7 @@ void NormalsEstimator::estimateNormalsANN(gsl_matrix* coords, gsl_matrix* normal
   ANNpoint query  = annAllocPt(3);
 
   double mean[3];
-  double** cov;
-  System<double>::allocate(dim, dim, cov);
-  gsl_matrix_view vcov = gsl_matrix_view_array (&cov[0][0], dim, dim);
-
-  gsl_vector *work = gsl_vector_alloc(3);
-  gsl_vector *S    = gsl_vector_alloc(3);
-  gsl_matrix *V    = gsl_matrix_alloc(3, 3);
+  Matrix C(dim, dim);
 
   // determine covariance matrix
   for(unsigned int i=0; i<cnt; i++)
@@ -369,7 +351,7 @@ void NormalsEstimator::estimateNormalsANN(gsl_matrix* coords, gsl_matrix* normal
 
     index->annkSearch(query, nn, indices, dists, 0.0);
 
-    gsl_matrix_set_zero(&vcov.matrix);
+    C.setZero();
     mean[0] = 0.0; mean[1] = 0.0; mean[2] = 0.0;
     for(int j=0; j<nn; j++)
     {
@@ -383,14 +365,14 @@ void NormalsEstimator::estimateNormalsANN(gsl_matrix* coords, gsl_matrix* normal
       mean[1] += y;
       mean[2] += z;
 
-      cov[0][0] += x*x;
+      C[0][0] += x*x;
 
-      cov[1][0] += y*x;
-      cov[1][1] += y*y;
+      C[1][0] += y*x;
+      C[1][1] += y*y;
 
-      cov[2][0] += z*x;
-      cov[2][1] += z*y;
-      cov[2][2] += z*z;
+      C[2][0] += z*x;
+      C[2][1] += z*y;
+      C[2][2] += z*z;
     }
 
     mean[0] /= (double)nn;
@@ -401,18 +383,21 @@ void NormalsEstimator::estimateNormalsANN(gsl_matrix* coords, gsl_matrix* normal
     {
       for(int l = 0; l <= k; l++)
       {
-        cov[k][l] /= (double)nn;
-        cov[k][l] -= mean[k]*mean[l];
-        cov[l][k] = cov[k][l];
+        C[k][l] /= (double)nn;
+        C[k][l] -= mean[k]*mean[l];
+        C[l][k] = C[k][l];
       }
     }
 
-    gsl_linalg_SV_decomp(&vcov.matrix, V, S, work);
+    Matrix U(dim, dim);
+    Matrix V(3, 3);
+    double s[3];
+    C.svd(&U, s, &V);
 
     double normal[3];
-    normal[0] = gsl_matrix_get(V, 0, 2);
-    normal[1] = gsl_matrix_get(V, 1, 2);
-    normal[2] = gsl_matrix_get(V, 2, 2);
+    normal[0] = V[0][2];
+    normal[1] = V[1][2];
+    normal[2] = V[2][2];
     norm3<double>(normal);
 
     // test facing
@@ -426,20 +411,15 @@ void NormalsEstimator::estimateNormalsANN(gsl_matrix* coords, gsl_matrix* normal
       normal[1] = -normal[1];
       normal[2] = -normal[2];
     }
-    gsl_matrix_set(normals, map[i], 0, normal[0]);
-    gsl_matrix_set(normals, map[i], 1, normal[1]);
-    gsl_matrix_set(normals, map[i], 2, normal[2]);
+    (*normals)[map[i]][0] = normal[0];
+    (*normals)[map[i]][1] = normal[1];
+    (*normals)[map[i]][2] = normal[2];
   }
 
   delete [] indices;
   delete index;
 
-  gsl_vector_free(work);
-  gsl_matrix_free(V);
-  gsl_vector_free(S);
-
   System<double>::deallocate(buf);
   delete [] map;
-  delete [] buf;
 }
 }

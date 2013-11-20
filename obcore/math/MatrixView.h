@@ -14,8 +14,8 @@ namespace obvious
 {
 
 /**
- * @class Matrix
- * @brief Matrix abstraction layer of GSL
+ * @class MatrixView
+ * @brief Matrix view abstraction layer of GSL
  * @author Stefan May
  */
 class MatrixView

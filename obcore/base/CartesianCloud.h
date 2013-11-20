@@ -6,7 +6,6 @@
 #include <math.h>
 #include <string>
 
-#include <gsl/gsl_matrix.h>
 #include "obcore/math/Matrix.h"
 
 using namespace std;

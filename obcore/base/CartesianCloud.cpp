@@ -179,11 +179,19 @@ void CartesianCloud3D::removeInvalidPoints()
 
   if(!_hasInfo) return;
 
-  Matrix C(_coords->getRows(), 3);
-  Matrix N(_coords->getRows(), 3);
-
   unsigned int i;
   int cnt = 0;
+
+  for (i=0; i<_coords->getRows(); i++)
+  {
+    if(_attributes[i] & ePointAttrValid)
+    {
+      cnt++;
+    }
+  }
+  Matrix C(cnt, 3);
+  Matrix N(cnt, 3);
+  cnt = 0;
 
   for (i=0; i<_coords->getRows(); i++)
   {
@@ -311,8 +319,8 @@ void CartesianCloud3D::createZBuffer(unsigned char* pImage, double* zbuffer, Mat
       double dw = ni[2];
       if(dw > 10e-6)
       {
-        int u = (int)( du / dw + 0.5);
-        int v = nH-1-(int)(dv / dw + 0.5);
+        int u = nW-1-(int)( du / dw + 0.5);
+        int v = (int)(dv / dw + 0.5);
 
         if((u>=0) && (u<nW) && (v>=0) && (v<nH))
         {

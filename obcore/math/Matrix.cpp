@@ -83,42 +83,6 @@ Matrix operator * (const Matrix &M1, const Matrix &M2)
   return Mnew;
 }
 
-Matrix Matrix::multiply(const Matrix &M1, const Matrix &M2, bool transposeArg1, bool transposeArg2)
-{
-  enum CBLAS_TRANSPOSE t1 = CblasNoTrans;
-  enum CBLAS_TRANSPOSE t2 = CblasNoTrans;
-  unsigned int rows = M1._M->size1;
-  unsigned int cols = M2._M->size2;
-  if(transposeArg1)
-  {
-    t1 = CblasTrans;
-    rows = M1._M->size2;
-  }
-  if(transposeArg2)
-  {
-    t2 = CblasTrans;
-    cols = M2._M->size1;
-  }
-  Matrix Mnew(rows, cols);
-  gsl_blas_dgemm(t1, t2, 1.0, M1._M, M2._M, 0.0, Mnew._M);
-  return Mnew;
-}
-
-Vector Matrix::multiply(const Matrix &M, const Vector &V, bool transpose)
-{
-  enum CBLAS_TRANSPOSE t = CblasNoTrans;
-  unsigned int size = M._M->size1;
-  if(transpose)
-  {
-    t = CblasTrans;
-    size = M._M->size2;
-  }
-  Vector V2(size);
-  gsl_blas_dgemv(t, 1.0, M._M, V._V, 0.0, V2._V);
-  return V2;
-}
-
-
 void Matrix::multiplyRight(const Matrix &M, bool transposeArg1, bool transposeArg2)
 {
   gsl_matrix* work = gsl_matrix_alloc(_M->size1, _M->size2);
@@ -152,11 +116,6 @@ ostream& operator <<(ostream &os, Matrix &M)
     os << endl;
   }
   return os;
-}
-
-gsl_matrix* Matrix::getBuffer()
-{
-  return _M;
 }
 
 void Matrix::getData(double* array)
@@ -233,7 +192,7 @@ Matrix Matrix::getTranspose()
   if(_M->size1 != _M->size2)
   {
     Matrix Mt(_M->size2, _M->size1);
-    gsl_matrix_transpose_memcpy(Mt.getBuffer(), _M);
+    gsl_matrix_transpose_memcpy(Mt._M, _M);
     return Mt;
   }
   else
@@ -351,8 +310,8 @@ Matrix* Matrix::pcaAnalysis()
     {
       double e = gsl_vector_get(&eigen.vector,j)*ext/2.0;
       // axis coordinates with respect to center of original coordinate system
-      gsl_matrix_set(axes->getBuffer(), i, 2*j,   cent[j] - e);
-      gsl_matrix_set(axes->getBuffer(), i, 2*j+1, cent[j] + e);
+      gsl_matrix_set(axes->_M, i, 2*j,   cent[j] - e);
+      gsl_matrix_set(axes->_M, i, 2*j+1, cent[j] + e);
     }
   }
 
@@ -366,14 +325,6 @@ Matrix* Matrix::pcaAnalysis()
   return axes;
 }
 
-void Matrix::svd(double* s, Matrix* V)
-{
-  gsl_vector* work = gsl_vector_alloc(getRows());
-  gsl_vector_view vs = gsl_vector_view_array(s, getRows());
-  gsl_linalg_SV_decomp(getBuffer(), V->getBuffer(), &vs.vector, work);
-  gsl_vector_free(work);
-}
-
 void Matrix::svd(Matrix* U, double* s, Matrix* V)
 {
   if(U->getCols() != getCols() || U->getRows() != getRows())
@@ -384,7 +335,7 @@ void Matrix::svd(Matrix* U, double* s, Matrix* V)
   *U = *this;
   gsl_vector* work = gsl_vector_alloc(getRows());
   gsl_vector_view vs = gsl_vector_view_array(s, getRows());
-  gsl_linalg_SV_decomp(U->getBuffer(), V->getBuffer(), &vs.vector, work);
+  gsl_linalg_SV_decomp(U->_M, V->_M, &vs.vector, work);
   gsl_vector_free(work);
 }
 
@@ -402,14 +353,33 @@ void Matrix::solve(double* b, double* x)
   gsl_permutation_free(perm);
 }
 
-Matrix* Matrix::TranslationMatrix44(double tx, double ty, double tz)
+Matrix Matrix::createTransform(Matrix T)
 {
-  Matrix* M = new Matrix(4, 4);
-  M->setIdentity();
-  gsl_matrix* buf = M->getBuffer();
-  gsl_matrix_set(buf, 0, 3, tx);
-  gsl_matrix_set(buf, 1, 3, ty);
-  gsl_matrix_set(buf, 2, 3, tz);
+  unsigned int dim = getCols();
+
+  if(dim!=2 && dim!=3)
+  {
+    LOGMSG(DBG_ERROR, "Matrix dimension invalid");
+    abort();
+  }
+
+  // Apply rotation
+  Matrix M(getRows(), dim);
+  gsl_matrix_view R = gsl_matrix_submatrix(T._M, 0, 0, dim, dim);
+  gsl_blas_dgemm(CblasNoTrans, CblasTrans, 1.0, _M, &R.matrix, 0.0, M._M);
+
+  // Add translation
+  gsl_vector_view x  = gsl_matrix_column(M._M, 0);
+  gsl_vector_view y  = gsl_matrix_column(M._M, 1);
+  gsl_vector_view tr = gsl_matrix_column(T._M, dim);
+  gsl_vector_add_constant(&x.vector, gsl_vector_get(&tr.vector,0));
+  gsl_vector_add_constant(&y.vector, gsl_vector_get(&tr.vector,1));
+
+  if(dim==3)
+  {
+    gsl_vector_view z  = gsl_matrix_column(M._M, 2);
+    gsl_vector_add_constant(&z.vector, gsl_vector_get(&tr.vector,2));
+  }
   return M;
 }
 
@@ -425,7 +395,7 @@ void Matrix::transform(Matrix T)
 
   // Apply rotation
   gsl_matrix* points_tmp = gsl_matrix_alloc(getRows(), dim);
-  gsl_matrix_view R = gsl_matrix_submatrix(T.getBuffer(), 0, 0, dim, dim);
+  gsl_matrix_view R = gsl_matrix_submatrix(T._M, 0, 0, dim, dim);
   gsl_blas_dgemm(CblasNoTrans, CblasTrans, 1.0, _M, &R.matrix, 0.0, points_tmp);
   gsl_matrix_memcpy(_M, points_tmp);
   gsl_matrix_free(points_tmp);
@@ -433,7 +403,7 @@ void Matrix::transform(Matrix T)
   // Add translation
   gsl_vector_view x  = gsl_matrix_column(_M, 0);
   gsl_vector_view y  = gsl_matrix_column(_M, 1);
-  gsl_vector_view tr = gsl_matrix_column(T.getBuffer(), dim);
+  gsl_vector_view tr = gsl_matrix_column(T._M, dim);
   gsl_vector_add_constant(&x.vector, gsl_vector_get(&tr.vector,0));
   gsl_vector_add_constant(&y.vector, gsl_vector_get(&tr.vector,1));
 
@@ -452,6 +422,41 @@ void Matrix::print()
       cout << (*this)[r][c] << " ";
     cout << endl;
   }
+}
+
+Matrix Matrix::multiply(const Matrix &M1, const Matrix &M2, bool transposeArg1, bool transposeArg2)
+{
+  enum CBLAS_TRANSPOSE t1 = CblasNoTrans;
+  enum CBLAS_TRANSPOSE t2 = CblasNoTrans;
+  unsigned int rows = M1._M->size1;
+  unsigned int cols = M2._M->size2;
+  if(transposeArg1)
+  {
+    t1 = CblasTrans;
+    rows = M1._M->size2;
+  }
+  if(transposeArg2)
+  {
+    t2 = CblasTrans;
+    cols = M2._M->size1;
+  }
+  Matrix Mnew(rows, cols);
+  gsl_blas_dgemm(t1, t2, 1.0, M1._M, M2._M, 0.0, Mnew._M);
+  return Mnew;
+}
+
+Vector Matrix::multiply(const Matrix &M, const Vector &V, bool transpose)
+{
+  enum CBLAS_TRANSPOSE t = CblasNoTrans;
+  unsigned int size = M._M->size1;
+  if(transpose)
+  {
+    t = CblasTrans;
+    size = M._M->size2;
+  }
+  Vector V2(size);
+  gsl_blas_dgemv(t, 1.0, M._M, V._V, 0.0, V2._V);
+  return V2;
 }
 
 }

@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <iostream>
 
+using namespace std;
+
 namespace obvious
 {
 
@@ -22,6 +24,7 @@ void SubsamplingFilter::filter(double** scene, unsigned int size, bool* mask)
 {
   if(!_active) return;
 
+  int valid = 0;
   for(unsigned int i=0; i<size; i++)
   {
     if(mask[i] == 0) continue;

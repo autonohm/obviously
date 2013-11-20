@@ -18,6 +18,8 @@ double*                _normals;
 ProjectionFilter*      _filterP;
 IPostAssignmentFilter* _filterD;
 
+bool _reference = false;
+
 void referenceCallback();
 
 class vtkTimerCallback : public vtkCommand
@@ -42,7 +44,7 @@ public:
       _vscene->setCoords(coords, size, 3);
       _vscene->setColors(rgb,    size, 3);
 
-      if(_icp)
+      if(_reference)
       {
 
         _icp->getFinalTransformation()->setIdentity();
@@ -105,7 +107,8 @@ void referenceCallback()
 
   _icp->setModel(model->getCoords(), model->getNormals());
 
-  cout << "Reference set" << endl;
+  cout << "Reference set, size: " << model->size() << endl;
+  _reference = true;
 
 }
 
@@ -129,12 +132,13 @@ int main(int argc, char* argv[])
 
   //PairAssignment* assigner  = (PairAssignment*)  new ProjectivePairAssignment(P, 640, 480);
   PairAssignment* assigner  = (PairAssignment*)  new FlannPairAssignment(3, 0.0);
+  //PairAssignment* assigner  = (PairAssignment*)  new AnnPairAssignment(3);
   //IRigidEstimator* estimator = (IRigidEstimator*) new PointToPointEstimator3D();
   IRigidEstimator* estimator = (IRigidEstimator*) new PointToPlaneEstimator3D();
   //IRigidEstimator* estimator = (IRigidEstimator*) new PlaneToPlaneEstimator3D();
 
 
-  IPreAssignmentFilter* filterS = (IPreAssignmentFilter*) new SubsamplingFilter(10);
+  IPreAssignmentFilter* filterS = (IPreAssignmentFilter*) new SubsamplingFilter(25);
   assigner->addPreFilter(filterS);
 
   _filterP = new ProjectionFilter(P, 640, 480);
