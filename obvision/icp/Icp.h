@@ -10,7 +10,6 @@ using namespace std;
 #include "obcore/base/CartesianCloud.h"
 #include "obcore/base/System.h"
 
-#include <gsl/gsl_matrix.h>
 #include "obcore/math/Matrix.h"
 #include "obcore/math/MatrixView.h"
 #include "obcore/math/VectorView.h"
@@ -89,7 +88,7 @@ public:
    * @param coords model coordinates
    * @param normals model normals, may be NULL
 	 */
-	void setModel(gsl_matrix* coords, gsl_matrix* normals = NULL);
+	void setModel(Matrix* coords, Matrix* normals = NULL);
 	
   /**
    * Copy scene to internal buffer
@@ -104,7 +103,7 @@ public:
    * @param coords scene coordinates
    * @param normals scene normals, may be NULL
 	 */
-	void setScene(gsl_matrix* coords, gsl_matrix* normals = NULL);
+	void setScene(Matrix* coords, Matrix* normals = NULL);
 	
 	/**
 	 * Set maximal RMS error interrupting iteration

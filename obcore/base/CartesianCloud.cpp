@@ -1,9 +1,8 @@
 #include "CartesianCloud.h"
 
 #include <string.h>
-#include <gsl/gsl_blas.h>
-#include <gsl/gsl_vector.h>
 #include <obcore/math/mathbase.h>
+#include <obcore/math/VectorView.h>
 
 namespace obvious
 {
@@ -16,13 +15,11 @@ CartesianCloud3D::CartesianCloud3D(unsigned int size, double* coords, unsigned c
   bool withInfo = (rgb!=NULL);
   init(size, withInfo);
 
-  gsl_matrix_view vcoords = gsl_matrix_view_array(coords, size, 3);
-  gsl_matrix_memcpy(_coords, &vcoords.matrix);
+  _coords->setData(coords);
 
   if(normals)
   {
-    gsl_matrix_view vnormals = gsl_matrix_view_array(normals, size, 3);
-    gsl_matrix_memcpy(_normals, &vnormals.matrix);
+    _normals->setData(normals);
     _hasNormals = 1;
   }
 
@@ -42,8 +39,8 @@ CartesianCloud3D::CartesianCloud3D(unsigned int size, bool withInfo)
 CartesianCloud3D::CartesianCloud3D(CartesianCloud3D* cloud)
 {
   init(cloud->size(), cloud->hasInfo());
-  gsl_matrix_memcpy(_coords, cloud->_coords);
-  gsl_matrix_memcpy(_normals, cloud->_normals);
+  *_coords = *(cloud->_coords);
+  *_normals= *(cloud->_normals);
   if(cloud->hasInfo())
   {
     memcpy(_colors, cloud->_colors, cloud->size()*3*sizeof(*_colors));
@@ -56,8 +53,8 @@ void CartesianCloud3D::init(unsigned int size, bool withInfo)
 {
   _hasInfo    = 0;
   _hasNormals = 0;
-  _coords   = gsl_matrix_alloc(size, 3);
-  _normals  = gsl_matrix_alloc(size, 3);
+  _coords   = new Matrix(size, 3);
+  _normals  = new Matrix(size, 3);
 
   if (withInfo)
   {
@@ -90,26 +87,26 @@ CartesianCloud3D::~CartesianCloud3D()
     delete[] _indices;
   }
 
-  gsl_matrix_free(_coords);
-  gsl_matrix_free(_normals);
+  delete _coords;
+  delete _normals;
 }
 
 double* CartesianCloud3D::operator [](unsigned int i)
 {
-  return gsl_matrix_ptr(_coords, i, 0);
+  return (*_coords)[i];
 }
 
-gsl_matrix* CartesianCloud3D::getCoords()
+Matrix* CartesianCloud3D::getCoords()
 {
   return _coords;
 }
 
-void CartesianCloud3D::setNormals(gsl_matrix* normals)
+void CartesianCloud3D::setNormals(Matrix* normals)
 {
-  gsl_matrix_memcpy(_normals, normals);
+  *_normals = *normals;
 }
 
-gsl_matrix* CartesianCloud3D::getNormals()
+Matrix* CartesianCloud3D::getNormals()
 {
   return _normals;
 }
@@ -162,7 +159,7 @@ void CartesianCloud3D::clearSourceInfo()
 
 void CartesianCloud3D::maskPoints(bool* mask)
 {
-  for (unsigned int i=0; i<_coords->size1; i++)
+  for (unsigned int i=0; i<_coords->getRows(); i++)
   {
     if(!mask[i])_attributes[i] &= ~ePointAttrValid;
   }
@@ -170,13 +167,9 @@ void CartesianCloud3D::maskPoints(bool* mask)
 
 void CartesianCloud3D::maskEmptyNormals()
 {
-  for (unsigned int i=0; i<_coords->size1; i++)
+  for (unsigned int i=0; i<_coords->getRows(); i++)
   {
-    double bufN[3];
-    bufN[0] = gsl_matrix_get(_normals, i, 0);
-    bufN[1] = gsl_matrix_get(_normals, i, 1);
-    bufN[2] = gsl_matrix_get(_normals, i, 2);
-    double len = bufN[0]*bufN[0] + bufN[1]*bufN[1] + bufN[2]*bufN[2];
+    double len = (*_normals)[i][0]*(*_normals)[i][0] + (*_normals)[i][1]*(*_normals)[i][1] + (*_normals)[i][2]*(*_normals)[i][2];
     if(len<10e-6)_attributes[i] &= ~ePointAttrValid;
   }
 }
@@ -186,22 +179,22 @@ void CartesianCloud3D::removeInvalidPoints()
 
   if(!_hasInfo) return;
 
-  gsl_matrix* bufC = gsl_matrix_alloc(_coords->size1, 3);
-  gsl_matrix* bufN = gsl_matrix_alloc(_coords->size1, 3);
+  Matrix C(_coords->getRows(), 3);
+  Matrix N(_coords->getRows(), 3);
 
   unsigned int i;
   int cnt = 0;
 
-  for (i=0; i<_coords->size1; i++)
+  for (i=0; i<_coords->getRows(); i++)
   {
     if(_attributes[i] & ePointAttrValid)
     {
-      gsl_matrix_set(bufC, cnt, 0, gsl_matrix_get(_coords, i, 0));
-      gsl_matrix_set(bufC, cnt, 1, gsl_matrix_get(_coords, i, 1));
-      gsl_matrix_set(bufC, cnt, 2, gsl_matrix_get(_coords, i, 2));
-      gsl_matrix_set(bufN, cnt, 0, gsl_matrix_get(_normals, i, 0));
-      gsl_matrix_set(bufN, cnt, 1, gsl_matrix_get(_normals, i, 1));
-      gsl_matrix_set(bufN, cnt, 2, gsl_matrix_get(_normals, i, 2));
+      C[cnt][0] = (*_coords)[i][0];
+      C[cnt][1] = (*_coords)[i][1];
+      C[cnt][2] = (*_coords)[i][2];
+      N[cnt][0] = (*_normals)[i][0];
+      N[cnt][1] = (*_normals)[i][1];
+      N[cnt][2] = (*_normals)[i][2];
       _colors[3*cnt]   = _colors[3*i];
       _colors[3*cnt+1] = _colors[3*i+1];
       _colors[3*cnt+2] = _colors[3*i+2];
@@ -211,22 +204,15 @@ void CartesianCloud3D::removeInvalidPoints()
     }
   }
 
-  gsl_matrix_free(_coords);
-  gsl_matrix_free(_normals);
-  _coords  = gsl_matrix_alloc(cnt, 3);
-  _normals = gsl_matrix_alloc(cnt, 3);
-  gsl_matrix_view vbuf = gsl_matrix_submatrix (bufC, 0, 0, cnt, 3);
-  gsl_matrix_memcpy(_coords, &vbuf.matrix);
-  vbuf = gsl_matrix_submatrix (bufN, 0, 0, cnt, 3);
-  gsl_matrix_memcpy(_normals, &vbuf.matrix);
-
-  gsl_matrix_free(bufC);
-  gsl_matrix_free(bufN);
+  delete _coords;
+  delete _normals;
+  _coords = new Matrix(C);
+  _normals = new Matrix(N);
 }
 
 void CartesianCloud3D::subsample(unsigned int step)
 {
-  for (unsigned int i=0; i<_coords->size1; i++)
+  for (unsigned int i=0; i<_coords->getRows(); i++)
   {
     if(i%step!=0)
       _attributes[i] &= ~ePointAttrValid;
@@ -236,63 +222,51 @@ void CartesianCloud3D::subsample(unsigned int step)
 
 unsigned int CartesianCloud3D::size()
 {
-  return _coords->size1;
-}
-
-void CartesianCloud3D::transform(gsl_matrix* T)
-{
-  gsl_matrix* buf = gsl_matrix_alloc(_coords->size1, 3);
-
-  gsl_matrix_view R = gsl_matrix_submatrix(T, 0, 0, 3, 3);
-
-  gsl_blas_dgemm(CblasNoTrans, CblasTrans, 1.0, _coords, &R.matrix, 0.0, buf);
-  gsl_matrix_memcpy(_coords, buf);
-
-  gsl_vector_view x = gsl_matrix_column(_coords, 0);
-  gsl_vector_view y = gsl_matrix_column(_coords, 1);
-  gsl_vector_view z = gsl_matrix_column(_coords, 2);
-
-  gsl_vector_add_constant(&x.vector, gsl_matrix_get(T,0,3));
-  gsl_vector_add_constant(&y.vector, gsl_matrix_get(T,1,3));
-  gsl_vector_add_constant(&z.vector, gsl_matrix_get(T,2,3));
-
-  gsl_matrix_free(buf);
+  return _coords->getRows();
 }
 
 void CartesianCloud3D::transform(Matrix* T)
 {
-  transform(T->getBuffer());
+  // Apply rotation
+  Matrix R(*T, 0, 0, 3, 3);
+  _coords->multiplyRight(R, false, true);
+
+  // Apply translation
+  VectorView x = _coords->getColumnView(0);
+  VectorView y = _coords->getColumnView(1);
+  VectorView z = _coords->getColumnView(2);
+  x.addConstant((*T)[0][3]);
+  y.addConstant((*T)[1][3]);
+  z.addConstant((*T)[2][3]);
 }
 
 void CartesianCloud3D::transform(double T[16])
 {
-  gsl_matrix_view VT = gsl_matrix_view_array(T, 4, 4);
-  transform(&VT.matrix);
+  Matrix M(4, 4, T);
+  transform(&M);
 }
 
-void CartesianCloud3D::createProjection(unsigned char* pImage, unsigned char* pMask, gsl_matrix* P, int nW, int nH)
+/*void CartesianCloud3D::createProjection(unsigned char* pImage, unsigned char* pMask, Matrix* P, int nW, int nH)
 {
-  gsl_vector* xi = gsl_vector_alloc(4);
-  gsl_vector* ni = gsl_vector_alloc(3);
-  gsl_vector_set(xi, 3, 1.0);
+  double xi_data[4];
+  VectorView xi(xi_data, 4);
+  xi[3] = 1.0;
 
   memset(pImage, 0, 3*nW*nH*sizeof(unsigned char));
   memset(pMask, 0, nW*nH*sizeof(unsigned char));
 
-  for(unsigned int i=0; i<_coords->size1; i++)
+  for(unsigned int i=0; i<_coords->getRows(); i++)
   {
-    double* point = gsl_matrix_ptr(_coords, i, 0);
+    double* point = (*_coords)[i];
 
     if(_attributes[i] & ePointAttrValid)
     {
-      gsl_vector_set(xi, 0, point[0]);
-      gsl_vector_set(xi, 1, point[1]);
-      gsl_vector_set(xi, 2, point[2]);
+      memcpy(xi_data, point, 3*sizeof(*point));
 
-      gsl_blas_dgemv(CblasNoTrans, 1.0, P, xi, 0.0, ni);
-      double du = gsl_vector_get(ni,0);
-      double dv = gsl_vector_get(ni,1);
-      double dw = gsl_vector_get(ni,2);
+      Vector ni = (*P) * xi;
+      double du = ni[0];
+      double dv = ni[1];
+      double dw = ni[2];
       if(dw > 10e-6)
       {
         int u = nW-1-(int)( du / dw + 0.5);
@@ -308,12 +282,10 @@ void CartesianCloud3D::createProjection(unsigned char* pImage, unsigned char* pM
       }
     }
   }
+}*/
 
-  gsl_vector_free(ni);
-  gsl_vector_free(xi);
-}
-
-void CartesianCloud3D::createZBuffer(unsigned char* pImage, double* zbuffer, gsl_matrix* P, int nW, int nH)
+/*
+void CartesianCloud3D::createZBuffer(unsigned char* pImage, double* zbuffer, Matrix* P, int nW, int nH)
 {
   if(!_hasInfo) return;
 
@@ -325,9 +297,9 @@ void CartesianCloud3D::createZBuffer(unsigned char* pImage, double* zbuffer, gsl
   for(int i=0; i<nW*nH; i++)
     zbuffer[i] = 0.0;
 
-  for(unsigned int i=0; i<_coords->size1; i++)
+  for(unsigned int i=0; i<_coords->getRows(); i++)
   {
-    double* point = gsl_matrix_ptr(_coords, i, 0);
+    double* point = _coords[i];
 
     if(_attributes[i] & ePointAttrValid)
     {
@@ -357,54 +329,44 @@ void CartesianCloud3D::createZBuffer(unsigned char* pImage, double* zbuffer, gsl
 
   gsl_vector_free(ni);
   gsl_vector_free(xi);
-}
+}*/
 
-void CartesianCloud3D::setData(const unsigned int size, double* coords,
-    double* normals, const unsigned char* const rgb)
+void CartesianCloud3D::setData(const unsigned int size, double* coords, double* normals, const unsigned char* const rgb)
 {
-  //new content == old content -> overwrite content
-  if((size == _size) && ((normals == NULL) && (_hasNormals == 0)) && ((rgb == NULL) && (_hasColors == false)))
+  delete _coords;
+  _coords = new Matrix(size, 3, coords);
+
+  if(_normals)
   {
-    for(unsigned int i = 0; i < size * 3; i++)
-    {
-      _coords->data[i] = coords[i];
-      if(normals)
-        _normals->data[i] = normals[i];
-      if(rgb)
-        _colors[i] = rgb[i];
-//      else
-//        _colors[i] = 255;
-    }
+    delete _normals;
+    _normals = NULL;
   }
-  else  //new content differs old content -> reallocate matrices
+  if(normals)
   {
-    _mSourceInfo.clear();
-    if(_hasInfo)
-    {
-      delete[] _colors;
-      delete[] _attributes;
-      delete[] _indices;
-    }
-    gsl_matrix_free(_coords);
-    gsl_matrix_free(_normals);
-    bool withInfo = (rgb!=NULL);
-    init(size, withInfo);
-    _size = size;
-    gsl_matrix_view vcoords = gsl_matrix_view_array(coords, size, 3);
-    gsl_matrix_memcpy(_coords, &vcoords.matrix);
+    _normals = new Matrix(size, 3, normals);
+    _hasNormals = 1;
+  }
 
-    if(normals)
-    {
-      gsl_matrix_view vnormals = gsl_matrix_view_array(normals, size, 3);
-      gsl_matrix_memcpy(_normals, &vnormals.matrix);
-      _hasNormals = 1;
-    }
-    if(rgb)
-    {
-      memcpy(_colors, rgb, 3*size*sizeof(*_colors));
-      _hasColors = true;
-    }
+  _mSourceInfo.clear();
+  if(_hasInfo)
+  {
+    delete[] _colors;
+    delete[] _attributes;
+    delete[] _indices;
+  }
+  if(rgb)
+  {
+    _hasInfo   = 1;
+    _colors     = new unsigned char[size*3];
+    _attributes = new int[size];
+    _indices    = new int[size];
 
+    for (unsigned int i = 0; i < size; i++)
+    {
+      _attributes[i] = ePointAttrValid;
+      _indices[i]    = i;
+    }
+    memcpy(_colors, rgb, size*3*sizeof(*_colors));
   }
 }
 

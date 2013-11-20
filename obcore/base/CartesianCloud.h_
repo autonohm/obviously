@@ -60,11 +60,11 @@ namespace obvious
      * Get access to array of coordinates
      * @return pointer to matrix instance
      */
-    Matrix* getCoords();
+    gsl_matrix* getCoords();
 
-    void setNormals(Matrix* normals);
+    void setNormals(gsl_matrix* normals);
 
-    Matrix* getNormals();
+    gsl_matrix* getNormals();
 
     /**
      * Get access to array of colors
@@ -154,6 +154,7 @@ namespace obvious
      * Transform the point cloud, i.e. translate and/or rotate it
      * @param matrix a 4x4 translation matrix
      */
+    void transform(gsl_matrix* T);
     void transform(Matrix* T);
     void transform(double T[16]);
 
@@ -165,7 +166,7 @@ namespace obvious
      * @param nW width of image
      * @param nH height of image
      */
-    //void createProjection(unsigned char* pImage, unsigned char* pMask, Matrix* P, int nW, int nH);
+    void createProjection(unsigned char* pImage, unsigned char* pMask, gsl_matrix* P, int nW, int nH);
 
     /**
      * Create a z-Buffer depending on a projection matrix
@@ -175,7 +176,7 @@ namespace obvious
      * @param nW width of image
      * @param nH height of image
      */
-    //void createZBuffer(unsigned char* pImage, double* zbuffer, Matrix* P, int nW, int nH);
+    void createZBuffer(unsigned char* pImage, double* zbuffer, gsl_matrix* P, int nW, int nH);
 
     /**
      * Set identifier
@@ -206,8 +207,8 @@ namespace obvious
     /**
      * point container
      */
-    Matrix* _coords;
-    Matrix* _normals;
+    gsl_matrix* _coords;
+    gsl_matrix* _normals;
     unsigned char* _colors;
     int* _attributes;
     int* _indices;

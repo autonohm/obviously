@@ -83,7 +83,7 @@ public:
    */
   void copyNormals(double* dst, unsigned int subsampling=1);
 
-  void copyData(gsl_matrix* C, gsl_matrix* N, unsigned char* rgb);
+  void copyData(Matrix* C, Matrix* N, unsigned char* rgb);
 
   void transform(double* T);
 

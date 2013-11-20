@@ -2,10 +2,9 @@
 
 namespace obvious
 {
-  VectorView::VectorView(Matrix* M, unsigned int index, bool column)
+  VectorView::VectorView()
   {
-    if(column) _V = gsl_matrix_column(M->_M, index);
-    else _V = gsl_matrix_row(M->_M, index);
+
   }
 
   VectorView::VectorView(double* data, unsigned int size)

@@ -1,6 +1,8 @@
 #include "Matrix.h"
 #include "obcore/base/Logger.h"
 
+#include <gsl/gsl_linalg.h>
+#include <gsl/gsl_blas.h>
 #include <gsl/gsl_permutation.h>
 #include <gsl/gsl_statistics_double.h>
 #include <math.h>
@@ -29,14 +31,23 @@ Matrix::Matrix(Matrix M, unsigned int i, unsigned int j, unsigned int rows, unsi
   gsl_matrix_memcpy(_M, &(V.matrix));
 }
 
+VectorView Matrix::getColumnView(unsigned int index)
+{
+  VectorView V;
+  V._V = gsl_matrix_column(_M, index);
+  return V;
+}
+
+VectorView Matrix::getRowView(unsigned int index)
+{
+  VectorView V;
+  V._V = gsl_matrix_row(_M, index);
+  return V;
+}
+
 Matrix::~Matrix()
 {
   gsl_matrix_free(_M);
-}
-
-void Matrix::copy(const Matrix &M)
-{
-  gsl_matrix_memcpy(_M, M._M);
 }
 
 Matrix&  Matrix::operator =  (const Matrix &M)
@@ -74,11 +85,21 @@ Matrix operator * (const Matrix &M1, const Matrix &M2)
 
 Matrix Matrix::multiply(const Matrix &M1, const Matrix &M2, bool transposeArg1, bool transposeArg2)
 {
-  Matrix Mnew(M1._M->size1, M2._M->size2);
   enum CBLAS_TRANSPOSE t1 = CblasNoTrans;
   enum CBLAS_TRANSPOSE t2 = CblasNoTrans;
-  if(transposeArg1) t1 = CblasTrans;
-  if(transposeArg2) t2 = CblasTrans;
+  unsigned int rows = M1._M->size1;
+  unsigned int cols = M2._M->size2;
+  if(transposeArg1)
+  {
+    t1 = CblasTrans;
+    rows = M1._M->size2;
+  }
+  if(transposeArg2)
+  {
+    t2 = CblasTrans;
+    cols = M2._M->size1;
+  }
+  Matrix Mnew(rows, cols);
   gsl_blas_dgemm(t1, t2, 1.0, M1._M, M2._M, 0.0, Mnew._M);
   return Mnew;
 }
@@ -94,6 +115,13 @@ void Matrix::multiplyRight(const Matrix &M, bool transposeArg1, bool transposeAr
   gsl_matrix_memcpy(_M, work);
   gsl_matrix_free(work);
 }
+
+/*Vector& operator * (const Matrix &M, const VectorView &V)
+{
+  Vector W(M._M->size1);
+  gsl_blas_dgemv(CblasNoTrans, 1.0, M._M, &(V._V.vector), 0.0, W._V);
+  return W;
+}*/
 
 ostream& operator <<(ostream &os, Matrix &M)
 {
@@ -131,15 +159,8 @@ void Matrix::getData(double* array)
 
 void Matrix::setData(const double* array)
 {
-  unsigned int rows = _M->size1;
-  unsigned int cols = _M->size2;
-  for(unsigned int r=0; r<rows; r++)
-  {
-    for(unsigned int c=0; c<cols; c++)
-    {
-      gsl_matrix_set(_M, r, c, array[r*cols+c]);
-    }
-  }
+  gsl_matrix_const_view varray = gsl_matrix_const_view_array(array, _M->size1, _M->size2);
+  gsl_matrix_memcpy(_M, &varray.matrix);
 }
 
 unsigned int Matrix::getRows()
@@ -337,7 +358,7 @@ void Matrix::svd(Matrix* U, double* s, Matrix* V)
     LOGMSG(DBG_ERROR, "Matrix U must have same dimension");
     return;
   }
-  U->copy(*this);
+  *U = *this;
   gsl_vector* work = gsl_vector_alloc(getRows());
   gsl_vector_view vs = gsl_vector_view_array(s, getRows());
   gsl_linalg_SV_decomp(U->getBuffer(), V->getBuffer(), &vs.vector, work);

@@ -26,6 +26,7 @@ add_library(obcore
 	math/geometry.cpp
 	math/Matrix.cpp
 	math/MatrixView.cpp
+	math/Vector.cpp
 	math/VectorView.cpp
    	math/PID_Controller.cpp
    	math/IntegratorSimpson.cpp

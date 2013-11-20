@@ -55,10 +55,10 @@ int main(int argc, char *argv[])
     else
       T = Tcur;
     cloud->transform(&T);
-    gsl_matrix* coords = cloud->getCoords();
+    Matrix* coords = cloud->getCoords();
     VtkCloud* vcloud = new VtkCloud();
-    vcloud->setCoords(coords->data, coords->size1, 3, NULL);
-    vcloud->setColors(cloud->getColors(), coords->size1, 3);
+    vcloud->setCoords((*coords)[0], coords->getRows(), 3, NULL);
+    vcloud->setColors(cloud->getColors(), coords->getRows(), 3);
 
     viewer->addCloud(vcloud);
   }

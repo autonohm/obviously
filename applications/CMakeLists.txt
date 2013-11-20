@@ -65,7 +65,7 @@ LINK_DIRECTORIES(/opt/ros/electric/stacks/perception_pcl/flann/lib64/
 
 ADD_EXECUTABLE(obvious3D_show             obvious3D_show.cpp)
 ADD_EXECUTABLE(obvious3D_map              obvious3D_map.cpp)
-ADD_EXECUTABLE(kinect_perspective         kinect_perspective.cpp)
+#ADD_EXECUTABLE(kinect_perspective         kinect_perspective.cpp)
 ADD_EXECUTABLE(icp_matching2D             icp_matching2D.cpp)
 #ADD_EXECUTABLE(icp_matching2D_PTL         icp_matching2D_PTL.cpp)
 ADD_EXECUTABLE(icp_interactive3D          icp_interactive3D.cpp)
@@ -102,7 +102,7 @@ SET_TARGET_PROPERTIES(xtionStream PROPERTIES COMPILE_FLAGS "-Wno-unknown-pragmas
 
 TARGET_LINK_LIBRARIES(obvious3D_show           ${GRAPHICLIBS} ${CORELIBS})
 TARGET_LINK_LIBRARIES(obvious3D_map            ${GRAPHICLIBS} ${CORELIBS})
-TARGET_LINK_LIBRARIES(kinect_perspective       ${GRAPHICLIBS} ${CORELIBS})
+#TARGET_LINK_LIBRARIES(kinect_perspective       ${GRAPHICLIBS} ${CORELIBS})
 TARGET_LINK_LIBRARIES(icp_matching2D           ${VISIONLIBS}  ${CORELIBS} ${XML_LIBRARIES})
 TARGET_LINK_LIBRARIES(icp_interactive3D        ${GRAPHICLIBS} ${VISIONLIBS} ${CORELIBS})
 #TARGET_LINK_LIBRARIES(icp_matching2D_PTL       ${GRAPHICLIBS} ${VISIONLIBS} ${CORELIBS})

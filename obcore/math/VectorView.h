@@ -1,9 +1,9 @@
 #ifndef VECTORVIEW_H__
 #define VECTORVIEW_H__
 
-#include "Matrix.h"
-
 #include <iostream>
+
+#include "Vector.h"
 
 using namespace std;
 
@@ -20,11 +20,15 @@ namespace obvious
  */
 class VectorView
 {
+  friend class Matrix;
+  friend class Vector;
+
 public:
 
-  VectorView(Matrix* M, unsigned int index, bool column = false);
+  VectorView();
 
   VectorView(double* data, unsigned int size);
+
   VectorView(double* data, unsigned int size, unsigned int stride);
 
 	/**

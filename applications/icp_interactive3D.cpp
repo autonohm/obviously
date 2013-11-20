@@ -76,10 +76,10 @@ int main(int argc, char* argv[])
   IPreAssignmentFilter* filterS = (IPreAssignmentFilter*) new SubsamplingFilter(25);
   assigner->addPreFilter(filterS);
 
-  ProjectionFilter* filterP = new ProjectionFilter(P, 640, 480);
+  /*ProjectionFilter* filterP = new ProjectionFilter(P, 640, 480);
   filterP->setModel(model);
   if(pre == 1 || pre == 3)
-    assigner->addPreFilter(filterP);
+    assigner->addPreFilter(filterP);*/
 
   IPostAssignmentFilter* filterD = (IPostAssignmentFilter*) new DistanceFilter(1.5, 0.03, iterations);
   if(post == 1)

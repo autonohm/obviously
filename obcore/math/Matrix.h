@@ -1,10 +1,10 @@
 #ifndef MATRIX_H__
 #define MATRIX_H__
 
-#include <gsl/gsl_vector.h>
 #include <gsl/gsl_matrix.h>
-#include <gsl/gsl_linalg.h>
-#include <gsl/gsl_blas.h>
+
+#include "VectorView.h"
+#include "Vector.h"
 
 #include <iostream>
 
@@ -24,13 +24,13 @@ namespace obvious
 class Matrix
 {
 friend class MatrixView;
-friend class VectorView;
+
 public:
 	/**
 	 * Constructor
 	 * @param rows number of matrix rows
 	 * @param cols number of matrix columns
-	 * @param data data buffer to be copied ore linked to matrix representation
+	 * @param data data buffer to be copied
 	 */
 	Matrix(unsigned int rows, unsigned int cols, double* data = NULL);
 
@@ -44,19 +44,17 @@ public:
 
 	Matrix(){};
 
+	VectorView getColumnView(unsigned int index);
+
+	VectorView getRowView(unsigned int index);
+
 	/**
 	 * Destructor
 	 */
 	~Matrix();
 
 	/**
-	 * Copy matrix elements
-	 * @param M source matrix (size must be equal of this instance)
-	 */
-	void copy(const Matrix &M);
-
-	/**
-	 * Assignment operator
+	 * Assignment operator, copies elements of source to this one
 	 * @param M matrix assigned to this one
 	 * @return this matrix instance
 	 */
@@ -94,6 +92,8 @@ public:
   static Matrix multiply(const Matrix &M1, const Matrix &M2, bool transposeArg1, bool transposeArg2);
 
   void multiplyRight(const Matrix &M, bool transposeArg1, bool transposeArg2);
+
+  //friend Vector& operator * (const Matrix &M, const VectorView &V);
 
 	/**
 	 * Stream operator
@@ -211,7 +211,7 @@ public:
 	 */
 	void print();
 
-protected:
+private:
 
 	/**
 	 * Internal GSL representation

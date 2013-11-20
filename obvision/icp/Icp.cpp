@@ -83,22 +83,22 @@ void Icp::setModel(double* coords, double* normals, const unsigned int size)
   _estimator->setModel(_model, _sizeModel, _normalsM);
 }
 
-void Icp::setModel(gsl_matrix* coords, gsl_matrix* normals)
+void Icp::setModel(Matrix* coords, Matrix* normals)
 {
-  if(coords->size2!=(size_t)_dim)
+  if(coords->getCols()!=(size_t)_dim)
   {
     cout << "WARNING: Model is not of correct dimensionality. Needed: " << _dim << endl;
     return;
   }
 
-  unsigned int size = coords->size1;
+  unsigned int size = coords->getRows();
   unsigned int sizeNormals = _sizeModelBuf;
 
   checkMemory(size, _dim, _sizeModelBuf, _model);
 
   for(unsigned int i=0; i<size; i++)
   {
-    double* c = gsl_matrix_ptr(coords, i, 0);
+    double* c = (*coords)[i];
     memcpy(_model[i], c, _dim*sizeof(double));
   }
 
@@ -107,7 +107,7 @@ void Icp::setModel(gsl_matrix* coords, gsl_matrix* normals)
     checkMemory(size, _dim, sizeNormals, _normalsM);
     for(unsigned int i=0; i<size; i++)
     {
-      double* c = gsl_matrix_ptr(normals, i, 0);
+      double* c = (*normals)[i];
       memcpy(_normalsM[i], c, _dim*sizeof(double));
     }
   }
@@ -142,20 +142,21 @@ void Icp::setScene(double* coords, double* normals, const unsigned int size)
   if(normals) applyTransformation(_normalsS, _sizeScene, _dim, _Tfinal4x4);
 }
 
-void Icp::setScene(gsl_matrix* coords, gsl_matrix* normals)
+void Icp::setScene(Matrix* coords, Matrix* normals)
 {
-  if(coords->size2!=(size_t)_dim) {
+  if(coords->getRows()!=(size_t)_dim) {
     cout << "WARNING: Scene is not of correct dimensionality " << _dim << endl;
+    return;
   }
 
-  _sizeScene = coords->size1;
+  _sizeScene = coords->getRows();
 
   unsigned int sizeNormals = _sizeSceneBuf;
 
   checkMemory(_sizeScene, _dim, _sizeSceneBuf, _scene);
   for(unsigned int i=0; i<_sizeScene; i++)
   {
-    double* c = gsl_matrix_ptr(coords, i, 0);
+    double* c = (*coords)[i];
     memcpy(_scene[i], c, _dim*sizeof(double));
   }
 
@@ -165,7 +166,7 @@ void Icp::setScene(gsl_matrix* coords, gsl_matrix* normals)
 
     for(unsigned int i=0; i<_sizeScene; i++)
     {
-      double* c = gsl_matrix_ptr(normals, i, 0);
+      double* c = (*normals)[i];
       memcpy(_normalsS[i], c, _dim*sizeof(double));
     }
   }
@@ -242,7 +243,7 @@ void Icp::applyTransformation(double** data, unsigned int size, unsigned int dim
   if(_dim >= 3)
   {
     VectorView z(&(data[0][2]), size, dim);
-    z.addConstant(*(T[2][3]));
+    z.addConstant((*T)[2][3]);
   }
 }
 

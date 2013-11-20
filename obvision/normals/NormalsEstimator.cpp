@@ -4,6 +4,9 @@
 #include <flann/flann.hpp>
 #include <ANN/ANN.h>
 
+#include <gsl/gsl_linalg.h>
+#include <gsl/gsl_blas.h>
+
 namespace obvious
 {
 

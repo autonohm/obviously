@@ -93,8 +93,6 @@ void SensorProjective3D::backProject(Matrix* M, int* indices)
   Pgen = (*_P) * PoseInv;
 
   // coords2D = P * Tinv * voxelCoords
-  //Matrix coords2D(3, M->getRows());
-  //gsl_blas_dgemm(CblasNoTrans, CblasTrans, 1.0, Pgen.getBuffer(), M->getBuffer(), 0.0, coords2D.getBuffer());
   Matrix coords2D = Matrix::multiply(Pgen, *M, false, true);
 
   const double* du = coords2D[0];

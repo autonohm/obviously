@@ -15,7 +15,7 @@ Kinect*    _kinect;
 Icp*                   _icp;
 NormalsEstimator*      _nestimator;
 double*                _normals;
-ProjectionFilter*      _filterP;
+//ProjectionFilter*      _filterP;
 IPostAssignmentFilter* _filterD;
 
 void referenceCallback();
@@ -98,7 +98,7 @@ void referenceCallback()
   model->maskEmptyNormals();
   model->removeInvalidPoints();
 
-  _filterP->setModel(model);
+  //_filterP->setModel(model);
 
   _vmodel->setCoords(coords, size, 3, _normals);
   _vmodel->setColors(rgb,    size, 3);
@@ -137,8 +137,8 @@ int main(int argc, char* argv[])
   IPreAssignmentFilter* filterS = (IPreAssignmentFilter*) new SubsamplingFilter(10);
   assigner->addPreFilter(filterS);
 
-  _filterP = new ProjectionFilter(P, 640, 480);
-  assigner->addPreFilter(_filterP);
+  //_filterP = new ProjectionFilter(P, 640, 480);
+  //assigner->addPreFilter(_filterP);
 
   _filterD = (IPostAssignmentFilter*) new DistanceFilter(0.25, 0.05, iterations);
   assigner->addPostFilter(_filterD);
@@ -161,7 +161,7 @@ int main(int argc, char* argv[])
   interactor->CreateRepeatingTimer(30);
   _viewer->registerKeyboardCallback("space", referenceCallback);
   _viewer->registerFlipVariable("d", &_filterD->_active);
-  _viewer->registerFlipVariable("g", &_filterP->_active);
+  //_viewer->registerFlipVariable("g", &_filterP->_active);
   _viewer->startRendering();
 
   delete _vmodel;

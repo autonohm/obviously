@@ -280,14 +280,14 @@ void VtkCloud::copyNormals(double* dst, unsigned int subsampling)
       normals->GetTuple(i, &dst[j*3]);
 }
 
-void VtkCloud::copyData(gsl_matrix* C, gsl_matrix* N, unsigned char* rgb)
+void VtkCloud::copyData(Matrix* C, Matrix* N, unsigned char* rgb)
 {
   vtkSmartPointer<vtkPointSet> points          = vtkPointSet::SafeDownCast(_polyData);
   vtkSmartPointer<vtkDoubleArray> normals      = vtkDoubleArray::SafeDownCast(_polyData->GetPointData()->GetNormals());
   vtkSmartPointer<vtkUnsignedCharArray> colors = vtkUnsignedCharArray::SafeDownCast(_polyData->GetPointData()->GetScalars());
   for(int i=0; i<points->GetNumberOfPoints(); i++)
   {
-    double* dst = gsl_matrix_ptr(C, i, 0);
+    double* dst = (*C)[i];
     points->GetPoint(i, dst);
     if(colors) colors->GetTupleValue(i, &rgb[3*i]);
   }
@@ -296,7 +296,7 @@ void VtkCloud::copyData(gsl_matrix* C, gsl_matrix* N, unsigned char* rgb)
   {
     for(int i=0; i<points->GetNumberOfPoints(); i++)
     {
-      double* dst = gsl_matrix_ptr(N, i, 0);
+      double* dst = (*N)[i];
       normals->GetTuple(i, dst);
     }
   }

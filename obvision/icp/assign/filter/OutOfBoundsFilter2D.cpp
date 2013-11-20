@@ -21,7 +21,7 @@ OutOfBoundsFilter2D::~OutOfBoundsFilter2D()
 
 void OutOfBoundsFilter2D::setPose(Matrix* T)
 {
-  _T->copy(*T);
+  *_T = *T;
 }
 
 void OutOfBoundsFilter2D::filter(double** scene, unsigned int size, bool* mask)

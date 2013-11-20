@@ -23,7 +23,7 @@ OutOfBoundsFilter3D::~OutOfBoundsFilter3D()
 
 void OutOfBoundsFilter3D::setPose(Matrix* T)
 {
-  _T->copy(*T);
+  *_T = *T;
 }
 
 void OutOfBoundsFilter3D::filter(double** scene, unsigned int size, bool* mask)

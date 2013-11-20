@@ -2,12 +2,17 @@
 #include "obcore/base/Logger.h"
 #include <math.h>
 
+#include <gsl/gsl_linalg.h>
+#include <gsl/gsl_blas.h>
+#include <gsl/gsl_permutation.h>
+#include <gsl/gsl_statistics_double.h>
+
 namespace obvious
 {
 
 MatrixView::MatrixView(Matrix* M, unsigned int i, unsigned int j, unsigned int rows, unsigned int cols)
 {
-  _V = gsl_matrix_submatrix(M->getBuffer(), i, j, i+rows, j+cols);
+  _V = gsl_matrix_submatrix(M->_M, i, j, i+rows, j+cols);
 }
 
 MatrixView::MatrixView(double* data, unsigned int rows, unsigned int cols)
