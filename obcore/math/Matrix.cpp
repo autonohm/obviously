@@ -104,6 +104,21 @@ Matrix Matrix::multiply(const Matrix &M1, const Matrix &M2, bool transposeArg1, 
   return Mnew;
 }
 
+Vector Matrix::multiply(const Matrix &M, const Vector &V, bool transpose)
+{
+  enum CBLAS_TRANSPOSE t = CblasNoTrans;
+  unsigned int size = M._M->size1;
+  if(transpose)
+  {
+    t = CblasTrans;
+    size = M._M->size2;
+  }
+  Vector V2(size);
+  gsl_blas_dgemv(t, 1.0, M._M, V._V, 0.0, V2._V);
+  return V2;
+}
+
+
 void Matrix::multiplyRight(const Matrix &M, bool transposeArg1, bool transposeArg2)
 {
   gsl_matrix* work = gsl_matrix_alloc(_M->size1, _M->size2);
@@ -349,6 +364,14 @@ Matrix* Matrix::pcaAnalysis()
   gsl_matrix_free(M);
 
   return axes;
+}
+
+void Matrix::svd(double* s, Matrix* V)
+{
+  gsl_vector* work = gsl_vector_alloc(getRows());
+  gsl_vector_view vs = gsl_vector_view_array(s, getRows());
+  gsl_linalg_SV_decomp(getBuffer(), V->getBuffer(), &vs.vector, work);
+  gsl_vector_free(work);
 }
 
 void Matrix::svd(Matrix* U, double* s, Matrix* V)

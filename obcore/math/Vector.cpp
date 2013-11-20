@@ -26,9 +26,10 @@ Vector& Vector::operator =  (const Vector &V)
   return *this;
 }
 
-double Vector::operator [] (unsigned int i)
+double& Vector::operator [] (unsigned int i)
 {
-  return gsl_vector_get(_V, i);
+  return *gsl_vector_ptr(_V, i);
+  //return gsl_vector_get(_V, i);
 }
 
 unsigned int Vector::getSize()
@@ -49,7 +50,7 @@ void Vector::setZero()
 
 void Vector::print()
 {
-  for(int i=0; i<_V->size; i++)
+  for(unsigned int i=0; i<_V->size; i++)
     cout << gsl_vector_get(_V, i);
   cout << endl;
 }

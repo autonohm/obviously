@@ -15,7 +15,7 @@ add_library(obvision
 	icp/assign/AnnPairAssignment.cpp
 	icp/assign/FlannPairAssignment.cpp
 	icp/assign/ProjectivePairAssignment.cpp
-	#icp/assign/filter/ProjectionFilter.cpp
+	icp/assign/filter/ProjectionFilter.cpp
 	icp/assign/filter/OcclusionFilter.cpp
 	icp/assign/filter/TrimmedFilter.cpp
 	icp/assign/filter/ReciprocalFilter.cpp

@@ -29,11 +29,6 @@ int main(int argc, char** argv)
     sdata[2*i]   = mdata[2*i] * T[0] + mdata[2*i+1] * T[1] + T[2];
     sdata[2*i+1] = mdata[2*i] * T[3] + mdata[2*i+1] * T[4] + T[5];
   }
-//  for (unsigned int i=0 ; i<8 ; i++)
-//    std::cout << sdata[i] << std::endl;
-
-  //gsl_matrix_view model = gsl_matrix_view_array(mdata, 4, 2);
-  //gsl_matrix_view scene = gsl_matrix_view_array(sdata, 4, 2);
 
   /**
    * Compose ICP modules
@@ -45,8 +40,6 @@ int main(int argc, char** argv)
   IRigidEstimator* estimator     = (IRigidEstimator*) new ClosedFormEstimator2D();
 
   Icp* icp = new Icp(assigner, estimator);
-  //icp->setModel(&model.matrix);
-  //icp->setScene(&scene.matrix);
   icp->setModel(mdata, NULL, 4);
   icp->setScene(sdata, NULL, 4);
   icp->setMaxRMS(0.0);
@@ -57,10 +50,11 @@ int main(int argc, char** argv)
   unsigned int it;
   icp->iterate(&rms, &pairs, &it);
   Matrix* F = icp->getFinalTransformation();
+  F->invert();
+  F->print();
 
-  gsl_matrix_fprintf(stdout, F->getBuffer(), "%f");
-  std::cout << "Error: " << estimator->getRMS() << std::endl;
-  std::cout << "Iterations: " << estimator->getIterations() << std::endl;
+  cout << "Error: " << estimator->getRMS() << endl;
+  cout << "Iterations: " << estimator->getIterations() << endl;
 
   delete icp;
   delete estimator;

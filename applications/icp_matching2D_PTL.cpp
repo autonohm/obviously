@@ -70,11 +70,6 @@ int main(int argc, char** argv)
     snorm[2 * i + 1] = mnorm[2 * i] * T[3] + mnorm[2 * i + 1] * T[4] + T[5];
   }
 
-  gsl_matrix_view model       = gsl_matrix_view_array(mdata, nr_of_points, 2);
-  gsl_matrix_view modelNormal = gsl_matrix_view_array(mnorm, nr_of_points, 2);
-  gsl_matrix_view scene       = gsl_matrix_view_array(sdata, nr_of_points, 2);
-  gsl_matrix_view sceneNormal = gsl_matrix_view_array(snorm, nr_of_points, 2);
-
   /**
    * Compose ICP modules
    */
@@ -88,8 +83,8 @@ int main(int argc, char** argv)
 
 
   Icp* icp = new Icp(assigner, estimator);
-  icp->setModel(&model.matrix, &modelNormal.matrix);
-  icp->setScene(&scene.matrix, &sceneNormal.matrix);
+  icp->setModel(mdata, mnorm, nr_of_points);
+  icp->setScene(sdata, snorm, nr_of_points);
   icp->setMaxRMS(0.0);
   icp->setMaxIterations(iterations);
 
@@ -98,8 +93,9 @@ int main(int argc, char** argv)
   unsigned int it;
   icp->iterate(&rms, &pairs, &it);
   Matrix* F = icp->getFinalTransformation4x4();
+  F->invert();
+  F->print();
 
-  gsl_matrix_fprintf(stdout, F->getBuffer(), "%f");
   std::cout << "Error: " << estimator->getRMS() << std::endl;
   std::cout << "Iterations: " << estimator->getIterations() << std::endl;
 

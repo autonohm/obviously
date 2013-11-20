@@ -165,7 +165,7 @@ namespace obvious
      * @param nW width of image
      * @param nH height of image
      */
-    //void createProjection(unsigned char* pImage, unsigned char* pMask, Matrix* P, int nW, int nH);
+    void createProjection(unsigned char* pImage, unsigned char* pMask, Matrix* P, int nW, int nH);
 
     /**
      * Create a z-Buffer depending on a projection matrix
@@ -175,7 +175,7 @@ namespace obvious
      * @param nW width of image
      * @param nH height of image
      */
-    //void createZBuffer(unsigned char* pImage, double* zbuffer, Matrix* P, int nW, int nH);
+    void createZBuffer(unsigned char* pImage, double* zbuffer, Matrix* P, int nW, int nH);
 
     /**
      * Set identifier

@@ -160,8 +160,8 @@ int main(int argc, char* argv[])
     Matrix* S = new Matrix(rays, 2, sCoords);
 
     icp->reset();
-    icp->setModel(M->getBuffer(), N->getBuffer());
-    icp->setScene(S->getBuffer());
+    icp->setModel(M, N);
+    icp->setScene(S);
 
     double rms;
     unsigned int pairs;

@@ -46,7 +46,7 @@ public:
    * Determine the transformation matrix that registers the scene to the model.
    * @param T transformation matrix as return parameter
    */
-  virtual void estimateTransformation(gsl_matrix* T);
+  virtual void estimateTransformation(Matrix* T);
 
   unsigned int getIterations(void);
 

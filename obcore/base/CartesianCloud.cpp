@@ -246,10 +246,9 @@ void CartesianCloud3D::transform(double T[16])
   transform(&M);
 }
 
-/*void CartesianCloud3D::createProjection(unsigned char* pImage, unsigned char* pMask, Matrix* P, int nW, int nH)
+void CartesianCloud3D::createProjection(unsigned char* pImage, unsigned char* pMask, Matrix* P, int nW, int nH)
 {
-  double xi_data[4];
-  VectorView xi(xi_data, 4);
+  Vector xi(4);
   xi[3] = 1.0;
 
   memset(pImage, 0, 3*nW*nH*sizeof(unsigned char));
@@ -261,9 +260,11 @@ void CartesianCloud3D::transform(double T[16])
 
     if(_attributes[i] & ePointAttrValid)
     {
-      memcpy(xi_data, point, 3*sizeof(*point));
+      xi[0] = point[0];
+      xi[1] = point[1];
+      xi[2] = point[2];
 
-      Vector ni = (*P) * xi;
+      Vector ni = Matrix::multiply(*P, xi, false);
       double du = ni[0];
       double dv = ni[1];
       double dw = ni[2];
@@ -282,16 +283,14 @@ void CartesianCloud3D::transform(double T[16])
       }
     }
   }
-}*/
+}
 
-/*
+
 void CartesianCloud3D::createZBuffer(unsigned char* pImage, double* zbuffer, Matrix* P, int nW, int nH)
 {
   if(!_hasInfo) return;
 
-  gsl_vector* xi = gsl_vector_alloc(4);
-  gsl_vector* ni  = gsl_vector_alloc(3);
-  gsl_vector_set(xi, 3, 1.0);
+  Vector xi(4);
 
   memset(pImage, 0, 3*nW*nH*sizeof(unsigned char));
   for(int i=0; i<nW*nH; i++)
@@ -299,18 +298,17 @@ void CartesianCloud3D::createZBuffer(unsigned char* pImage, double* zbuffer, Mat
 
   for(unsigned int i=0; i<_coords->getRows(); i++)
   {
-    double* point = _coords[i];
+    double* point = (*_coords)[i];
 
     if(_attributes[i] & ePointAttrValid)
     {
-      gsl_vector_set(xi, 0, point[0]);
-      gsl_vector_set(xi, 1, point[1]);
-      gsl_vector_set(xi, 2, point[2]);
-
-      gsl_blas_dgemv(CblasNoTrans, 1.0, P, xi, 0.0, ni);
-      double du = gsl_vector_get(ni,0);
-      double dv = gsl_vector_get(ni,1);
-      double dw = gsl_vector_get(ni,2);
+      xi[0] = point[0];
+      xi[1] = point[1];
+      xi[2] = point[2];
+      Vector ni = Matrix::multiply(*P, xi, false);
+      double du = ni[0];
+      double dv = ni[1];
+      double dw = ni[2];
       if(dw > 10e-6)
       {
         int u = (int)( du / dw + 0.5);
@@ -326,10 +324,7 @@ void CartesianCloud3D::createZBuffer(unsigned char* pImage, double* zbuffer, Mat
       }
     }
   }
-
-  gsl_vector_free(ni);
-  gsl_vector_free(xi);
-}*/
+}
 
 void CartesianCloud3D::setData(const unsigned int size, double* coords, double* normals, const unsigned char* const rgb)
 {

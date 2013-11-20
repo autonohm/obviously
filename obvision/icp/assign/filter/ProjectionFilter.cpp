@@ -31,8 +31,8 @@ void ProjectionFilter::setModel(CartesianCloud3D* cloud)
   Matrix M(3, 4);
   M.setData(_P);
 
-  cloud->createProjection(proj, msk, M.getBuffer(), _w, _h);
-  cloud->createZBuffer(proj, zbuffer, M.getBuffer(), _w, _h);
+  cloud->createProjection(proj, msk, &M, _w, _h);
+  cloud->createZBuffer(proj, zbuffer, &M, _w, _h);
 
   memcpy(_mask[0], msk, _w*_h*sizeof(*msk));
   memcpy(_zbuffer[0], zbuffer, _w*_h*sizeof(*zbuffer));

@@ -94,6 +94,7 @@ public:
   void multiplyRight(const Matrix &M, bool transposeArg1, bool transposeArg2);
 
   //friend Vector& operator * (const Matrix &M, const VectorView &V);
+  static Vector multiply(const Matrix &M, const Vector &V, bool transpose);
 
 	/**
 	 * Stream operator
@@ -176,6 +177,13 @@ public:
 	 * @return matrix in layout [x1_from x1_to y1_from y1_to z1_from z1_to; x2...]
 	 */
 	Matrix* pcaAnalysis();
+
+  /**
+   * perform singular value decomposition A = U S V'. A is replaced with content of U.
+   * @param s singular values
+   * @param V orthogonal square matrix
+   */
+	void svd(double* s, Matrix* V);
 
 	/**
 	 * perform singular value decomposition A = U S V'
