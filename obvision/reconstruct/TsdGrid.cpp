@@ -163,6 +163,7 @@ void TsdGrid::grid2GrayscaleImage(unsigned char* image)
 
 void TsdGrid::grid2ColorImage(unsigned char* image)
 {
+  const double MAX_DIST = 10.0;
   unsigned char rgb[3];
   for(int y=0; y<_cellsY; y++)
   {
@@ -171,23 +172,23 @@ void TsdGrid::grid2ColorImage(unsigned char* image)
     {
 
       double tsd = _grid[y][x].tsdf;
-      if(tsd>0.0 && tsd<0.999)
+      if(tsd>0.0)
       {
-        rgb[0] = 127;
-        rgb[1] = 127 + (unsigned char)(128.0*tsd);
-        rgb[2] = 127;
+        rgb[0] = static_cast<unsigned char>(tsd * (255.0 / MAX_DIST));
+        rgb[1] = 255; //max showable distance MAX_DIST m
+        rgb[2] = static_cast<unsigned char>(tsd * (255.0 / MAX_DIST));
       }
       else if(tsd<0.0 && tsd>-0.999)
       {
-        rgb[0] = 127 + (unsigned char)(-128.0*tsd);
-        rgb[1] = 127;
-        rgb[2] = 127;
+        rgb[0] = static_cast<unsigned char>(tsd * (255.0));
+        rgb[1] = 0;
+        rgb[2] = 0;
       }
       else
       {
-        rgb[0] = 255;
-        rgb[1] = 255;
-        rgb[2] = 255;
+        rgb[0] = 0;
+        rgb[1] = 0;
+        rgb[2] = 0;
       }
 
       memcpy(&image[3*i], rgb, 3*sizeof(unsigned char));
@@ -243,9 +244,9 @@ bool TsdGrid::interpolateBilinear(double coord[2], double* tsdf)
 
   // Interpolate
   *tsdf =    tsdf_cell * (1. - wy) * (1. - wx)
-                        + _grid[y - 1][x + 0].tsdf *       wy  * (1. - wx)
-                        + _grid[y + 0][x + 1].tsdf * (1. - wy) *       wx
-                        + _grid[y - 1][x + 1].tsdf *       wy  *       wx;
+                            + _grid[y - 1][x + 0].tsdf *       wy  * (1. - wx)
+                            + _grid[y + 0][x + 1].tsdf * (1. - wy) *       wx
+                            + _grid[y - 1][x + 1].tsdf *       wy  *       wx;
 
   return (!isnan(*tsdf));
 }
