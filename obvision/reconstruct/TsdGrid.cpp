@@ -354,5 +354,9 @@ void TsdGrid::Load(const char* filename)
 
   f.close();
 }
+obvious::TsdCell** TsdGrid::getData(void)const
+{
+  return(_grid);
+}
 
 }

@@ -148,6 +148,12 @@ public:
    * @param filename
    */
   void Load(const char* filename);
+
+  /**
+   * Method to get direct access to the data
+   * @return Pointer to data
+   */
+  obvious::TsdCell** getData(void)const;
 private:
 
   /**
