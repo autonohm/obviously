@@ -6,9 +6,20 @@
 namespace obvious
 {
 
-#define _PARALLEL_VERSION 1
+SensorProjective3D::SensorProjective3D(unsigned int cols, unsigned int rows, double PData[12]) : Sensor(3)
+{
+  init(cols, rows, PData);
+}
 
-SensorProjective3D::SensorProjective3D(unsigned int cols, unsigned int rows, double PData[12], double voxelSize) : Sensor(3)
+SensorProjective3D::SensorProjective3D(SensorProjective3D* sensor) : Sensor(3)
+{
+  double PData[12];
+  sensor->_P->getData(PData);
+
+  init(sensor->_width, sensor->_height, PData);
+}
+
+void SensorProjective3D::init(unsigned int cols, unsigned int rows, double PData[12])
 {
   _P = new Matrix(3,4);
   _P->setData(PData);
@@ -29,10 +40,9 @@ SensorProjective3D::SensorProjective3D(unsigned int cols, unsigned int rows, dou
       _rays[col][row] = new Matrix(4, 1);
       project2Space(col, row, 1.0, _rays[col][row]);
 
-      // Normalize ray to size of voxel
+      // Normalize ray to 1.0
       Matrix* M = _rays[col][row];
       double len = sqrt((*M)[0][0]*(*M)[0][0] + (*M)[1][0]*(*M)[1][0] + (*M)[2][0]*(*M)[2][0]);
-      //len /= voxelSize;
       (*M)[0][0] /= len;
       (*M)[1][0] /= len;
       (*M)[2][0] /= len;

@@ -17,13 +17,18 @@ class SensorProjective3D : public Sensor
 public:
 
   /**
-   * Standard constructor
+   * Constructor
    * @param[in] cols number of image columns
    * @param[in] rows number of image rows
    * @param[in] PData 3x4 projection matrix
-   * @param[in] voxelSize edge length of voxel
    */
-  SensorProjective3D(unsigned int cols, unsigned int rows, double PData[12], double voxelSize);
+  SensorProjective3D(unsigned int cols, unsigned int rows, double PData[12]);
+
+  /**
+   * Copy constructor
+   * @param sensor sensor instance to be copied
+   */
+  SensorProjective3D(SensorProjective3D* sensor);
 
   /**
    * Destructor
@@ -52,6 +57,8 @@ public:
   void calcRayFromCurrentPose(const unsigned int row, const unsigned int col, double dirVec[3]);
 
 private:
+
+  void init(unsigned int cols, unsigned int rows, double PData[12]);
 
   Matrix* _P;
 

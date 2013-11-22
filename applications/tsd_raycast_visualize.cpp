@@ -49,7 +49,7 @@ int main(int argc, char* argv[])
     Matrix P(3, 4, Pdata);
     unsigned int cols = 640;
     unsigned int rows = 480;
-    sensor = new SensorProjective3D(cols, rows, Pdata, 0.01);
+    sensor = new SensorProjective3D(cols, rows, Pdata);
     subsamplingW = 64;
     subsamplingH = 48;
   }

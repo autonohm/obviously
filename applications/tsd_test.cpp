@@ -46,7 +46,7 @@ int main(void)
 
   double voxelSize = 0.02;
 
-  SensorProjective3D sensor(cols, rows, PData, voxelSize);
+  SensorProjective3D sensor(cols, rows, PData);
   sensor.transform(&T);
 
   TsdSpace space(0.99, 0.99, 0.99, voxelSize);

@@ -159,7 +159,7 @@ void init(void)
   double Pdata[12] = {90.1, 0.0,  82.0, 0.0,
                       0.0,   90.1, 59.5, 0.0,
                       0.0,   0.0,  1.0,  0.0};
-  _sensor = new SensorProjective3D(_nano->getCols(), _nano->getRows(), Pdata, _space->getVoxelSize());
+  _sensor = new SensorProjective3D(_nano->getCols(), _nano->getRows(), Pdata);
   _dists  = new double[_sensor->getRealMeasurementSize()];
 
   std::cout << "Size: " << _sensor->getRealMeasurementSize() << std::endl;

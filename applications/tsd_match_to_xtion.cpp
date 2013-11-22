@@ -349,7 +349,7 @@ int main(int argc, char* argv[])
     if(_xtion->grab()) pre++;
   }
 
-  _sensor = new SensorProjective3D(_xtion->getCols(), _xtion->getRows(), perspective, voxelSize);
+  _sensor = new SensorProjective3D(_xtion->getCols(), _xtion->getRows(), perspective);
 
   double tf[16]={1, 0, 0, 1.0,
                  0, 1, 0, 1.0,
