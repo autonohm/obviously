@@ -243,9 +243,9 @@ bool TsdGrid::interpolateBilinear(double coord[2], double* tsdf)
 
   // Interpolate
   *tsdf =    tsdf_cell * (1. - wy) * (1. - wx)
-                    + _grid[y - 1][x + 0].tsdf *       wy  * (1. - wx)
-                    + _grid[y + 0][x + 1].tsdf * (1. - wy) *       wx
-                    + _grid[y - 1][x + 1].tsdf *       wy  *       wx;
+                        + _grid[y - 1][x + 0].tsdf *       wy  * (1. - wx)
+                        + _grid[y + 0][x + 1].tsdf * (1. - wy) *       wx
+                        + _grid[y - 1][x + 1].tsdf *       wy  *       wx;
 
   return (!isnan(*tsdf));
 }
@@ -256,9 +256,14 @@ void TsdGrid::addTsdfValue(const unsigned int x, const unsigned int y, const dou
   if(sdf >= -_maxTruncation)
   {
     TsdCell* cell = &_grid[y][x];
-
-    double tsdf = sdf / _maxTruncation;
-    tsdf = min(tsdf, 1.0);
+    double tsdf = 0.0;
+    if(sdf < 0.0)
+    {
+      tsdf = sdf / _maxTruncation;
+      tsdf = min(tsdf, 1.0);
+    }
+    else
+      tsdf = sdf;
 
     cell->weight += 1.0;
 
@@ -345,10 +350,10 @@ void TsdGrid::Load(const char* filename)
 
   do
   {
-      f >> y >> x >> tsdf >> weight;
-      TsdCell* cell = &_grid[y][x];
-      cell->weight  = weight;
-      cell->tsdf    = tsdf;
+    f >> y >> x >> tsdf >> weight;
+    TsdCell* cell = &_grid[y][x];
+    cell->weight  = weight;
+    cell->tsdf    = tsdf;
 
   }while(f.getline(line, 256).good());
 
