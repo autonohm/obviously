@@ -129,7 +129,7 @@ bool RayCast3D::calcCoordsFromCurrentPose(Sensor* sensor, double* coords, double
     T[1][3] = (-1.0) * offset[1];
     T[2][3] = (-1.0) * offset[2];
     sensor->transform(&T);
-    sensor->calcRayFromCurrentPose(u, v, ray);
+    sensor->calcRayFromCurrentPose(v, u, ray);
     ray[0] *= _space->getVoxelSize();
     ray[1] *= _space->getVoxelSize();
     ray[2] *= _space->getVoxelSize();
