@@ -339,11 +339,11 @@ void Matrix::svd(Matrix* U, double* s, Matrix* V)
   gsl_vector_free(work);
 }
 
-void Matrix::solve(double* b, double* x)
+void Matrix::solve(const double* b, double* x)
 {
   unsigned int dim = getRows();
   gsl_vector_view vx = gsl_vector_view_array(x, dim);
-  gsl_vector_view vb = gsl_vector_view_array(b, dim);
+  gsl_vector_const_view vb = gsl_vector_const_view_array(b, dim);
 
   gsl_permutation* perm = gsl_permutation_alloc(getRows());
   int sig;

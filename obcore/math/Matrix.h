@@ -201,7 +201,7 @@ public:
 	 * @param[in] b b must have elements = number of rows of current matrix
 	 * @param[out] x x must have elements = number of rows of current matrix
 	 */
-	void solve(double* b, double* x);
+	void solve(const double* b, double* x);
 
 	/**
    * Transform current matrix, i.e. with homogeneous transformation
