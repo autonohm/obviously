@@ -22,9 +22,9 @@ namespace obvious
 
   }
 
-	double VectorView::operator [] (unsigned int i)
+	double& VectorView::operator [] (unsigned int i)
 	{
-	  return gsl_vector_get(&(_V.vector), i);
+	  return *gsl_vector_ptr(&(_V.vector), i);
 	}
 
 	double* VectorView::ptr()

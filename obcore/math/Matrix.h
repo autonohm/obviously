@@ -74,21 +74,21 @@ public:
 	 * @param M matrix assigned to this one
 	 * @return this matrix instance
 	 */
-	Matrix  &operator =  (const Matrix &M);
+	Matrix& operator =  (const Matrix &M);
 
 	/**
 	 * Multiplication operator
 	 * @param M matrix multiplied with this one
 	 * @return this matrix instance
 	 */
-	Matrix  &operator *= (const Matrix &M);
+	Matrix& operator *= (const Matrix &M);
 
 	/**
 	 * Subtraction operator
 	 * @param M matrix subtracted from this one
 	 * @return this matrix instance
 	 */
-	Matrix &operator -= (const Matrix &M);
+	Matrix& operator -= (const Matrix &M);
 
 	/**
 	 * Row accessor
@@ -122,7 +122,7 @@ public:
 
 	/**
 	 * Data accessor
-	 * @param array array to copy data into (must be instanciated outside)
+	 * @param array buffer to copy data into (must be instantiated outside)
 	 */
 	void getData(double* array);
 

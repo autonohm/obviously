@@ -25,10 +25,24 @@ class VectorView
 
 public:
 
+  /**
+   * Standard constructor
+   */
   VectorView();
 
+  /**
+   * Constructor
+   * @param data external buffer to be referenced
+   * @param size size of external buffer
+   */
   VectorView(double* data, unsigned int size);
 
+  /**
+   * Constructor
+   * @param data external buffer to be referenced
+   * @param size size of external buffer
+   * @param stride memory alignment, i.e. number of values per row
+   */
   VectorView(double* data, unsigned int size, unsigned int stride);
 
 	/**
@@ -36,12 +50,28 @@ public:
 	 */
 	~VectorView();
 
-	double operator [] (unsigned int i);
+	/**
+	 * Row accessor
+	 * @param i index
+	 * @param return value
+	 */
+	double& operator [] (unsigned int i);
 
+	/**
+	 * Accessor to referenced buffer
+	 * @return buffer reference pointer
+	 */
 	double* ptr();
 
+	/**
+	 * Add constant to each element of vector
+	 * @param val constant to be added
+	 */
 	void addConstant(const double val);
 
+	/**
+	 * Print data buffer to stdout
+	 */
   void print();
 
 private:

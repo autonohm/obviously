@@ -26,7 +26,7 @@ Matrix::Matrix(const Matrix &M)
 
 Matrix::Matrix(Matrix M, unsigned int i, unsigned int j, unsigned int rows, unsigned int cols)
 {
-  gsl_matrix_view V = gsl_matrix_submatrix(M._M, i, j, i+rows, j+cols);
+  gsl_matrix_view V = gsl_matrix_submatrix(M._M, i, j, rows, cols);
   _M = gsl_matrix_alloc(rows, cols);
   gsl_matrix_memcpy(_M, &(V.matrix));
 }

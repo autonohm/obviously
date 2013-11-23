@@ -29,7 +29,6 @@ Vector& Vector::operator =  (const Vector &V)
 double& Vector::operator [] (unsigned int i)
 {
   return *gsl_vector_ptr(_V, i);
-  //return gsl_vector_get(_V, i);
 }
 
 unsigned int Vector::getSize()
