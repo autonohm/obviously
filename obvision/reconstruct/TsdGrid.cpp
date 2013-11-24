@@ -110,7 +110,6 @@ double TsdGrid::getMaxTruncation()
 
 void TsdGrid::push(SensorPolar2D* sensor)
 {
-  Timer t;
   double* data = sensor->getRealMeasurementData();
   bool*   mask = sensor->getRealMeasurementMask();
   double* accuracy = sensor->getRealMeasurementAccuracy();

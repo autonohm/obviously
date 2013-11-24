@@ -71,13 +71,12 @@ void SensorPolar2D::backProject(Matrix* M, int* indices)
   Timer t;
   Matrix PoseInv = (*_Pose);
   PoseInv.invert();
-  Matrix coords2D(3, M->getRows());
-  Matrix Mt = M->getTranspose();
-  coords2D = PoseInv * Mt;
+  Matrix coords2D = Matrix::multiply(PoseInv, *M, false, true);
+
+  double* y = coords2D[1];
+  double* x = coords2D[0];
   for(unsigned int i=0; i<M->getRows(); i++)
-  {
-    indices[i] = phi2Index(atan2(coords2D[1][i], coords2D[0][i]));
-  }
+    indices[i] = phi2Index(atan2(*(y+i), *(x+i)));
 }
 
 int SensorPolar2D::phi2Index(double phi)
@@ -86,9 +85,7 @@ int SensorPolar2D::phi2Index(double phi)
   if(phi<=_phiLowerBound) return -1;
   if(phi>=_phiUpperBound) phi -= 2.0*M_PI;
 
-  double phiAligned = phi-_phiMin;
-
-  int index = round(phiAligned /_angularRes);
+  int index = round((phi-_phiMin) /_angularRes);
 
   if(index >= (int)_size) index = -1;
 
