@@ -30,8 +30,6 @@ TsdGrid::TsdGrid(const unsigned int dimX, const unsigned int dimY, const double 
 
   System<TsdCell>::allocate(_cellsY, _cellsX, _grid);
 
-  _cellCoordsHom = new Matrix(_sizeOfGrid, 3);
-
   int i=0;
   for (int y = 0; y < _cellsY; y++)
   {
@@ -39,9 +37,6 @@ TsdGrid::TsdGrid(const unsigned int dimX, const unsigned int dimY, const double 
     {
       _grid[y][x].tsdf   = NAN;
       _grid[y][x].weight = 0.0;
-      (*_cellCoordsHom)[i][0] = ((double)x + 0.5) * _cellSize;
-      (*_cellCoordsHom)[i][1] = ((double)y + 0.5) * _cellSize;
-      (*_cellCoordsHom)[i][2] = 1.0;
     }
   }
 
@@ -54,7 +49,6 @@ TsdGrid::TsdGrid(const unsigned int dimX, const unsigned int dimY, const double 
 TsdGrid::~TsdGrid(void)
 {
   delete [] _grid;
-  delete _cellCoordsHom;
 }
 
 unsigned int TsdGrid::getCellsX()
@@ -110,6 +104,7 @@ double TsdGrid::getMaxTruncation()
 
 void TsdGrid::push(SensorPolar2D* sensor)
 {
+  Timer t;
   double* data = sensor->getRealMeasurementData();
   bool*   mask = sensor->getRealMeasurementMask();
   double* accuracy = sensor->getRealMeasurementAccuracy();
@@ -117,23 +112,35 @@ void TsdGrid::push(SensorPolar2D* sensor)
   double tr[2];
   sensor->getPosition(tr);
 
-  int* indices = new int[_sizeOfGrid];
-  sensor->backProject(_cellCoordsHom, indices);
+#pragma omp parallel
+{
+  Matrix cellCoordsHom(_cellsX, 3);
+  for(int x=0; x<_cellsX; x++)
+  {
+    cellCoordsHom[x][0] = ((double)x + 0.5) * _cellSize;
+    cellCoordsHom[x][2] = 1.0;
+  }
 
-  int i = 0;
+#pragma omp for schedule(dynamic)
   for(int y=0; y<_cellsY; y++)
   {
-    for(int x=0; x<_cellsX; x++, i++)
+    int idx[_cellsX];
+    const double ycoord = ((double)y + 0.5) * _cellSize;
+    for(int x=0; x<_cellsX; x++)
+      cellCoordsHom[x][1] = ycoord;
+    sensor->backProject(&cellCoordsHom, idx);
+
+    for(int x=0; x<_cellsX; x++)
     {
       // Index of laser beam
-      int index = indices[i];
+      int index = idx[x];
 
       if(index>=0)
       {
         if(mask[index])
         {
           // calculate distance of current cell to sensor
-          double distance = euklideanDistance<double>(tr, (*_cellCoordsHom)[i], 2);
+          double distance = euklideanDistance<double>(tr, cellCoordsHom[x], 2);
           double sdf = data[index] - distance;
           double weight = 1.0;
           if(accuracy) weight = accuracy[index];
@@ -142,8 +149,8 @@ void TsdGrid::push(SensorPolar2D* sensor)
       }
     }
   }
+}
 
-  delete [] indices;
   LOGMSG(DBG_DEBUG, "Elapsed push: " << t.getTime() << "ms");
 }
 

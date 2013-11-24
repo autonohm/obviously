@@ -177,8 +177,6 @@ private:
 
   TsdCell** _grid;
 
-  Matrix* _cellCoordsHom;
-
   double _cellSize;
 
   double _invCellSize;
