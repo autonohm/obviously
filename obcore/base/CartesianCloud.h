@@ -6,7 +6,7 @@
 #include <math.h>
 #include <string>
 
-#include "obcore/math/Matrix.h"
+#include "obcore/math/linalg/linalg.h"
 
 using namespace std;
 

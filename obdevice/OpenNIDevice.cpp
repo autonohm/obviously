@@ -8,7 +8,7 @@
 
 #include "obdevice/OpenNIDevice.h"
 #include <obcore/math/mathbase.h>
-#include <obcore/math/Matrix.h>
+#include "obcore/math/linalg/linalg.h"
 #include <math.h>
 
 using namespace obvious;

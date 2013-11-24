@@ -1,7 +1,6 @@
 #ifndef SENSOR_POLAR_2D_H
 #define SENSOR_POLAR_2D_H
 
-#include "obcore/math/Matrix.h"
 #include "Sensor.h"
 
 namespace obvious

@@ -51,7 +51,7 @@ public:
    * @param ty y-component of translation
    * @param tz z-component of translation
    */
-  static Matrix* TransformationMatrix44(double phi, double theta, double psi, double tx, double ty, double tz);
+  static Matrix* TransformationMatrix44(double phi, double theta, double psi, double tx=0, double ty=0, double tz=0);
 
 private:
 

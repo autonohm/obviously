@@ -10,7 +10,7 @@
 #include "VtkCloud.h"
 #include <vtkExtractSelectedFrustum.h>
 #include <vtkAxesActor.h>
-#include "../obcore/math/Matrix.h"
+#include "obcore/math/linalg/linalg.h"
 
 #include "Obvious.h"
 

@@ -4,7 +4,7 @@
 #include <math.h>
 
 #include "obvision/icp/assign/assignbase.h"
-#include <obcore/math/Matrix.h>
+#include "obcore/math/linalg/linalg.h"
 #include <vector>
 
 namespace obvious

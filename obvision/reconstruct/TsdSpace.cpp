@@ -1,7 +1,6 @@
 #include "obcore/base/System.h"
 #include "obcore/base/Logger.h"
 #include "obcore/base/Timer.h"
-#include "obcore/math/Matrix.h"
 #include "obcore/math/mathbase.h"
 #include "TsdSpace.h"
 #include "SensorProjective3D.h"

@@ -10,9 +10,7 @@ using namespace std;
 #include "obcore/base/CartesianCloud.h"
 #include "obcore/base/System.h"
 
-#include "obcore/math/Matrix.h"
-#include "obcore/math/MatrixView.h"
-#include "obcore/math/VectorView.h"
+#include "obcore/math/linalg/linalg.h"
 
 using namespace obvious;
 

@@ -1,7 +1,7 @@
 #ifndef TSDSPACE_H
 #define TSDSPACE_H
 
-#include "obcore/math/Matrix.h"
+#include "obcore/math/linalg/linalg.h"
 #include "Sensor.h"
 
 namespace obvious

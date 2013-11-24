@@ -1,7 +1,7 @@
 #include "KinectPlayback.h"
 #include <cstring>
 #include <stdlib.h>
-#include <obcore/math/Matrix.h>
+#include "obcore/math/linalg/linalg.h"
 #include <math.h>
 
 namespace obvious

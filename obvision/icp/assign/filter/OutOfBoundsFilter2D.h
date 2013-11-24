@@ -2,7 +2,7 @@
 #define OUTOFBOUNDSFILTER2D_H
 
 #include "obvision/icp/assign/filter/IPreAssignmentFilter.h"
-#include "obcore/math/Matrix.h"
+#include "obcore/math/linalg/linalg.h"
 
 namespace obvious
 {

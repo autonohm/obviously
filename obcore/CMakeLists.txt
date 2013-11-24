@@ -24,11 +24,11 @@ add_library(obcore
 	base/Logger.cpp
 	base/tools.cpp
 	math/geometry.cpp
-	math/Matrix.cpp
-	math/MatrixFactory.cpp
-	math/MatrixView.cpp
-	math/Vector.cpp
-	math/VectorView.cpp
+	math/linalg/gsl/Matrix.cpp
+	math/linalg/gsl/MatrixFactory.cpp
+	math/linalg/gsl/MatrixView.cpp
+	math/linalg/gsl/Vector.cpp
+	math/linalg/gsl/VectorView.cpp
    	math/PID_Controller.cpp
    	math/IntegratorSimpson.cpp
 	filter/EuclideanFilter.cpp

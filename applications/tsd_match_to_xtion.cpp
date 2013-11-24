@@ -19,7 +19,6 @@
 #include "obdevice/Kinect.h"
 #include "obcore/math/mathbase.h"
 #include "obvision/icp/icp_def.h"
-#include "obcore/math/transformationbase.h"
 
 using namespace std;
 using namespace obvious;
@@ -110,11 +109,10 @@ public:
 private:
 };
 
-void updatePose(double* P)
+void updatePose(Matrix* T)
 {
-  Matrix T(4, 4);
-  T.setData(P);
-  _sensor->transform(&T);
+  _sensor->transform(T);
+  double P[16];
   _sensor->getPose()->getData(P);
   _viewer->showSensorPose(P);
 }
@@ -129,71 +127,67 @@ void _changeMode(void)
 
 void _upPressed(void)
 {
-  double* tf = new double[16];
+  Matrix* T;
   if (_rotationMode)
-    rotateXAxis(tf, _alpha);
+    T = MatrixFactory::TransformationMatrix44(0, 0, _alpha);
   else
-    translateZAxis(tf, _alpha);
-
-  updatePose(tf);
-  delete [] tf;
+    T = MatrixFactory::TransformationMatrix44(_alpha, 0, 0);
+  updatePose(T);
+  delete T;
 }
 
 void _downPressed(void)
 {
-  double* tf = new double[16];
+  Matrix* T;
   if (_rotationMode)
-    rotateXAxis(tf, -_alpha);
+    T = MatrixFactory::TransformationMatrix44(0, 0, -_alpha);
   else
-    translateZAxis(tf, -_alpha);
-
-  updatePose(tf);
-  delete [] tf;
+    T = MatrixFactory::TransformationMatrix44(-_alpha, 0, 0);
+  updatePose(T);
+  delete T;
 }
 
 void _leftPressed(void)
 {
-  double* tf = new double[16];
+  Matrix* T;
   if (_rotationMode)
-    rotateYAxis(tf, _alpha);
+    T = MatrixFactory::TransformationMatrix44(0, _alpha, 0);
   else
-    translateXAxis(tf, _alpha);
-
-  updatePose(tf);
-  delete [] tf;
+    T = MatrixFactory::TransformationMatrix44(_alpha, 0, 0);
+  updatePose(T);
+  delete T;
 }
 void _rightPressed(void)
 {
-  double* tf = new double[16];
+  Matrix* T;
   if (_rotationMode)
-    rotateYAxis(tf, -_alpha);
+    T = MatrixFactory::TransformationMatrix44(0, -_alpha, 0);
   else
-    translateXAxis(tf, -_alpha);
-
-  updatePose(tf);
-  delete [] tf;
+    T = MatrixFactory::TransformationMatrix44(-_alpha, 0, 0);
+  updatePose(T);
+  delete T;
 }
 
 void _moveUp(void)
 {
-  double* tf = new double[16];
+  Matrix* T;
   if (_rotationMode)
-    translateZAxis(tf, _alpha);
+    T = MatrixFactory::TranslationMatrix44(0, 0, _alpha);
   else
-    translateYAxis(tf, _alpha);
-  updatePose(tf);
-  delete [] tf;
+    T = MatrixFactory::TranslationMatrix44(0, _alpha, 0);
+  updatePose(T);
+  delete T;
 }
 
 void _moveDown(void)
 {
-  double* tf = new double[16];
+  Matrix* T;
   if (_rotationMode)
-    translateZAxis(tf, -_alpha);
+    T = MatrixFactory::TranslationMatrix44(0, 0, -_alpha);
   else
-    translateYAxis(tf, -_alpha);
-  updatePose(tf);
-  delete [] tf;
+    T = MatrixFactory::TranslationMatrix44(0, -_alpha, 0);
+  updatePose(T);
+  delete T;
 }
 
 void _match(void)

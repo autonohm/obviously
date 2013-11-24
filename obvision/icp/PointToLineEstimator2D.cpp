@@ -2,7 +2,7 @@
 #include <iostream>
 #include "obcore/base/System.h"
 #include "obcore/math/mathbase.h"
-#include "obcore/math/Matrix.h"
+#include "obcore/math/linalg/linalg.h"
 
 using namespace std;
 using namespace obvious;

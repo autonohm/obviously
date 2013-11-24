@@ -1,7 +1,7 @@
 #ifndef GEOMETRY_H_
 #define GEOMETRY_H_
 #include "obcore/base/CartesianCloud.h"
-#include <obcore/math/Matrix.h>
+#include "obcore/math/linalg/linalg.h"
 
 namespace obvious
 {

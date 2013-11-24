@@ -1,7 +1,7 @@
 #ifndef SENSOR_H_
 #define SENSOR_H_
 
-#include "obcore/math/Matrix.h"
+#include "obcore/math/linalg/linalg.h"
 #include <vector>
 
 namespace obvious

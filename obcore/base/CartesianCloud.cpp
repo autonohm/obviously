@@ -2,7 +2,6 @@
 
 #include <string.h>
 #include <obcore/math/mathbase.h>
-#include <obcore/math/VectorView.h>
 
 namespace obvious
 {

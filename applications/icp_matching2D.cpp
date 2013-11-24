@@ -7,7 +7,7 @@
 #include <string.h>
 #include <iostream>
 
-#include "obcore/math/MatrixFactory.h"
+#include "obcore/math/linalg/linalg.h"
 #include "obvision/icp/icp_def.h"
 
 using namespace std;

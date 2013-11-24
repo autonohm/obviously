@@ -2,7 +2,7 @@
 #define RAYCAST3D_H
 
 #include <vector>
-#include "obcore/math/Matrix.h"
+#include "obcore/math/linalg/linalg.h"
 #include "TsdSpace.h"
 
 namespace obvious

@@ -1,7 +1,6 @@
 #ifndef SENSOR_H
 #define SENSOR_H
 
-#include "obcore/math/Matrix.h"
 #include "obcore/base/Logger.h"
 #include "Sensor.h"
 #include <string.h>

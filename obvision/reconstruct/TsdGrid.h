@@ -1,7 +1,7 @@
 #ifndef TSDGRID_H
 #define TSDGRID_H
 
-#include "obcore/math/Matrix.h"
+#include "obcore/math/linalg/linalg.h"
 #include "obvision/reconstruct/SensorPolar2D.h"
 
 namespace obvious

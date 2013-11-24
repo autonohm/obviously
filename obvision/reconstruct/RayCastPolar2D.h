@@ -2,7 +2,7 @@
 #define RAYCASTPOLAR2D_H
 
 #include <vector>
-#include "obcore/math/Matrix.h"
+#include "obcore/math/linalg/linalg.h"
 #include "obvision/reconstruct/TsdGrid.h"
 #include "obvision/reconstruct/SensorPolar2D.h"
 
