@@ -23,6 +23,7 @@ add_library(obcore
 	base/Timer.cpp
 	base/Logger.cpp
 	base/tools.cpp
+        base/PointCloud.cpp
 	math/geometry.cpp
 	math/linalg/gsl/Matrix.cpp
 	math/linalg/gsl/MatrixFactory.cpp
