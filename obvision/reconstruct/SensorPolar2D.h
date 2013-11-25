@@ -62,8 +62,6 @@ public:
   double phiMin(void);
 private:
 
-  int phi2Index(double phi);
-
   double _angularRes;
 
   double _phiMin;

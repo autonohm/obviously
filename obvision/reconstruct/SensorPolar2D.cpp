@@ -26,7 +26,7 @@ SensorPolar2D::SensorPolar2D(unsigned int size, double angularRes, double phiMin
   _phiLowerBound = -0.5*_angularRes + _phiMin;
 
   // if angle is too large, it might be projected with modulo 2 PI to a valid index
-  _phiUpperBound = 2.0*M_PI + _phiLowerBound;
+  _phiUpperBound = _phiMin + ((double)size)*_angularRes;
 
   if(_phiMin>=180.0)
   {
@@ -63,7 +63,10 @@ int SensorPolar2D::backProject(double data[2])
   xh = PoseInv * xh;
 
   double phi = atan2(xh[1][0], xh[0][0]);
-  return phi2Index(phi);
+  // ensure angle to lie in valid bounds
+  if(phi<=_phiLowerBound) return -1;
+  if(phi>=_phiUpperBound) return -1;
+  return round((phi-_phiMin) /_angularRes);
 }
 
 void SensorPolar2D::backProject(Matrix* M, int* indices)
@@ -73,23 +76,16 @@ void SensorPolar2D::backProject(Matrix* M, int* indices)
   PoseInv.invert();
   Matrix coords2D = Matrix::multiply(PoseInv, *M, false, true);
 
-  double* y = coords2D[1];
+  const double angularResInv = 1.0 / _angularRes;
   double* x = coords2D[0];
+  double* y = coords2D[1];
   for(unsigned int i=0; i<M->getRows(); i++)
-    indices[i] = phi2Index(atan2(*(y+i), *(x+i)));
-}
-
-int SensorPolar2D::phi2Index(double phi)
-{
-  // ensure angle to lie in valid bounds
-  if(phi<=_phiLowerBound) return -1;
-  if(phi>=_phiUpperBound) phi -= 2.0*M_PI;
-
-  int index = round((phi-_phiMin) /_angularRes);
-
-  if(index >= (int)_size) index = -1;
-
-  return index;
+  {
+    const double phi = atan2(*(y+i), *(x+i));
+    if(phi<=_phiLowerBound) indices[i] = -1;
+    else if(phi>=_phiUpperBound) indices[i] = -1;
+    else indices[i] = round((phi-_phiMin) * angularResInv);
+  }
 }
 
 double SensorPolar2D::angularRes(void)

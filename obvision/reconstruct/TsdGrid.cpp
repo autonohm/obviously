@@ -262,14 +262,12 @@ void TsdGrid::addTsdfValue(const unsigned int x, const unsigned int y, const dou
   if(sdf >= -_maxTruncation)
   {
     TsdCell* cell = &_grid[y][x];
-    double tsdf = 0.0;
+    double tsdf = sdf;
     if(sdf < 0.0)
     {
-      tsdf = sdf / _maxTruncation;
+      tsdf /= _maxTruncation;
       tsdf = min(tsdf, 1.0);
     }
-    else
-      tsdf = sdf;
 
     cell->weight += 1.0;
 
@@ -279,8 +277,7 @@ void TsdGrid::addTsdfValue(const unsigned int x, const unsigned int y, const dou
     }
     else
     {
-      const double invWeight = 1.0 / cell->weight;
-      cell->tsdf   = (cell->tsdf * (cell->weight - 1.0) + tsdf) * invWeight;
+      cell->tsdf   = (cell->tsdf * (cell->weight - 1.0) + tsdf) / cell->weight;
       cell->weight = min(cell->weight, MAXWEIGHT);
     }
   }
