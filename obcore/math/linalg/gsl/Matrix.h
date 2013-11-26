@@ -225,6 +225,8 @@ public:
 
   static Vector multiply(const Matrix &M, const Vector &V, bool transpose);
 
+  double* getBuffer(void)const{return(_M->data);}
+
 private:
 
 	/**
