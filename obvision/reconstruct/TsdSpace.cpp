@@ -192,7 +192,7 @@ void TsdSpace::push(Sensor* sensor)
     delete [] indices;
   }
 
-  LOGMSG(DBG_DEBUG, "Elapsed push: " << t.getTime() << "ms");
+  //LOGMSG(DBG_DEBUG, "Elapsed push: " << t.getTime() << "ms");
 
 }
 
