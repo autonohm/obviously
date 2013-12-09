@@ -13,7 +13,7 @@ namespace obvious
 
 #define MAXWEIGHT 32.0
 
-TsdGrid::TsdGrid(const unsigned int dimX, const unsigned int dimY, const double cellSize)
+TsdGrid::TsdGrid(const unsigned int dimX, const unsigned int dimY, const double cellSize, const unsigned int dimPartition)
 {
   _partitions.clear();
 
@@ -47,7 +47,6 @@ TsdGrid::TsdGrid(const unsigned int dimX, const unsigned int dimY, const double 
   _minY = 0.0;
   _maxY = ((double)_cellsY + 0.5) * _cellSize;
 
-  unsigned int dimPartition = 100;
   unsigned int partSizeX = _cellsX/dimPartition;
   unsigned int partSizeY = _cellsY/dimPartition;
   for(unsigned int py=0; py<dimPartition; py++)

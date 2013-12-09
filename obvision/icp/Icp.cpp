@@ -98,7 +98,7 @@ void Icp::setModel(Matrix* coords, Matrix* normals)
 
   for(unsigned int i=0; i<size; i++)
   {
-    for(unsigned int j=0; j<_dim; j++)
+    for(unsigned int j=0; j<(unsigned int)_dim; j++)
       _model[i][j] = (*coords)(i,j);
   }
 
@@ -107,7 +107,7 @@ void Icp::setModel(Matrix* coords, Matrix* normals)
     checkMemory(size, _dim, sizeNormals, _normalsM);
     for(unsigned int i=0; i<size; i++)
     {
-      for(unsigned int j=0; j<_dim; j++)
+      for(unsigned int j=0; j<(unsigned int)_dim; j++)
         _normalsM[i][j] = (*normals)(i,j);
     }
   }
@@ -156,7 +156,7 @@ void Icp::setScene(Matrix* coords, Matrix* normals)
   checkMemory(_sizeScene, _dim, _sizeSceneBuf, _scene);
   for(unsigned int i=0; i<_sizeScene; i++)
   {
-    for(unsigned int j=0; j<_dim; j++)
+    for(unsigned int j=0; j<(unsigned int)_dim; j++)
       _scene[i][j] = (*coords)(i,j);
   }
 
@@ -166,7 +166,7 @@ void Icp::setScene(Matrix* coords, Matrix* normals)
 
     for(unsigned int i=0; i<_sizeScene; i++)
     {
-      for(unsigned int j=0; j<_dim; j++)
+      for(unsigned int j=0; j<(unsigned int)_dim; j++)
         _normalsS[i][j] = (*normals)(i,j);
     }
   }

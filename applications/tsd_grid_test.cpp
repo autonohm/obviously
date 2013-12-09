@@ -23,8 +23,9 @@ int main(void)
   double dimX = 24.0;
   double dimY = 24.0;
   double cellSize = 0.01;
+  unsigned int dimPartition = 100;
 
-  TsdGrid* grid = new TsdGrid(dimX, dimY, cellSize);
+  TsdGrid* grid = new TsdGrid(dimX, dimY, cellSize, dimPartition);
   grid->setMaxTruncation(6.0*cellSize);
 
 
@@ -97,7 +98,7 @@ int main(void)
   grid->grid2ColorImage(image);
   for(unsigned int i=0; i<cnt; i+=2)
   {
-    if(i%100==0) cout << " x: " << coords[i] << " y: " << coords[i+1] << " d:" << sqrt(coords[i]*coords[i] + coords[i+1]*coords[i+1]) << endl;
+    //if(i%100==0) cout << " x: " << coords[i] << " y: " << coords[i+1] << " d:" << sqrt(coords[i]*coords[i] + coords[i+1]*coords[i+1]) << endl;
     int x = round(((double)(coords[i] + tx)) / cellSize);
     int y = h-round(((double)(coords[i+1] + ty)) / cellSize);
     unsigned int idx = y*w + x;

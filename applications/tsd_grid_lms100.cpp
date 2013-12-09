@@ -53,6 +53,7 @@ int main(int argc, char* argv[])
   const double dimX = 36.0;
   const double dimY = 36.0;
   const double cellSize = 0.06;
+  const unsigned int dimPartition = 100;
 
   // choose estimator type
   enum Est{PTP, PTL};
@@ -62,7 +63,7 @@ int main(int argc, char* argv[])
   else
     _estType = PTP;
 
-  _grid = new TsdGrid(dimX, dimY, cellSize);
+  _grid = new TsdGrid(dimX, dimY, cellSize, dimPartition);
   _grid->setMaxTruncation(4.0*cellSize);
 
 

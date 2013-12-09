@@ -34,8 +34,9 @@ public:
    * @param[in] dimX Number of cells in x-dimension
    * @param[in] dimY Number of cells in y-dimension
    * @param[in] cellSize Size of cell in meters
+   * @param[in] number of partitioned per dimension, i.e. in x- and y-direction
    */
-  TsdGrid(const unsigned int dimX, const unsigned int dimY, const double cellSize);
+  TsdGrid(const unsigned int dimX, const unsigned int dimY, const double cellSize, const unsigned int dimPartition);
 
   /**
    * Destructor
