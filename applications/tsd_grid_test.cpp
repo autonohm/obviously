@@ -88,7 +88,7 @@ int main(void)
 
   unsigned int cnt;
   sensor.transform(&T);
-  grid->push(&sensor);
+  grid->pushPartitioned(&sensor);
 
   rayCaster.calcCoordsFromCurrentView(grid, &sensor, coords, normals, &cnt);
   LOGMSG(DBG_DEBUG, "Found " << cnt/2 << " coordinate tuples");
@@ -97,7 +97,7 @@ int main(void)
   grid->grid2ColorImage(image);
   for(unsigned int i=0; i<cnt; i+=2)
   {
-    //if(i%100==0) cout << " x: " << coords[i] << " y: " << coords[i+1] << " d:" << sqrt(coords[i]*coords[i] + coords[i+1]*coords[i+1]) << endl;
+    if(i%100==0) cout << " x: " << coords[i] << " y: " << coords[i+1] << " d:" << sqrt(coords[i]*coords[i] + coords[i+1]*coords[i+1]) << endl;
     int x = round(((double)(coords[i] + tx)) / cellSize);
     int y = h-round(((double)(coords[i+1] + ty)) / cellSize);
     unsigned int idx = y*w + x;
@@ -112,7 +112,7 @@ int main(void)
     usleep(200000);
   }
 
-  serializePGM("/tmp/tsd_grid.pgm", image, w, h, true);
+  serializePPM("/tmp/tsd_grid.pgm", image, w, h, true);
 
   delete [] image;
   delete [] coords;

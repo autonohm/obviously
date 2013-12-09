@@ -53,7 +53,7 @@ namespace obvious
      * Accessor to each point via array indices.
      * @param i point index
      */
-    double* operator [] (unsigned int i);
+    //double* operator [] (unsigned int i);
 
     /**
      * Get access to array of coordinates

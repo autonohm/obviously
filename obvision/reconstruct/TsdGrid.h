@@ -3,6 +3,7 @@
 
 #include "obcore/math/linalg/linalg.h"
 #include "obvision/reconstruct/SensorPolar2D.h"
+#include "TsdGridPartition.h"
 
 namespace obvious
 {
@@ -101,6 +102,8 @@ public:
    */
   void push(SensorPolar2D* sensor);
 
+  void pushPartitioned(SensorPolar2D* sensor);
+
   /**
    * Create grayscale image from tsdf grid
    * @param[out] grayscale image
@@ -147,13 +150,14 @@ public:
    * Method to load values out of a file into the grid
    * @param filename
    */
-  void Load(const char* filename);
+  void load(const char* filename);
 
   /**
    * Method to get direct access to the data
    * @return Pointer to data
    */
-  obvious::TsdCell** getData(void)const;
+  TsdCell** getData() const;
+
 private:
 
   /**
@@ -164,6 +168,8 @@ private:
    * @param[in] weight weighting of current measurement
    */
   void addTsdfValue(const unsigned int x, const unsigned int y, const double sdf, const double weight);
+
+  void addTsdfValueEmptyCell(const unsigned int x, const unsigned int y);
 
   int _cellsX;
 
@@ -191,6 +197,7 @@ private:
 
   double _maxY;
 
+  vector<TsdGridPartition*> _partitions;
 };
 
 }

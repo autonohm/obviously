@@ -173,9 +173,9 @@ int main(int argc, char* argv[])
     Matrix* T = icp->getFinalTransformation();
 
     Matrix* Pose = sensor.getPose();
-    double poseX  = (*Pose)[0][2];
-    double poseY  = (*Pose)[1][2];
-    double curPhi = acos((*Pose)[0][0]);
+    double poseX  = (*Pose)(0,2);
+    double poseY  = (*Pose)(1,2);
+    double curPhi = acos((*Pose)(0,0));
 
     double deltaX   = poseX - lastX;
     double deltaY   = poseY - lastY;

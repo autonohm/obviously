@@ -100,10 +100,9 @@ void NormalsEstimator::estimateNormalsReverseMapping(Matrix* coords, Matrix* P, 
 
   for(unsigned int i=0; i<coords->getRows(); i++)
   {
-    double* point = (*coords)[i];
-    xi[0] = point[0];
-    xi[1] = point[1];
-    xi[2] = point[2];
+    xi[0] = (*coords)(i,0);
+    xi[1] = (*coords)(i,1);
+    xi[2] = (*coords)(i,2);
     Vector ni = Matrix::multiply(*P, xi, false);
     double du = ni[0];
     double dv = ni[1];
@@ -160,12 +159,12 @@ void NormalsEstimator::estimateNormalsReverseMapping(Matrix* coords, Matrix* P, 
 
       if(isValid1)
       {
-        u[0]            = (*coords)[idx_up][0] - (*coords)[idx][0];
-        u[1]            = (*coords)[idx_up][1] - (*coords)[idx][1];
-        u[2]            = (*coords)[idx_up][2] - (*coords)[idx][2];
-        v[0]            = (*coords)[idx][0]    - (*coords)[idx_lt][0];
-        v[1]            = (*coords)[idx][1]    - (*coords)[idx_lt][1];
-        v[2]            = (*coords)[idx][2]    - (*coords)[idx_lt][2];
+        u[0]            = (*coords)(idx_up,0) - (*coords)(idx,0);
+        u[1]            = (*coords)(idx_up,1) - (*coords)(idx,1);
+        u[2]            = (*coords)(idx_up,2) - (*coords)(idx,2);
+        v[0]            = (*coords)(idx,0)    - (*coords)(idx_lt,0);
+        v[1]            = (*coords)(idx,1)    - (*coords)(idx_lt,1);
+        v[2]            = (*coords)(idx,2)    - (*coords)(idx_lt,2);
 
         cross3<double>(cr, u, v);
         norm3<double>(cr);
@@ -174,12 +173,12 @@ void NormalsEstimator::estimateNormalsReverseMapping(Matrix* coords, Matrix* P, 
 
       if(isValid2)
       {
-        u[0]            = (*coords)[idx][0]    - (*coords)[idx_dwn][0];
-        u[1]            = (*coords)[idx][1]    - (*coords)[idx_dwn][1];
-        u[2]            = (*coords)[idx][2]    - (*coords)[idx_dwn][2];
-        v[0]            = (*coords)[idx_rt][0] - (*coords)[idx][0];
-        v[1]            = (*coords)[idx_rt][1] - (*coords)[idx][1];
-        v[2]            = (*coords)[idx_rt][2] - (*coords)[idx][2];
+        u[0]            = (*coords)(idx,0)    - (*coords)(idx_dwn,0);
+        u[1]            = (*coords)(idx,1)    - (*coords)(idx_dwn,1);
+        u[2]            = (*coords)(idx,2)    - (*coords)(idx_dwn,2);
+        v[0]            = (*coords)(idx_rt,0) - (*coords)(idx,0);
+        v[1]            = (*coords)(idx_rt,1) - (*coords)(idx,1);
+        v[2]            = (*coords)(idx_rt,2) - (*coords)(idx,2);
 
         cross3<double>(cr, u, v);
         norm3<double>(cr);
@@ -191,9 +190,9 @@ void NormalsEstimator::estimateNormalsReverseMapping(Matrix* coords, Matrix* P, 
 
       // Normalize
       norm3<double>(n);
-      (*normals)[idx][0] = n[0];
-      (*normals)[idx][1] = n[1];
-      (*normals)[idx][2] = n[2];
+      (*normals)(idx,0) = n[0];
+      (*normals)(idx,1) = n[1];
+      (*normals)(idx,2) = n[2];
     }
   }
 }
@@ -210,7 +209,10 @@ void NormalsEstimator::estimateNormalsFLANN(Matrix* coords, Matrix* normals)
   unsigned int* map = new unsigned int[size];
   for(unsigned int i=0; i<size; i++)
   {
-    double* c = (*coords)[i];
+    double c[3];
+    c[0] = (*coords)(i,0);
+    c[1] = (*coords)(i,1);
+    c[2] = (*coords)(i,2);
     if(distSqr3D<double>(c, origin)>10e-3)
     {
       memcpy(&buf[cnt][0], c, dim*sizeof(double));
@@ -253,14 +255,14 @@ void NormalsEstimator::estimateNormalsFLANN(Matrix* coords, Matrix* normals)
       mean[1] += y;
       mean[2] += z;
 
-      C[0][0] += x*x;
+      C(0,0) += x*x;
 
-      C[1][0] += y*x;
-      C[1][1] += y*y;
+      C(1,0) += y*x;
+      C(1,1) += y*y;
 
-      C[2][0] += z*x;
-      C[2][1] += z*y;
-      C[2][2] += z*z;
+      C(2,0) += z*x;
+      C(2,1) += z*y;
+      C(2,2) += z*z;
     }
 
     mean[0] /= (double)nn;
@@ -271,9 +273,9 @@ void NormalsEstimator::estimateNormalsFLANN(Matrix* coords, Matrix* normals)
     {
       for(int l = 0; l <= k; l++)
       {
-        C[k][l] /= (double)nn;
-        C[k][l] -= mean[k]*mean[l];
-        C[l][k] = C[k][l];
+        C(k,l) /= (double)nn;
+        C(k,l) -= mean[k]*mean[l];
+        C(l,k) = C(k,l);
       }
     }
 
@@ -283,9 +285,9 @@ void NormalsEstimator::estimateNormalsFLANN(Matrix* coords, Matrix* normals)
     C.svd(&U, s, &V);
 
     double normal[3];
-    normal[0] = V[0][2];
-    normal[1] = V[1][2];
-    normal[2] = V[2][2];
+    normal[0] = V(0,2);
+    normal[1] = V(1,2);
+    normal[2] = V(2,2);
     norm3<double>(normal);
 
     // test facing
@@ -299,9 +301,9 @@ void NormalsEstimator::estimateNormalsFLANN(Matrix* coords, Matrix* normals)
       normal[1] = -normal[1];
       normal[2] = -normal[2];
     }
-    (*normals)[map[i]][0] = normal[0];
-    (*normals)[map[i]][1] = normal[1];
-    (*normals)[map[i]][2] = normal[2];
+    (*normals)(map[i],0) = normal[0];
+    (*normals)(map[i],1) = normal[1];
+    (*normals)(map[i],2) = normal[2];
   }
 
   delete index;
@@ -323,7 +325,10 @@ void NormalsEstimator::estimateNormalsANN(Matrix* coords, Matrix* normals)
   unsigned int* map = new unsigned int[size];
   for(unsigned int i=0; i<size; i++)
   {
-    double* c = (*coords)[i];
+    double c[3];
+    c[0] = (*coords)(i,0);
+    c[1] = (*coords)(i,1);
+    c[2] = (*coords)(i,2);
     if(distSqr3D<double>(c, origin)>10e-3)
     {
       memcpy(&buf[cnt][0], c, dim*sizeof(double));
@@ -365,14 +370,14 @@ void NormalsEstimator::estimateNormalsANN(Matrix* coords, Matrix* normals)
       mean[1] += y;
       mean[2] += z;
 
-      C[0][0] += x*x;
+      C(0,0) += x*x;
 
-      C[1][0] += y*x;
-      C[1][1] += y*y;
+      C(1,0) += y*x;
+      C(1,1) += y*y;
 
-      C[2][0] += z*x;
-      C[2][1] += z*y;
-      C[2][2] += z*z;
+      C(2,0) += z*x;
+      C(2,1) += z*y;
+      C(2,2) += z*z;
     }
 
     mean[0] /= (double)nn;
@@ -383,9 +388,9 @@ void NormalsEstimator::estimateNormalsANN(Matrix* coords, Matrix* normals)
     {
       for(int l = 0; l <= k; l++)
       {
-        C[k][l] /= (double)nn;
-        C[k][l] -= mean[k]*mean[l];
-        C[l][k] = C[k][l];
+        C(k,l) /= (double)nn;
+        C(k,l) -= mean[k]*mean[l];
+        C(l,k) = C(k,l);
       }
     }
 
@@ -395,9 +400,9 @@ void NormalsEstimator::estimateNormalsANN(Matrix* coords, Matrix* normals)
     C.svd(&U, s, &V);
 
     double normal[3];
-    normal[0] = V[0][2];
-    normal[1] = V[1][2];
-    normal[2] = V[2][2];
+    normal[0] = V(0,2);
+    normal[1] = V(1,2);
+    normal[2] = V(2,2);
     norm3<double>(normal);
 
     // test facing
@@ -411,9 +416,9 @@ void NormalsEstimator::estimateNormalsANN(Matrix* coords, Matrix* normals)
       normal[1] = -normal[1];
       normal[2] = -normal[2];
     }
-    (*normals)[map[i]][0] = normal[0];
-    (*normals)[map[i]][1] = normal[1];
-    (*normals)[map[i]][2] = normal[2];
+    (*normals)(map[i],0) = normal[0];
+    (*normals)(map[i],1) = normal[1];
+    (*normals)(map[i],2) = normal[2];
   }
 
   delete [] indices;

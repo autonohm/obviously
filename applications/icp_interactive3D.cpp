@@ -13,7 +13,6 @@ using namespace obvious;
 
 void iterateCallback();
 void stepCallback();
-void saveCallback();
 void exportCallback();
 
 VtkCloud* _vmodel                  = NULL;

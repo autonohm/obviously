@@ -287,8 +287,11 @@ void VtkCloud::copyData(Matrix* C, Matrix* N, unsigned char* rgb)
   vtkSmartPointer<vtkUnsignedCharArray> colors = vtkUnsignedCharArray::SafeDownCast(_polyData->GetPointData()->GetScalars());
   for(int i=0; i<points->GetNumberOfPoints(); i++)
   {
-    double* dst = (*C)[i];
+    double dst[3];
     points->GetPoint(i, dst);
+    (*C)(i,0) = dst[0];
+    (*C)(i,1) = dst[1];
+    (*C)(i,2) = dst[2];
     if(colors) colors->GetTupleValue(i, &rgb[3*i]);
   }
 
@@ -296,8 +299,11 @@ void VtkCloud::copyData(Matrix* C, Matrix* N, unsigned char* rgb)
   {
     for(int i=0; i<points->GetNumberOfPoints(); i++)
     {
-      double* dst = (*N)[i];
+      double dst[3];
       normals->GetTuple(i, dst);
+      (*N)(i,0) = dst[0];
+      (*N)(i,1) = dst[1];
+      (*N)(i,2) = dst[2];
     }
   }
   else

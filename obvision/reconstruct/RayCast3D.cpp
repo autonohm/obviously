@@ -45,8 +45,8 @@ void RayCast3D::calcCoordsFromCurrentPose(Sensor* sensor, double* coords, double
     unsigned int size_tmp     = 0;
     Matrix M(4,1);
     Matrix N(4,1);
-    M[3][0] = 1.0;
-    N[3][0] = 0.0; // no translation for normals
+    M(3,0) = 1.0;
+    N(3,0) = 0.0; // no translation for normals
 
 #pragma omp for schedule(dynamic)
     for (unsigned int v = 0; v < height; v++)
@@ -62,19 +62,19 @@ void RayCast3D::calcCoordsFromCurrentPose(Sensor* sensor, double* coords, double
 
         if(rayCastFromSensorPose(ray, c, n, color, &depth, sensor)) // Ray returned with coordinates
         {
-          M[0][0] = c[0];
-          M[1][0] = c[1];
-          M[2][0] = c[2];
-          N[0][0] = n[0];
-          N[1][0] = n[1];
-          N[2][0] = n[2];
+          M(0,0) = c[0];
+          M(1,0) = c[1];
+          M(2,0) = c[2];
+          N(0,0) = n[0];
+          N(1,0) = n[1];
+          N(2,0) = n[2];
           M = Tinv * M;
           N = Tinv * N;
           for (unsigned int i = 0; i < 3; i++)
           {
-            c_tmp[size_tmp]      = M[i][0];
+            c_tmp[size_tmp]      = M(i,0);
             color_tmp[size_tmp]  = color[i];
-            n_tmp[size_tmp++]    = N[i][0];
+            n_tmp[size_tmp++]    = N(i,0);
           }
         }
       }
@@ -108,8 +108,8 @@ bool RayCast3D::calcCoordsFromCurrentPose(Sensor* sensor, double* coords, double
   unsigned int spaceCtr = 0;
   Matrix M(4,1);
   Matrix N(4,1);
-  M[3][0] = 1.0;
-  N[3][0] = 0.0; // no translation for normals  -> no homogenous coordinates???
+  M(3,0) = 1.0;
+  N(3,0) = 0.0; // no translation for normals  -> no homogenous coordinates???
   bool found = false;
   std::vector<double>::const_iterator offIter = offsets.begin();
   //unsigned int offCtr = 0;
@@ -125,9 +125,9 @@ bool RayCast3D::calcCoordsFromCurrentPose(Sensor* sensor, double* coords, double
     offset[2] = *offIter;
     offIter++;
     T.setIdentity();
-    T[0][3] = (-1.0) * offset[0];
-    T[1][3] = (-1.0) * offset[1];
-    T[2][3] = (-1.0) * offset[2];
+    T(0,3) = (-1.0) * offset[0];
+    T(1,3) = (-1.0) * offset[1];
+    T(2,3) = (-1.0) * offset[2];
     sensor->transform(&T);
     sensor->calcRayFromCurrentPose(v, u, ray);
     ray[0] *= _space->getVoxelSize();
@@ -144,12 +144,12 @@ bool RayCast3D::calcCoordsFromCurrentPose(Sensor* sensor, double* coords, double
   }
   if(!found)
     return(false);
-  M[0][0] = coordVar[0];
-  M[1][0] = coordVar[1];
-  M[2][0] = coordVar[2];
-  N[0][0] = normalVar[0];
-  N[1][0] = normalVar[1];
-  N[2][0] = normalVar[2];
+  M(0,0) = coordVar[0];
+  M(1,0) = coordVar[1];
+  M(2,0) = coordVar[2];
+  N(0,0) = normalVar[0];
+  N(1,0) = normalVar[1];
+  N(2,0) = normalVar[2];
   T.invert();
   Tinv.invert();
   M       =  T * M;
@@ -157,9 +157,9 @@ bool RayCast3D::calcCoordsFromCurrentPose(Sensor* sensor, double* coords, double
   N       = Tinv * N;
   for (unsigned int i = 0; i < 3; i++)
   {
-    coords[i]  = M[i][0];
+    coords[i]  = M(i,0);
     rgb[i]     = colorVar[i];
-    normals[i] = N[i][0];
+    normals[i] = N(i,0);
   }
 
   sensor->transform(&T);
@@ -190,8 +190,8 @@ void RayCast3D::calcCoordsFromCurrentPoseMask(Sensor* sensor, double* coords, do
     bool* mask_tmp           = new bool[width*height];
     Matrix M(4,1);
     Matrix N(4,1);
-    M[3][0] = 1.0;
-    N[3][0] = 0.0; // no translation for normals
+    M(3,0) = 1.0;
+    N(3,0) = 0.0; // no translation for normals
     unsigned int cnt_tmp = 0;
 
 #pragma omp for schedule(dynamic)
@@ -209,20 +209,20 @@ void RayCast3D::calcCoordsFromCurrentPoseMask(Sensor* sensor, double* coords, do
 
         if(rayCastFromSensorPose(ray, c, n, color, &depth, sensor)) // Ray returned with coordinates
         {
-          M[0][0] = c[0];
-          M[1][0] = c[1];
-          M[2][0] = c[2];
-          N[0][0] = n[0];
-          N[1][0] = n[1];
-          N[2][0] = n[2];
+          M(0,0) = c[0];
+          M(1,0) = c[1];
+          M(2,0) = c[2];
+          N(0,0) = n[0];
+          N(1,0) = n[1];
+          N(2,0) = n[2];
           M       = Tinv * M;
           N       = Tinv * N;
           mask_tmp[cnt_tmp/3] = true;
           for (unsigned int i = 0; i < 3; i++)
           {
-            c_tmp[cnt_tmp]      = M[i][0];
+            c_tmp[cnt_tmp]      = M(i,0);
             color_tmp[cnt_tmp]  = color[i];
-            n_tmp[cnt_tmp++]    = N[i][0];
+            n_tmp[cnt_tmp++]    = N(i,0);
           }
         }
         else

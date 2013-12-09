@@ -15,6 +15,8 @@ namespace obvious
 
 TsdGrid::TsdGrid(const unsigned int dimX, const unsigned int dimY, const double cellSize)
 {
+  _partitions.clear();
+
   _cellSize = cellSize;
   _invCellSize = 1.0 / _cellSize;
 
@@ -44,6 +46,18 @@ TsdGrid::TsdGrid(const unsigned int dimX, const unsigned int dimY, const double 
   _maxX = ((double)_cellsX + 0.5) * _cellSize;
   _minY = 0.0;
   _maxY = ((double)_cellsY + 0.5) * _cellSize;
+
+  unsigned int dimPartition = 100;
+  unsigned int partSizeX = _cellsX/dimPartition;
+  unsigned int partSizeY = _cellsY/dimPartition;
+  for(unsigned int py=0; py<dimPartition; py++)
+  {
+    for(unsigned int px=0; px<dimPartition; px++)
+    {
+      TsdGridPartition* partition = new TsdGridPartition(px*partSizeX, py*partSizeY, partSizeX, partSizeY, cellSize);
+      _partitions.push_back(partition);
+    }
+  }
 }
 
 TsdGrid::~TsdGrid(void)
@@ -115,19 +129,19 @@ void TsdGrid::push(SensorPolar2D* sensor)
 #pragma omp parallel
 {
   Matrix cellCoordsHom(_cellsX, 3);
+  double dx = 0.5 * _cellSize;
   for(int x=0; x<_cellsX; x++)
   {
-    cellCoordsHom[x][0] = ((double)x + 0.5) * _cellSize;
-    cellCoordsHom[x][2] = 1.0;
+    cellCoordsHom(x,0) = (dx += _cellSize);
+    cellCoordsHom(x,2) = 1.0;
   }
 
 #pragma omp for schedule(dynamic)
   for(int y=0; y<_cellsY; y++)
   {
     int idx[_cellsX];
-    const double ycoord = ((double)y + 0.5) * _cellSize;
     for(int x=0; x<_cellsX; x++)
-      cellCoordsHom[x][1] = ycoord;
+      cellCoordsHom(x,1) = ((double)y + 0.5) * _cellSize;
     sensor->backProject(&cellCoordsHom, idx);
 
     for(int x=0; x<_cellsX; x++)
@@ -140,7 +154,10 @@ void TsdGrid::push(SensorPolar2D* sensor)
         if(mask[index])
         {
           // calculate distance of current cell to sensor
-          double distance = euklideanDistance<double>(tr, cellCoordsHom[x], 2);
+          double crd[2];
+          crd[0] = cellCoordsHom(x,0);
+          crd[1] = cellCoordsHom(x,1);
+          double distance = euklideanDistance<double>(tr, crd, 2);
           double sdf = data[index] - distance;
           double weight = 1.0;
           if(accuracy) weight = accuracy[index];
@@ -150,6 +167,107 @@ void TsdGrid::push(SensorPolar2D* sensor)
     }
   }
 }
+
+  LOGMSG(DBG_DEBUG, "Elapsed push: " << t.getTime() << "ms");
+}
+
+void TsdGrid::pushPartitioned(SensorPolar2D* sensor)
+{
+  Timer t;
+  double* data = sensor->getRealMeasurementData();
+  bool*   mask = sensor->getRealMeasurementMask();
+  double* accuracy = sensor->getRealMeasurementAccuracy();
+
+  double tr[2];
+  sensor->getPosition(tr);
+
+#pragma omp parallel
+  {
+  unsigned int partSize = _partitions[0]->getSize();
+  int* idx = new int[partSize];
+#pragma omp for schedule(dynamic)
+  for(unsigned int i=0; i<_partitions.size(); i++)
+  {
+    TsdGridPartition* part = _partitions[i];
+    Matrix* edgeCoordsHom = part->getEdgeCoordsHom();
+    Matrix* cellCoordsHom = part->getCellCoordsHom();
+    Matrix* gridCoords = part->getGridCoords();
+
+    // Project back edge coordinates of partition
+    int idxEdge[4];
+    sensor->backProject(edgeCoordsHom, idxEdge);
+    sort4(idxEdge);
+
+    // Check whether non of the cells are in the field of view
+    if(idxEdge[3]<0) continue;
+
+    if(idxEdge[0]>0)
+    {
+      double* crd = part->getCentroid();
+      double edge[2];
+      edge[0] = (*edgeCoordsHom)(0,0);
+      edge[1] = (*edgeCoordsHom)(0,1);
+
+      // Radius of circumcircle
+      double radius = euklideanDistance<double>(edge, crd, 2);
+
+      // Centroid-to-sensor distance
+      double distance = euklideanDistance<double>(tr, crd, 2);
+
+      double minDist = distance - radius;
+      double maxDist = distance + radius;
+
+      // Check if any cell comes closer than the truncation radius
+      bool isVisible = false;
+      for(int j=idxEdge[0]; j<idxEdge[3]; j++)
+      {
+        double sdf = data[j] - minDist;
+        isVisible = isVisible || (sdf >= -_maxTruncation);
+      }
+      if(!isVisible) continue;
+
+      // Check if all cells are in empty space
+      bool isEmpty = true;
+      for(int j=idxEdge[0]; j<idxEdge[3]; j++)
+      {
+        double sdf = data[j] - maxDist;
+        isEmpty = isEmpty && (sdf > _maxTruncation);
+      }
+
+      if(isEmpty)
+      {
+        for(unsigned int c=0; c<partSize; c++)
+          addTsdfValueEmptyCell((*gridCoords)(c, 0), (*gridCoords)(c, 1));
+        continue;
+      }
+    }
+
+    sensor->backProject(cellCoordsHom, idx);
+
+    for(unsigned int c=0; c<partSize; c++)
+    {
+      // Index of laser beam
+      int index = idx[c];
+
+      if(index>=0)
+      {
+        if(mask[index])
+        {
+          // calculate distance of current cell to sensor
+          double crd[2];
+          crd[0] = (*cellCoordsHom)(c,0);
+          crd[1] = (*cellCoordsHom)(c,1);
+          double distance = euklideanDistance<double>(tr, crd, 2);
+          double sdf = data[index] - distance;
+          double weight = 1.0;
+          if(accuracy) weight = accuracy[index];
+          addTsdfValue((*gridCoords)(c, 0), (*gridCoords)(c, 1), sdf, weight);
+        }
+      }
+    }
+  }
+  delete [] idx;
+  }
 
   LOGMSG(DBG_DEBUG, "Elapsed push: " << t.getTime() << "ms");
 }
@@ -258,16 +376,13 @@ bool TsdGrid::interpolateBilinear(double coord[2], double* tsdf)
 
 void TsdGrid::addTsdfValue(const unsigned int x, const unsigned int y, const double sdf, const double weight)
 {
-  // Determine whether sdf/max_truncation = ]-1;1[
   if(sdf >= -_maxTruncation)
   {
     TsdCell* cell = &_grid[y][x];
+
     double tsdf = sdf;
-    if(sdf < 0.0)
-    {
-      tsdf /= _maxTruncation;
-      tsdf = min(tsdf, 1.0);
-    }
+    tsdf /= _maxTruncation;
+    tsdf = min(tsdf, 1.0);
 
     cell->weight += 1.0;
 
@@ -277,9 +392,25 @@ void TsdGrid::addTsdfValue(const unsigned int x, const unsigned int y, const dou
     }
     else
     {
-      cell->tsdf   = (cell->tsdf * (cell->weight - 1.0) + tsdf) / cell->weight;
       cell->weight = min(cell->weight, MAXWEIGHT);
+      cell->tsdf   = (cell->tsdf * (cell->weight - 1.0) + tsdf) / cell->weight;
     }
+  }
+}
+
+void TsdGrid::addTsdfValueEmptyCell(const unsigned int x, const unsigned int y)
+{
+  TsdCell* cell = &_grid[y][x];
+  cell->weight += 1.0;
+
+  if(isnan(cell->tsdf))
+  {
+    cell->tsdf = 1.0;
+  }
+  else
+  {
+    cell->weight = min(cell->weight, MAXWEIGHT);
+    cell->tsdf   = (cell->tsdf * (cell->weight - 1.0) + 1.0) / cell->weight;
   }
 }
 
@@ -336,7 +467,7 @@ void TsdGrid::serialize(const char* filename)
   f.close();
 }
 
-void TsdGrid::Load(const char* filename)
+void TsdGrid::load(const char* filename)
 {
   char line[256];
   double weight, tsdf;
@@ -362,7 +493,8 @@ void TsdGrid::Load(const char* filename)
 
   f.close();
 }
-obvious::TsdCell** TsdGrid::getData(void)const
+
+TsdCell** TsdGrid::getData() const
 {
   return(_grid);
 }

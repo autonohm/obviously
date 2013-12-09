@@ -52,6 +52,31 @@ namespace obvious {
     return ( (a <= b) ? a : b );
   }
 
+  template <class T>
+  void sort2( T* v )
+  {
+      if ( v[0] > v[1] )
+          swap( v[0], v[1] );
+  }
+
+  template <class T>
+  void sort3( T* v )
+  {
+      if ( v[0] > v[1] )  swap( v[0], v[1] );
+      if ( v[0] > v[2] )  swap( v[0], v[2] );
+      if ( v[1] > v[2] )  swap( v[1], v[2] );
+  }
+
+  template <class T>
+  void sort4( T* v )
+  {
+      if ( v[0] > v[1] )  swap( v[0], v[1] );
+      if ( v[0] > v[2] )  swap( v[0], v[2] );
+      if ( v[0] > v[3] )  swap( v[0], v[3] );
+      sort3( &v[1] );
+  }
+
+
   /**
    * @function abs2D
    * @brief template function calculating length of 2D vector

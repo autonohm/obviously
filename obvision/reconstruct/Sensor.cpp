@@ -48,10 +48,10 @@ void Sensor::transform(Matrix* T)
 
 void Sensor::translate(double* tr)
 {
-  (*_Pose)[0][_dim] += tr[0];
-  (*_Pose)[1][_dim] += tr[1];
+  (*_Pose)(0,_dim) += tr[0];
+  (*_Pose)(1,_dim) += tr[1];
   if(_dim==3)
-    (*_Pose)[2][_dim] += tr[2];
+    (*_Pose)(2,_dim) += tr[2];
 }
 
 void Sensor::setPose(Matrix* T)
@@ -66,10 +66,10 @@ Matrix* Sensor::getPose()
 
 void Sensor::getPosition(double* tr)
 {
-  tr[0] = (*_Pose)[0][_dim];
-  tr[1] = (*_Pose)[1][_dim];
+  tr[0] = (*_Pose)(0,_dim);
+  tr[1] = (*_Pose)(1,_dim);
   if(_dim==3)
-    tr[2] = (*_Pose)[2][_dim];
+    tr[2] = (*_Pose)(2,_dim);
 }
 
 unsigned int Sensor::getRealMeasurementSize()

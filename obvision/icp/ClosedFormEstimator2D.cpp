@@ -103,15 +103,15 @@ void ClosedFormEstimator2D::estimateTransformation(Matrix* T)
 
   // fill result matrix
   T->setIdentity();
-  (*T)[0][0] = dCosDeltaTheta;
-  (*T)[0][1] = -dSinDeltaTheta;
-  (*T)[0][3] = dDeltaX;
+  (*T)(0,0) = dCosDeltaTheta;
+  (*T)(0,1) = -dSinDeltaTheta;
+  (*T)(0,3) = dDeltaX;
 
-  (*T)[1][0] = dSinDeltaTheta;
-  (*T)[1][1] = dCosDeltaTheta;
-  (*T)[1][3] = dDeltaY;
+  (*T)(1,0) = dSinDeltaTheta;
+  (*T)(1,1) = dCosDeltaTheta;
+  (*T)(1,3) = dDeltaY;
 
-  (*T)[2][3] = 0;
+  (*T)(2,3) = 0;
 }
 
 }

@@ -42,11 +42,11 @@ void SensorProjective3D::init(unsigned int cols, unsigned int rows, double PData
 
       // Normalize ray to 1.0
       Matrix* M = _rays[col][row];
-      double len = sqrt((*M)[0][0]*(*M)[0][0] + (*M)[1][0]*(*M)[1][0] + (*M)[2][0]*(*M)[2][0]);
-      (*M)[0][0] /= len;
-      (*M)[1][0] /= len;
-      (*M)[2][0] /= len;
-      (*M)[3][0] = 0.0;
+      double len = sqrt((*M)(0,0)*(*M)(0,0) + (*M)(1,0)*(*M)(1,0) + (*M)(2,0)*(*M)(2,0));
+      (*M)(0,0) /= len;
+      (*M)(1,0) /= len;
+      (*M)(2,0) /= len;
+      (*M)(3,0) = 0.0;
     }
 }
 
@@ -71,27 +71,27 @@ void SensorProjective3D::calcRayFromCurrentPose(const unsigned int row, const un
   r = *_rays[col][row];
   r = *T * r;
 
-  ray[0] = r[0][0];
-  ray[1] = r[1][0];
-  ray[2] = r[2][0];
+  ray[0] = r(0,0);
+  ray[1] = r(1,0);
+  ray[2] = r(2,0);
 }
 
 void SensorProjective3D::project2Space(const unsigned int col, const unsigned int row, const double depth, Matrix* coord)
 {
-  double fx = (*_P)[0][0];
-  double fy = (*_P)[1][1];
-  double tx = (*_P)[0][2];
-  double ty = (*_P)[1][2];
+  double fx = (*_P)(0,0);
+  double fy = (*_P)(1,1);
+  double tx = (*_P)(0,2);
+  double ty = (*_P)(1,2);
 
   double x = (depth/fx)*(col-tx);
   double y = (depth/fy)*(row-ty);
   //double lambda_inv = 1./sqrt(x * x + y * y + 1.);
   //double z = depth * lambda_inv;
 
-  (*coord)[0][0]=x;
-  (*coord)[1][0]=y;
-  (*coord)[2][0]=depth;
-  (*coord)[3][0]=1.0;
+  (*coord)(0,0) = x;
+  (*coord)(1,0) = y;
+  (*coord)(2,0) = depth;
+  (*coord)(3,0) = 1.0;
 }
 
 void SensorProjective3D::backProject(Matrix* M, int* indices)
@@ -105,18 +105,14 @@ void SensorProjective3D::backProject(Matrix* M, int* indices)
   // coords2D = P * Tinv * voxelCoords
   Matrix coords2D = Matrix::multiply(Pgen, *M, false, true);
 
-  const double* du = coords2D[0];
-  const double* dv = coords2D[1];
-  const double* dw = coords2D[2];
-
   for(unsigned int i=0; i<M->getRows(); i++)
   {
     indices[i] = -1;
-    if(dw[i] > 0.0)
+    if(coords2D(2,i) > 0.0)
     {
-      const double inv_dw = 1.0 / dw[i];
-      const unsigned int u = static_cast<unsigned int>(du[i]*inv_dw + 0.5);
-      const unsigned int v = static_cast<unsigned int>(dv[i]*inv_dw + 0.5);
+      const double inv_dw = 1.0 / coords2D(2,i);
+      const unsigned int u = static_cast<unsigned int>(coords2D(0,i)*inv_dw + 0.5);
+      const unsigned int v = static_cast<unsigned int>(coords2D(1,i)*inv_dw + 0.5);
 
       if(u < _width && v < _height && _mask[((_height - 1) - v) * _width + u])
       {
