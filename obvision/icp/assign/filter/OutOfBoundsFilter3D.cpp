@@ -33,8 +33,7 @@ void OutOfBoundsFilter3D::filter(double** scene, unsigned int size, bool* mask)
 
   for(unsigned int i=0; i<size; i++)
   {
-    double* pt = S[i];
-    if(pt[0]<_xMin || pt[0]>_xMax || pt[1]<_yMin || pt[1]>_yMax || pt[2]<_zMin || pt[2]>_zMax)
+    if(S(i,0)<_xMin || S(i,0)>_xMax || S(i,1)<_yMin || S(i,1)>_yMax || S(i,2)<_zMin || S(i,2)>_zMax)
       mask[i] = false;
   }
 }

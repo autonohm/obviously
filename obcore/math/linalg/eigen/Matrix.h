@@ -1,7 +1,8 @@
 #ifndef MATRIX_H__
 #define MATRIX_H__
 
-#include <gsl/gsl_matrix.h>
+#include <eigen3/Eigen/Dense>
+#include <vector>
 
 #include "VectorView.h"
 #include "Vector.h"
@@ -97,7 +98,7 @@ public:
 	 */
 	//double* operator [] (unsigned int i);
 
-  double& operator () (unsigned int row, unsigned int col);
+	double& operator () (unsigned int row, unsigned int col);
 
 	/**
 	 * Multiplication operator
@@ -203,7 +204,7 @@ public:
 	 * @param[in] b b must have elements = number of rows of current matrix
 	 * @param[out] x x must have elements = number of rows of current matrix
 	 */
-	void solve(const double* b, double* x);
+	void solve(double* b, double* x);
 
 	/**
    * Transform current matrix, i.e. with homogeneous transformation
@@ -227,14 +228,12 @@ public:
 
   static Vector multiply(const Matrix &M, const Vector &V, bool transpose);
 
-  double* getBuffer(void)const{return(_M->data);}
-
 private:
 
 	/**
-	 * Internal GSL representation
+	 * Internal matrix representation
 	 */
-	gsl_matrix* _M;
+	Eigen::MatrixXd _M;
 
 };
 

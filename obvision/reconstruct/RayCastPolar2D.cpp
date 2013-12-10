@@ -32,23 +32,23 @@ void RayCastPolar2D::calcCoordsFromCurrentView(TsdGrid* grid, SensorPolar2D* sen
   Matrix* T = sensor->getPose();
   Matrix Ti(3, 3);
   Ti = T->getInverse();
-  M[2][0] = 1.0;
-  N[2][0] = 0.0; // no translation for normals
+  M(2,0) = 1.0;
+  N(2,0) = 0.0; // no translation for normals
 
   for (unsigned int beam = 0; beam < sensor->getRealMeasurementSize(); beam++)
   {
     if (rayCastFromCurrentView(grid, sensor, beam, c, n)) // Ray returned with coordinates
     {
-      M[0][0] = c[0];
-      M[1][0] = c[1];
-      N[0][0] = n[0];
-      N[1][0] = n[1];
+      M(0,0) = c[0];
+      M(1,0) = c[1];
+      N(0,0) = n[0];
+      N(1,0) = n[1];
       M       = Ti * M;
       N       = Ti * N;
       for (unsigned int i = 0; i < 2; i++)
       {
-        coords[*cnt] = M[i][0];
-        normals[(*cnt)++] = N[i][0];
+        coords[*cnt] = M(i,0);
+        normals[(*cnt)++] = N(i,0);
       }
     }
   }

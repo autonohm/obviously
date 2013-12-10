@@ -71,9 +71,14 @@ Matrix& Matrix::operator -= (const Matrix &M)
   return *this;
 }
 
-double* Matrix::operator [] (unsigned int i)
+/*double* Matrix::operator [] (unsigned int i)
 {
   return gsl_matrix_ptr(_M, i, 0);
+}*/
+
+double& Matrix::operator () (unsigned int row, unsigned int col)
+{
+  return *gsl_matrix_ptr(_M, row, col);
 }
 
 Matrix operator * (const Matrix &M1, const Matrix &M2)
@@ -108,10 +113,10 @@ ostream& operator <<(ostream &os, Matrix &M)
   unsigned int cols = M._M->size2;
   for(unsigned int r=0; r<rows; r++)
   {
-    os << M[r][0];
+    os << M(r,0);
     for(unsigned int c=1; c<cols; c++)
     {
-      os << " " << M[r][c];
+      os << " " << M(r,c);
     }
     os << endl;
   }
@@ -419,7 +424,7 @@ void Matrix::print()
   for(size_t r=0; r<_M->size1; r++)
   {
     for(size_t c=0; c<_M->size2; c++)
-      cout << (*this)[r][c] << " ";
+      cout << (*this)(r,c) << " ";
     cout << endl;
   }
 }

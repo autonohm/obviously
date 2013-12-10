@@ -127,9 +127,9 @@ void PointToPlaneEstimator3D::estimateTransformation(Matrix* T)
   Matrix A(6, 6, A_buf);
   double x[6];
   A.solve(b, x);
-  (*T)[0][3] = x[3];
-  (*T)[1][3] = x[4];
-  (*T)[2][3] = x[5];
+  (*T)(0,3) = x[3];
+  (*T)(1,3) = x[4];
+  (*T)(2,3) = x[5];
 
   double cph = cos(x[0]);
   double cth = cos(x[1]);
@@ -138,17 +138,17 @@ void PointToPlaneEstimator3D::estimateTransformation(Matrix* T)
   double sth = sin(x[1]);
   double sps = sin(x[2]);
 
-  (*T)[0][0] = cth*cps;
-  (*T)[0][1] = -cph*sps+sph*sth*cps;
-  (*T)[0][2] = sph*sth+cph*sth*cps;
+  (*T)(0,0) = cth*cps;
+  (*T)(0,1) = -cph*sps+sph*sth*cps;
+  (*T)(0,2) = sph*sth+cph*sth*cps;
 
-  (*T)[1][0] = cth*sps;
-  (*T)[1][1] = cph*cps+sph*sth*sps;
-  (*T)[1][2] = -sph*cps+cph*sth*sps;
+  (*T)(1,0) = cth*sps;
+  (*T)(1,1) = cph*cps+sph*sth*sps;
+  (*T)(1,2) = -sph*cps+cph*sth*sps;
 
-  (*T)[2][0] = -sth;
-  (*T)[2][1] = sph*cth;
-  (*T)[2][2] = cph*cth;
+  (*T)(2,0) = -sth;
+  (*T)(2,1) = sph*cth;
+  (*T)(2,2) = cph*cth;
 }
 
 unsigned int PointToPlaneEstimator3D::getIterations(void)

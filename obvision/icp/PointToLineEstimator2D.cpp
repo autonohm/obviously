@@ -104,9 +104,9 @@ void PointToLine2DEstimator::estimateTransformation(Matrix* T)
     a[y] = 0;
     a[z] = p[x]*n[y] - p[y]*n[x];
 
-    A[0][0] += a[z]*a[z];             A[0][1] += a[z]*n[x];             A[0][2] += a[z]*n[y];
-    A[1][0] += a[z]*n[x];             A[1][1] += n[x]*n[x];             A[1][2] += n[x]*n[y];
-    A[2][0] += a[z]*n[y];             A[2][1] += n[y]*n[x];             A[2][2] += n[y]*n[y];
+    A(0,0) += a[z]*a[z];             A(0,1) += a[z]*n[x];             A(0,2) += a[z]*n[y];
+    A(1,0) += a[z]*n[x];             A(1,1) += n[x]*n[x];             A(1,2) += n[x]*n[y];
+    A(2,0) += a[z]*n[y];             A(2,1) += n[y]*n[x];             A(2,2) += n[y]*n[y];
 
     double pmq[3];
     pmq[x] = p[x]-q[x];
@@ -134,20 +134,20 @@ void PointToLine2DEstimator::estimateTransformation(Matrix* T)
   double sth = sin(theta);
   double sps = sin(psi);
 
-  (*T)[0][0] = cth*cps;
-  (*T)[0][1] = -cph*sps+sph*sth*cps;
-  (*T)[0][2] = sph*sth+cph*sth*cps;
+  (*T)(0,0) = cth*cps;
+  (*T)(0,1) = -cph*sps+sph*sth*cps;
+  (*T)(0,2) = sph*sth+cph*sth*cps;
 
-  (*T)[1][0] = cth*sps;
-  (*T)[1][1] = cph*cps+sph*sth*sps;
-  (*T)[1][2] = -sph*cps+cph*sth*sps;
+  (*T)(1,0) = cth*sps;
+  (*T)(1,1) = cph*cps+sph*sth*sps;
+  (*T)(1,2) = -sph*cps+cph*sth*sps;
 
-  (*T)[2][0] = -sth;
-  (*T)[2][1] = sph*cth;
-  (*T)[2][2] = cph*cth;
+  (*T)(2,0) = -sth;
+  (*T)(2,1) = sph*cth;
+  (*T)(2,2) = cph*cth;
 
-  (*T)[0][3] = x[1];
-  (*T)[1][3] = x[2];
+  (*T)(0,3) = x[1];
+  (*T)(1,3) = x[2];
 }
 
 unsigned int PointToLine2DEstimator::getIterations(void)

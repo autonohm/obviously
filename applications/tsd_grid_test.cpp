@@ -23,8 +23,9 @@ int main(void)
   double dimX = 24.0;
   double dimY = 24.0;
   double cellSize = 0.01;
+  unsigned int dimPartition = 100;
 
-  TsdGrid* grid = new TsdGrid(dimX, dimY, cellSize);
+  TsdGrid* grid = new TsdGrid(dimX, dimY, cellSize, dimPartition);
   grid->setMaxTruncation(6.0*cellSize);
 
 
@@ -88,7 +89,7 @@ int main(void)
 
   unsigned int cnt;
   sensor.transform(&T);
-  grid->push(&sensor);
+  grid->pushPartitioned(&sensor);
 
   rayCaster.calcCoordsFromCurrentView(grid, &sensor, coords, normals, &cnt);
   LOGMSG(DBG_DEBUG, "Found " << cnt/2 << " coordinate tuples");
@@ -112,7 +113,7 @@ int main(void)
     usleep(200000);
   }
 
-  serializePGM("/tmp/tsd_grid.pgm", image, w, h, true);
+  serializePPM("/tmp/tsd_grid.pgm", image, w, h, true);
 
   delete [] image;
   delete [] coords;

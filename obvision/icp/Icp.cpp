@@ -98,8 +98,8 @@ void Icp::setModel(Matrix* coords, Matrix* normals)
 
   for(unsigned int i=0; i<size; i++)
   {
-    double* c = (*coords)[i];
-    memcpy(_model[i], c, _dim*sizeof(double));
+    for(unsigned int j=0; j<(unsigned int)_dim; j++)
+      _model[i][j] = (*coords)(i,j);
   }
 
   if(normals)
@@ -107,8 +107,8 @@ void Icp::setModel(Matrix* coords, Matrix* normals)
     checkMemory(size, _dim, sizeNormals, _normalsM);
     for(unsigned int i=0; i<size; i++)
     {
-      double* c = (*normals)[i];
-      memcpy(_normalsM[i], c, _dim*sizeof(double));
+      for(unsigned int j=0; j<(unsigned int)_dim; j++)
+        _normalsM[i][j] = (*normals)(i,j);
     }
   }
 
@@ -156,8 +156,8 @@ void Icp::setScene(Matrix* coords, Matrix* normals)
   checkMemory(_sizeScene, _dim, _sizeSceneBuf, _scene);
   for(unsigned int i=0; i<_sizeScene; i++)
   {
-    double* c = (*coords)[i];
-    memcpy(_scene[i], c, _dim*sizeof(double));
+    for(unsigned int j=0; j<(unsigned int)_dim; j++)
+      _scene[i][j] = (*coords)(i,j);
   }
 
   if(normals)
@@ -166,8 +166,8 @@ void Icp::setScene(Matrix* coords, Matrix* normals)
 
     for(unsigned int i=0; i<_sizeScene; i++)
     {
-      double* c = (*normals)[i];
-      memcpy(_normalsS[i], c, _dim*sizeof(double));
+      for(unsigned int j=0; j<(unsigned int)_dim; j++)
+        _normalsS[i][j] = (*normals)(i,j);
     }
   }
 
@@ -238,12 +238,12 @@ void Icp::applyTransformation(double** data, unsigned int size, unsigned int dim
   // Apply translation
   VectorView x(data[0], size, dim);
   VectorView y(&(data[0][1]), size, dim);
-  x.addConstant((*T)[0][3]);
-  y.addConstant((*T)[1][3]);
+  x.addConstant((*T)(0,3));
+  y.addConstant((*T)(1,3));
   if(_dim >= 3)
   {
     VectorView z(&(data[0][2]), size, dim);
-    z.addConstant((*T)[2][3]);
+    z.addConstant((*T)(2,3));
   }
 }
 
@@ -343,15 +343,15 @@ Matrix* Icp::getFinalTransformation()
    {
       for(int c=0; c<_dim; c++)
       {
-         (*_Tfinal)[r][c] = (*_Tfinal4x4)[r][c];
+         (*_Tfinal)(r,c) = (*_Tfinal4x4)(r,c);
       }
-      (*_Tfinal)[r][_dim] = (*_Tfinal4x4)[r][3];
+      (*_Tfinal)(r,_dim) = (*_Tfinal4x4)(r,3);
    }
 
    for(int c=0; c<_dim; c++)
-      (*_Tfinal)[_dim][c] = 0;
+      (*_Tfinal)(_dim,c) = 0;
 
-   (*_Tfinal)[_dim][_dim] = 1;
+   (*_Tfinal)(_dim,_dim) = 1;
 
   return _Tfinal;
 }

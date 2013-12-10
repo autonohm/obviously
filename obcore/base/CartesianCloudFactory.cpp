@@ -45,8 +45,7 @@ void serializeAscii(char* filename, CartesianCloud3D* cloud)
 
   for(unsigned int i=0; i<cnt; i++)
   {
-    double* point = (*cloud)[i];
-    file << point[0] << " " << point[1] << " " << point[2] << " ";
+    file << (*(cloud->getCoords()))(i,0) << " " << (*(cloud->getCoords()))(i,1) << " " << (*(cloud->getCoords()))(i,2) << " ";
     if(colors) file << (unsigned int)colors[0] << " " << (unsigned int)colors[1] << " " << (unsigned int)colors[2] << endl;
   }
 
@@ -76,10 +75,9 @@ CartesianCloud3D* loadAscii(char* filename)
   file >> x >> y >> z >> r >> g >> b;
   while (file.good())
   {
-    double* point = (*cloud)[cnt];
-    point[0] = x;
-    point[1] = y;
-    point[2] = z;
+    (*(cloud->getCoords()))(cnt,0) = x;
+    (*(cloud->getCoords()))(cnt,1) = y;
+    (*(cloud->getCoords()))(cnt,2) = z;
     colors[3 * cnt] = r;
     colors[3 * cnt + 1] = g;
     colors[3 * cnt + 2] = b;

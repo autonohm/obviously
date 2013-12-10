@@ -119,7 +119,7 @@ void PointToPointEstimator3D::estimateTransformation(Matrix* T)
       for(i=0; i<(unsigned int)size; i++) {
         val += ps[i][r] * pm[i][c];
       }
-      H[r][c] = val;
+      H(r,c) = val;
     }
   }
 
@@ -138,9 +138,9 @@ void PointToPointEstimator3D::estimateTransformation(Matrix* T)
   Matrix tr(3, 1, _cm);
   tr -= tmp;
 
-  (*T)[0][0] = R[0][0];  (*T)[0][1] = R[0][1];  (*T)[0][2] = R[0][2];  (*T)[0][3] = tr[0][0];
-  (*T)[1][0] = R[1][0];  (*T)[1][1] = R[1][1];  (*T)[1][2] = R[1][2];  (*T)[1][3] = tr[1][0];
-  (*T)[2][0] = R[2][0];  (*T)[2][1] = R[2][1];  (*T)[2][2] = R[2][2];  (*T)[2][3] = tr[2][0];
+  (*T)(0,0) = R(0,0);  (*T)(0,1) = R(0,1);  (*T)(0,2) = R(0,2);  (*T)(0,3) = tr(0,0);
+  (*T)(1,0) = R(1,0);  (*T)(1,1) = R(1,1);  (*T)(1,2) = R(1,2);  (*T)(1,3) = tr(1,0);
+  (*T)(2,0) = R(2,0);  (*T)(2,1) = R(2,1);  (*T)(2,2) = R(2,2);  (*T)(2,3) = tr(2,0);
 
   System<double>::deallocate(pm);
   System<double>::deallocate(ps);

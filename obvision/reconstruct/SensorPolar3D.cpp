@@ -50,14 +50,14 @@ void SensorPolar3D::calcRayFromCurrentPose(unsigned int beam, unsigned int plane
 
   double phi = ((double)plane) / ((double)_width) * M_PI - M_PI;
 
-  Rh[0][0] = cos(phi) * x;
-  Rh[1][0] = sin(phi) * x;
-  Rh[2][0] = z;
-  Rh[3][0] = 0.0;
+  Rh(0,0) = cos(phi) * x;
+  Rh(1,0) = sin(phi) * x;
+  Rh(2,0) = z;
+  Rh(3,0) = 0.0;
   Rh = (*_Pose) * Rh;
-  ray[0] = Rh[0][0];
-  ray[1] = Rh[1][0];
-  ray[2] = Rh[2][0];
+  ray[0] = Rh(0,0);
+  ray[1] = Rh(1,0);
+  ray[2] = Rh(2,0);
 }
 
 void SensorPolar3D::setDistanceMap(vector<float> phi, vector<float> dist)
@@ -108,19 +108,15 @@ void SensorPolar3D::backProject(Matrix* M, int* indices)
 
   Matrix coords3D = Matrix::multiply(PoseInv, *M, false, true);
 
-  const double* x = coords3D[0];
-  const double* y = coords3D[1];
-  const double* z = coords3D[2];
-
   for(unsigned int i=0; i<M->getRows(); i++)
   {
-    double phi = atan2(*(y+i), *(x+i)) - M_PI;
+    double phi = atan2(coords3D(1,i), coords3D(1,0)) - M_PI;
     if(phi>M_PI) phi -= M_PI;
     if(phi<-M_PI) phi += M_PI;
 
-    double r = sqrt(*(x+i) * *(x+i) + *(y+i) * *(y+i) + *(z+i) * *(z+i));
-    double theta = acos(*(z+i) / r);
-    if(*(y+i)>0)
+    double r = sqrt(coords3D(0,i) * coords3D(0,i) + coords3D(1,i) * coords3D(1,i) + coords3D(2,i) * coords3D(2,i));
+    double theta = acos(coords3D(2,i) / r);
+    if(coords3D(1,i)>0)
       theta = -theta;
 
     double t = theta-_thetaMin;

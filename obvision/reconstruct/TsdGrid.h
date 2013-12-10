@@ -3,6 +3,7 @@
 
 #include "obcore/math/linalg/linalg.h"
 #include "obvision/reconstruct/SensorPolar2D.h"
+#include "TsdGridPartition.h"
 
 namespace obvious
 {
@@ -33,8 +34,9 @@ public:
    * @param[in] dimX Number of cells in x-dimension
    * @param[in] dimY Number of cells in y-dimension
    * @param[in] cellSize Size of cell in meters
+   * @param[in] number of partitioned per dimension, i.e. in x- and y-direction
    */
-  TsdGrid(const unsigned int dimX, const unsigned int dimY, const double cellSize);
+  TsdGrid(const unsigned int dimX, const unsigned int dimY, const double cellSize, const unsigned int dimPartition);
 
   /**
    * Destructor
@@ -101,6 +103,8 @@ public:
    */
   void push(SensorPolar2D* sensor);
 
+  void pushPartitioned(SensorPolar2D* sensor);
+
   /**
    * Create grayscale image from tsdf grid
    * @param[out] grayscale image
@@ -147,13 +151,14 @@ public:
    * Method to load values out of a file into the grid
    * @param filename
    */
-  void Load(const char* filename);
+  void load(const char* filename);
 
   /**
    * Method to get direct access to the data
    * @return Pointer to data
    */
-  obvious::TsdCell** getData(void)const;
+  TsdCell** getData() const;
+
 private:
 
   /**
@@ -164,6 +169,8 @@ private:
    * @param[in] weight weighting of current measurement
    */
   void addTsdfValue(const unsigned int x, const unsigned int y, const double sdf, const double weight);
+
+  void addTsdfValueEmptyCell(const unsigned int x, const unsigned int y);
 
   int _cellsX;
 
@@ -191,6 +198,7 @@ private:
 
   double _maxY;
 
+  vector<TsdGridPartition*> _partitions;
 };
 
 }

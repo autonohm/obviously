@@ -20,36 +20,35 @@ void calculatePerspective(Matrix* P, CartesianCloud3D* cloud, int nW, int nH, in
   for (unsigned int i = 0; i < cloud->size(); i += subsample)
   {
     int idx = indices[i];
-    double* point = (*cloud)[i];
     double ik = (double) (idx % nW);
     double jk = (double) (idx / nW);
-    double xk = point[0];
-    double yk = point[1];
-    double zk = point[2];
+    double xk = (*(cloud->getCoords()))(i,0);
+    double yk = (*(cloud->getCoords()))(i,1);
+    double zk = (*(cloud->getCoords()))(i,2);
 
-    (*A)[k][0] = xk;
-    (*A)[k][1] = yk;
-    (*A)[k][2] = zk;
-    (*A)[k][3] = 1.0;
-    (*A)[k][4] = 0.0;
-    (*A)[k][5] = 0.0;
-    (*A)[k][6] = 0.0;
-    (*A)[k][7] = 0.0;
-    (*A)[k][8] = -ik * xk;
-    (*A)[k][9] = -ik * yk;
-    (*A)[k][10] = -ik * zk;
+    (*A)(k,0) = xk;
+    (*A)(k,1) = yk;
+    (*A)(k,2) = zk;
+    (*A)(k,3) = 1.0;
+    (*A)(k,4) = 0.0;
+    (*A)(k,5) = 0.0;
+    (*A)(k,6) = 0.0;
+    (*A)(k,7) = 0.0;
+    (*A)(k,8) = -ik * xk;
+    (*A)(k,9) = -ik * yk;
+    (*A)(k,10) = -ik * zk;
 
-    (*A)[k+1][0] = 0.0;
-    (*A)[k+1][1] = 0.0;
-    (*A)[k+1][2] = 0.0;
-    (*A)[k+1][3] = 0.0;
-    (*A)[k+1][4] = xk;
-    (*A)[k+1][5] = yk;
-    (*A)[k+1][6] = zk;
-    (*A)[k+1][7] = 1.0;
-    (*A)[k+1][8] = -jk * xk;
-    (*A)[k+1][9] = -jk * yk;
-    (*A)[k+1][10] = -jk * zk;
+    (*A)(k+1,0) = 0.0;
+    (*A)(k+1,1) = 0.0;
+    (*A)(k+1,2) = 0.0;
+    (*A)(k+1,3) = 0.0;
+    (*A)(k+1,4) = xk;
+    (*A)(k+1,5) = yk;
+    (*A)(k+1,6) = zk;
+    (*A)(k+1,7) = 1.0;
+    (*A)(k+1,8) = -jk * xk;
+    (*A)(k+1,9) = -jk * yk;
+    (*A)(k+1,10) = -jk * zk;
 
     b[k] = ik;
     b[k+1] = jk;
@@ -61,8 +60,8 @@ void calculatePerspective(Matrix* P, CartesianCloud3D* cloud, int nW, int nH, in
   A->solve(b, x);
 
   for (int i = 0; i < 11; i++)
-    (*P)[i/4][i%4] = x[i];
-  (*P)[2][3] = 1.0;
+    (*P)(i/4,i%4) = x[i];
+  (*P)(2,3) = 1.0;
 }
 
 bool axisAngle(Matrix M, double* axis, double* angle)
@@ -72,12 +71,12 @@ bool axisAngle(Matrix M, double* axis, double* angle)
 
   if((rows != 3 && cols != 3) && (rows != 4 && cols != 4))
   {
-    printf("WARNING Matrix::axisAngle: axis angle representation only valid for 3x3 or 4x4 matrices\n");
+    cout << "WARNING Matrix::axisAngle: axis angle representation only valid for 3x3 or 4x4 matrices" << endl;
     return false;
   }
 
   double trace = M.trace();
-  if(rows==4) trace -= M[3][3];
+  if(rows==4) trace -= M(3,3);
 
   /**
    * Fix for imprecise rotation matrices
@@ -89,9 +88,9 @@ bool axisAngle(Matrix M, double* axis, double* angle)
   *angle = acos((trace - 1.0)/2.0);
 
   double w = 1.0 / (2.0 * sin(*angle));
-  double a1 = w * (M[2][1] - M[1][2]);
-  double a2 = w * (M[0][2] - M[2][0]);
-  double a3 = w * (M[1][0] - M[0][1]);
+  double a1 = w * (M(2,1) - M(1,2));
+  double a2 = w * (M(0,2) - M(2,0));
+  double a3 = w * (M(1,0) - M(0,1));
   axis[0] = a1;
   axis[1] = a2;
   axis[2] = a3;

@@ -24,6 +24,11 @@ add_library(obcore
 	base/Logger.cpp
 	base/tools.cpp
 	math/geometry.cpp
+#	math/linalg/eigen/Matrix.cpp
+#	math/linalg/eigen/MatrixFactory.cpp
+#	math/linalg/eigen/MatrixView.cpp
+#	math/linalg/eigen/Vector.cpp
+#	math/linalg/eigen/VectorView.cpp
 	math/linalg/gsl/Matrix.cpp
 	math/linalg/gsl/MatrixFactory.cpp
 	math/linalg/gsl/MatrixView.cpp
