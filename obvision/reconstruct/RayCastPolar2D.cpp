@@ -91,10 +91,7 @@ bool RayCastPolar2D::rayCastFromCurrentView(TsdGrid* grid, SensorPolar2D* sensor
   if(fabs(ray[1])>10e-6) ymax = ((double)(ray[1] > 0.0 ? (yDim-1)*cellSize : 0) - tr[1]) / ray[1];
   double idxMax = min(xmax, ymax);
 
-  if (idxMin >= idxMax)
-  {
-    return false;
-  }
+  if (idxMin >= idxMax) return false;
 
   double tsdf_prev;
   position[0] = tr[0] + idxMin * ray[0];
@@ -128,7 +125,10 @@ bool RayCastPolar2D::rayCastFromCurrentView(TsdGrid* grid, SensorPolar2D* sensor
     tsdf_prev = tsdf;
   }
 
-  if(!found) return false;
+  if(!found)
+  {
+    return false;
+  }
 
   coordinates[0] = position_prev[0] + ray[0] * interp;
   coordinates[1] = position_prev[1] + ray[1] * interp;

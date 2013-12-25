@@ -42,7 +42,8 @@ void callbackAssignment(double** m, double** s, unsigned int size)
 
 void callbackSerializeTsdGrid()
 {
-  _grid->serialize("/tmp/tsdgrid.dat");
+  //_grid->serialize("/tmp/tsdgrid.dat");
+  cout << "WARNING: re-implement this method" << endl;
 }
 
 int main(int argc, char* argv[])
@@ -71,10 +72,11 @@ int main(int argc, char* argv[])
   // image display is only possible for image dimensions divisible by 4
   const unsigned int w = _grid->getCellsX();
   const unsigned int h = _grid->getCellsY();
-  unsigned char* image = new unsigned char[3*w*h];
   double ratio = double(w)/double(h);
-  double screen_width = 1000;
-  Obvious2D viewer(screen_width, screen_width/ratio, "tsd_grid_lms100");
+  unsigned int screen_width = 1000;
+  unsigned int screen_height = (unsigned int)(((double)screen_width)/ratio);
+  unsigned char* image = new unsigned char[3*screen_width*screen_height];
+  Obvious2D viewer(screen_width, screen_height, "tsd_grid_lms100");
   viewer.registerKeyboardCallback('s', callbackSerializeTsdGrid);
 
   // Translation of sensor
@@ -204,10 +206,10 @@ int main(int argc, char* argv[])
     }
 
     // Visualize data
-    _grid->grid2ColorImage(image);
+    _grid->grid2ColorImage(image, screen_width, screen_height);
     unsigned int mapSize;
     rayCaster.calcCoordsAligned(_grid, map, NULL, &mapSize);
-    for(unsigned int i=0; i<mapSize/2; i++)
+    /*for(unsigned int i=0; i<mapSize/2; i++)
     {
       double x = map[2*i];
       double y = map[2*i+1];
@@ -220,17 +222,9 @@ int main(int argc, char* argv[])
         image[idx+1] = 0;
         image[idx+2] = 0;
       }
-    }
-    double position[2];
-    sensor.getPosition(position);
-    int x, y;
-    double dx, dy;
-    _grid->coord2Cell(position, &x, &y, &dx, &dy);
-    int idx = ((h-y)*w+x);
-    image[3*idx]   = 255;
-    image[3*idx+1] = 0;
-    image[3*idx+2] = 0;
-    viewer.draw(image, w, h, 3, 0, 0);
+    }*/
+
+    viewer.draw(image, screen_width, screen_height, 3, 0, 0);
 
     delete M;
     delete N;

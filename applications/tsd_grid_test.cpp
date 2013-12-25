@@ -20,23 +20,13 @@ int main(void)
   LOGMSG_CONF("tsd_grid_test.log", Logger::file_off|Logger::screen_on, DBG_DEBUG, DBG_DEBUG);
 
   // Initialization of TSD grid
-  double dimX = 24.0;
-  double dimY = 24.0;
+  double dimX = 10.0;
+  double dimY = 10.0;
   double cellSize = 0.01;
-  unsigned int dimPartition = 100;
+  unsigned int partitionSize = 25;
 
-  TsdGrid* grid = new TsdGrid(dimX, dimY, cellSize, dimPartition);
+  TsdGrid* grid = new TsdGrid(dimX, dimY, cellSize, partitionSize);
   grid->setMaxTruncation(6.0*cellSize);
-
-
-  // Initialization of 2D viewer
-  unsigned int w = grid->getCellsX();
-  unsigned int h = grid->getCellsY();
-  unsigned char* image = new unsigned char[3 * w * h];
-  double ratio = double(w)/double(h);
-  double screen_width = 600;
-  Obvious2D viewer(screen_width, screen_width/ratio, "tsd_grid_test");
-
 
   // Translation of sensor
   double tx = dimX/2.0;
@@ -54,7 +44,7 @@ int main(void)
   // Sensor initialization
   int beams = 1081;
   double angularRes = deg2rad(0.25);
-  double minPhi     = deg2rad(-135.0);
+  double minPhi     = deg2rad(-95.0);
 
   SensorPolar2D sensor(beams, angularRes, minPhi);
 
@@ -89,33 +79,46 @@ int main(void)
 
   unsigned int cnt;
   sensor.transform(&T);
-  grid->pushPartitioned(&sensor);
+  grid->push(&sensor);
 
   rayCaster.calcCoordsFromCurrentView(grid, &sensor, coords, normals, &cnt);
   LOGMSG(DBG_DEBUG, "Found " << cnt/2 << " coordinate tuples");
 
 
-  grid->grid2ColorImage(image);
-  for(unsigned int i=0; i<cnt; i+=2)
+  // Initialization of 2D viewer
+  unsigned int w = grid->getCellsX();
+  unsigned int h = grid->getCellsY();
+  double ratio = double(w)/double(h);
+  unsigned screen_width = 600;
+  unsigned screen_height = (unsigned int)(((double)screen_width)/ratio);
+
+  LOGMSG(DBG_DEBUG, "Display map " << screen_width << "x" << screen_height);
+  Obvious2D viewer(screen_width, screen_height, "tsd_grid_test");
+
+  unsigned char* image = new unsigned char[3 * screen_width * screen_height];
+  grid->grid2ColorImage(image, screen_width, screen_height);
+  /*for(unsigned int i=0; i<cnt; i+=2)
   {
-    //if(i%100==0) cout << " x: " << coords[i] << " y: " << coords[i+1] << " d:" << sqrt(coords[i]*coords[i] + coords[i+1]*coords[i+1]) << endl;
-    int x = round(((double)(coords[i] + tx)) / cellSize);
-    int y = h-round(((double)(coords[i+1] + ty)) / cellSize);
+    if(i%100==0) cout << " x: " << coords[i] << " y: " << coords[i+1] << " d:" << sqrt(coords[i]*coords[i] + coords[i+1]*coords[i+1]) << endl;
+    int x = (coords[i] + tx) / grid->getMaxX() * screen_width;
+    int y = (coords[i+1] + ty) / grid->getMaxY() * screen_height;
     unsigned int idx = y*w + x;
-    image[3*idx] = 0;
-    image[3*idx+1] = 0;
-    image[3*idx+2] = 0;
-  }
+    image[3*idx] = 255;
+    image[3*idx+1] = 255;
+    image[3*idx+2] = 255;
+  }*/
+
 
   while(viewer.isAlive())
   {
-    viewer.draw(image, w, h, 3, 0, 0);
+    viewer.draw(image, screen_width, screen_height, 3, 0, 0);
     usleep(200000);
   }
 
-  serializePPM("/tmp/tsd_grid.pgm", image, w, h, true);
+  //serializePPM("/tmp/tsd_grid.pgm", image, w, h, true);
 
   delete [] image;
+
   delete [] coords;
   delete [] normals;
 }

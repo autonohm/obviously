@@ -9,17 +9,6 @@ namespace obvious
 {
 
 /**
- * Cell structure for TsdGrid
- * @param tsdf value of the truncated signed distance function
- * @param weight used to calculate mean of all points in a voxel
- */
-struct TsdCell
-{
-  double tsdf;
-  double weight;
-};
-
-/**
  * @class TsdGrid
  * @brief Grid on the basis of true signed distance functions
  * @author Stefan May, Philipp Koch
@@ -36,12 +25,21 @@ public:
    * @param[in] cellSize Size of cell in meters
    * @param[in] number of partitioned per dimension, i.e. in x- and y-direction
    */
-  TsdGrid(const unsigned int dimX, const unsigned int dimY, const double cellSize, const unsigned int dimPartition);
+  TsdGrid(const unsigned int dimX, const unsigned int dimY, const double cellSize, const unsigned int partitionSize);
 
   /**
    * Destructor
    */
   virtual ~TsdGrid();
+
+  /**
+   * Access truncated signed distance at specific cell. This method does not check validity of indices.
+   * The specific cell might not be instantiated.
+   * @param y y coordinate
+   * @param x x coordinate
+   * @return truncated signed distance
+   */
+  double& operator () (unsigned int y, unsigned int x);
 
   /**
    * Get number of cells in x-dimension
@@ -103,19 +101,11 @@ public:
    */
   void push(SensorPolar2D* sensor);
 
-  void pushPartitioned(SensorPolar2D* sensor);
-
-  /**
-   * Create grayscale image from tsdf grid
-   * @param[out] grayscale image
-   */
-  void grid2GrayscaleImage(unsigned char* image);
-
   /**
    * Create color image from tsdf grid
    * @param[out] color image (3-channel)
    */
-  void grid2ColorImage(unsigned char* image);
+  void grid2ColorImage(unsigned char* image, unsigned int width, unsigned int height);
 
   /**
    * Calculates normal of plain element hit by a ray caster
@@ -139,38 +129,11 @@ public:
    * @param[out] dx x-coordinate of cell-center in metric space
    * @param[out] dy y-coordinate of cell-center in metric space
    */
-  bool coord2Cell(double coord[2], int* x, int* y, double* dx, double* dy);
-
-  /**
-   * Method to store the content of the grid in a file
-   * @param filename
-   */
-  void serialize(const char* filename);
-
-  /**
-   * Method to load values out of a file into the grid
-   * @param filename
-   */
-  void load(const char* filename);
-
-  /**
-   * Method to get direct access to the data
-   * @return Pointer to data
-   */
-  TsdCell** getData() const;
+  bool coord2Cell(double coord[2], int* p, int* x, int* y, double* dx, double* dy);
 
 private:
 
-  /**
-   * Add tsdf value to grid
-   * @param[in] x index in x-dimension
-   * @param[in] y index in y-dimension
-   * @param[in] sdf signed distance function value
-   * @param[in] weight weighting of current measurement
-   */
-  void addTsdfValue(const unsigned int x, const unsigned int y, const double sdf, const double weight);
-
-  void addTsdfValueEmptyCell(const unsigned int x, const unsigned int y);
+  void propagateBorders();
 
   int _cellsX;
 
@@ -181,8 +144,6 @@ private:
   int _dimX;
 
   int _dimY;
-
-  TsdCell** _grid;
 
   double _cellSize;
 
@@ -198,7 +159,13 @@ private:
 
   double _maxY;
 
-  vector<TsdGridPartition*> _partitions;
+  TsdGridPartition*** _partitions;
+
+  int _dimPartition;
+
+  int _partitionsInX;
+
+  int _partitionsInY;
 };
 
 }

@@ -53,6 +53,17 @@ namespace obvious {
   }
 
   template <class T>
+  static inline void minmaxArray(const T* a, const unsigned int size, T* min, T* max)
+  {
+    *min = *max = a[0];
+    for(unsigned int i=1; i<size; i++)
+    {
+      if(*min > a[i]) *min = a[i];
+      else if (*max < a[i]) *max = a[i];
+    }
+  }
+
+  template <class T>
   void sort2( T* v )
   {
       if ( v[0] > v[1] )
