@@ -20,10 +20,10 @@ int main(void)
   LOGMSG_CONF("tsd_grid_test.log", Logger::file_off|Logger::screen_on, DBG_DEBUG, DBG_DEBUG);
 
   // Initialization of TSD grid
-  double dimX = 10.0;
-  double dimY = 10.0;
+  double dimX = 100.0;
+  double dimY = 100.0;
   double cellSize = 0.01;
-  unsigned int partitionSize = 25;
+  unsigned int partitionSize = 20;
 
   TsdGrid* grid = new TsdGrid(dimX, dimY, cellSize, partitionSize);
   grid->setMaxTruncation(6.0*cellSize);
@@ -45,8 +45,9 @@ int main(void)
   int beams = 1081;
   double angularRes = deg2rad(0.25);
   double minPhi     = deg2rad(-95.0);
+  double maxRange   = 30.0;
 
-  SensorPolar2D sensor(beams, angularRes, minPhi);
+  SensorPolar2D sensor(beams, angularRes, minPhi, maxRange);
 
   // Sample data, to be replaced with real measurements
   double* data = new double[beams];
@@ -54,7 +55,7 @@ int main(void)
   for(int i=0; i<beams; i++)
   {
     // circular structure
-    data[i] = std::min(dimX, dimY) / 3.0;
+    data[i] = maxRange / 2.0;
     mask[i] = true;
 
 #if 0
@@ -63,7 +64,7 @@ int main(void)
     if(i>0 && i<beams-1)
     {
       double theta = angularRes*((double)i)+minPhi;
-      data[i] = std::min(dimX, dimY) / 3.0/sin(theta);
+      data[i] = maxRange / 3.0 / sin(theta);
       mask[i] = true;
     }
 #endif

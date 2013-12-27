@@ -20,8 +20,9 @@ public:
    * @param[in] beams number of beams
    * @param[in] angularRes angular resolution, i.e. angle between beams in rad
    * @param[in] phiMin minimum angle from which beams are counted positive counter-clockwisely (rad)
+   * @param[in] maxRange maximum range
    */
-  SensorPolar2D(unsigned int beams, double angularRes, double phiMin);
+  SensorPolar2D(unsigned int beams, double angularRes, double phiMin, double maxRange=NAN);
 
   /**
    * Destructor

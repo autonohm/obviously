@@ -10,7 +10,7 @@
 namespace obvious
 {
 
-SensorPolar3D::SensorPolar3D(unsigned int beams, double thetaRes, double thetaMin, double phiRes) : Sensor(3)
+SensorPolar3D::SensorPolar3D(unsigned int beams, double thetaRes, double thetaMin, double phiRes, double maxRange) : Sensor(3, maxRange)
 {
   _thetaRes = thetaRes;
   _thetaMin = thetaMin;

@@ -8,9 +8,10 @@
 namespace obvious
 {
 
-Sensor::Sensor(unsigned int dim)
+Sensor::Sensor(unsigned int dim, double maxRange)
 {
   _dim = dim;
+  _maxRange = maxRange;
 
   _Pose = new Matrix(_dim+1, _dim+1);
   _Pose->setIdentity();
@@ -39,6 +40,11 @@ unsigned int Sensor::getHeight()
     return 0;
   }
   return _height;
+}
+
+double Sensor::getMaximumRange()
+{
+  return _maxRange;
 }
 
 void Sensor::transform(Matrix* T)

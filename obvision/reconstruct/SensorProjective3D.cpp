@@ -6,12 +6,12 @@
 namespace obvious
 {
 
-SensorProjective3D::SensorProjective3D(unsigned int cols, unsigned int rows, double PData[12]) : Sensor(3)
+SensorProjective3D::SensorProjective3D(unsigned int cols, unsigned int rows, double PData[12], double maxRange) : Sensor(3, maxRange)
 {
   init(cols, rows, PData);
 }
 
-SensorProjective3D::SensorProjective3D(SensorProjective3D* sensor) : Sensor(3)
+SensorProjective3D::SensorProjective3D(SensorProjective3D* sensor) : Sensor(3, sensor->getMaximumRange())
 {
   double PData[12];
   sensor->_P->getData(PData);

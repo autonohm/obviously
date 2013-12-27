@@ -20,8 +20,9 @@ public:
    * @param[in] cols number of image columns
    * @param[in] rows number of image rows
    * @param[in] PData 3x4 projection matrix
+   * @param[in] maxRange maximum range
    */
-  SensorProjective3D(unsigned int cols, unsigned int rows, double PData[12]);
+  SensorProjective3D(unsigned int cols, unsigned int rows, double PData[12], double maxRange=NAN);
 
   /**
    * Copy constructor

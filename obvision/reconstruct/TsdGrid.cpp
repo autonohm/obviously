@@ -137,8 +137,9 @@ double TsdGrid::getMaxTruncation()
 void TsdGrid::push(SensorPolar2D* sensor)
 {
   Timer t;
-  double* data = sensor->getRealMeasurementData();
-  bool*   mask = sensor->getRealMeasurementMask();
+  double* data     = sensor->getRealMeasurementData();
+  bool*   mask     = sensor->getRealMeasurementMask();
+  double  maxRange = sensor->getMaximumRange();
 
   double tr[2];
   sensor->getPosition(tr);
@@ -154,6 +155,16 @@ void TsdGrid::push(SensorPolar2D* sensor)
     Matrix* edgeCoordsHom = part->getEdgeCoordsHom();
     Matrix* partCoords = part->getPartitionCoords();
 
+    double* crd = part->getCentroid();
+
+    // Centroid-to-sensor distance
+    double distance = euklideanDistance<double>(tr, crd, 2);
+
+    if(!isnan(maxRange))
+    {
+      if((distance+_cellSize) > maxRange) continue;
+    }
+
     // Project back edge coordinates of partition
     int idxEdge[4];
     sensor->backProject(edgeCoordsHom, idxEdge);
@@ -167,16 +178,12 @@ void TsdGrid::push(SensorPolar2D* sensor)
 
     minIdx = 0;
 
-    double* crd = part->getCentroid();
     double edge[2];
     edge[0] = (*edgeCoordsHom)(0,0);
     edge[1] = (*edgeCoordsHom)(0,1);
 
     // Radius of circumcircle
     double radius = euklideanDistance<double>(edge, crd, 2);
-
-    // Centroid-to-sensor distance
-    double distance = euklideanDistance<double>(tr, crd, 2);
 
     double minDist = distance - radius;
     double maxDist = distance + radius;

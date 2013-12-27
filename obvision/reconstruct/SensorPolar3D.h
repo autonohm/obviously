@@ -22,7 +22,7 @@ public:
    * @param[in] thetaMin minimum angle from which beams are counted positive counter-clockwisely (rad)
    * @param[in] phiRes angular resolution, i.e. angle between scanning planes in rad
    */
-  SensorPolar3D(unsigned int beams, double thetaRes, double thetaMin, double phiRes=0.25);
+  SensorPolar3D(unsigned int beams, double thetaRes, double thetaMin, double phiRes=0.25, double maxRange=NAN);
 
   /**
    * Destructor

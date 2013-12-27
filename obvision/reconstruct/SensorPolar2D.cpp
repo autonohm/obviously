@@ -8,7 +8,7 @@
 namespace obvious
 {
 
-SensorPolar2D::SensorPolar2D(unsigned int size, double angularRes, double phiMin) : Sensor(2)
+SensorPolar2D::SensorPolar2D(unsigned int size, double angularRes, double phiMin, double maxRange) : Sensor(2, maxRange)
 {
   _Pose = new Matrix(3, 3);
   _Pose->setIdentity();
