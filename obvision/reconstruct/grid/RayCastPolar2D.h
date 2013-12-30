@@ -3,8 +3,8 @@
 
 #include <vector>
 #include "obcore/math/linalg/linalg.h"
-#include "obvision/reconstruct/TsdGrid.h"
-#include "obvision/reconstruct/SensorPolar2D.h"
+#include "obvision/reconstruct/grid/TsdGrid.h"
+#include "obvision/reconstruct/grid/SensorPolar2D.h"
 
 namespace obvious
 {

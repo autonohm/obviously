@@ -8,8 +8,8 @@
 
 #include "obdevice/SickLMS100.h"
 
-#include "obvision/reconstruct/TsdGrid.h"
-#include "obvision/reconstruct/RayCastPolar2D.h"
+#include "obvision/reconstruct/grid/TsdGrid.h"
+#include "obvision/reconstruct/grid/RayCastPolar2D.h"
 #include "obvision/icp/icp_def.h"
 
 #include "obgraphic/Obvious2D.h"
@@ -51,10 +51,7 @@ int main(int argc, char* argv[])
   LOGMSG_CONF("tsd_grid_test.log", Logger::file_off|Logger::screen_off, DBG_DEBUG, DBG_DEBUG);
 
   // Initialization of TSD grid
-  const double dimX = 36.0;
-  const double dimY = 36.0;
   const double cellSize = 0.06;
-  const unsigned int dimPartition = 100;
 
   // choose estimator type
   enum Est{PTP, PTL};
@@ -64,7 +61,7 @@ int main(int argc, char* argv[])
   else
     _estType = PTP;
 
-  _grid = new TsdGrid(dimX, dimY, cellSize, dimPartition);
+  _grid = new TsdGrid(cellSize, LAYOUT_64x64, LAYOUT_512x512);
   _grid->setMaxTruncation(4.0*cellSize);
 
 
@@ -80,8 +77,8 @@ int main(int argc, char* argv[])
   viewer.registerKeyboardCallback('s', callbackSerializeTsdGrid);
 
   // Translation of sensor
-  double tx = dimX/2.0;
-  double ty = dimY/2.0;
+  double tx = _grid->getMaxX()/2.0;
+  double ty = _grid->getMaxY()/2.0;
 
   // Rotation about z-axis of sensor
   double phi = 0.0 * M_PI / 180.0;

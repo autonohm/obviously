@@ -12,9 +12,9 @@
 #include "obcore/base/Logger.h"
 #include "obcore/math/mathbase.h"
 
-#include "obvision/reconstruct/SensorProjective3D.h"
-#include "obvision/reconstruct/SensorPolar3D.h"
-#include "obvision/reconstruct/RayCast3D.h"
+#include "obvision/reconstruct/space/SensorProjective3D.h"
+#include "obvision/reconstruct/space/SensorPolar3D.h"
+#include "obvision/reconstruct/space/RayCast3D.h"
 
 using namespace obvious;
 

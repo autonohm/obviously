@@ -2,11 +2,28 @@
 #define TSDGRID_H
 
 #include "obcore/math/linalg/linalg.h"
-#include "obvision/reconstruct/SensorPolar2D.h"
+#include "obvision/reconstruct/grid/SensorPolar2D.h"
 #include "TsdGridPartition.h"
 
 namespace obvious
 {
+
+enum EnumTsdGridLayout { LAYOUT_1x1=0,
+                         LAYOUT_2x2=1,
+                         LAYOUT_4x4=2,
+                         LAYOUT_8x8=3,
+                         LAYOUT_16x16=4,
+                         LAYOUT_32x32=5,
+                         LAYOUT_64x64=6,
+                         LAYOUT_128x128=7,
+                         LAYOUT_256x256=8,
+                         LAYOUT_512x512=9,
+                         LAYOUT_1024x1024=10,
+                         LAYOUT_2048x2048=11,
+                         LAYOUT_4096x4096=12,
+                         LAYOUT_9192x9192=13,
+                         LAYOUT_18384x18384=14,
+                         LAYOUT_36768x36768=15};
 
 /**
  * @class TsdGrid
@@ -20,12 +37,11 @@ public:
   /**
    * Standard constructor
    * Allocates and initializes space and matrices
-   * @param[in] dimX Number of cells in x-dimension
-   * @param[in] dimY Number of cells in y-dimension
    * @param[in] cellSize Size of cell in meters
-   * @param[in] number of partitioned per dimension, i.e. in x- and y-direction
+   * @param[in] layoutPartition Partition layout, i.e., cells in partition
+   * @param[in] layoutGrid Grid layout, i.e., partitions in grid
    */
-  TsdGrid(const unsigned int dimX, const unsigned int dimY, const double cellSize, const unsigned int partitionSize);
+  TsdGrid(const double cellSize, const EnumTsdGridLayout layoutPartition, const EnumTsdGridLayout layoutGrid);
 
   /**
    * Destructor
@@ -72,6 +88,12 @@ public:
   double getMaxX();
 
   /**
+   * Get centroid of grid
+   * @param[out] centroid centroid coordinates
+   */
+  void getCentroid(double centroid[2]);
+
+  /**
    * Get minimum for y-coordinate
    * @return y-coordinate
    */
@@ -100,6 +122,9 @@ public:
    * @param[in] virtual 2D measurement unit
    */
   void push(SensorPolar2D* sensor);
+  void pushTree(SensorPolar2D* sensor);
+
+  void pushRecursion(SensorPolar2D* sensor, double pos[2], TsdGridComponent* comp, vector<TsdGridPartition*> &partitionsToCheck);
 
   /**
    * Create color image from tsdf grid
@@ -135,15 +160,13 @@ private:
 
   void propagateBorders();
 
+  TsdGridComponent* _tree;
+
   int _cellsX;
 
   int _cellsY;
 
   int _sizeOfGrid;
-
-  int _dimX;
-
-  int _dimY;
 
   double _cellSize;
 

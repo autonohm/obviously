@@ -3,6 +3,7 @@
 #include "obcore/base/Timer.h"
 #include "obcore/math/mathbase.h"
 #include "TsdGrid.h"
+#include "TsdGridBranch.h"
 
 #include <cstring>
 #include <cmath>
@@ -13,32 +14,32 @@ namespace obvious
 
 #define MAXWEIGHT 32.0
 
-TsdGrid::TsdGrid(const unsigned int dimX, const unsigned int dimY, const double cellSize, const unsigned int partitionSize)
+TsdGrid::TsdGrid(const double cellSize, const EnumTsdGridLayout layoutPartition, const EnumTsdGridLayout layoutGrid)
 {
   _cellSize = cellSize;
   _invCellSize = 1.0 / _cellSize;
 
-  _cellsX = ((double)dimX * _invCellSize + 0.5);
-  _cellsY = ((double)dimY * _invCellSize + 0.5);
+  _cellsX = (unsigned int)pow(2.0,layoutGrid);
+  _cellsY = _cellsX;
 
-  _dimPartition = partitionSize;
-  _partitionsInX = _cellsX/_dimPartition;
-  _partitionsInY = _cellsY/_dimPartition;
+  _dimPartition = (unsigned int)pow(2.0,layoutPartition);
 
-  if(_partitionsInX*_dimPartition != _cellsX || _partitionsInY*_dimPartition != _cellsY)
+  if(_dimPartition > _cellsX)
   {
     LOGMSG(DBG_ERROR, "Insufficient partition size : " << _dimPartition << "x" << _dimPartition << " in "
-                                                       << _cellsX << "x" << _cellsY << "grid");
+                                                       << _cellsX << "x" << _cellsY << " grid");
     return;
   }
 
+  _partitionsInX = _cellsX/_dimPartition;
+  _partitionsInY = _cellsY/_dimPartition;
+
   _sizeOfGrid = _cellsY * _cellsX;
 
-  _dimX = dimX;
-  _dimY = dimY;
   _maxTruncation = 2*cellSize;
 
-  LOGMSG(DBG_DEBUG, "Grid dimensions are (x/y) (" << _cellsX << "/" << _cellsY << ")");
+  LOGMSG(DBG_DEBUG, "Grid dimensions: " << _cellsX << "x" << _cellsY << " cells" <<
+                    " = " << ((double)_cellsX)*cellSize << "x" << ((double)_cellsY)*cellSize << " sqm");
 
   _minX = 0.0;
   _maxX = ((double)_cellsX + 0.5) * _cellSize;
@@ -55,18 +56,23 @@ TsdGrid::TsdGrid(const unsigned int dimX, const unsigned int dimY, const double 
       _partitions[py][px] = new TsdGridPartition(px*_dimPartition, py*_dimPartition, _dimPartition, _dimPartition, cellSize);
     }
   }
+
+  int depthTree = layoutGrid-layoutPartition;
+  if(depthTree == 0)
+  {
+    _tree = _partitions[0][0];
+  }
+  else
+  {
+    TsdGridBranch* tree = new TsdGridBranch((TsdGridComponent***)_partitions, 0, 0, depthTree);
+    //tree->printEdges();
+    _tree = tree;
+  }
 }
 
 TsdGrid::~TsdGrid(void)
 {
-  for(int py=0; py<_partitionsInY; py++)
-  {
-    for(int px=0; px<_partitionsInX; px++)
-    {
-      delete _partitions[py][px];
-    }
-  }
-
+  delete _tree;
   System<TsdGridPartition>::deallocate(_partitions);
 }
 
@@ -118,6 +124,12 @@ double TsdGrid::getMaxY()
   return _maxY;
 }
 
+void TsdGrid::getCentroid(double centroid[2])
+{
+  centroid[0] = (_minX + _maxX) / 2.0;
+  centroid[1] = (_minY + _maxY) / 2.0;
+}
+
 void TsdGrid::setMaxTruncation(double val)
 {
   if(val < 2 * _cellSize)
@@ -139,7 +151,6 @@ void TsdGrid::push(SensorPolar2D* sensor)
   Timer t;
   double* data     = sensor->getRealMeasurementData();
   bool*   mask     = sensor->getRealMeasurementMask();
-  double  maxRange = sensor->getMaximumRange();
 
   double tr[2];
   sensor->getPosition(tr);
@@ -152,67 +163,11 @@ void TsdGrid::push(SensorPolar2D* sensor)
   for(unsigned int i=0; i<(unsigned int)(_partitionsInX*_partitionsInY); i++)
   {
     TsdGridPartition* part = _partitions[0][i];
-    Matrix* edgeCoordsHom = part->getEdgeCoordsHom();
-    Matrix* partCoords = part->getPartitionCoords();
-
-    double* crd = part->getCentroid();
-
-    // Centroid-to-sensor distance
-    double distance = euklideanDistance<double>(tr, crd, 2);
-
-    if(!isnan(maxRange))
-    {
-      if((distance+_cellSize) > maxRange) continue;
-    }
-
-    // Project back edge coordinates of partition
-    int idxEdge[4];
-    sensor->backProject(edgeCoordsHom, idxEdge);
-
-    int minIdx;
-    int maxIdx;
-    minmaxArray<int>(idxEdge, 4, &minIdx, &maxIdx);
-
-    // Check whether non of the cells are in the field of view
-    if(maxIdx<0) continue;
-
-    minIdx = 0;
-
-    double edge[2];
-    edge[0] = (*edgeCoordsHom)(0,0);
-    edge[1] = (*edgeCoordsHom)(0,1);
-
-    // Radius of circumcircle
-    double radius = euklideanDistance<double>(edge, crd, 2);
-
-    double minDist = distance - radius;
-    double maxDist = distance + radius;
-
-    // Check if any cell comes closer than the truncation radius
-    bool isVisible = false;
-    for(int j=minIdx; j<maxIdx; j++)
-    {
-      double sdf = data[j] - minDist;
-      isVisible = isVisible || (sdf >= -_maxTruncation);
-    }
-    if(!isVisible) continue;
-
-    // Check if all cells are in empty space
-    bool isEmpty = true;
-    for(int j=minIdx; j<maxIdx; j++)
-    {
-      double sdf = data[j] - maxDist;
-      isEmpty = isEmpty && (sdf > _maxTruncation);
-    }
-
-    if(isEmpty)
-    {
-      part->increaseEmptiness();
-      continue;
-    }
+    if(!part->isInRange(tr, sensor, _maxTruncation)) continue;
 
     part->init();
 
+    Matrix* partCoords = part->getPartitionCoords();
     Matrix* cellCoordsHom = part->getCellCoordsHom();
     sensor->backProject(cellCoordsHom, idx);
 
@@ -245,6 +200,79 @@ void TsdGrid::push(SensorPolar2D* sensor)
   LOGMSG(DBG_DEBUG, "Elapsed push: " << t.getTime() << "ms");
 }
 
+void TsdGrid::pushTree(SensorPolar2D* sensor)
+{
+  Timer t;
+  double* data     = sensor->getRealMeasurementData();
+  bool*   mask     = sensor->getRealMeasurementMask();
+
+  double tr[2];
+  sensor->getPosition(tr);
+
+  TsdGridComponent* comp = _tree;
+  vector<TsdGridPartition*> partitionsToCheck;
+  pushRecursion(sensor, tr, comp, partitionsToCheck);
+
+  cout << "Partitions to check: " << partitionsToCheck.size() << endl;
+
+#pragma omp parallel
+  {
+  unsigned int partSize = (_partitions[0][0])->getSize();
+  int* idx = new int[partSize];
+#pragma omp for schedule(dynamic)
+  for(unsigned int i=0; i<partitionsToCheck.size(); i++)
+  {
+    TsdGridPartition* part = partitionsToCheck[i];
+    part->init();
+
+    Matrix* partCoords = part->getPartitionCoords();
+    Matrix* cellCoordsHom = part->getCellCoordsHom();
+    sensor->backProject(cellCoordsHom, idx);
+
+    for(unsigned int c=0; c<partSize; c++)
+    {
+      // Index of laser beam
+      int index = idx[c];
+
+      if(index>=0)
+      {
+        if(mask[index])
+        {
+          // calculate distance of current cell to sensor
+          double crd[2];
+          crd[0] = (*cellCoordsHom)(c,0);
+          crd[1] = (*cellCoordsHom)(c,1);
+          double distance = euklideanDistance<double>(tr, crd, 2);
+          double sdf = data[index] - distance;
+
+          part->addTsd((*partCoords)(c, 0), (*partCoords)(c, 1), sdf, _maxTruncation);
+        }
+      }
+    }
+  }
+  delete [] idx;
+  }
+
+  propagateBorders();
+
+  LOGMSG(DBG_DEBUG, "Elapsed push: " << t.getTime() << "ms");
+}
+
+void TsdGrid::pushRecursion(SensorPolar2D* sensor, double pos[2], TsdGridComponent* comp, vector<TsdGridPartition*> &partitionsToCheck)
+{
+  if(comp->isInRange(pos, sensor, _maxTruncation))
+  {
+    if(comp->isLeaf())
+        partitionsToCheck.push_back((TsdGridPartition*)comp);
+    else
+    {
+      vector<TsdGridComponent*> children = ((TsdGridBranch*)comp)->getChildren();
+      for(unsigned int i=0; i<children.size(); i++)
+        pushRecursion(sensor, pos, children[i], partitionsToCheck);
+    }
+  }
+}
+
 void TsdGrid::propagateBorders()
 {
   unsigned int width  = _partitions[0][0]->getWidth();
@@ -252,88 +280,112 @@ void TsdGrid::propagateBorders()
 
   // Copy valid tsd values of neighbors to borders of each partition.
   // Skip outmost partitions for the moment, they are negligible.
-  for(int py=1; py<_partitionsInY-1; py++)
+  for(int py=0; py<_partitionsInY; py++)
   {
-    for(int px=1; px<_partitionsInX-1; px++)
+    for(int px=0; px<_partitionsInX; px++)
     {
       TsdGridPartition* partCur       = _partitions[py][px];
-      TsdGridPartition* partLeft      = _partitions[py][px-1];
-      TsdGridPartition* partRight     = _partitions[py][px+1];
-      TsdGridPartition* partUp        = _partitions[py+1][px];
-      TsdGridPartition* partDown      = _partitions[py-1][px];
-      TsdGridPartition* partUpLeft    = _partitions[py+1][px-1];
-      TsdGridPartition* partDownLeft  = _partitions[py-1][px-1];
-      TsdGridPartition* partUpRight   = _partitions[py+1][px+1];
-      TsdGridPartition* partDownRight = _partitions[py-1][px+1];
 
       if(!partCur->isInitialized()) continue;
 
-      if(partLeft->isInitialized())
+      if(px>0)
       {
-        // Copy left border
-        for(unsigned int i=1; i<height+1; i++)
+        TsdGridPartition* partLeft      = _partitions[py][px-1];
+        if(partLeft->isInitialized())
         {
-          partCur->_grid[i][0].tsd = partLeft->_grid[i][width].tsd;
-          partCur->_grid[i][0].weight = partLeft->_grid[i][width].weight;
+          // Copy left border
+          for(unsigned int i=1; i<height+1; i++)
+          {
+            partCur->_grid[i][0].tsd = partLeft->_grid[i][width].tsd;
+            partCur->_grid[i][0].weight = partLeft->_grid[i][width].weight;
+          }
         }
       }
 
-      if(partRight->isInitialized())
+      if(px<(_partitionsInX-1))
       {
-        // Copy right border
-        for(unsigned int i=1; i<height+1; i++)
+        TsdGridPartition* partRight     = _partitions[py][px+1];
+        if(partRight->isInitialized())
         {
-          partCur->_grid[i][width+1].tsd = partRight->_grid[i][1].tsd;
-          partCur->_grid[i][width+1].weight = partRight->_grid[i][1].weight;
+          // Copy right border
+          for(unsigned int i=1; i<height+1; i++)
+          {
+            partCur->_grid[i][width+1].tsd = partRight->_grid[i][1].tsd;
+            partCur->_grid[i][width+1].weight = partRight->_grid[i][1].weight;
+          }
         }
       }
 
-      if(partUp->isInitialized())
+      if(py<(_partitionsInY-1))
       {
-        // Copy upper border
-        for(unsigned int i=1; i<width+1; i++)
+        TsdGridPartition* partUp        = _partitions[py+1][px];
+        if(partUp->isInitialized())
         {
-          partCur->_grid[height+1][i].tsd = partUp->_grid[1][i].tsd;
-          partCur->_grid[height+1][i].weight = partUp->_grid[1][i].weight;
+          // Copy upper border
+          for(unsigned int i=1; i<width+1; i++)
+          {
+            partCur->_grid[height+1][i].tsd = partUp->_grid[1][i].tsd;
+            partCur->_grid[height+1][i].weight = partUp->_grid[1][i].weight;
+          }
         }
       }
 
-      if(partDown->isInitialized())
+      if(py>0)
       {
-        // Copy lower border
-        for(unsigned int i=1; i<width+1; i++)
+        TsdGridPartition* partDown      = _partitions[py-1][px];
+        if(partDown->isInitialized())
         {
-          partCur->_grid[0][i].tsd = partDown->_grid[height][i].tsd;
-          partCur->_grid[0][i].weight = partDown->_grid[height][i].weight;
+          // Copy lower border
+          for(unsigned int i=1; i<width+1; i++)
+          {
+            partCur->_grid[0][i].tsd = partDown->_grid[height][i].tsd;
+            partCur->_grid[0][i].weight = partDown->_grid[height][i].weight;
+          }
         }
       }
 
-      if(partUpLeft->isInitialized())
+      if(px>0 && py<(_partitionsInY-1))
       {
-        // Copy upper left corner
-        partCur->_grid[height+1][0].tsd = partUpLeft->_grid[1][width].tsd;
-        partCur->_grid[height+1][0].weight = partUpLeft->_grid[1][width].weight;
+        TsdGridPartition* partUpLeft    = _partitions[py+1][px-1];
+        if(partUpLeft->isInitialized())
+        {
+          // Copy upper left corner
+          partCur->_grid[height+1][0].tsd = partUpLeft->_grid[1][width].tsd;
+          partCur->_grid[height+1][0].weight = partUpLeft->_grid[1][width].weight;
+        }
       }
 
-      if(partDownLeft->isInitialized())
+      if(px>0 && py>0)
       {
-        // Copy lower left corner
-        partCur->_grid[0][0].tsd = partDownLeft->_grid[height][width].tsd;
-        partCur->_grid[0][0].weight = partDownLeft->_grid[height][width].weight;
+        TsdGridPartition* partDownLeft  = _partitions[py-1][px-1];
+        if(partDownLeft->isInitialized())
+        {
+          // Copy lower left corner
+          partCur->_grid[0][0].tsd = partDownLeft->_grid[height][width].tsd;
+          partCur->_grid[0][0].weight = partDownLeft->_grid[height][width].weight;
+        }
       }
 
-      if(partUpRight->isInitialized())
+      if(px<(_partitionsInX-1) && py<(_partitionsInY-1))
       {
-        // Copy upper right corner
-        partCur->_grid[height+1][width+1].tsd = partUpRight->_grid[1][1].tsd;
-        partCur->_grid[height+1][width+1].weight = partUpRight->_grid[1][1].weight;
+        TsdGridPartition* partUpRight   = _partitions[py+1][px+1];
+        if(partUpRight->isInitialized())
+        {
+          // Copy upper right corner
+          partCur->_grid[height+1][width+1].tsd = partUpRight->_grid[1][1].tsd;
+          partCur->_grid[height+1][width+1].weight = partUpRight->_grid[1][1].weight;
+        }
       }
 
-      if(partDownRight->isInitialized())
+      if(py>0 && px<(_partitionsInX-1))
       {
-        // Copy lower right corner
-        partCur->_grid[0][width+1].tsd = partDownRight->_grid[height][1].tsd;
-        partCur->_grid[0][width+1].weight = partDownRight->_grid[height][1].weight;
+        TsdGridPartition* partDownRight = _partitions[py-1][px+1];
+        if(partDownRight->isInitialized())
+        {
+          // Copy lower right corner
+          partCur->_grid[0][width+1].tsd = partDownRight->_grid[height][1].tsd;
+          partCur->_grid[0][width+1].weight = partDownRight->_grid[height][1].weight;
+        }
       }
     }
   }
@@ -341,7 +393,6 @@ void TsdGrid::propagateBorders()
 
 void TsdGrid::grid2ColorImage(unsigned char* image, unsigned int width, unsigned int height)
 {
-  const double MAX_DIST = 10.0;
   unsigned char rgb[3];
 
   double stepW = getMaxX() / (double)width;
@@ -360,22 +411,33 @@ void TsdGrid::grid2ColorImage(unsigned char* image, unsigned int width, unsigned
       int p, x, y;
       double dx, dy;
       double tsd = NAN;
+      bool isEmpty = false;
+
       if(coord2Cell(coord, &p, &x, &y, &dx, &dy))
       {
         if(_partitions[0][p]->isInitialized())
           tsd = _partitions[0][p]->_grid[y][x].tsd;
+
+        isEmpty = _partitions[0][p]->isEmpty();
       }
+
       if(tsd>0.0)
       {
-        rgb[0] = static_cast<unsigned char>(tsd * (255.0 / MAX_DIST));
-        rgb[1] = 255; //max showable distance MAX_DIST m
-        rgb[2] = static_cast<unsigned char>(tsd * (255.0 / MAX_DIST));
+        rgb[0] = static_cast<unsigned char>(tsd * 150.0);
+        rgb[1] = 255;
+        rgb[2] = static_cast<unsigned char>(tsd * 150.0);
       }
-      else if(tsd<0.0 && tsd>-0.999)
+      else if(tsd<0.0)
       {
-        rgb[0] = static_cast<unsigned char>(tsd * (255.0));
+        rgb[0] = static_cast<unsigned char>(tsd * 255.0);
         rgb[1] = 0;
         rgb[2] = 0;
+      }
+      else if(isEmpty)
+      {
+        rgb[0] = 255;
+        rgb[1] = 255;
+        rgb[2] = 255;
       }
       else
       {
@@ -430,6 +492,7 @@ bool TsdGrid::interpolateBilinear(double coord[2], double* tsdf)
   double dy;
 
   if(!coord2Cell(coord, &p, &x, &y, &dx, &dy)) return false;
+  if(!_partitions[0][p]->isInitialized()) return false;
 
   double wx = fabs((coord[0] - dx) / (_cellSize));
   double wy = fabs((coord[1] - dy) / (_cellSize));
@@ -469,8 +532,6 @@ bool TsdGrid::coord2Cell(double coord[2], int* p, int* x, int* y, double* dx, do
     return false;
 
   *p = yIdx / _dimPartition * _partitionsInX + xIdx / _dimPartition;
-  if(!(_partitions[0][*p]->isInitialized())) return false;
-
   *x = xIdx % _dimPartition;
   *y = yIdx % _dimPartition;
 

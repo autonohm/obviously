@@ -7,14 +7,16 @@
 #include <cstring>
 #include <cmath>
 
-#define MAXWEIGHT 32.0
-
 namespace obvious
 {
 
 static Matrix* _partCoords;
 
-TsdGridPartition::TsdGridPartition(const unsigned int x, const unsigned int y, const unsigned int cellsX, const unsigned int cellsY, const double cellSize)
+TsdGridPartition::TsdGridPartition(const unsigned int x,
+                                   const unsigned int y,
+                                   const unsigned int cellsX,
+                                   const unsigned int cellsY,
+                                   const double cellSize) : TsdGridComponent(true)
 {
   _x = x;
   _y = y;
@@ -23,6 +25,7 @@ TsdGridPartition::TsdGridPartition(const unsigned int x, const unsigned int y, c
   _cellCoordsHom = NULL;
 
   _cellSize = cellSize;
+  _componentSize = cellSize * (double)cellsX;
 
   _initWeight = 0.0;
 
@@ -60,6 +63,10 @@ TsdGridPartition::TsdGridPartition(const unsigned int x, const unsigned int y, c
   _centroid[0] = ((*_edgeCoordsHom)(0, 0) + (*_edgeCoordsHom)(1, 0) + (*_edgeCoordsHom)(2, 0) + (*_edgeCoordsHom)(3, 0)) / 4.0;
   _centroid[1] = ((*_edgeCoordsHom)(0, 1) + (*_edgeCoordsHom)(1, 1) + (*_edgeCoordsHom)(2, 1) + (*_edgeCoordsHom)(3, 1)) / 4.0;
 
+  double dx = ((*_edgeCoordsHom)(3, 0)-(*_edgeCoordsHom)(0, 0));
+  double dy = ((*_edgeCoordsHom)(3, 1)-(*_edgeCoordsHom)(0, 1));
+  _circumradius = sqrt(dx*dx + dy*dy) / 2.0;
+
   _cellsX = cellsX;
   _cellsY = cellsY;
 }
@@ -76,15 +83,21 @@ TsdGridPartition::~TsdGridPartition()
   }
 }
 
+double& TsdGridPartition::operator () (unsigned int y, unsigned int x)
+{
+  return _grid[y+1][x+1].tsd;
+}
+
 void TsdGridPartition::init()
 {
   if(_grid) return;
+
   System<TsdCell>::allocate(_cellsY+2, _cellsX+2, _grid);
   for (unsigned int iy = 0; iy < _cellsY+2; iy++)
   {
     for (unsigned int ix = 0; ix < _cellsX+2; ix++)
     {
-      _grid[iy][ix].tsd   = NAN;
+      _grid[iy][ix].tsd    = NAN;
       _grid[iy][ix].weight = _initWeight;
     }
   }
@@ -107,9 +120,9 @@ bool TsdGridPartition::isInitialized()
   return _grid!=NULL;
 }
 
-double& TsdGridPartition::operator () (unsigned int y, unsigned int x)
+bool TsdGridPartition::isEmpty()
 {
-  return _grid[y+1][x+1].tsd;
+  return (_grid==NULL && _initWeight > 0.0);
 }
 
 unsigned int TsdGridPartition::getX()
@@ -122,19 +135,9 @@ unsigned int TsdGridPartition::getY()
   return _y;
 }
 
-double* TsdGridPartition::getCentroid()
-{
-  return _centroid;
-}
-
 Matrix* TsdGridPartition::getCellCoordsHom()
 {
   return _cellCoordsHom;
-}
-
-Matrix* TsdGridPartition::getEdgeCoordsHom()
-{
-  return _edgeCoordsHom;
 }
 
 Matrix* TsdGridPartition::getPartitionCoords()
@@ -175,7 +178,7 @@ void TsdGridPartition::addTsd(const unsigned int x, const unsigned int y, const 
     }
     else
     {
-      cell->weight = min(cell->weight, MAXWEIGHT);
+      cell->weight = min(cell->weight, TSDGRIDMAXWEIGHT);
       cell->tsd   = (cell->tsd * (cell->weight - 1.0) + tsdf) / cell->weight;
     }
   }
@@ -198,7 +201,7 @@ void TsdGridPartition::increaseEmptiness()
         }
         else
         {
-          cell->weight = min(cell->weight, MAXWEIGHT);
+          cell->weight = min(cell->weight, TSDGRIDMAXWEIGHT);
           cell->tsd    = (cell->tsd * (cell->weight - 1.0) + 1.0) / cell->weight;
         }
       }
@@ -207,7 +210,7 @@ void TsdGridPartition::increaseEmptiness()
   else
   {
     _initWeight += 1.0;
-    _initWeight = min(_initWeight, MAXWEIGHT);
+    _initWeight = min(_initWeight, TSDGRIDMAXWEIGHT);
   }
 }
 

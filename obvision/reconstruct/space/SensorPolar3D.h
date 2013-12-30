@@ -1,7 +1,7 @@
 #ifndef SENSOR_POLAR_3D_H
 #define SENSOR_POLAR_3D_H
 
-#include "Sensor.h"
+#include "obvision/reconstruct/Sensor.h"
 
 namespace obvious
 {

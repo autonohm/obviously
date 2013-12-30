@@ -2,7 +2,7 @@
 #define TSDSPACE_H
 
 #include "obcore/math/linalg/linalg.h"
-#include "Sensor.h"
+#include "obvision/reconstruct/Sensor.h"
 
 namespace obvious
 {

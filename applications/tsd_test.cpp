@@ -2,9 +2,9 @@
 #include "obgraphic/Obvious3D.h"
 #include "obcore/base/tools.h"
 #include "obcore/base/System.h"
-#include "obvision/reconstruct/TsdSpace.h"
-#include "obvision/reconstruct/SensorProjective3D.h"
-#include "obvision/reconstruct/RayCast3D.h"
+#include "obvision/reconstruct/space/TsdSpace.h"
+#include "obvision/reconstruct/space/SensorProjective3D.h"
+#include "obvision/reconstruct/space/RayCast3D.h"
 #include "obcore/base/Logger.h"
 
 using namespace std;

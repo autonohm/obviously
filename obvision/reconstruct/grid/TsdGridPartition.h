@@ -2,7 +2,8 @@
 #define TSDGRIDPARTITION_H
 
 #include "obcore/math/linalg/linalg.h"
-#include "obvision/reconstruct/SensorPolar2D.h"
+#include "obvision/reconstruct/grid/SensorPolar2D.h"
+#include "obvision/reconstruct/grid/TsdGridComponent.h"
 
 namespace obvious
 {
@@ -10,7 +11,7 @@ namespace obvious
 /**
  * Cell structure for TsdGrid
  * @param tsd value of the truncated signed distance function
- * @param weight used to calculate mean of all points in a voxel
+ * @param weight used to calculate contribution of pushed samples
  */
 struct TsdCell
 {
@@ -20,10 +21,10 @@ struct TsdCell
 
 /**
  * @class TsdGridPartition
- * @brief Acceleration structur for TsdGrid approach
+ * @brief Acceleration structure for TsdGrid approach
  * @author Stefan May
  */
-class TsdGridPartition
+class TsdGridPartition : public TsdGridComponent
 {
   friend class TsdGrid;
 public:
@@ -42,23 +43,19 @@ public:
 
   ~TsdGridPartition();
 
+  double& operator () (unsigned int y, unsigned int x);
+
   void init();
 
   bool isInitialized();
 
-  double& operator () (unsigned int y, unsigned int x);
-
-  bool isVisible(Sensor* sensor);
+  bool isEmpty();
 
   unsigned int getX();
 
   unsigned int getY();
 
-  double* getCentroid();
-
   Matrix* getCellCoordsHom();
-
-  Matrix* getEdgeCoordsHom();
 
   Matrix* getPartitionCoords();
 
@@ -70,7 +67,7 @@ public:
 
   void addTsd(const unsigned int x, const unsigned int y, const double sdf, const double maxTruncation);
 
-  void increaseEmptiness();
+  virtual void increaseEmptiness();
 
   double interpolateBilinear(int x, int y, double dx, double dy);
 
@@ -78,13 +75,9 @@ private:
 
   TsdCell** _grid;
 
-  Matrix* _cellCoordsHom;
-
-  Matrix* _edgeCoordsHom;
-
   double _cellSize;
 
-  double _initWeight;
+  Matrix* _cellCoordsHom;
 
   unsigned int _cellsX;
 
@@ -94,7 +87,7 @@ private:
 
   unsigned int _y;
 
-  double _centroid[2];
+  double _initWeight;
 };
 
 }

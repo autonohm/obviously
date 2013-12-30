@@ -32,13 +32,15 @@ add_library(obvision
 	normals/NormalsEstimator.cpp
 	mesh/TriangleMesh.cpp
 	reconstruct/Sensor.cpp
-	reconstruct/SensorPolar2D.cpp
-	reconstruct/SensorPolar3D.cpp
-	reconstruct/SensorProjective3D.cpp
-	reconstruct/SensorPolar3D.cpp
-	reconstruct/TsdGrid.cpp
-	reconstruct/TsdGridPartition.cpp
-	reconstruct/TsdSpace.cpp
-    reconstruct/RayCastPolar2D.cpp
-	reconstruct/RayCast3D.cpp
+	reconstruct/grid/SensorPolar2D.cpp
+	reconstruct/grid/TsdGrid.cpp
+	reconstruct/grid/TsdGridComponent.cpp
+	reconstruct/grid/TsdGridPartition.cpp
+	reconstruct/grid/TsdGridBranch.cpp
+	reconstruct/grid/RayCastPolar2D.cpp
+	reconstruct/space/SensorPolar3D.cpp
+	reconstruct/space/SensorProjective3D.cpp
+	reconstruct/space/SensorPolar3D.cpp
+	reconstruct/space/TsdSpace.cpp
+	reconstruct/space/RayCast3D.cpp
 	)

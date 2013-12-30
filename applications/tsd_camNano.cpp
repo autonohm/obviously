@@ -5,11 +5,11 @@
 *
 *
 */
-#include "obvision/reconstruct/SensorProjective3D.h"
-#include "obvision/reconstruct/TsdSpace.h"
+#include "obvision/reconstruct/space/SensorProjective3D.h"
+#include "obvision/reconstruct/space/TsdSpace.h"
 #include "obvision/icp/icp_def.h"
 
-#include "obvision/reconstruct/RayCast3D.h"
+#include "obvision/reconstruct/space/RayCast3D.h"
 #include "obcore/base/Timer.h"
 #include "obcore/base/Logger.h"
 #include "obcore/base/tools.h"
