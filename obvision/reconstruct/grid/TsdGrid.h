@@ -132,6 +132,9 @@ public:
    */
   void grid2ColorImage(unsigned char* image, unsigned int width, unsigned int height);
 
+
+  void getData(std::vector<double>& data);
+
   /**
    * Calculates normal of plain element hit by a ray caster
    * @param[out] coordinates

@@ -452,6 +452,35 @@ void TsdGrid::grid2ColorImage(unsigned char* image, unsigned int width, unsigned
   }
 }
 
+void TsdGrid::getData(std::vector<double>& data)
+{
+  double coordVar[2] = {0.0};
+  int p = 0;
+  int x = 0;
+  int y = 0;
+  double dx = 0.0;
+  double dy = 0.0;
+  double tsd = 0.0;
+  unsigned int stepsx = 0;
+  unsigned int stepsy = 0;
+  for(coordVar[1] = 0.0; coordVar[1] < _maxY; coordVar[1] += _cellSize)
+  {
+    for(coordVar[0] = 0.0; coordVar[0] < _maxX; coordVar[0] += _cellSize)
+    {
+      if(this->coord2Cell(coordVar, &p, &x, &y, &dx, &dy))
+      {
+        if(_partitions[0][p]->isInitialized())
+          tsd = _partitions[0][p]->_grid[y][x].tsd;
+        else
+          tsd = NAN;
+      }
+      else
+        tsd = NAN;
+      data.push_back(tsd);
+    }
+  }
+}
+
 bool TsdGrid::interpolateNormal(const double* coord, double* normal)
 {
   double neighbor[3];
