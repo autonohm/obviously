@@ -193,14 +193,14 @@ void _moveDown(void)
 void _match(void)
 {
   // get model from space
-  RayCast3D raycaster(_space);
+  RayCast3D raycaster;
   unsigned int size;
   double* coords      = new double       [_sensor->getWidth() * _sensor->getHeight() * 3];
   double* normals     = new double       [_sensor->getWidth() * _sensor->getHeight() * 3];
   unsigned char* rgb  = new unsigned char[_sensor->getWidth() * _sensor->getHeight() * 3];
   double P[16];
 
-  raycaster.calcCoordsFromCurrentPose(_sensor, coords, normals, rgb, &size);
+  raycaster.calcCoordsFromCurrentPose(_space, _sensor, coords, normals, rgb, &size);
 
   cout << "Received " << size/3 << " from TSD space" << endl;
   _cloudModel->setCoords(coords,   size/3, 3);
@@ -274,13 +274,13 @@ void _push(void)
   _space->push(_sensor);
 
   // get model from space
-  RayCast3D raycaster(_space);
+  RayCast3D raycaster;
   unsigned int size;
   double* coords      = new double       [_sensor->getWidth() * _sensor->getHeight() * 3];
   double* normals     = new double       [_sensor->getWidth() * _sensor->getHeight() * 3];
   unsigned char* rgb  = new unsigned char[_sensor->getWidth() * _sensor->getHeight() * 3];
 
-  raycaster.calcCoordsFromCurrentPose(_sensor, coords, normals, rgb, &size);
+  raycaster.calcCoordsFromCurrentPose(_space, _sensor, coords, normals, rgb, &size);
 
   _cloudTsd->setCoords( coords,  size/3, 3);
   _cloudTsd->setColors( rgb,     size/3, 3);
@@ -313,11 +313,8 @@ int main(int argc, char* argv[])
   }
   // configuration of space
   ///@todo set up method for tsd configuration with load
-  double height    = 2.0;
-  double width     = 2.0;
-  double depth     = 2.5;
   double voxelSize = 0.02;
-  _space = new TsdSpace(height, width, depth, voxelSize);
+  _space = new TsdSpace(voxelSize, LAYOUT_1x1x1, LAYOUT_256x256x256);
 
   const unsigned int maxIterations = 44;
   const unsigned int subSampling   = 44;
@@ -379,8 +376,8 @@ int main(int argc, char* argv[])
   double*        coords;
   double*        normals;
   unsigned char* rgb;
-  RayCast3D raycaster(_space);
-  raycaster.calcCoordsAxisParallel(&coords, &normals, &rgb, &size);
+  RayCast3D raycaster;
+  raycaster.calcCoordsAxisParallel(_space, &coords, &normals, &rgb, &size);
   std::cout << "Raycast returned: " << size << "points. " << std::endl;
 
   // ICP configuration

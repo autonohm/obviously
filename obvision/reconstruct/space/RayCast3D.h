@@ -27,14 +27,14 @@ public:
   /**
    * Constructor
    */
-	RayCast3D(TsdSpace* space);
+	RayCast3D();
 
   /**
    * Destructor
    */
 	virtual ~RayCast3D();
 
-	virtual void calcCoordsFromCurrentPose(Sensor* sensor, double* coords, double* normals, unsigned char* rgb, unsigned int* size);
+	virtual void calcCoordsFromCurrentPose(TsdSpace* space, Sensor* sensor, double* coords, double* normals, unsigned char* rgb, unsigned int* size);
 	/**
 	 * Overloaded method to cast a single ray trough several spaces. The method returns in case of a found coordinate or at
 	 * the end of the TsdSpace input vector.
@@ -48,35 +48,32 @@ public:
 	 * @param v Row the ray is casted through
 	 * @return True in case of a found point, false otherwise
 	 */
-	virtual bool calcCoordsFromCurrentPose(Sensor* sensor, double* coords, double* normals, unsigned char* rgb, const std::vector<TsdSpace*>& spaces,
+	virtual bool calcCoordsFromCurrentPose(TsdSpace* space, Sensor* sensor, double* coords, double* normals, unsigned char* rgb, const std::vector<TsdSpace*>& spaces,
 											                    const std::vector<double>& offsets, const unsigned int u, const unsigned int v);
 
-	virtual void calcCoordsFromCurrentPoseMask(Sensor* sensor, double* coords, double* normals, unsigned char* rgb, bool* mask, unsigned int* size);
+	virtual void calcCoordsFromCurrentPoseMask(TsdSpace* space, Sensor* sensor, double* coords, double* normals, unsigned char* rgb, bool* mask, unsigned int* size);
 
 
   /**
    * @param size Contains number of coords found
    */
-  virtual bool calcCoordsAxisParallel(double** pointCloud, double** cloudNormals, unsigned char** cloudRgb, unsigned int* size);
+  virtual bool calcCoordsAxisParallel(TsdSpace* space, double** pointCloud, double** cloudNormals, unsigned char** cloudRgb, unsigned int* size);
 
-  void setSpace(TsdSpace* space){_space = space;}
 private:
 
-  bool rayCastFromSensorPose(double ray[3], double coordinates[3], double normal[3], unsigned char rgb[3], double* depth, Sensor* sensor);
+  bool rayCastFromSensorPose(TsdSpace* space, double pos[3], double ray[3], double coordinates[3], double normal[3], unsigned char rgb[3], double* depth);
 
   /**
    *
    */
-	bool rayCastParallelAxis(double* footPoint,double* dirVec,std::vector<double>* pointCloud, std::vector<double>* cloudNormals, std::vector<unsigned char>* cloudRgb,const unsigned int steps);
+	bool rayCastParallelAxis(TsdSpace* space, double* footPoint,double* dirVec,std::vector<double>* pointCloud, std::vector<double>* cloudNormals, std::vector<unsigned char>* cloudRgb,const unsigned int steps);
 
   /**
    *
    */
-	void calcRayParallelAxis(const unsigned int row, const unsigned int col, double* footPoint, double* dirVec, unsigned int* steps, AXSPARMODE mode);
+	void calcRayParallelAxis(TsdSpace* space, const unsigned int row, const unsigned int col, double* footPoint, double* dirVec, unsigned int* steps, AXSPARMODE mode);
 
 protected:
-
-	 TsdSpace* _space;
 
 };
 

@@ -3,33 +3,28 @@
 
 #include "obcore/math/linalg/linalg.h"
 #include "obvision/reconstruct/Sensor.h"
+#include "TsdSpacePartition.h"
 
 namespace obvious
 {
 
-/**
-* Struct for Class Tsd_space
-* Contains data that is saved in a voxel
-* @param tsdf value of the truncated signed distance function
-* @param weight used to calculate mean of all points in a voxel
-*/
-struct TsdVoxel
-{
-  double tsdf;
-  double weight;
-  unsigned char rgb[3];
-};
+enum EnumTsdSpaceLayout { LAYOUT_1x1x1=0,
+                          LAYOUT_2x2x2=1,
+                          LAYOUT_4x4x4=2,
+                          LAYOUT_8x8x8=3,
+                          LAYOUT_16x16x16=4,
+                          LAYOUT_32x32x32=5,
+                          LAYOUT_64x64x64=6,
+                          LAYOUT_128x128x128=7,
+                          LAYOUT_256x256x256=8,
+                          LAYOUT_512x512x512=9,
+                          LAYOUT_1024x1024x1024=10};
 
-/**
-* Struct for Class Tsd_space
-* Contains Cartesian Point Coordinates
-* @param x,y,z Cartesian coords
-*/
-struct Point
-{
-  double x;
-  double y;
-  double z;
+
+enum EnumTsdSpaceInterpolate { INTERPOLATE_SUCCESS=0,
+                               INTERPOLATE_INVALIDINDEX=1,
+                               INTERPOLATE_EMPTYPARTITION=2,
+                               INTERPOLATE_ISNAN=3
 };
 
 /**
@@ -43,14 +38,11 @@ public:
 
  /**
   * Standard constructor
-  * Allocates and initializes space and matrices
-  * @param height,width,depth dimension of the allocated space in meters
-  * @param cols
-  * @param rows
-  * @param voxelDim edge length of the Tsd_voxels
-  * @param P projection matrix
+  * @param[in] voxelSize edge length of voxels in meters
+  * @param[in] layoutPartition Partition layout, i.e., voxels in partition
+  * @param[in] layoutSpace Space layout, i.e., partitions in space
   */
-  TsdSpace(const double height, const double width, const double depth, const double voxelDim);
+  TsdSpace(const double voxelSize, const EnumTsdSpaceLayout layoutPartition, const EnumTsdSpaceLayout layoutSpace);
 
  /**
   * Destructor
@@ -81,6 +73,8 @@ public:
   * Get edge length of voxels
   */
  double getVoxelSize();
+
+ unsigned int getPartitionSize();
 
  /**
   * Get minimum for x-coordinate
@@ -118,7 +112,12 @@ public:
   */
  double getMaxZ();
 
- TsdVoxel*** getSpace(void){return(_space);}
+ /**
+  * Get centroid of space
+  * @param[out] centroid centroid coordinates
+  */
+ void getCentroid(double centroid[3]);
+
  /**
   * Set maximum truncation radius
   * Function to set the max truncation
@@ -133,17 +132,18 @@ public:
  double getMaxTruncation();
 
  /**
-  *
+  * Push sensor data to space
+  * @param[in] sensor abstract sensor instance holding current data
   */
- void push(Sensor* sensor);//double *depthImage, bool* mask, unsigned char* rgbImage);
+ void push(Sensor* sensor);
 
  /**
   * interpolate_trilineary
   * Function to interpolate TSDF trilineary
   * @param coordinates pointer to coordinates of intersection
-  * @param[out] tsdf interpolated TSD value
+  * @param[out] tsd interpolated TSD value
   */
- bool interpolateTrilinear(double coord[3], double* tsdf);
+ EnumTsdSpaceInterpolate interpolateTrilinear(double coord[3], double* tsd);
 
  /**
   *
@@ -152,44 +152,39 @@ public:
 
  /**
   *
-  * Calculates normal to a hit plain element
+  * Calculates normal of crossed surface
   * @param normal Variable to store the components in. Has to be allocated by calling function (3 coordinates)
   */
  bool interpolateNormal(const double* coord, double* normal);
 
- bool buildSliceImage(const unsigned int depthIndex, unsigned char* image);
+ //bool buildSliceImage(const unsigned int depthIndex, unsigned char* image);
  /**
   * Method to store the content of the grid in a file
   * @param filename
   */
- void serialize(const char* filename);
+ //void serialize(const char* filename);
 
  /**
   * Method to load values out of a file into the grid
   * @param filename
   */
- void load(const char* filename);
+ //void load(const char* filename);
 private:
 
- /**
-  *
-  */
- void addTsdfValue(const unsigned int col, const unsigned int row, const unsigned int z, double sdf, unsigned char* rgb);
+ void propagateBorders();
 
  /**
   *
   */
- bool coord2Voxel(double coord[3], int* x, int* y, int* z, Point* p);
+ void addTsdValue(const unsigned int col, const unsigned int row, const unsigned int z, double sd, unsigned char* rgb);
 
- unsigned int _xDim;
+ bool coord2Index(double coord[3], int* x, int* y, int* z, double* dx, double* dy, double* dz);
 
- unsigned int _yDim;
+ unsigned int _cellsX;
 
- unsigned int _zDim;
+ unsigned int _cellsY;
 
- int _sizeOfSpace;
-
- TsdVoxel*** _space;
+ unsigned int _cellsZ;
 
  double _voxelSize;
 
@@ -208,6 +203,17 @@ private:
  double _minZ;
 
  double _maxZ;
+
+ TsdSpacePartition**** _partitions;
+
+ int* _lutIndex2Partition;
+ int* _lutIndex2Cell;
+
+ int _partitionsInX;
+
+ int _partitionsInY;
+
+ int _partitionsInZ;
 };
 
 }

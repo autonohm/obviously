@@ -53,18 +53,15 @@ int main(int argc, char* argv[])
 
   // configuration of space
   ///@todo set up method for tsd configuration
-  double height    = 0.5;
-  double width     = 0.5;
-  double depth     = 0.5;
   double voxelSize = 0.004;
-  TsdSpace* _space = new TsdSpace(height, width, depth, voxelSize);
+  TsdSpace* space = new TsdSpace(voxelSize, LAYOUT_1x1x1, LAYOUT_256x256x256);
 
   // load space from file
-  _space->load(argv[1]);
+  space->load(argv[1]);
 
   // configure raycast
   unsigned int   size;
-  RayCast3D raycaster(_space);
+  RayCast3D raycaster;
   double thetaRes = deg2rad(0.25);
   double thetaMin = deg2rad(-135.0);
   double phiRes   = deg2rad(1.0);
@@ -86,19 +83,20 @@ int main(int argc, char* argv[])
   _sensor->transform(&T);
 //  raycaster.calcCoordsFromCurrentPose(_sensor, coords, normals, rgb, &size);
 
-  raycaster.calcCoordsAxisParallel(&coords, &normals, &rgb, &size);
+  raycaster.calcCoordsAxisParallel(space, &coords, &normals, &rgb, &size);
   std::cout << "Raycast returned: " << size << "points. " << std::endl;
 
   // set up cloud
-  VtkCloud* _cloud = new VtkCloud();
-  _viewer->addCloud(_cloud);
-  _cloud->setCoords(coords,   size/3, 3);
-  _cloud->setColors(rgb,      size/3, 3);
-  _cloud->setNormals(normals, size/3, 3);
+  VtkCloud* cloud = new VtkCloud();
+  _viewer->addCloud(cloud);
+  cloud->setCoords(coords,   size/3, 3);
+  cloud->setColors(rgb,      size/3, 3);
+  cloud->setNormals(normals, size/3, 3);
   _viewer->update();
 
   _viewer->startRendering();
 
-  // collect garbage
   delete _viewer;
+  delete space;
+  delete cloud;
 }

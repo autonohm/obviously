@@ -360,7 +360,7 @@ namespace obvious {
    * @return Euklidean distance
    */
   template <class T>
-  inline float euklideanDistance(T* coords1, T* coords2, int size)
+  inline T euklideanDistance(T* coords1, T* coords2, int size)
   {
 	  T sqr = 0.0;
     for(int i=0; i<size; i++)

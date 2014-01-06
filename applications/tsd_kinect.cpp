@@ -64,8 +64,12 @@ void _cbBuildSliceViews(void)
 	{
 		char path[128];
 		std::sprintf(path, "/tmp/slice%04d.ppm", i);
-		if((_space->buildSliceImage(i, buffer))!=true)
-		  LOGMSG(DBG_ERROR, "Error building sliceImage #" << i);
+
+		// not implemented yet
+		//if((_space->buildSliceImage(i, buffer))!=true)
+		LOGMSG(DBG_ERROR, "Error building sliceImage #" << i);
+		return;
+
 		obvious::serializePPM(path, buffer, _space->getXDimension(), _space->getYDimension(), 0);
 	}
 	delete[] buffer;
@@ -78,7 +82,7 @@ void _cbGenPointCloud(void)
   unsigned char* rgb=NULL;
   unsigned int size;
 
-  if(!(_rayCaster->calcCoordsAxisParallel(&cloud, &normals, &rgb, &size)))
+  if(!(_rayCaster->calcCoordsAxisParallel(_space, &cloud, &normals, &rgb, &size)))
   {
     LOGMSG(DBG_ERROR, "Error generating global point cloud");
     return;
@@ -107,7 +111,7 @@ void _cbGenMesh(void)
 
   unsigned int size = cols*rows*3;
 
-  _rayCaster->calcCoordsFromCurrentPoseMask(_sensor, coords, normals, rgb, mask, &size);
+  _rayCaster->calcCoordsFromCurrentPoseMask(_space, _sensor, coords, normals, rgb, mask, &size);
 
   TriangleMesh* mesh       = new TriangleMesh(rows*cols);
   mesh->createMeshFromOrganizedCloud(coords, rows, cols, rgb, mask);
@@ -176,7 +180,7 @@ void _cbRegNewImage(void)
   _filterBounds->setPose(_sensor->getPose());
 
   // Extract model from TSDF space
-  _rayCaster->calcCoordsFromCurrentPose(_sensor, coords, normals, rgb, &size);
+  _rayCaster->calcCoordsFromCurrentPose(_space, _sensor, coords, normals, rgb, &size);
 
   if(size==0)
   {
@@ -321,19 +325,19 @@ int main(void)
   unsigned int cols = _kinect->getCols();
   unsigned int rows = _kinect->getRows();
 
+  _space = new TsdSpace(VXLDIM, LAYOUT_16x16x16, LAYOUT_512x512x512);
+  _space->setMaxTruncation(3.0 * VXLDIM);
+
   // Initial transformation of sensor
   // ------------------------------------------------------------------
-  double tx = X_DIM/2.0;
-  double ty = Y_DIM/2.0;
-  double tz = 0;
-  double tf[16]={1,  0, 0, tx,
-                 0,  1, 0, ty,
-                 0,  0, 1, tz,
+  double tr[3];
+  _space->getCentroid(tr);
+  tr[2] = 0.0;
+  double tf[16]={1,  0, 0, tr[0],
+                 0,  1, 0, tr[1],
+                 0,  0, 1, tr[2],
                  0,  0, 0, 1};
   _Tinit.setData(tf);
-
-  _space = new TsdSpace(Y_DIM, X_DIM, Z_DIM, VXLDIM);
-  _space->setMaxTruncation(3.0 * VXLDIM);
 
   // ICP configuration
   // ------------------------------------------------------------------
@@ -381,7 +385,7 @@ int main(void)
   _space->push(_sensor);
   delete [] dist;
 
-  _rayCaster = new RayCast3D(_space);
+  _rayCaster = new RayCast3D();
 
   // Displaying stuff
   // ------------------------------------------------------------------

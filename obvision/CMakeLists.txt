@@ -42,5 +42,7 @@ add_library(obvision
 	reconstruct/space/SensorProjective3D.cpp
 	reconstruct/space/SensorPolar3D.cpp
 	reconstruct/space/TsdSpace.cpp
+	reconstruct/space/TsdSpaceComponent.cpp
+	reconstruct/space/TsdSpacePartition.cpp
 	reconstruct/space/RayCast3D.cpp
 	)

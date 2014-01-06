@@ -36,7 +36,7 @@ TsdGrid::TsdGrid(const double cellSize, const EnumTsdGridLayout layoutPartition,
 
   _sizeOfGrid = _cellsY * _cellsX;
 
-  _maxTruncation = 2*cellSize;
+  _maxTruncation = 2.0*cellSize;
 
   LOGMSG(DBG_DEBUG, "Grid dimensions: " << _cellsX << "x" << _cellsY << " cells" <<
                     " = " << ((double)_cellsX)*cellSize << "x" << ((double)_cellsY)*cellSize << " sqm");
@@ -73,7 +73,7 @@ TsdGrid::TsdGrid(const double cellSize, const EnumTsdGridLayout layoutPartition,
 TsdGrid::~TsdGrid(void)
 {
   delete _tree;
-  System<TsdGridPartition>::deallocate(_partitions);
+  System<TsdGridPartition*>::deallocate(_partitions);
 }
 
 double& TsdGrid::operator () (unsigned int y, unsigned int x)
@@ -185,9 +185,9 @@ void TsdGrid::push(SensorPolar2D* sensor)
           crd[0] = (*cellCoordsHom)(c,0);
           crd[1] = (*cellCoordsHom)(c,1);
           double distance = euklideanDistance<double>(tr, crd, 2);
-          double sdf = data[index] - distance;
+          double sd = data[index] - distance;
 
-          part->addTsd((*partCoords)(c, 0), (*partCoords)(c, 1), sdf, _maxTruncation);
+          part->addTsd((*partCoords)(c, 0), (*partCoords)(c, 1), sd, _maxTruncation);
         }
       }
     }
@@ -461,8 +461,6 @@ void TsdGrid::getData(std::vector<double>& data)
   double dx = 0.0;
   double dy = 0.0;
   double tsd = 0.0;
-  unsigned int stepsx = 0;
-  unsigned int stepsy = 0;
   for(coordVar[1] = 0.0; coordVar[1] < _maxY; coordVar[1] += _cellSize)
   {
     for(coordVar[0] = 0.0; coordVar[0] < _maxX; coordVar[0] += _cellSize)

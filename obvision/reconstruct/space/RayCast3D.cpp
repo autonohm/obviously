@@ -10,9 +10,9 @@
 namespace obvious
 {
 
-RayCast3D::RayCast3D(TsdSpace* space)
+RayCast3D::RayCast3D()
 {
-  _space = space;
+
 }
 
 RayCast3D::~RayCast3D()
@@ -20,12 +20,14 @@ RayCast3D::~RayCast3D()
 
 }
 
-void RayCast3D::calcCoordsFromCurrentPose(Sensor* sensor, double* coords, double* normals, unsigned char* rgb, unsigned int* size)
+void RayCast3D::calcCoordsFromCurrentPose(TsdSpace* space, Sensor* sensor, double* coords, double* normals, unsigned char* rgb, unsigned int* size)
 {
   Timer t;
   *size = 0;
 
   Matrix* T = sensor->getPose();
+  double tr[3];
+  sensor->getPosition(tr);
 
   Matrix Tinv(4, 4);
   Tinv = T->getInverse();
@@ -56,11 +58,11 @@ void RayCast3D::calcCoordsFromCurrentPose(Sensor* sensor, double* coords, double
         double ray[3];
         sensor->calcRayFromCurrentPose(v, u, ray);
 
-        ray[0] *= _space->getVoxelSize();
-        ray[1] *= _space->getVoxelSize();
-        ray[2] *= _space->getVoxelSize();
+        ray[0] *= space->getVoxelSize();
+        ray[1] *= space->getVoxelSize();
+        ray[2] *= space->getVoxelSize();
 
-        if(rayCastFromSensorPose(ray, c, n, color, &depth, sensor)) // Ray returned with coordinates
+        if(rayCastFromSensorPose(space, tr, ray, c, n, color, &depth)) // Ray returned with coordinates
         {
           M(0,0) = c[0];
           M(1,0) = c[1];
@@ -95,7 +97,7 @@ void RayCast3D::calcCoordsFromCurrentPose(Sensor* sensor, double* coords, double
   LOGMSG(DBG_DEBUG, "Raycasting finished! Found " << *size << " coordinates");
 }
 
-bool RayCast3D::calcCoordsFromCurrentPose(Sensor* sensor, double* coords, double* normals, unsigned char* rgb, const std::vector<TsdSpace*>& spaces,
+bool RayCast3D::calcCoordsFromCurrentPose(TsdSpace* space, Sensor* sensor, double* coords, double* normals, unsigned char* rgb, const std::vector<TsdSpace*>& spaces,
     const std::vector<double>& offsets, const unsigned int u, const unsigned int v)
 {
   double depthVar = 0.0;
@@ -105,6 +107,8 @@ bool RayCast3D::calcCoordsFromCurrentPose(Sensor* sensor, double* coords, double
   double ray[3];
   Matrix Tinv(4, 4);
   Tinv = *sensor->getPose();
+  double tr[3];
+  sensor->getPosition(tr);
   unsigned int spaceCtr = 0;
   Matrix M(4,1);
   Matrix N(4,1);
@@ -117,7 +121,6 @@ bool RayCast3D::calcCoordsFromCurrentPose(Sensor* sensor, double* coords, double
   obvious::Matrix T(4,4);
   for(std::vector<TsdSpace*>::const_iterator spaIter = spaces.begin(); spaIter != spaces.end(); spaIter++)
   {
-    this->setSpace(*spaIter);
     offset[0] = *offIter;
     offIter++;
     offset[1] = *offIter;
@@ -130,10 +133,10 @@ bool RayCast3D::calcCoordsFromCurrentPose(Sensor* sensor, double* coords, double
     T(2,3) = (-1.0) * offset[2];
     sensor->transform(&T);
     sensor->calcRayFromCurrentPose(v, u, ray);
-    ray[0] *= _space->getVoxelSize();
-    ray[1] *= _space->getVoxelSize();
-    ray[2] *= _space->getVoxelSize();
-    if(rayCastFromSensorPose(ray, coordVar, normalVar, colorVar, &depthVar, sensor)) // Ray returned with coordinates
+    ray[0] *= space->getVoxelSize();
+    ray[1] *= space->getVoxelSize();
+    ray[2] *= space->getVoxelSize();
+    if(rayCastFromSensorPose(*spaIter, tr, ray, coordVar, normalVar, colorVar, &depthVar)) // Ray returned with coordinates
     {
       found = true;
       break;
@@ -166,13 +169,15 @@ bool RayCast3D::calcCoordsFromCurrentPose(Sensor* sensor, double* coords, double
   return(true);
 }
 
-void RayCast3D::calcCoordsFromCurrentPoseMask(Sensor* sensor, double* coords, double* normals, unsigned char* rgb, bool* mask, unsigned int* size)
+void RayCast3D::calcCoordsFromCurrentPoseMask(TsdSpace* space, Sensor* sensor, double* coords, double* normals, unsigned char* rgb, bool* mask, unsigned int* size)
 {
   Timer t;
 
   Matrix* T = sensor->getPose();
   Matrix Tinv(4, 4);
   Tinv = T->getInverse();
+  double tr[3];
+  sensor->getPosition(tr);
   unsigned int ctr = 0;
 
   unsigned int width = sensor->getWidth();
@@ -203,11 +208,11 @@ void RayCast3D::calcCoordsFromCurrentPoseMask(Sensor* sensor, double* coords, do
 
         sensor->calcRayFromCurrentPose(v, u, ray);
 
-        ray[0] *= _space->getVoxelSize();
-        ray[1] *= _space->getVoxelSize();
-        ray[2] *= _space->getVoxelSize();
+        ray[0] *= space->getVoxelSize();
+        ray[1] *= space->getVoxelSize();
+        ray[2] *= space->getVoxelSize();
 
-        if(rayCastFromSensorPose(ray, c, n, color, &depth, sensor)) // Ray returned with coordinates
+        if(rayCastFromSensorPose(space, tr, ray, c, n, color, &depth)) // Ray returned with coordinates
         {
           M(0,0) = c[0];
           M(1,0) = c[1];
@@ -257,11 +262,11 @@ void RayCast3D::calcCoordsFromCurrentPoseMask(Sensor* sensor, double* coords, do
   LOGMSG(DBG_DEBUG, "Raycasting finished! Found " << ctr << " coordinates");
 }
 
-bool RayCast3D::calcCoordsAxisParallel(double** pointCloud, double** cloudNormals, unsigned char** cloudRgb, unsigned int* size)
+bool RayCast3D::calcCoordsAxisParallel(TsdSpace* space, double** pointCloud, double** cloudNormals, unsigned char** cloudRgb, unsigned int* size)
 {
-  int xDim = _space->getXDimension();
-  int yDim = _space->getYDimension();
-  int zDim = _space->getZDimension();
+  int xDim = space->getXDimension();
+  int yDim = space->getYDimension();
+  int zDim = space->getZDimension();
 
   std::vector<double> vCloud;
   std::vector<double> vNormals;
@@ -276,8 +281,8 @@ bool RayCast3D::calcCoordsAxisParallel(double** pointCloud, double** cloudNormal
   {
     for (int col=0; col<zDim; col++)
     {
-      calcRayParallelAxis(row, col, footPoint, dirVec, &steps, X_AXS);
-      rayCastParallelAxis(footPoint, dirVec, &vCloud, &vNormals, &vRGB, steps);
+      calcRayParallelAxis(space, row, col, footPoint, dirVec, &steps, X_AXS);
+      rayCastParallelAxis(space, footPoint, dirVec, &vCloud, &vNormals, &vRGB, steps);
     }
   }
 
@@ -286,8 +291,8 @@ bool RayCast3D::calcCoordsAxisParallel(double** pointCloud, double** cloudNormal
   {
     for (int col = 0; col < xDim; col++)
     {
-      calcRayParallelAxis(row, col, footPoint, dirVec, &steps, Y_AXS);
-      rayCastParallelAxis(footPoint, dirVec, &vCloud, &vNormals, &vRGB, steps);
+      calcRayParallelAxis(space, row, col, footPoint, dirVec, &steps, Y_AXS);
+      rayCastParallelAxis(space, footPoint, dirVec, &vCloud, &vNormals, &vRGB, steps);
     }
   }
 
@@ -296,8 +301,8 @@ bool RayCast3D::calcCoordsAxisParallel(double** pointCloud, double** cloudNormal
   {
     for (int col=0; col<xDim; col++)
     {
-      calcRayParallelAxis(row, col, footPoint, dirVec, &steps, Z_AXS);
-      rayCastParallelAxis(footPoint, dirVec, &vCloud, &vNormals, &vRGB, steps);
+      calcRayParallelAxis(space, row, col, footPoint, dirVec, &steps, Z_AXS);
+      rayCastParallelAxis(space, footPoint, dirVec, &vCloud, &vNormals, &vRGB, steps);
     }
   }
 
@@ -325,69 +330,75 @@ bool RayCast3D::calcCoordsAxisParallel(double** pointCloud, double** cloudNormal
   return(true);
 }
 
-bool RayCast3D::rayCastFromSensorPose(double ray[3], double coordinates[3], double normal[3], unsigned char rgb[3], double* depth, Sensor* sensor)
+bool RayCast3D::rayCastFromSensorPose(TsdSpace* space, double pos[3], double ray[3], double coordinates[3], double normal[3], unsigned char rgb[3], double* depth)
 {
-  double tr[3];
-
-  sensor->getPosition(tr);
-
   double position[3];
-  double position_prev[3];
 
-  int xDim = _space->getXDimension();
-  int yDim = _space->getYDimension();
-  int zDim = _space->getZDimension();
-  double voxelSize = _space->getVoxelSize();
+  int xDim = space->getXDimension();
+  int yDim = space->getYDimension();
+  int zDim = space->getZDimension();
+  double voxelSize = space->getVoxelSize();
 
   // Interpolation weight
   double interp;
 
+  // Leave out outmost cells in order to prevent access to invalid neighbors
   double xmin   = -10e9;
   double ymin   = -10e9;
   double zmin   = -10e9;
-  if(fabs(ray[0])>10e-6) xmin = ((double)(ray[0] > 0.0 ? 0 : (xDim-1)*voxelSize) - tr[0]) / ray[0];
-  if(fabs(ray[1])>10e-6) ymin = ((double)(ray[1] > 0.0 ? 0 : (yDim-1)*voxelSize) - tr[1]) / ray[1];
-  if(fabs(ray[2])>10e-6) zmin = ((double)(ray[2] > 0.0 ? 0 : (zDim-1)*voxelSize) - tr[2]) / ray[2];
-  double idxMin = max(max(xmin, ymin), zmin);
+  if(fabs(ray[0])>10e-6) xmin = ((double)(ray[0] > 0.0 ? 1.5*voxelSize : (((double)xDim)-1.5)*voxelSize) - pos[0]) / ray[0];
+  if(fabs(ray[1])>10e-6) ymin = ((double)(ray[1] > 0.0 ? 1.5*voxelSize : (((double)yDim)-1.5)*voxelSize) - pos[1]) / ray[1];
+  if(fabs(ray[2])>10e-6) zmin = ((double)(ray[2] > 0.0 ? 1.5*voxelSize : (((double)zDim)-1.5)*voxelSize) - pos[2]) / ray[2];
+  double idxMin = ceil(max(max(xmin, ymin), zmin));
   idxMin        = max(idxMin, 0.0);
 
   double xmax   = 10e9;
   double ymax   = 10e9;
   double zmax   = 10e9;
-  if(fabs(ray[0])>10e-6) xmax = ((double)(ray[0] > 0.0 ? (xDim-1)*voxelSize : 0) - tr[0]) / ray[0];
-  if(fabs(ray[1])>10e-6) ymax = ((double)(ray[1] > 0.0 ? (yDim-1)*voxelSize : 0) - tr[1]) / ray[1];
-  if(fabs(ray[2])>10e-6) zmax = ((double)(ray[2] > 0.0 ? (zDim-1)*voxelSize : 0) - tr[2]) / ray[2];
-  double idxMax = min(min(xmax, ymax), zmax);
+  if(fabs(ray[0])>10e-6) xmax = ((double)(ray[0] > 0.0 ? (((double)xDim)-1.5)*voxelSize : 1.5*voxelSize) - pos[0]) / ray[0];
+  if(fabs(ray[1])>10e-6) ymax = ((double)(ray[1] > 0.0 ? (((double)yDim)-1.5)*voxelSize : 1.5*voxelSize) - pos[1]) / ray[1];
+  if(fabs(ray[2])>10e-6) zmax = ((double)(ray[2] > 0.0 ? (((double)zDim)-1.5)*voxelSize : 1.5*voxelSize) - pos[2]) / ray[2];
+  double idxMax = floor(min(min(xmax, ymax), zmax));
 
   if (idxMin >= idxMax)
     return false;
 
+  // Traverse partitions roughly to clip minimum index
+  int partitionSize = space->getPartitionSize();
+  for(int i=idxMin; i<idxMax; i+=partitionSize)
+  {
+    double tsd_tmp;
+    position[0] = pos[0] + i * ray[0];
+    position[1] = pos[1] + i * ray[1];
+    position[2] = pos[2] + i * ray[2];
+    EnumTsdSpaceInterpolate retval = space->interpolateTrilinear(position, &tsd_tmp);
+    if(retval!=INTERPOLATE_EMPTYPARTITION && retval!=INTERPOLATE_INVALIDINDEX)
+      break;
+    else
+      idxMin = i;
+  }
+
   double tsdf_prev;
-  position[0] = tr[0] + idxMin * ray[0];
-  position[1] = tr[1] + idxMin * ray[1];
-  position[2] = tr[2] + idxMin * ray[2];
-  if(!_space->interpolateTrilinear(position, &tsdf_prev))
+  position[0] = pos[0] + idxMin * ray[0];
+  position[1] = pos[1] + idxMin * ray[1];
+  position[2] = pos[2] + idxMin * ray[2];
+
+  if(space->interpolateTrilinear(position, &tsdf_prev)!=INTERPOLATE_SUCCESS)
     tsdf_prev = NAN;
 
   bool found = false;
-  //  std::cout << __PRETTY_FUNCTION__ << " starting position:\n\tx = " << position[0] << "\n\ty = " << position[1]
-  //            << "\n\tz = " << position[1] << "\n";
+
   for(int i=idxMin; i<idxMax; i++)
   {
-    // calculate current position
-    memcpy(position_prev, position, 3 * sizeof(*position));
-
     position[0] += ray[0];
     position[1] += ray[1];
     position[2] += ray[2];
-    //    std::cout << __PRETTY_FUNCTION__ << " position:\n\tx = " << position[0] << "\n\ty = " << position[1]
-    //              << "\n\tz = " << position[1] << "\n";
 
     double tsdf;
-    bool retval = _space->interpolateTrilinear(position, &tsdf);
-    if (!retval)
+    EnumTsdSpaceInterpolate retval = space->interpolateTrilinear(position, &tsdf);
+    if (retval!=INTERPOLATE_SUCCESS)
     {
-      tsdf_prev = tsdf;
+      tsdf_prev = NAN;
       continue;
     }
 
@@ -395,7 +406,7 @@ bool RayCast3D::rayCastFromSensorPose(double ray[3], double coordinates[3], doub
     if(tsdf_prev > 0 && tsdf < 0)
     {
       interp = tsdf_prev / (tsdf_prev - tsdf);
-      if(sensor->hasRealMeasurmentRGB()) _space->interpolateTrilinearRGB(position, rgb);
+      //if(sensor->hasRealMeasurmentRGB()) space->interpolateTrilinearRGB(position, rgb);
       found = true;
       break;
     }
@@ -407,16 +418,15 @@ bool RayCast3D::rayCastFromSensorPose(double ray[3], double coordinates[3], doub
 
   // interpolate between voxels when sign changes
   for (unsigned int i = 0; i < 3; i++)
-    coordinates[i] = position_prev[i] + ray[i] * interp;
+    coordinates[i] = position[i] + ray[i] * (interp-1.0);
 
-  if(!_space->interpolateNormal(coordinates, normal))
+  if(!space->interpolateNormal(coordinates, normal))
     return false;
-  //  std::cout << __PRETTY_FUNCTION__ << " end position:\n\tx = " << position[0] << "\n\ty = " << position[1]
-  //            << "\n\tz = " << position[1] << "\n";
+
   return true;
 }
 
-bool RayCast3D::rayCastParallelAxis(double* footPoint, double* dirVec,std::vector<double>* pointCloud,std::vector<double>* cloudNormals, std::vector<unsigned char>* cloudRgb, const unsigned int steps)
+bool RayCast3D::rayCastParallelAxis(TsdSpace* space, double* footPoint, double* dirVec,std::vector<double>* pointCloud,std::vector<double>* cloudNormals, std::vector<unsigned char>* cloudRgb, const unsigned int steps)
 {
   double tsdf = 0.0;
   double tsdfPrev = 0.0;
@@ -428,7 +438,7 @@ bool RayCast3D::rayCastParallelAxis(double* footPoint, double* dirVec,std::vecto
   unsigned char zerCrossingRgb[3] = {0.0};
   memcpy(curPosition, footPoint, 3*sizeof(double));
 
-  if (!_space->interpolateTrilinear(curPosition, &tsdfPrev))
+  if (!space->interpolateTrilinear(curPosition, &tsdfPrev))
     tsdfPrev=NAN;
 
   for(unsigned int i=0;i<=steps;i++)
@@ -438,7 +448,7 @@ bool RayCast3D::rayCastParallelAxis(double* footPoint, double* dirVec,std::vecto
     for(unsigned int i=0; i<3; i++)
       curPosition[i] += dirVec[i];
 
-    if (!_space->interpolateTrilinear(curPosition, &tsdf))
+    if (!space->interpolateTrilinear(curPosition, &tsdf))
     {
       tsdfPrev = tsdf;
       continue;
@@ -451,13 +461,13 @@ bool RayCast3D::rayCastParallelAxis(double* footPoint, double* dirVec,std::vecto
       for (unsigned int i = 0; i < 3; i++)
         zeroCrossing[i] = prevPosition[i] + dirVec[i] * curPrevInterp;
 
-      if(!_space->interpolateNormal(zeroCrossing, normal))
+      if(!space->interpolateNormal(zeroCrossing, normal))
       {
         tsdfPrev = tsdf;
         continue;
       }
 
-      if(!_space->interpolateTrilinearRGB(curPosition, zerCrossingRgb))
+      if(!space->interpolateTrilinearRGB(curPosition, zerCrossingRgb))
       {
         tsdfPrev = tsdf;
         continue;
@@ -476,12 +486,12 @@ bool RayCast3D::rayCastParallelAxis(double* footPoint, double* dirVec,std::vecto
   return(true);
 }
 
-void RayCast3D::calcRayParallelAxis(const unsigned int row, const unsigned int col, double* footPoint, double* dirVec, unsigned int* steps, AXSPARMODE mode)
+void RayCast3D::calcRayParallelAxis(TsdSpace* space, const unsigned int row, const unsigned int col, double* footPoint, double* dirVec, unsigned int* steps, AXSPARMODE mode)
 {
-  int xDim = _space->getXDimension();
-  int yDim = _space->getYDimension();
-  int zDim = _space->getZDimension();
-  double voxelSize = _space->getVoxelSize();
+  int xDim = space->getXDimension();
+  int yDim = space->getYDimension();
+  int zDim = space->getZDimension();
+  double voxelSize = space->getVoxelSize();
 
   if(mode==X_AXS)
   {
