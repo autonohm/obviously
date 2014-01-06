@@ -24,8 +24,7 @@ enum EnumTsdSpaceLayout { LAYOUT_1x1x1=0,
 enum EnumTsdSpaceInterpolate { INTERPOLATE_SUCCESS=0,
                                INTERPOLATE_INVALIDINDEX=1,
                                INTERPOLATE_EMPTYPARTITION=2,
-                               INTERPOLATE_ISNAN=3
-};
+                               INTERPOLATE_ISNAN=3};
 
 /**
  * @class TsdSpace

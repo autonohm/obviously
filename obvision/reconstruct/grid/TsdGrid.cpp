@@ -124,6 +124,11 @@ double TsdGrid::getMaxY()
   return _maxY;
 }
 
+unsigned int TsdGrid::getPartitionSize()
+{
+  return _partitions[0][0]->getWidth();
+}
+
 void TsdGrid::getCentroid(double centroid[2])
 {
   centroid[0] = (_minX + _maxX) / 2.0;
@@ -288,30 +293,16 @@ void TsdGrid::propagateBorders()
 
       if(!partCur->isInitialized()) continue;
 
-      if(px>0)
-      {
-        TsdGridPartition* partLeft      = _partitions[py][px-1];
-        if(partLeft->isInitialized())
-        {
-          // Copy left border
-          for(unsigned int i=1; i<height+1; i++)
-          {
-            partCur->_grid[i][0].tsd = partLeft->_grid[i][width].tsd;
-            partCur->_grid[i][0].weight = partLeft->_grid[i][width].weight;
-          }
-        }
-      }
-
       if(px<(_partitionsInX-1))
       {
         TsdGridPartition* partRight     = _partitions[py][px+1];
         if(partRight->isInitialized())
         {
           // Copy right border
-          for(unsigned int i=1; i<height+1; i++)
+          for(unsigned int i=0; i<height; i++)
           {
-            partCur->_grid[i][width+1].tsd = partRight->_grid[i][1].tsd;
-            partCur->_grid[i][width+1].weight = partRight->_grid[i][1].weight;
+            partCur->_grid[i][width].tsd = partRight->_grid[i][0].tsd;
+            partCur->_grid[i][width].weight = partRight->_grid[i][0].weight;
           }
         }
       }
@@ -322,47 +313,11 @@ void TsdGrid::propagateBorders()
         if(partUp->isInitialized())
         {
           // Copy upper border
-          for(unsigned int i=1; i<width+1; i++)
+          for(unsigned int i=0; i<width; i++)
           {
-            partCur->_grid[height+1][i].tsd = partUp->_grid[1][i].tsd;
-            partCur->_grid[height+1][i].weight = partUp->_grid[1][i].weight;
+            partCur->_grid[height][i].tsd = partUp->_grid[0][i].tsd;
+            partCur->_grid[height][i].weight = partUp->_grid[0][i].weight;
           }
-        }
-      }
-
-      if(py>0)
-      {
-        TsdGridPartition* partDown      = _partitions[py-1][px];
-        if(partDown->isInitialized())
-        {
-          // Copy lower border
-          for(unsigned int i=1; i<width+1; i++)
-          {
-            partCur->_grid[0][i].tsd = partDown->_grid[height][i].tsd;
-            partCur->_grid[0][i].weight = partDown->_grid[height][i].weight;
-          }
-        }
-      }
-
-      if(px>0 && py<(_partitionsInY-1))
-      {
-        TsdGridPartition* partUpLeft    = _partitions[py+1][px-1];
-        if(partUpLeft->isInitialized())
-        {
-          // Copy upper left corner
-          partCur->_grid[height+1][0].tsd = partUpLeft->_grid[1][width].tsd;
-          partCur->_grid[height+1][0].weight = partUpLeft->_grid[1][width].weight;
-        }
-      }
-
-      if(px>0 && py>0)
-      {
-        TsdGridPartition* partDownLeft  = _partitions[py-1][px-1];
-        if(partDownLeft->isInitialized())
-        {
-          // Copy lower left corner
-          partCur->_grid[0][0].tsd = partDownLeft->_grid[height][width].tsd;
-          partCur->_grid[0][0].weight = partDownLeft->_grid[height][width].weight;
         }
       }
 
@@ -372,19 +327,8 @@ void TsdGrid::propagateBorders()
         if(partUpRight->isInitialized())
         {
           // Copy upper right corner
-          partCur->_grid[height+1][width+1].tsd = partUpRight->_grid[1][1].tsd;
-          partCur->_grid[height+1][width+1].weight = partUpRight->_grid[1][1].weight;
-        }
-      }
-
-      if(py>0 && px<(_partitionsInX-1))
-      {
-        TsdGridPartition* partDownRight = _partitions[py-1][px+1];
-        if(partDownRight->isInitialized())
-        {
-          // Copy lower right corner
-          partCur->_grid[0][width+1].tsd = partDownRight->_grid[height][1].tsd;
-          partCur->_grid[0][width+1].weight = partDownRight->_grid[height][1].weight;
+          partCur->_grid[height][width].tsd = partUpRight->_grid[0][0].tsd;
+          partCur->_grid[height][width].weight = partUpRight->_grid[0][0].weight;
         }
       }
     }
@@ -487,21 +431,21 @@ bool TsdGrid::interpolateNormal(const double* coord, double* normal)
 
   neighbor[0] = coord[0] + _cellSize;
   neighbor[1] = coord[1];
-  if(!interpolateBilinear(neighbor, &depthInc)) return false;
+  if(interpolateBilinear(neighbor, &depthInc)!=INTERPOLATE_SUCCESS) return false;
 
   neighbor[0] = coord[0] - _cellSize;
   // neighbor[1] = coord[1];
-  if(!interpolateBilinear(neighbor, &depthDec)) return false;
+  if(interpolateBilinear(neighbor, &depthDec)!=INTERPOLATE_SUCCESS) return false;
 
   normal[0] = depthInc - depthDec;
 
   neighbor[0] = coord[0];
   neighbor[1] = coord[1] + _cellSize;
-  if(!interpolateBilinear(neighbor, &depthInc)) return false;
+  if(interpolateBilinear(neighbor, &depthInc)!=INTERPOLATE_SUCCESS) return false;
 
   // neighbor[0] = coord[0];
   neighbor[1] = coord[1] - _cellSize;
-  if(!interpolateBilinear(neighbor, &depthDec)) return false;
+  if(interpolateBilinear(neighbor, &depthDec)!=INTERPOLATE_SUCCESS) return false;
 
   normal[1] = depthInc - depthDec;
 
@@ -510,7 +454,7 @@ bool TsdGrid::interpolateNormal(const double* coord, double* normal)
   return true;
 }
 
-bool TsdGrid::interpolateBilinear(double coord[2], double* tsdf)
+EnumTsdGridInterpolate TsdGrid::interpolateBilinear(double coord[2], double* tsd)
 {
   int p;
   int x;
@@ -518,15 +462,18 @@ bool TsdGrid::interpolateBilinear(double coord[2], double* tsdf)
   double dx;
   double dy;
 
-  if(!coord2Cell(coord, &p, &x, &y, &dx, &dy)) return false;
-  if(!_partitions[0][p]->isInitialized()) return false;
+  if(!coord2Cell(coord, &p, &x, &y, &dx, &dy)) return INTERPOLATE_INVALIDINDEX;
+  if(!_partitions[0][p]->isInitialized()) return INTERPOLATE_EMPTYPARTITION;
 
   double wx = fabs((coord[0] - dx) / (_cellSize));
   double wy = fabs((coord[1] - dy) / (_cellSize));
 
-  *tsdf = _partitions[0][p]->interpolateBilinear(x, y, wx, wy);
+  *tsd = _partitions[0][p]->interpolateBilinear(x, y, wx, wy);
 
-  return (!isnan(*tsdf));
+  if(isnan(*tsd))
+    return INTERPOLATE_ISNAN;
+
+  return INTERPOLATE_SUCCESS;
 }
 
 bool TsdGrid::coord2Cell(double coord[2], int* p, int* x, int* y, double* dx, double* dy)
@@ -550,8 +497,8 @@ bool TsdGrid::coord2Cell(double coord[2], int* p, int* x, int* y, double* dx, do
   }
   if (coord[1] > *dy)
   {
-    yIdx++;
-    (*dy) += _cellSize;
+    yIdx--;
+    (*dy) -= _cellSize;
   }
 
   // Check boundaries

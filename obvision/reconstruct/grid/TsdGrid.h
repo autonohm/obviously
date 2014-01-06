@@ -25,6 +25,11 @@ enum EnumTsdGridLayout { LAYOUT_1x1=0,
                          LAYOUT_18384x18384=14,
                          LAYOUT_36768x36768=15};
 
+enum EnumTsdGridInterpolate { INTERPOLATE_SUCCESS=0,
+                              INTERPOLATE_INVALIDINDEX=1,
+                              INTERPOLATE_EMPTYPARTITION=2,
+                              INTERPOLATE_ISNAN=3};
+
 /**
  * @class TsdGrid
  * @brief Grid on the basis of true signed distance functions
@@ -105,6 +110,8 @@ public:
    */
   double getMaxY();
 
+  unsigned int getPartitionSize();
+
   /**
    * Set maximum truncation radius
    * @param[in] val truncation radius
@@ -147,7 +154,7 @@ public:
    * @param coordinates pointer to coordinates of intersection
    * @param[out] tsdf interpolated TSD value
    */
-  bool interpolateBilinear(double coord[2], double* tsdf);
+  EnumTsdGridInterpolate interpolateBilinear(double coord[2], double* tsd);
 
   /**
    * Convert arbitrary coordinate to grid coordinates

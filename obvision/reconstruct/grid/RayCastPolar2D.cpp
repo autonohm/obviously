@@ -70,7 +70,6 @@ bool RayCastPolar2D::rayCastFromCurrentView(TsdGrid* grid, SensorPolar2D* sensor
 
   double ray[2];
   double position[2];
-  double position_prev[2];
 
   sensor->calcRay(beam, ray);
   ray[0] *= cellSize;
@@ -101,36 +100,48 @@ bool RayCastPolar2D::rayCastFromCurrentView(TsdGrid* grid, SensorPolar2D* sensor
 
   if (idxMin >= idxMax) return false;
 
-  double tsdf_prev;
+  // Traverse partitions roughly to clip minimum index
+  int partitionSize = grid->getPartitionSize();
+  for(int i=idxMin; i<idxMax; i+=partitionSize)
+  {
+    double tsd_tmp;
+    position[0] = tr[0] + i * ray[0];
+    position[1] = tr[1] + i * ray[1];
+    EnumTsdGridInterpolate retval = grid->interpolateBilinear(position, &tsd_tmp);
+    if(retval!=INTERPOLATE_EMPTYPARTITION && retval!=INTERPOLATE_INVALIDINDEX)
+      break;
+    else
+      idxMin = i;
+  }
+
+  double tsd_prev;
   position[0] = tr[0] + idxMin * ray[0];
   position[1] = tr[1] + idxMin * ray[1];
-  grid->interpolateBilinear(position, &tsdf_prev);
+  if(grid->interpolateBilinear(position, &tsd_prev)!=INTERPOLATE_SUCCESS)
+    tsd_prev = NAN;
 
   bool found = false;
   for(int i=idxMin; i<=idxMax; i++)
   {
-    // Calculate current position
-    memcpy(position_prev, position, 2 * sizeof(*position));
-
     position[0] += ray[0];
     position[1] += ray[1];
 
-    double tsdf;
-    if (!grid->interpolateBilinear(position, &tsdf))
+    double tsd;
+    if (grid->interpolateBilinear(position, &tsd)!=INTERPOLATE_SUCCESS)
     {
-      tsdf_prev = tsdf;
+      tsd_prev = tsd;
       continue;
     }
 
     // Check sign change
-    if(tsdf_prev > 0 && tsdf < 0)
+    if(tsd_prev > 0 && tsd < 0)
     {
-      interp = tsdf_prev / (tsdf_prev - tsdf);
+      interp = tsd_prev / (tsd_prev - tsd);
       found = true;
       break;
     }
 
-    tsdf_prev = tsdf;
+    tsd_prev = tsd;
   }
 
   if(!found)
@@ -138,13 +149,10 @@ bool RayCastPolar2D::rayCastFromCurrentView(TsdGrid* grid, SensorPolar2D* sensor
     return false;
   }
 
-  coordinates[0] = position_prev[0] + ray[0] * interp;
-  coordinates[1] = position_prev[1] + ray[1] * interp;
+  coordinates[0] = position[0] + ray[0] * (interp-1.0);
+  coordinates[1] = position[1] + ray[1] * (interp-1.0);
 
-  if(!grid->interpolateNormal(coordinates, normal))
-    return false;
-
-  return true;
+  return grid->interpolateNormal(coordinates, normal);
 }
 
 void RayCastPolar2D::calcCoordsAligned(TsdGrid* grid, double* coords, double* normals, unsigned int* cnt)
