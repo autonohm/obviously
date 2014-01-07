@@ -22,9 +22,6 @@
 
 using namespace obvious;
 
-#define X_DIM 2
-#define Y_DIM 2
-#define Z_DIM 2
 #define VXLDIM 0.01
 
 Matrix* _T;
@@ -146,12 +143,12 @@ void _cbGenMesh(void)
   _vModel->transform(P);
   double lightPos[3];
   double lightLookAt[3];
-  lightPos[0] = X_DIM / 2.0;
-  lightPos[1] = Y_DIM / 2.0;
+  lightPos[0] = _space->getMaxX() / 2.0;
+  lightPos[1] = _space->getMaxY() / 2.0;
   lightPos[2] = 0;
-  lightLookAt[0] = X_DIM / 2.0;
-  lightLookAt[1] = Y_DIM / 2.0;
-  lightLookAt[2] = Z_DIM / 2.0;
+  lightLookAt[0] = _space->getMaxX() / 2.0;
+  lightLookAt[1] = _space->getMaxY() / 2.0;
+  lightLookAt[2] = _space->getMaxZ() / 2.0;
   _viewer3D->addLight(lightPos, lightLookAt);
   _viewer3D->update();
 
@@ -207,10 +204,12 @@ void _cbRegNewImage(void)
 
   _icp->reset();
   _icp->setModel(coords, normals, size);
+  cout << "ICP set model: " << timeIcpStart - t.getTime() << " ms" << endl;
 
   // Acquire scene image
-  for(unsigned int i=0; i<5; i++)
-    _kinect->grab();
+  //for(unsigned int i=0; i<5; i++)
+  _kinect->grab();
+  cout << "ICP Grab: " << timeIcpStart - t.getTime() << " ms" << endl;
 
   double* coordsScene     = _kinect->getCoords();
   bool* maskScene         = _kinect->getMask();
@@ -233,6 +232,8 @@ void _cbRegNewImage(void)
     }
   }
 
+  cout << "ICP Subsample scene: " << timeIcpStart - t.getTime() << " ms" << endl;
+
   if(idx==0)
   {
     LOGMSG(DBG_ERROR, "Invalid scene");
@@ -247,6 +248,7 @@ void _cbRegNewImage(void)
   _vScene->removeInvalidPoints();
 
   _icp->setScene(coords, NULL, idx);
+  cout << "ICP Set scene: " << timeIcpStart - t.getTime() << " ms" << endl;
 
   // Perform ICP registration
   double rms = 0;
@@ -393,7 +395,7 @@ int main(void)
   _vScene = new VtkCloud();
   _viewer3D = new Obvious3D("3DMapper");
   _viewer3D->addCloud(_vModel);
-  _viewer3D->addAxisAlignedCube(0, X_DIM, 0, Y_DIM, 0, Z_DIM);
+  _viewer3D->addAxisAlignedCube(0, _space->getMaxX(), 0, _space->getMaxY(), 0, _space->getMaxZ());
   //_viewer3D->addCloud(_vScene);
   _viewer3D->registerKeyboardCallback("space", _cbRegNewImage, "Register new image");
   _viewer3D->registerKeyboardCallback("c", _cbGenPointCloud, "Generate point cloud");
