@@ -232,18 +232,19 @@ void Icp::applyTransformation(double** data, unsigned int size, unsigned int dim
 {
   // Apply rotation
   Matrix R(*T, 0, 0, dim, dim);
-  MatrixView P(*data, size, dim);
-  P.multiplyRight(R, false, true);
+  Matrix::multiply(R, *data, size, dim);
 
   // Apply translation
-  VectorView x(data[0], size, dim);
-  VectorView y(&(data[0][1]), size, dim);
-  x.addConstant((*T)(0,3));
-  y.addConstant((*T)(1,3));
+  for(unsigned int i=0; i<size; i++)
+  {
+    data[i][0] += (*T)(0,3);
+    data[i][1] += (*T)(1,3);
+  }
+
   if(_dim >= 3)
   {
-    VectorView z(&(data[0][2]), size, dim);
-    z.addConstant((*T)(2,3));
+    for(unsigned int i=0; i<size; i++)
+      data[i][2] += (*T)(2,3);
   }
 }
 

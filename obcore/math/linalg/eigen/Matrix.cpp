@@ -10,13 +10,14 @@ using namespace Eigen;
 
 Matrix::Matrix(unsigned int rows, unsigned int cols, double* data)
 {
-  _M.resize(rows, cols);
   if(data)
   {
-    unsigned int i=0;
-    for(unsigned int r=0; r<rows; r++)
-      for(unsigned int c=0; c<cols; c++, i++)
-        _M(r,c) = data[i];
+    Map< Eigen::Matrix<double, Dynamic, Dynamic, RowMajor> > M(data, rows, cols);
+    _M = M;
+  }
+  else
+  {
+    _M.resize(rows, cols);
   }
 }
 
@@ -29,16 +30,6 @@ Matrix::Matrix(Matrix M, unsigned int i, unsigned int j, unsigned int rows, unsi
 {
   _M.resize(rows, cols);
   _M = M._M.block(i, j, rows, cols);
-}
-
-VectorView Matrix::getColumnView(unsigned int index)
-{
-
-}
-
-VectorView Matrix::getRowView(unsigned int index)
-{
-
 }
 
 Matrix::~Matrix()
@@ -64,6 +55,28 @@ Matrix& Matrix::operator -= (const Matrix &M)
   return *this;
 }
 
+Matrix& Matrix::operator += (const Matrix &M)
+{
+  _M += M._M;
+  return *this;
+}
+
+Matrix& Matrix::operator += (const double scalar)
+{
+  _M.array() += scalar;
+  return *this;
+}
+
+void Matrix::addToColumn(unsigned int column, const double scalar)
+{
+  _M.col(column).array() += scalar;
+}
+
+void Matrix::addToRow(unsigned int row, const double scalar)
+{
+  _M.row(row).array() += scalar;
+}
+
 double& Matrix::operator () (unsigned int row, unsigned int col)
 {
   return _M(row, col);
@@ -81,13 +94,13 @@ void Matrix::multiplyRight(const Matrix &M, bool transposeArg1, bool transposeAr
   MatrixXd Mleft = _M;
   MatrixXd Mright = M._M;
   if(transposeArg1 && transposeArg2)
-    _M = Mleft.transpose() * Mright.transpose();
+    _M.noalias() = Mleft.transpose() * Mright.transpose();
   else if(transposeArg1)
-    _M = Mleft.transpose() * Mright;
+    _M.noalias() = Mleft.transpose() * Mright;
   else if(transposeArg2)
-    _M = Mleft * Mright.transpose();
+    _M.noalias() = Mleft * Mright.transpose();
   else
-    _M = Mleft * Mright;
+    _M.noalias() = Mleft * Mright;
 }
 
 ostream& operator <<(ostream &os, Matrix &M)
@@ -98,18 +111,16 @@ ostream& operator <<(ostream &os, Matrix &M)
 
 void Matrix::getData(double* array)
 {
-  unsigned int i=0;
-  for(unsigned int r=0; r<_M.rows(); r++)
-    for(unsigned int c=0; c<_M.cols(); c++, i++)
+  int i=0;
+  for(int r=0; r<_M.rows(); r++)
+    for(int c=0; c<_M.cols(); c++, i++)
       array[i] = _M(r,c);
 }
 
-void Matrix::setData(const double* array)
+void Matrix::setData(double* array)
 {
-  unsigned int i=0;
-  for(unsigned r=0; r<_M.rows(); r++)
-    for(unsigned c=0; c<_M.cols(); c++, i++)
-      _M(r,c) = array[i];
+  Map< Eigen::Matrix<double, Dynamic, Dynamic, RowMajor > > M(array, _M.rows(), _M.cols());
+  _M = M;
 }
 
 unsigned int Matrix::getRows()
@@ -163,12 +174,24 @@ double Matrix::trace()
 
 Matrix* Matrix::pcaAnalysis()
 {
-
+  cout << "WARNING: Matrix::pcaAnalysis Not implemented yet" << endl;
+  abort();
 }
 
 void Matrix::svd(Matrix* U, double* s, Matrix* V)
 {
+  if(U->getCols() != getCols() || U->getRows() != getRows())
+  {
+    LOGMSG(DBG_ERROR, "Matrix U must have same dimension");
+    return;
+  }
 
+  JacobiSVD<MatrixXd> svdOfM = _M.jacobiSvd(ComputeFullU | ComputeFullV);
+  U->_M = svdOfM.matrixU();
+  V->_M = svdOfM.matrixV();
+  VectorXd singular = svdOfM.singularValues();
+  for(int i=0; i<singular.count(); i++)
+    s[i] = singular(i);
 }
 
 void Matrix::solve(double* b, double* x)
@@ -188,36 +211,38 @@ Matrix Matrix::createTransform(Matrix T)
     abort();
   }
 
-  // Apply rotation
-  Matrix M(getRows(), dim);
-  Matrix Rt(dim, dim);
-  for(unsigned int r=0; r<dim; r++)
-    for(unsigned int c=0; c<dim; c++)
-      Rt(c, r) = T(r, c);
-
-  M = *this * Rt;
-
-  for(unsigned int r=0; r<getRows(); r++)
-  {
-    M(r, 0) += T(0, dim);
-    M(r, 1) += T(1, dim);
-  }
-
-  if(dim==3)
-  for(unsigned int r=0; r<getRows(); r++)
-    M(r, 2) += T(2, dim);
-
+  Matrix M = *this;
+  M.transform(T);
   return M;
 }
 
 void Matrix::transform(Matrix T)
 {
+  unsigned int dim = getCols();
 
+  if(dim!=2 && dim!=3)
+  {
+    LOGMSG(DBG_ERROR, "Matrix dimension invalid");
+    abort();
+  }
+
+  // Apply rotation
+  Matrix Rt(dim, dim);
+  for(unsigned int r=0; r<dim; r++)
+    for(unsigned int c=0; c<dim; c++)
+      Rt(c, r) = T(r, c);
+
+  _M *= Rt._M;
+  addToColumn(0, T(0, dim));
+  addToColumn(1, T(1, dim));
+  if(dim==3)
+    addToColumn(2, T(2, dim));
 }
 
 void Matrix::print()
 {
   cout << _M;
+  cout << endl;
 }
 
 Matrix Matrix::multiply(const Matrix &M1, const Matrix &M2, bool transposeArg1, bool transposeArg2)
@@ -240,7 +265,19 @@ Matrix Matrix::multiply(const Matrix &M1, const Matrix &M2, bool transposeArg1, 
 
 Vector Matrix::multiply(const Matrix &M, const Vector &V, bool transpose)
 {
+  Vector V2(M._M.rows());
+  if(transpose)
+    V2._V = M._M.transpose() * V._V;
+  else
+    V2._V = M._M * V._V;
+  return V2;
+}
 
+typedef Map<Eigen::Matrix<double, Dynamic, Dynamic, RowMajor> > MapType;
+void Matrix::multiply(const Matrix &M1, double* array, unsigned int rows, unsigned int cols)
+{
+  MapType map(array, rows, cols);
+  map = map * M1._M.transpose();
 }
 
 }

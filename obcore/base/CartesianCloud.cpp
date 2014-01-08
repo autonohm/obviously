@@ -240,12 +240,9 @@ void CartesianCloud3D::transform(Matrix* T)
   _coords->multiplyRight(R, false, true);
 
   // Apply translation
-  VectorView x = _coords->getColumnView(0);
-  VectorView y = _coords->getColumnView(1);
-  VectorView z = _coords->getColumnView(2);
-  x.addConstant((*T)(0,3));
-  y.addConstant((*T)(1,3));
-  z.addConstant((*T)(2,3));
+  _coords->addToColumn(0, (*T)(0,3));
+  _coords->addToColumn(1, (*T)(1,3));
+  _coords->addToColumn(2, (*T)(2,3));
 }
 
 void CartesianCloud3D::transform(double T[16])
@@ -257,7 +254,7 @@ void CartesianCloud3D::transform(double T[16])
 void CartesianCloud3D::createProjection(unsigned char* pImage, unsigned char* pMask, Matrix* P, int nW, int nH)
 {
   Vector xi(4);
-  xi[3] = 1.0;
+  xi(3) = 1.0;
 
   memset(pImage, 0, 3*nW*nH*sizeof(unsigned char));
   memset(pMask, 0, nW*nH*sizeof(unsigned char));
@@ -266,14 +263,14 @@ void CartesianCloud3D::createProjection(unsigned char* pImage, unsigned char* pM
   {
     if(_attributes[i] & ePointAttrValid)
     {
-      xi[0] = (*_coords)(i,0);
-      xi[1] = (*_coords)(i,1);
-      xi[2] = (*_coords)(i,2);
+      xi(0) = (*_coords)(i,0);
+      xi(1) = (*_coords)(i,1);
+      xi(2) = (*_coords)(i,2);
 
       Vector ni = Matrix::multiply(*P, xi, false);
-      double du = ni[0];
-      double dv = ni[1];
-      double dw = ni[2];
+      double du = ni(0);
+      double dv = ni(1);
+      double dw = ni(2);
       if(dw > 10e-6)
       {
         int u = nW-1-(int)( du / dw + 0.5);
@@ -306,14 +303,14 @@ void CartesianCloud3D::createZBuffer(unsigned char* pImage, double* zbuffer, Mat
   {
     if(_attributes[i] & ePointAttrValid)
     {
-      xi[0] = (*_coords)(i,0);
-      xi[1] = (*_coords)(i,1);
-      xi[2] = (*_coords)(i,2);
+      xi(0) = (*_coords)(i,0);
+      xi(1) = (*_coords)(i,1);
+      xi(2) = (*_coords)(i,2);
 
       Vector ni = Matrix::multiply(*P, xi, false);
-      double du = ni[0];
-      double dv = ni[1];
-      double dw = ni[2];
+      double du = ni(0);
+      double dv = ni(1);
+      double dw = ni(2);
       if(dw > 10e-6)
       {
         int u = nW-1-(int)( du / dw + 0.5);
@@ -324,7 +321,7 @@ void CartesianCloud3D::createZBuffer(unsigned char* pImage, double* zbuffer, Mat
           pImage[(v*nW+u)*3]   = _colors[3*i];
           pImage[(v*nW+u)*3+1] = _colors[3*i+1];
           pImage[(v*nW+u)*3+2] = _colors[3*i+2];
-          zbuffer[v*nW+u]      = xi[2];
+          zbuffer[v*nW+u]      = xi(2);
         }
       }
     }

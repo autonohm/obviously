@@ -1,8 +1,6 @@
 #ifndef MATRIXFACTORY_H__
 #define MATRIXFACTORY_H__
 
-#include "Matrix.h"
-
 using namespace std;
 
 /**
@@ -10,6 +8,8 @@ using namespace std;
  */
 namespace obvious
 {
+
+class Matrix;
 
 /**
  * @class MatrixFactory

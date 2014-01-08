@@ -23,6 +23,8 @@
 using namespace obvious;
 
 #define VXLDIM 0.01
+#define LAYOUTPARTITION LAYOUT_8x8x8
+#define LAYOUTSPACE LAYOUT_256x256x256
 
 Matrix* _T;
 Matrix _Tinit(4, 4);
@@ -204,12 +206,12 @@ void _cbRegNewImage(void)
 
   _icp->reset();
   _icp->setModel(coords, normals, size);
-  cout << "ICP set model: " << timeIcpStart - t.getTime() << " ms" << endl;
+  //cout << "ICP set model: " << t.getTime()-timeIcpStart << " ms" << endl;
 
   // Acquire scene image
   //for(unsigned int i=0; i<5; i++)
   _kinect->grab();
-  cout << "ICP Grab: " << timeIcpStart - t.getTime() << " ms" << endl;
+  //cout << "ICP Grab: " << t.getTime()-timeIcpStart << " ms" << endl;
 
   double* coordsScene     = _kinect->getCoords();
   bool* maskScene         = _kinect->getMask();
@@ -232,7 +234,7 @@ void _cbRegNewImage(void)
     }
   }
 
-  cout << "ICP Subsample scene: " << timeIcpStart - t.getTime() << " ms" << endl;
+  //cout << "ICP Subsample scene: " << t.getTime()-timeIcpStart << " ms" << endl;
 
   if(idx==0)
   {
@@ -248,7 +250,7 @@ void _cbRegNewImage(void)
   _vScene->removeInvalidPoints();
 
   _icp->setScene(coords, NULL, idx);
-  cout << "ICP Set scene: " << timeIcpStart - t.getTime() << " ms" << endl;
+  //cout << "ICP Set scene: " << t.getTime()-timeIcpStart << " ms" << endl;
 
   // Perform ICP registration
   double rms = 0;
@@ -327,7 +329,7 @@ int main(void)
   unsigned int cols = _kinect->getCols();
   unsigned int rows = _kinect->getRows();
 
-  _space = new TsdSpace(VXLDIM, LAYOUT_16x16x16, LAYOUT_512x512x512);
+  _space = new TsdSpace(VXLDIM, LAYOUTPARTITION, LAYOUTSPACE);
   _space->setMaxTruncation(3.0 * VXLDIM);
 
   // Initial transformation of sensor

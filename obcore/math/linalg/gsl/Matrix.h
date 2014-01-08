@@ -3,7 +3,6 @@
 
 #include <gsl/gsl_matrix.h>
 
-#include "VectorView.h"
 #include "Vector.h"
 
 #include <iostream>
@@ -51,20 +50,6 @@ public:
 	Matrix(Matrix M, unsigned int i, unsigned int j, unsigned int rows, unsigned int cols);
 
 	/**
-	 * Get vector view of a column
-	 * @param index column index
-	 * @return vector view
-	 */
-	VectorView getColumnView(unsigned int index);
-
-  /**
-   * Get vector view of a row
-   * @param index row index
-   * @return vector view
-   */
-	VectorView getRowView(unsigned int index);
-
-	/**
 	 * Destructor
 	 */
 	~Matrix();
@@ -89,6 +74,34 @@ public:
 	 * @return this matrix instance
 	 */
 	Matrix& operator -= (const Matrix &M);
+
+  /**
+   * Addition operator
+   * @param M matrix added to this one
+   * @return this matrix instance
+   */
+  Matrix& operator += (const Matrix &M);
+
+  /**
+   * Addition operator
+   * @param scalar scalar value added to this one
+   * @return this matrix instance
+   */
+  Matrix& operator += (const double scalar);
+
+  /**
+   * Add constant to column of matrix
+   * @param column column index
+   * @param scalar scalar value
+   */
+  void addToColumn(unsigned int column, const double scalar);
+
+  /**
+   * Add constant to row of matrix
+   * @param row row index
+   * @param scalar scalar value
+   */
+  void addToRow(unsigned int row, const double scalar);
 
 	/**
 	 * Row accessor
@@ -132,7 +145,7 @@ public:
 	 * Data mutator
 	 * @param array array to copy data from
 	 */
-	void setData(const double* array);
+	void setData(double* array);
 
 	/**
 	 * Property accessor
@@ -203,7 +216,7 @@ public:
 	 * @param[in] b b must have elements = number of rows of current matrix
 	 * @param[out] x x must have elements = number of rows of current matrix
 	 */
-	void solve(const double* b, double* x);
+	void solve(double* b, double* x);
 
 	/**
    * Transform current matrix, i.e. with homogeneous transformation
@@ -226,6 +239,8 @@ public:
   static Matrix multiply(const Matrix &M1, const Matrix &M2, bool transposeArg1, bool transposeArg2);
 
   static Vector multiply(const Matrix &M, const Vector &V, bool transpose);
+
+  static void multiply(const Matrix &M1, double* array, unsigned int rows, unsigned int cols);
 
 private:
 

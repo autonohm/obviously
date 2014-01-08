@@ -40,26 +40,6 @@ TEST(matrix_test_copy_constructor, matrix_test)
   EXPECT_EQ(M3(1,1), M(2,2));
 }
 
-TEST(matrix_test_column_view, matrix_test)
-{
-  Matrix M(3, 3, data);
-
-  VectorView v = M.getColumnView(1);
-  EXPECT_EQ(v[0], M(0,1));
-  EXPECT_EQ(v[1], M(1,1));
-  EXPECT_EQ(v[2], M(2,1));
-}
-
-TEST(matrix_test_row_view, matrix_test)
-{
-  Matrix M(3, 3, data);
-
-  VectorView v = M.getRowView(1);
-  EXPECT_EQ(v[0], M(1,0));
-  EXPECT_EQ(v[1], M(1,1));
-  EXPECT_EQ(v[2], M(1,2));
-}
-
 TEST(matrix_test_assignment_operator, matrix_test)
 {
   Matrix M(3, 3, data);
@@ -69,6 +49,48 @@ TEST(matrix_test_assignment_operator, matrix_test)
   for(int r=0; r<3; r++)
     for(int c=0; c<3; c++)
       EXPECT_EQ(M(r,c), M2(r,c));
+}
+
+TEST(matrix_test_add_scalar, matrix_test)
+{
+  Matrix M(3, 3, data);
+
+  Matrix M2 = M;
+  M2 += 5.0;
+
+  for(int r=0; r<3; r++)
+    for(int c=0; c<3; c++)
+      EXPECT_EQ(M2(r,c), M(r,c)+5.0);
+}
+
+TEST(matrix_test_add_scalar_to_column, matrix_test)
+{
+  Matrix M(3, 3, data);
+
+  Matrix M2 = M;
+  M2.addToColumn(0, 5.0);
+
+  for(int r=0; r<3; r++)
+    EXPECT_EQ(M2(r,0), M(r,0)+5.0);
+
+  for(int r=0; r<3; r++)
+    for(int c=1; c<3; c++)
+      EXPECT_EQ(M2(r,c), M(r,c));
+}
+
+TEST(matrix_test_add_scalar_to_row, matrix_test)
+{
+  Matrix M(3, 3, data);
+
+  Matrix M2 = M;
+  M2.addToRow(0, 5.0);
+
+  for(int c=0; c<3; c++)
+    EXPECT_EQ(M2(0,c), M(0,c)+5.0);
+
+  for(int r=1; r<3; r++)
+    for(int c=0; c<3; c++)
+      EXPECT_EQ(M2(r,c), M(r,c));
 }
 
 TEST(matrix_test_multiply_equal_operator, matrix_test)
@@ -226,4 +248,119 @@ TEST(matrix_test_solve, matrix_test)
   EXPECT_EQ(x[0], 1.0);
   EXPECT_EQ(x[1], 2.0);
   EXPECT_EQ(x[2], 3.0);
+}
+
+TEST(matrix_test_multiply_generic, matrix_test)
+{
+  double data2[] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
+  Matrix M(3, 3, data2);
+  Matrix M2(3, 3, data2);
+
+  Matrix Mres = Matrix::multiply(M, M2, false, false);
+  EXPECT_EQ(Mres(0, 0), 30.0);
+  EXPECT_EQ(Mres(0, 1), 36.0);
+  EXPECT_EQ(Mres(0, 2), 42.0);
+  EXPECT_EQ(Mres(1, 0), 66.0);
+  EXPECT_EQ(Mres(1, 1), 81.0);
+  EXPECT_EQ(Mres(1, 2), 96.0);
+  EXPECT_EQ(Mres(2, 0), 102.0);
+  EXPECT_EQ(Mres(2, 1), 126.0);
+  EXPECT_EQ(Mres(2, 2), 150.0);
+
+  Matrix Mres2 = Matrix::multiply(M, M2, true, false);
+  EXPECT_EQ(Mres2(0, 0), 66.0);
+  EXPECT_EQ(Mres2(0, 1), 78.0);
+  EXPECT_EQ(Mres2(0, 2), 90.0);
+  EXPECT_EQ(Mres2(1, 0), 78.0);
+  EXPECT_EQ(Mres2(1, 1), 93.0);
+  EXPECT_EQ(Mres2(1, 2), 108.0);
+  EXPECT_EQ(Mres2(2, 0), 90.0);
+  EXPECT_EQ(Mres2(2, 1), 108.0);
+  EXPECT_EQ(Mres2(2, 2), 126.0);
+
+  Matrix Mres3 = Matrix::multiply(M, M2, false, true);
+  EXPECT_EQ(Mres3(0, 0), 14.0);
+  EXPECT_EQ(Mres3(0, 1), 32.0);
+  EXPECT_EQ(Mres3(0, 2), 50.0);
+  EXPECT_EQ(Mres3(1, 0), 32.0);
+  EXPECT_EQ(Mres3(1, 1), 77.0);
+  EXPECT_EQ(Mres3(1, 2), 122.0);
+  EXPECT_EQ(Mres3(2, 0), 50.0);
+  EXPECT_EQ(Mres3(2, 1), 122.0);
+  EXPECT_EQ(Mres3(2, 2), 194.0);
+
+  Matrix Mres4 = Matrix::multiply(M, M2, true, true);
+  EXPECT_EQ(Mres4(0, 0), 30.0);
+  EXPECT_EQ(Mres4(0, 1), 66.0);
+  EXPECT_EQ(Mres4(0, 2), 102.0);
+  EXPECT_EQ(Mres4(1, 0), 36.0);
+  EXPECT_EQ(Mres4(1, 1), 81.0);
+  EXPECT_EQ(Mres4(1, 2), 126.0);
+  EXPECT_EQ(Mres4(2, 0), 42.0);
+  EXPECT_EQ(Mres4(2, 1), 96.0);
+  EXPECT_EQ(Mres4(2, 2), 150.0);
+}
+
+TEST(matrix_test_vector_multiply, matrix_test)
+{
+  double data2[] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
+  double data3[] = {1.0, 2.0, 3.0};
+  Matrix M(3, 3, data2);
+  Vector V(3, data3);
+  Vector Vres = Matrix::multiply(M, V, false);
+
+  EXPECT_EQ(Vres(0), 14.0);
+  EXPECT_EQ(Vres(1), 32.0);
+  EXPECT_EQ(Vres(2), 50.0);
+
+  Vector Vres2 = Matrix::multiply(M, V, true);
+
+  EXPECT_EQ(Vres2(0), 30.0);
+  EXPECT_EQ(Vres2(1), 36.0);
+  EXPECT_EQ(Vres2(2), 42.0);
+}
+
+TEST(matrix_test_matrix_transform, matrix_test)
+{
+  double data2[] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
+  double tdata[] = {0.0, -1.0, 0.0, 0.5,
+                    1.0, 0.0, 0.0, 0.6,
+                    0.0, 0.0, 1.0, 0.7};
+
+  Matrix coords(3, 3, data2);
+  Matrix T(3, 4, tdata);
+
+  coords.transform(T);
+
+  EXPECT_EQ(coords(0,0), -1.5);
+  EXPECT_EQ(coords(0,1), 1.6);
+  EXPECT_EQ(coords(0,2), 3.7);
+  EXPECT_EQ(coords(1,0), -4.5);
+  EXPECT_EQ(coords(1,1), 4.6);
+  EXPECT_EQ(coords(1,2), 6.7);
+  EXPECT_EQ(coords(2,0), -7.5);
+  EXPECT_EQ(coords(2,1), 7.6);
+  EXPECT_EQ(coords(2,2), 9.7);
+}
+
+TEST(matrix_test_matrix_multiply_array, matrix_test)
+{
+  double data2[] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
+  double rdata[] = {0.0, -1.0, 0.0,
+                    1.0, 0.0, 0.0,
+                    0.0, 0.0, 1.0};
+
+  Matrix R(3, 3, rdata);
+
+  Matrix::multiply(R, data2, 3, 3);
+
+  EXPECT_EQ(data2[0], -2.0);
+  EXPECT_EQ(data2[1], 1.0);
+  EXPECT_EQ(data2[2], 3.0);
+  EXPECT_EQ(data2[3], -5.0);
+  EXPECT_EQ(data2[4], 4.0);
+  EXPECT_EQ(data2[5], 6.0);
+  EXPECT_EQ(data2[6], -8.0);
+  EXPECT_EQ(data2[7], 7.0);
+  EXPECT_EQ(data2[8], 9.0);
 }

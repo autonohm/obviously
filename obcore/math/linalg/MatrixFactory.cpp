@@ -1,5 +1,6 @@
 #include "MatrixFactory.h"
 #include <math.h>
+#include "linalg.h"
 
 namespace obvious
 {
