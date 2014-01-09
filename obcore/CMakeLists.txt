@@ -7,6 +7,7 @@ include(FindPkgConfig)
 
 PROJECT(OBCORE)
 SET(OBCORE_VERSION_MAJOR 0)
+SET(USE_EIGEN 0)
 
 PKG_CHECK_MODULES(XML libxml++-2.6)
 
@@ -33,16 +34,17 @@ SET(LIBRARY     base/CartesianCloud.cpp
                 )
               
 IF(USE_EIGEN)
-  MESSAGE("Using eigen3 library for obcore.")
+  message("Using libeigen for obcore")
+  add_definitions(-DEIGENUSED)
   SET(LIBRARY ${LIBRARY} math/linalg/eigen/Matrix.cpp
                          math/linalg/eigen/Vector.cpp
                          )
 ELSE()
-  MESSAGE("Using gsl library for obcore.")
+  message("Using gsl for obcore")
   SET(LIBRARY ${LIBRARY} math/linalg/gsl/Matrix.cpp
                          math/linalg/gsl/Vector.cpp
                          )
 ENDIF()
-              
-              
+
 add_library(obcore ${LIBRARY})
+
