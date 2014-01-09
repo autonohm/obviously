@@ -1,4 +1,4 @@
-#if 0
+#if EIGENUSED
 #include "eigen/Matrix.h"
 #include "eigen/Vector.h"
 #else
