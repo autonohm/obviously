@@ -45,6 +45,6 @@ ELSE()
                          math/linalg/gsl/Vector.cpp
                          )
 ENDIF()
-              
-              
+
 add_library(obcore ${LIBRARY})
+
