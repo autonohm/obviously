@@ -136,10 +136,9 @@ void init(void)
 {
   const double voxelSize   = 0.001;
   double d_maxIterations   = 50;
-  double d_subSampling     = 1;
+  double d_subSampling     = 1.0; // 100% -> take every sample
 
   const unsigned int maxIterations = (unsigned int)(d_maxIterations);
-  const unsigned int subSampling   = (unsigned int)(d_subSampling);
 
   _cloud      = new VtkCloud();
   _cloudScene = new VtkCloud();
@@ -181,7 +180,7 @@ void init(void)
   assigner->addPreFilter(_filterBounds);
 
   // Subsampling filter for accelartion of icp
-  IPreAssignmentFilter* filterS = (IPreAssignmentFilter*) new SubsamplingFilter(subSampling);
+  IPreAssignmentFilter* filterS = (IPreAssignmentFilter*) new SubsamplingFilter(d_subSampling);
   assigner->addPreFilter(filterS);
 
   // Decreasing threshhold filter

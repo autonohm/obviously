@@ -317,7 +317,7 @@ int main(int argc, char* argv[])
   _space = new TsdSpace(voxelSize, LAYOUT_1x1x1, LAYOUT_256x256x256);
 
   const unsigned int maxIterations = 44;
-  const unsigned int subSampling   = 44;
+  const double subSampling   = 1.0/44.0;
 
   // set up sensor parameters
   double perspective[12]  = {585.05108211, 0.00000000, 315.83800193,

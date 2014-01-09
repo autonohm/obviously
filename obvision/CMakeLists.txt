@@ -19,7 +19,6 @@ add_library(obvision
 	icp/assign/filter/OcclusionFilter.cpp
 	icp/assign/filter/TrimmedFilter.cpp
 	icp/assign/filter/ReciprocalFilter.cpp
-	icp/assign/filter/SubsamplingFilter.cpp
 	icp/assign/filter/DistanceFilter.cpp
 	icp/assign/filter/OutOfBoundsFilter2D.cpp
 	icp/assign/filter/OutOfBoundsFilter3D.cpp

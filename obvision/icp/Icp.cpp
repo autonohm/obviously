@@ -64,26 +64,67 @@ IRigidEstimator* Icp::getRigidEstimator()
   return _estimator;
 }
 
-void Icp::setModel(double* coords, double* normals, const unsigned int size)
+bool* createSubsamplingMask(unsigned int* size, double probability)
 {
-  unsigned int sizeNormals = _sizeModelBuf;
-
-  checkMemory(size, _dim, _sizeModelBuf, _model);
-
-  memcpy(&_model[0][0], coords, size*_dim*sizeof(double));
-  if(normals)
+  unsigned int sizeOut = 0;
+  bool* mask = new bool[*size];
+  memset(mask, 0, *size * sizeof(*mask));
+  if(probability>1.0) probability = 1.0;
+  if(probability<0.0) probability = 0.0;
+  int probability_thresh = (int)(probability * 1000.0 + 0.5);
+  srand(time(NULL));
+  for(unsigned int i=0; i<*size; i++)
   {
-    checkMemory(size, _dim, sizeNormals, _normalsM);
-    memcpy(_normalsM[0], normals, size*_dim*sizeof(double));
+    if((rand()%1000)<probability_thresh)
+    {
+      mask[i] = 1;
+      sizeOut++;
+    }
+  }
+  *size = sizeOut;
+  return mask;
+}
+
+void Icp::setModel(double* coords, double* normals, const unsigned int size, double probability)
+{
+  _sizeModel = size;
+  bool* mask = createSubsamplingMask(&_sizeModel, probability);
+
+  unsigned int sizeNormalsBuf = _sizeModelBuf;
+  checkMemory(_sizeModel, _dim, _sizeModelBuf, _model);
+  unsigned int idx = 0;
+  for(unsigned int i=0; i<size; i++)
+  {
+    if(mask[i])
+    {
+      for(unsigned int j=0; j<(unsigned int)_dim; j++)
+        _model[idx][j] = coords[_dim*i+j];
+      idx++;
+    }
   }
 
-  _sizeModel = size;
+  if(normals)
+  {
+    checkMemory(_sizeModel, _dim, sizeNormalsBuf, _normalsM);
+    idx = 0;
+    for(unsigned int i=0; i<size; i++)
+    {
+      if(mask[i])
+      {
+        for(unsigned int j=0; j<(unsigned int)_dim; j++)
+          _normalsM[idx][j] = normals[_dim*i+j];
+        idx++;
+      }
+    }
+  }
 
   _assigner->setModel(_model, _sizeModel);
   _estimator->setModel(_model, _sizeModel, _normalsM);
+
+  delete [] mask;
 }
 
-void Icp::setModel(Matrix* coords, Matrix* normals)
+void Icp::setModel(Matrix* coords, Matrix* normals, double probability)
 {
   if(coords->getCols()!=(size_t)_dim)
   {
@@ -91,83 +132,128 @@ void Icp::setModel(Matrix* coords, Matrix* normals)
     return;
   }
 
-  unsigned int size = coords->getRows();
+  unsigned int sizeSource = coords->getRows();
+  _sizeModel = sizeSource;
+  bool* mask = createSubsamplingMask(&_sizeModel, probability);
+
+
   unsigned int sizeNormals = _sizeModelBuf;
 
-  checkMemory(size, _dim, _sizeModelBuf, _model);
+  checkMemory(_sizeModel, _dim, _sizeModelBuf, _model);
 
-  for(unsigned int i=0; i<size; i++)
+  unsigned int idx = 0;
+  for(unsigned int i=0; i<sizeSource; i++)
   {
-    for(unsigned int j=0; j<(unsigned int)_dim; j++)
-      _model[i][j] = (*coords)(i,j);
+    if(mask[i])
+    {
+      for(unsigned int j=0; j<(unsigned int)_dim; j++)
+        _model[idx][j] = (*coords)(i,j);
+      idx++;
+    }
   }
 
   if(normals)
   {
-    checkMemory(size, _dim, sizeNormals, _normalsM);
-    for(unsigned int i=0; i<size; i++)
+    checkMemory(_sizeModel, _dim, sizeNormals, _normalsM);
+    idx = 0;
+    for(unsigned int i=0; i<sizeSource; i++)
     {
-      for(unsigned int j=0; j<(unsigned int)_dim; j++)
-        _normalsM[i][j] = (*normals)(i,j);
+      if(mask[i])
+      {
+        for(unsigned int j=0; j<(unsigned int)_dim; j++)
+          _normalsM[idx][j] = (*normals)(i,j);
+        idx++;
+      }
     }
   }
-
-  _sizeModel = size;
 
   _assigner->setModel(_model, _sizeModel);
   _estimator->setModel(_model, _sizeModel, _normalsM);
 }
 
-void Icp::setScene(double* coords, double* normals, const unsigned int size)
+void Icp::setScene(double* coords, double* normals, const unsigned int size, double probability)
 {
   if(size==0)
   {
     cout << "Scene of size 0 passed ... ignoring" << endl;
     return;
   }
+
   _sizeScene = size;
+  bool* mask = createSubsamplingMask(&_sizeScene, probability);
 
-  unsigned int sizeNormals = _sizeSceneBuf;
-
+  unsigned int sizeNormalsBuf = _sizeSceneBuf;
   checkMemory(_sizeScene, _dim, _sizeSceneBuf, _scene);
-  memcpy(_scene[0], coords, size*_dim*sizeof(double));
+  unsigned int idx = 0;
+  for(unsigned int i=0; i<size; i++)
+  {
+    if(mask[i])
+    {
+      for(unsigned int j=0; j<(unsigned int)_dim; j++)
+        _scene[idx][j] = coords[_dim*i+j];
+      idx++;
+    }
+  }
 
   if(normals)
   {
-    checkMemory(_sizeScene, _dim, sizeNormals, _normalsS);
-    memcpy(_normalsS[0], normals, size*_dim*sizeof(double));
+    cout << "copy normals" << endl;
+    checkMemory(_sizeScene, _dim, sizeNormalsBuf, _normalsS);
+    idx = 0;
+    for(unsigned int i=0; i<size; i++)
+    {
+      if(mask[i])
+      {
+        for(unsigned int j=0; j<(unsigned int)_dim; j++)
+          _normalsS[idx][j] = normals[_dim*i+j];
+        idx++;
+      }
+    }
   }
 
   applyTransformation(_scene, _sizeScene, _dim, _Tfinal4x4);
   if(normals) applyTransformation(_normalsS, _sizeScene, _dim, _Tfinal4x4);
+
+  delete [] mask;
 }
 
-void Icp::setScene(Matrix* coords, Matrix* normals)
+void Icp::setScene(Matrix* coords, Matrix* normals, double probability)
 {
   if(coords->getCols()!=(size_t)_dim) {
     cout << "WARNING: Scene is not of correct dimensionality " << _dim << endl;
     return;
   }
 
-  _sizeScene = coords->getRows();
+  unsigned int sizeSource = coords->getRows();
+  _sizeScene = sizeSource;
+  bool* mask = createSubsamplingMask(&_sizeScene, probability);
 
   unsigned int sizeNormals = _sizeSceneBuf;
 
   checkMemory(_sizeScene, _dim, _sizeSceneBuf, _scene);
-  for(unsigned int i=0; i<_sizeScene; i++)
+  unsigned int idx = 0;
+  for(unsigned int i=0; i<sizeSource; i++)
   {
-    for(unsigned int j=0; j<(unsigned int)_dim; j++)
-      _scene[i][j] = (*coords)(i,j);
+    if(mask[i])
+    {
+      for(unsigned int j=0; j<(unsigned int)_dim; j++)
+        _scene[idx][j] = (*coords)(i,j);
+      idx++;
+    }
   }
 
   if(normals)
   {
     checkMemory(_sizeScene, _dim, sizeNormals, _normalsS);
-
-    for(unsigned int i=0; i<_sizeScene; i++)
+    idx = 0;
+    for(unsigned int i=0; i<sizeSource; i++)
     {
-      for(unsigned int j=0; j<(unsigned int)_dim; j++)
-        _normalsS[i][j] = (*normals)(i,j);
+      if(mask[i])
+      {
+        for(unsigned int j=0; j<(unsigned int)_dim; j++)
+          _normalsS[idx][j] = (*normals)(i,j);
+        idx++;
+      }
     }
   }
 

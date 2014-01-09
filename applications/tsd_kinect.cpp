@@ -205,7 +205,7 @@ void _cbRegNewImage(void)
   _vModel->transform(P);
 
   _icp->reset();
-  _icp->setModel(coords, normals, size);
+  _icp->setModel(coords, normals, size, 0.2);
   //cout << "ICP set model: " << t.getTime()-timeIcpStart << " ms" << endl;
 
   // Acquire scene image
@@ -217,10 +217,9 @@ void _cbRegNewImage(void)
   bool* maskScene         = _kinect->getMask();
   unsigned char* rgbScene = _kinect->getRGB();
 
-  // Subsample and filter scene
-  unsigned int subsamplingScene = 25;
+  // Assort invalid scene points
   unsigned int idx = 0;
-  for(unsigned int i=0; i<cols*rows; i+=subsamplingScene)
+  for(unsigned int i=0; i<cols*rows; i++)
   {
     if(maskScene[i])
     {
@@ -249,7 +248,7 @@ void _cbRegNewImage(void)
   _vScene->setColors(rgb, size / 3, 3);
   _vScene->removeInvalidPoints();
 
-  _icp->setScene(coords, NULL, idx);
+  _icp->setScene(coords, NULL, idx, 0.04);
   //cout << "ICP Set scene: " << t.getTime()-timeIcpStart << " ms" << endl;
 
   // Perform ICP registration
