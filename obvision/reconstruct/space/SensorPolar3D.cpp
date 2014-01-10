@@ -110,7 +110,7 @@ void SensorPolar3D::backProject(Matrix* M, int* indices)
 
   for(unsigned int i=0; i<M->getRows(); i++)
   {
-    double phi = atan2(coords3D(1,i), coords3D(1,0)) - M_PI;
+    double phi = atan2(coords3D(1,i), coords3D(0,i)) - M_PI;
     if(phi>M_PI) phi -= M_PI;
     if(phi<-M_PI) phi += M_PI;
 
