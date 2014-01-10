@@ -136,7 +136,6 @@ void init(void)
 {
   const double voxelSize   = 0.001;
   double d_maxIterations   = 50;
-  double d_subSampling     = 1.0; // 100% -> take every sample
 
   const unsigned int maxIterations = (unsigned int)(d_maxIterations);
 
@@ -178,10 +177,6 @@ void init(void)
   _filterBounds = new OutOfBoundsFilter3D(_space->getMinX(), _space->getMaxX(), _space->getMinY(), _space->getMaxY(), _space->getMinZ(), _space->getMaxZ());
   _filterBounds->setPose(&T);
   assigner->addPreFilter(_filterBounds);
-
-  // Subsampling filter for accelartion of icp
-  IPreAssignmentFilter* filterS = (IPreAssignmentFilter*) new SubsamplingFilter(d_subSampling);
-  assigner->addPreFilter(filterS);
 
   // Decreasing threshhold filter
   IPostAssignmentFilter* filterD = (IPostAssignmentFilter*)new DistanceFilter(0.10, 0.01, maxIterations);
@@ -277,8 +272,9 @@ void calc(void)
       _cloudScene->serialize("scene.vtp");
 
       _icp->reset();
-//
-      _icp->setScene(coordsT, NULL, _nano->getCols()*_nano->getRows());
+
+      double d_subSampling     = 1.0; // 100% -> take every sample
+      _icp->setScene(coordsT, NULL, _nano->getCols()*_nano->getRows(), d_subSampling);
       _icp->setModel(coords, normals, size/3);
 
       // Perform ICP registration
