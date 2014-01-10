@@ -301,13 +301,13 @@ double TsdSpacePartition::interpolateTrilinear(int x, int y, int z, double dx, d
 
   // Interpolate
   return tsdf_cell * (1. - dx) * (1. - dy) * (1. - dz)
-        +  _space[z + 1][y + 1][x + 0].tsd * (1. - dx) * dy * dz
-        +  _space[z + 0][y + 0][x + 0].tsd * (1. - dx) * (1. - dy) * (1. - dz)
         +  _space[z + 1][y + 0][x + 0].tsd * (1. - dx) * (1. - dy) * dz
-        +  _space[z + 0][y + 1][x + 1].tsd * dx * dy * (1. - dz)
-        +  _space[z + 1][y + 1][x + 1].tsd * dx * dy * dz
+        +  _space[z + 0][y + 1][x + 0].tsd * (1. - dx) * dy * (1. - dz)
+        +  _space[z + 1][y + 1][x + 0].tsd * (1. - dx) * dy * dz
         +  _space[z + 0][y + 0][x + 1].tsd * dx * (1. - dy) * (1. - dz)
-        +  _space[z + 1][y + 0][x + 1].tsd * dx * (1. - dy) * dz;
+        +  _space[z + 1][y + 0][x + 1].tsd * dx * (1. - dy) * dz
+        +  _space[z + 0][y + 1][x + 1].tsd * dx * dy * (1. - dz)
+        +  _space[z + 1][y + 1][x + 1].tsd * dx * dy * dz;
 }
 
 }
