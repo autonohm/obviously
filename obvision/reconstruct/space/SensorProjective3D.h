@@ -51,18 +51,11 @@ public:
    */
   void backProject(Matrix* M, int* indices);
 
-  /**
-   *
-   */
-  void calcRayFromCurrentPose(const unsigned int row, const unsigned int col, double dirVec[3]);
-
 private:
 
   void init(unsigned int cols, unsigned int rows, double PData[12]);
 
   Matrix* _P;
-
-  Matrix*** _rays;
 
 };
 

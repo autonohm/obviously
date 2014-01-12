@@ -65,7 +65,6 @@ TsdGrid::TsdGrid(const double cellSize, const EnumTsdGridLayout layoutPartition,
   else
   {
     TsdGridBranch* tree = new TsdGridBranch((TsdGridComponent***)_partitions, 0, 0, depthTree);
-    //tree->printEdges();
     _tree = tree;
   }
 }

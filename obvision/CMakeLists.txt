@@ -43,5 +43,6 @@ add_library(obvision
 	reconstruct/space/TsdSpace.cpp
 	reconstruct/space/TsdSpaceComponent.cpp
 	reconstruct/space/TsdSpacePartition.cpp
+	reconstruct/space/TsdSpaceBranch.cpp
 	reconstruct/space/RayCast3D.cpp
 	)

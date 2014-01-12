@@ -13,12 +13,12 @@ namespace obvious
 static Matrix* _partCoords;
 
 TsdSpacePartition::TsdSpacePartition(const unsigned int x,
-                                   const unsigned int y,
-                                   const unsigned int z,
-                                   const unsigned int cellsX,
-                                   const unsigned int cellsY,
-                                   const unsigned int cellsZ,
-                                   const double cellSize) : TsdSpaceComponent(true)
+                                     const unsigned int y,
+                                     const unsigned int z,
+                                     const unsigned int cellsX,
+                                     const unsigned int cellsY,
+                                     const unsigned int cellsZ,
+                                     const double cellSize) : TsdSpaceComponent(true)
 {
   _x = x;
   _y = y;
@@ -91,18 +91,9 @@ TsdSpacePartition::TsdSpacePartition(const unsigned int x,
   (*_edgeCoordsHom)(7, 2) = ((double)(z+cellsZ) + 0.5) * _cellSize;
   (*_edgeCoordsHom)(7, 3) = 1.0;
 
-  _centroid[0] = 0.0;
-  _centroid[1] = 0.0;
-  _centroid[2] = 0.0;
-  for(int i=0; i<8; i++)
-  {
-    _centroid[0] += (*_edgeCoordsHom)(i, 0);
-    _centroid[1] += (*_edgeCoordsHom)(i, 1);
-    _centroid[2] += (*_edgeCoordsHom)(i, 2);
-  }
-  _centroid[0] /= 8.0;
-  _centroid[1] /= 8.0;
-  _centroid[2] /= 8.0;
+  _centroid[0] = ((*_edgeCoordsHom)(7, 0)+(*_edgeCoordsHom)(0, 0)) / 2.0;
+  _centroid[1] = ((*_edgeCoordsHom)(7, 1)+(*_edgeCoordsHom)(0, 1)) / 2.0;
+  _centroid[2] = ((*_edgeCoordsHom)(7, 2)+(*_edgeCoordsHom)(0, 2)) / 2.0;
 
   double dx = ((*_edgeCoordsHom)(7, 0)-(*_edgeCoordsHom)(0, 0));
   double dy = ((*_edgeCoordsHom)(7, 1)-(*_edgeCoordsHom)(0, 1));
@@ -116,13 +107,21 @@ TsdSpacePartition::TsdSpacePartition(const unsigned int x,
 
 TsdSpacePartition::~TsdSpacePartition()
 {
-  if(_space) System<TsdVoxel>::deallocate(_space);
-  if(_cellCoordsHom) delete [] _cellCoordsHom;
-  delete [] _edgeCoordsHom;
-  if(_partCoords)
+  reset();
+
+  delete [] _edgeCoordsHom; _edgeCoordsHom = NULL;
+}
+
+void TsdSpacePartition::reset()
+{
+  if(_space)
   {
-    delete [] _partCoords;
-    _partCoords = NULL;
+    System<TsdVoxel>::deallocate(_space); _space = NULL;
+  }
+
+  if(_cellCoordsHom)
+  {
+    delete [] _cellCoordsHom; _cellCoordsHom = NULL;
   }
 }
 
@@ -220,15 +219,15 @@ unsigned int TsdSpacePartition::getSize()
   return _cellsX*_cellsY*_cellsZ;
 }
 
-void TsdSpacePartition::addTsd(const unsigned int x, const unsigned int y, const unsigned int z, const double sdf, const double maxTruncation)
+void TsdSpacePartition::addTsd(const unsigned int x, const unsigned int y, const unsigned int z, const double sd, const double maxTruncation)
 {
-  if(sdf >= -maxTruncation)
+  if(sd >= -maxTruncation)
   {
     TsdVoxel* voxel = &_space[z][y][x];
 
-    double tsdf = sdf;
-    tsdf /= maxTruncation;
-    tsdf = min(tsdf, 1.0);
+    double tsd = sd;
+    tsd /= maxTruncation;
+    tsd = min(tsd, 1.0);
 
     /** The following lines were proposed by
      *  E. Bylow, J. Sturm, C. Kerl, F. Kahl, and D. Cremers.
@@ -252,12 +251,12 @@ void TsdSpacePartition::addTsd(const unsigned int x, const unsigned int y, const
 
     if(isnan(voxel->tsd))
     {
-      voxel->tsd = tsdf;
+      voxel->tsd = tsd;
     }
     else
     {
       voxel->weight = min(voxel->weight, TSDSPACEMAXWEIGHT);
-      voxel->tsd   = (voxel->tsd * (voxel->weight - 1.0) + tsdf) / voxel->weight;
+      voxel->tsd   = (voxel->tsd * (voxel->weight - 1.0) + tsd) / voxel->weight;
     }
   }
 }

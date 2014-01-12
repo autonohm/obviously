@@ -45,6 +45,8 @@ public:
 
   ~TsdSpacePartition();
 
+  void reset();
+
   double& operator () (unsigned int z, unsigned int y, unsigned int x);
 
   void init();
@@ -71,7 +73,7 @@ public:
 
   unsigned int getSize();
 
-  void addTsd(const unsigned int x, const unsigned int y, const unsigned int z, const double sdf, const double maxTruncation);
+  void addTsd(const unsigned int x, const unsigned int y, const unsigned int z, const double sd, const double maxTruncation);
 
   virtual void increaseEmptiness();
 

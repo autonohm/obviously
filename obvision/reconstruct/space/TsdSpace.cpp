@@ -3,6 +3,7 @@
 #include "obcore/base/Timer.h"
 #include "obcore/math/mathbase.h"
 #include "TsdSpace.h"
+#include "TsdSpaceBranch.h"
 #include "SensorProjective3D.h"
 
 #include <cstring>
@@ -72,11 +73,21 @@ TsdSpace::TsdSpace(const double voxelSize, const EnumTsdSpaceLayout layoutPartit
     }
   }
 
-  reset();
+  int depthTree = layoutSpace-layoutPartition;
+  if(depthTree == 0)
+  {
+    _tree = _partitions[0][0][0];
+  }
+  else
+  {
+    TsdSpaceBranch* tree = new TsdSpaceBranch((TsdSpaceComponent****)_partitions, 0, 0, 0, depthTree);
+    _tree = tree;
+  }
 }
 
 TsdSpace::~TsdSpace(void)
 {
+  delete _tree;
   System<TsdSpacePartition*>::deallocate(_partitions);
   delete [] _lutIndex2Partition;
   delete [] _lutIndex2Cell;
@@ -84,7 +95,16 @@ TsdSpace::~TsdSpace(void)
 
 void TsdSpace::reset()
 {
-  LOGMSG(DBG_DEBUG, "Reset not implemented yet");
+  for(int pz=0; pz<_partitionsInZ; pz++)
+  {
+    for(int py=0; py<_partitionsInY; py++)
+    {
+      for(int px=0; px<_partitionsInX; px++)
+      {
+        _partitions[pz][py][px]->reset();
+      }
+    }
+  }
 }
 
 unsigned int TsdSpace::getXDimension()
@@ -176,6 +196,8 @@ void TsdSpace::push(Sensor* sensor)
   double tr[3];
   sensor->getPosition(tr);
 
+  Matrix* partCoords = _partitions[0][0][0]->getPartitionCoords();
+
 #pragma omp parallel
   {
   unsigned int partSize = (_partitions[0][0][0])->getSize();
@@ -192,7 +214,6 @@ void TsdSpace::push(Sensor* sensor)
 
         part->init();
 
-        Matrix* partCoords = part->getPartitionCoords();
         Matrix* cellCoordsHom = part->getCellCoordsHom();
         sensor->backProject(cellCoordsHom, idx);
 
@@ -213,6 +234,10 @@ void TsdSpace::push(Sensor* sensor)
               double distance = euklideanDistance<double>(tr, crd, 3);
               double sd = data[index] - distance;
 
+              // Test with distance-related weighting
+              /*double weight = 1.0 - (10.0 - distance);
+              weight = max(weight, 0.1);*/
+
               // TODO: Implement color support
               //unsigned char* color = NULL;
               //if(rgb) color = &(rgb[3*index]);
@@ -230,6 +255,92 @@ void TsdSpace::push(Sensor* sensor)
   propagateBorders();
 
   LOGMSG(DBG_DEBUG, "Elapsed push: " << t.getTime() << "ms");
+}
+
+void TsdSpace::pushTree(Sensor* sensor)
+{
+  Timer t;
+
+  double* data = sensor->getRealMeasurementData();
+  bool* mask = sensor->getRealMeasurementMask();
+  //unsigned char* rgb = sensor->getRealMeasurementRGB();
+
+  double tr[3];
+  sensor->getPosition(tr);
+
+  TsdSpaceComponent* comp = _tree;
+  vector<TsdSpacePartition*> partitionsToCheck;
+  pushRecursion(sensor, tr, comp, partitionsToCheck);
+
+  cout << "Partitions to check: " << partitionsToCheck.size() << endl;
+
+  Matrix* partCoords = _partitions[0][0][0]->getPartitionCoords();
+
+#pragma omp parallel
+  {
+  unsigned int partSize = (_partitions[0][0][0])->getSize();
+  int* idx = new int[partSize];
+#pragma omp for schedule(dynamic)
+  for(unsigned int i=0; i<partitionsToCheck.size(); i++)
+  {
+    TsdSpacePartition* part = partitionsToCheck[i];
+
+    part->init();
+
+    Matrix* cellCoordsHom = part->getCellCoordsHom();
+    sensor->backProject(cellCoordsHom, idx);
+
+    for(unsigned int c=0; c<partSize; c++)
+    {
+      // Measurement index
+      int index = idx[c];
+
+      if(index>=0)
+      {
+        if(mask[index])
+        {
+          // calculate distance of current cell to sensor
+          double crd[3];
+          crd[0] = (*cellCoordsHom)(c,0);
+          crd[1] = (*cellCoordsHom)(c,1);
+          crd[2] = (*cellCoordsHom)(c,2);
+          double distance = euklideanDistance<double>(tr, crd, 3);
+          double sd = data[index] - distance;
+
+          // Test with distance-related weighting
+          /*double weight = 1.0 - (10.0 - distance);
+          weight = max(weight, 0.1);*/
+
+          // TODO: Implement color support
+          //unsigned char* color = NULL;
+          //if(rgb) color = &(rgb[3*index]);
+
+          part->addTsd((*partCoords)(c, 0), (*partCoords)(c, 1), (*partCoords)(c, 2), sd, _maxTruncation);
+        }
+      }
+    }
+  }
+  delete [] idx;
+  }
+
+  propagateBorders();
+
+  LOGMSG(DBG_DEBUG, "Elapsed push: " << t.getTime() << "ms");
+}
+
+void TsdSpace::pushRecursion(Sensor* sensor, double pos[3], TsdSpaceComponent* comp, vector<TsdSpacePartition*> &partitionsToCheck)
+{
+  if(comp->isInRange(pos, sensor, _maxTruncation))
+  {
+    if(comp->isLeaf())
+        partitionsToCheck.push_back((TsdSpacePartition*)comp);
+    else
+    {
+      vector<TsdSpaceComponent*> children = ((TsdSpaceBranch*)comp)->getChildren();
+      for(unsigned int i=0; i<children.size(); i++)
+        pushRecursion(sensor, pos, children[i], partitionsToCheck);
+    }
+  }
 }
 
 void TsdSpace::propagateBorders()
@@ -445,11 +556,13 @@ bool TsdSpace::coord2Index(double coord[3], int* x, int* y, int* z, double* dx, 
   }
 
   // Check boundaries
-  /*if ((xIdx >= (int)_cellsX) || (xIdx < 0) || (yIdx >= (int)_cellsY) || (yIdx < 0) || (zIdx >= (int)_cellsZ) || zIdx < 0)
+  /*if ((*x >= (int)_cellsX) || (*x < 0) || (*y >= (int)_cellsY) || (*y < 0) || (*z >= (int)_cellsZ) || *z < 0)
   {
     return false;
-  }
+  }*/
 
+
+/*
   *x = xIdx;
   *y = yIdx;
   *z = zIdx;

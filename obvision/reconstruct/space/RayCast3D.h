@@ -35,6 +35,9 @@ public:
 	virtual ~RayCast3D();
 
 	virtual void calcCoordsFromCurrentPose(TsdSpace* space, Sensor* sensor, double* coords, double* normals, unsigned char* rgb, unsigned int* size);
+
+  virtual void calcCoordsFromCurrentPoseMask(TsdSpace* space, Sensor* sensor, double* coords, double* normals, unsigned char* rgb, bool* mask, unsigned int* size);
+
 	/**
 	 * Overloaded method to cast a single ray trough several spaces. The method returns in case of a found coordinate or at
 	 * the end of the TsdSpace input vector.
@@ -48,10 +51,8 @@ public:
 	 * @param v Row the ray is casted through
 	 * @return True in case of a found point, false otherwise
 	 */
-	virtual bool calcCoordsFromCurrentPose(TsdSpace* space, Sensor* sensor, double* coords, double* normals, unsigned char* rgb, const std::vector<TsdSpace*>& spaces,
-											                    const std::vector<double>& offsets, const unsigned int u, const unsigned int v);
-
-	virtual void calcCoordsFromCurrentPoseMask(TsdSpace* space, Sensor* sensor, double* coords, double* normals, unsigned char* rgb, bool* mask, unsigned int* size);
+	/*virtual bool calcCoordsFromCurrentPose(TsdSpace* space, Sensor* sensor, double* coords, double* normals, unsigned char* rgb, const std::vector<TsdSpace*>& spaces,
+											                    const std::vector<double>& offsets, const unsigned int u, const unsigned int v);*/
 
 
   /**

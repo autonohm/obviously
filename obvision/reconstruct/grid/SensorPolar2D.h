@@ -30,13 +30,6 @@ public:
   ~SensorPolar2D();
 
   /**
-   * Calculate ray of specific beam
-   * @param[in] beam beam index
-   * @param[out] ray vector
-   */
-  void calcRay(unsigned int beam, double ray[2]);
-
-  /**
    * Assign an arbitrary 2D coordinate to a measurement beam
    * @param[in] coordinate vector
    * @return beam index
@@ -54,13 +47,14 @@ public:
    * Get angular resolution
    * @return angular resolution
    */
-  double angularRes(void);
+  double getAngularResolution();
 
   /**
    * Get the minimum angle
    * @return minimum angle
    */
-  double phiMin(void);
+  double getPhiMin();
+
 private:
 
   double _angularRes;

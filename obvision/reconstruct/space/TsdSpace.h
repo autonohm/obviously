@@ -136,6 +136,8 @@ public:
   */
  void push(Sensor* sensor);
 
+ void pushTree(Sensor* sensor);
+
  /**
   * interpolate_trilineary
   * Function to interpolate TSDF trilineary
@@ -170,6 +172,8 @@ public:
  //void load(const char* filename);
 private:
 
+ void pushRecursion(Sensor* sensor, double pos[3], TsdSpaceComponent* comp, vector<TsdSpacePartition*> &partitionsToCheck);
+
  void propagateBorders();
 
  /**
@@ -178,6 +182,8 @@ private:
  void addTsdValue(const unsigned int col, const unsigned int row, const unsigned int z, double sd, unsigned char* rgb);
 
  bool coord2Index(double coord[3], int* x, int* y, int* z, double* dx, double* dy, double* dz);
+
+ TsdSpaceComponent* _tree;
 
  unsigned int _cellsX;
 

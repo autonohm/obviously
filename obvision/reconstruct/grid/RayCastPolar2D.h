@@ -28,7 +28,7 @@ public:
 
 private:
 
-  bool rayCastFromCurrentView(TsdGrid* grid, SensorPolar2D* sensor, const unsigned int beam, double coordinates[2], double normal[2]);
+  bool rayCastFromCurrentView(TsdGrid* grid, SensorPolar2D* sensor, double ray[2], double coordinates[2], double normal[2]);
 
   void calcRayFromCurrentView(const unsigned int beam, double dirVec[2]);
 

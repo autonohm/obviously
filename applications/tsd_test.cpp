@@ -14,8 +14,8 @@ int main(void)
 {
   LOGMSG_CONF("tsd_test.log", Logger::file_off|Logger::screen_on, DBG_DEBUG, DBG_DEBUG);
 
-  double voxelSize = 0.01;
-  TsdSpace space(voxelSize, LAYOUT_16x16x16, LAYOUT_512x512x512);
+  double voxelSize = 0.02;
+  TsdSpace space(voxelSize, LAYOUT_8x8x8, LAYOUT_256x256x256);
   space.setMaxTruncation(3.0*voxelSize);
 
   // translation of sensor
@@ -36,8 +36,6 @@ int main(void)
   int rows = 480;
   int cols = 640;
 
-  double*** buf;
-  System<double>::allocate (cols, rows, 3, buf);
 
   // Setup synthetic perspective projection
   double su = 500;
@@ -46,38 +44,30 @@ int main(void)
   double tv = 240;
   double PData[12]  = {su, 0, tu, 0, 0, sv, tv, 0, 0, 0, 1, 0};
 
-
   SensorProjective3D sensor(cols, rows, PData);
   sensor.transform(&T);
 
-
   double distZ[cols*rows];
 
-  // Background with distance = 0.8m -> s=0.8
+  // Background with distance = 3.0m -> s=3.0
   for(int u=0; u<cols; u++)
     for(int v=0; v<rows; v++)
     {
-      double s = 0.8;
+      double s = 3.0;
       double x = s*(((double)u) - tu) / su;
       double y = s*(((double)v) - tv) / sv;
       double z = s;
-      buf[u][v][0] = x;
-      buf[u][v][1] = y;
-      buf[u][v][2] = z;
       distZ[v*cols+u] = sqrt(x*x+y*y+z*z);
     }
 
-  // Centered square with distance = 0.5m -> s=0.5
+  // Centered square with distance = 1.5m -> s=1.5
   for(int u=cols/4; u<3*cols/4; u++)
     for(int v=rows/4; v<3*rows/4; v++)
     {
-      double s = 0.5;
+      double s = 1.5;
       double x = s*(((double)u) - tu) / su;
       double y = s*(((double)v) - tv) / sv;
       double z = s;
-      buf[u][v][0] = x;
-      buf[u][v][1] = y;
-      buf[u][v][2] = z;
       distZ[v*cols+u] = sqrt(x*x+y*y+z*z);
     }
 
