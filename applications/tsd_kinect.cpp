@@ -19,6 +19,7 @@
 #include "obvision/reconstruct/space/TsdSpace.h"
 #include "obvision/reconstruct/space/SensorProjective3D.h"
 #include "obvision/reconstruct/space/RayCast3D.h"
+#include "obvision/reconstruct/space/RayCastAxisAligned3D.h"
 
 using namespace obvious;
 
@@ -76,28 +77,26 @@ void _cbBuildSliceViews(void)
 
 void _cbGenPointCloud(void)
 {
-  double* cloud = NULL;
-  double* normals = NULL;
-  unsigned char* rgb=NULL;
+  double* cloud = new double[1000*1000*3];
+  double* normals = new double[1000*1000*3];
+  //unsigned char* rgb=NULL;
   unsigned int size;
 
-  if(!(_rayCaster->calcCoordsAxisParallel(_space, &cloud, &normals, &rgb, &size)))
-  {
-    LOGMSG(DBG_ERROR, "Error generating global point cloud");
-    return;
-  }
+  RayCastAxisAligned3D rayCasterMap;
+  rayCasterMap.calcCoords(_space, cloud, normals, &size);
 
   LOGMSG(DBG_DEBUG, "Cloud generated with " << size << " points";);
   _vModel->setCoords(cloud, size/3, 3, normals);
-  _vModel->setColors(rgb, size/3, 3 );
+  //_vModel->setColors(rgb, size/3, 3 );
 
   _viewer3D->update();
 
   delete cloud;
   delete normals;
-  delete rgb;
+  //delete rgb;
 }
 
+/*
 void _cbGenMesh(void)
 {
   unsigned int cols = _kinect->getCols();
@@ -159,7 +158,7 @@ void _cbGenMesh(void)
   delete[] rgb;
   delete[] mask;
   delete mesh;
-}
+}*/
 
 void _cbRegNewImage(void)
 {
@@ -398,7 +397,7 @@ int main(void)
   //_viewer3D->addCloud(_vScene);
   _viewer3D->registerKeyboardCallback("space", _cbRegNewImage, "Register new image");
   _viewer3D->registerKeyboardCallback("c", _cbGenPointCloud, "Generate point cloud");
-  _viewer3D->registerKeyboardCallback("d", _cbGenMesh, "Generate mesh");
+  //_viewer3D->registerKeyboardCallback("d", _cbGenMesh, "Generate mesh");
   _viewer3D->registerKeyboardCallback("v", _cbBuildSliceViews, "Build slice views");
   _viewer3D->registerKeyboardCallback("m", _cbStoreModel, "Save model");
   _viewer3D->registerKeyboardCallback("n", _cbStoreScene, "Save scene");

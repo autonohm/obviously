@@ -55,24 +55,9 @@ public:
 											                    const std::vector<double>& offsets, const unsigned int u, const unsigned int v);*/
 
 
-  /**
-   * @param size Contains number of coords found
-   */
-  virtual bool calcCoordsAxisParallel(TsdSpace* space, double** pointCloud, double** cloudNormals, unsigned char** cloudRgb, unsigned int* size);
-
 private:
 
   bool rayCastFromSensorPose(TsdSpace* space, double pos[3], double ray[3], double coordinates[3], double normal[3], unsigned char rgb[3], double* depth);
-
-  /**
-   *
-   */
-	bool rayCastParallelAxis(TsdSpace* space, double* footPoint,double* dirVec,std::vector<double>* pointCloud, std::vector<double>* cloudNormals, std::vector<unsigned char>* cloudRgb,const unsigned int steps);
-
-  /**
-   *
-   */
-	void calcRayParallelAxis(TsdSpace* space, const unsigned int row, const unsigned int col, double* footPoint, double* dirVec, unsigned int* steps, AXSPARMODE mode);
 
 protected:
 

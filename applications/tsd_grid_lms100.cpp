@@ -10,6 +10,7 @@
 
 #include "obvision/reconstruct/grid/TsdGrid.h"
 #include "obvision/reconstruct/grid/RayCastPolar2D.h"
+#include "obvision/reconstruct/grid/RayCastAxisAligned2D.h"
 #include "obvision/icp/icp_def.h"
 
 #include "obgraphic/Obvious2D.h"
@@ -55,11 +56,11 @@ int main(int argc, char* argv[])
 
   // choose estimator type
   enum Est{PTP, PTL};
-  Est _estType;
+  Est estType;
   if (argc >=1)
-    _estType = PTL;
+    estType = PTL;
   else
-    _estType = PTP;
+    estType = PTP;
 
   _grid = new TsdGrid(cellSize, LAYOUT_64x64, LAYOUT_512x512);
   _grid->setMaxTruncation(4.0*cellSize);
@@ -103,7 +104,6 @@ int main(int argc, char* argv[])
   RayCastPolar2D rayCaster;
   double* mCoords = new double[rays*2];
   double* mNormals = new double[rays*2];
-  double* map      = new double[_grid->getCellsX()*_grid->getCellsY()*2];
 
   // Compose ICP modules
   int iterations                 = 25;
@@ -116,7 +116,7 @@ int main(int argc, char* argv[])
 
 //  // choose estimator
 //  IRigidEstimator* estimator;
-//  if (_estType == PTP)
+//  if (estType == PTP)
 //    estimator     = (IRigidEstimator*) new ClosedFormEstimator2D();
 //  else
 //    IRigidEstimator* estimator    = (IRigidEstimator*) new PointToLine2DEstimator();
@@ -204,9 +204,12 @@ int main(int argc, char* argv[])
 
     // Visualize data
     _grid->grid2ColorImage(image, screen_width, screen_height);
-    unsigned int mapSize;
-    rayCaster.calcCoordsAligned(_grid, map, NULL, &mapSize);
-    /*for(unsigned int i=0; i<mapSize/2; i++)
+
+    /*unsigned int mapSize;
+    double* map      = new double[_grid->getCellsX()*_grid->getCellsY()*2];
+    RayCastAxisAligned2D rayCasterMap;
+    rayCasterMap.calcCoords(_grid, map, NULL, &mapSize);
+    for(unsigned int i=0; i<mapSize/2; i++)
     {
       double x = map[2*i];
       double y = map[2*i+1];
@@ -219,7 +222,9 @@ int main(int argc, char* argv[])
         image[idx+1] = 0;
         image[idx+2] = 0;
       }
-    }*/
+    }
+    delete [] map;
+    */
 
     viewer.draw(image, screen_width, screen_height, 3, 0, 0);
 

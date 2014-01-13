@@ -131,6 +131,12 @@ public:
  double getMaxTruncation();
 
  /**
+  * Get pointer to internal partition space
+  * @return pointer to 3D partition space
+  */
+ TsdSpacePartition**** getPartitions();
+
+ /**
   * Push sensor data to space
   * @param[in] sensor abstract sensor instance holding current data
   */
