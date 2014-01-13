@@ -21,8 +21,8 @@ enum EnumTsdGridLayout { LAYOUT_1x1=0,
                          LAYOUT_1024x1024=10,
                          LAYOUT_2048x2048=11,
                          LAYOUT_4096x4096=12,
-                         LAYOUT_9192x9192=13,
-                         LAYOUT_18384x18384=14,
+                         LAYOUT_8192x8192=13,
+                         LAYOUT_16384x16384=14,
                          LAYOUT_36768x36768=15};
 
 enum EnumTsdGridInterpolate { INTERPOLATE_SUCCESS=0,

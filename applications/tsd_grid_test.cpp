@@ -22,7 +22,7 @@ int main(void)
   // Initialization of TSD grid
   double cellSize = 0.01;
 
-  TsdGrid* grid = new TsdGrid(cellSize, LAYOUT_32x32, LAYOUT_9192x9192);
+  TsdGrid* grid = new TsdGrid(cellSize, LAYOUT_32x32, LAYOUT_8192x8192);
   grid->setMaxTruncation(6.0*cellSize);
 
   // Translation of sensor

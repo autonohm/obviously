@@ -22,7 +22,7 @@
 
 using namespace obvious;
 
-#define VXLDIM 0.01
+#define VXLDIM 0.02
 #define LAYOUTPARTITION LAYOUT_8x8x8
 #define LAYOUTSPACE LAYOUT_256x256x256
 
@@ -232,8 +232,6 @@ void _cbRegNewImage(void)
       idx++;
     }
   }
-
-  //cout << "ICP Subsample scene: " << t.getTime()-timeIcpStart << " ms" << endl;
 
   if(idx==0)
   {

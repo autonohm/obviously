@@ -35,9 +35,14 @@ void RayCastPolar2D::calcCoordsFromCurrentView(TsdGrid* grid, SensorPolar2D* sen
   M(2,0) = 1.0;
   N(2,0) = 0.0; // no translation for normals
 
+  Matrix* R = sensor->getNormalizedRayMap(grid->getCellSize());
+
   for (unsigned int beam = 0; beam < sensor->getRealMeasurementSize(); beam++)
   {
-    if (rayCastFromCurrentView(grid, sensor, beam, c, n)) // Ray returned with coordinates
+    double ray[2];
+    ray[0] = (*R)(0, beam);
+    ray[1] = (*R)(1, beam);
+    if (rayCastFromCurrentView(grid, sensor, ray, c, n)) // Ray returned with coordinates
     {
       M(0,0) = c[0];
       M(1,0) = c[1];
@@ -58,7 +63,7 @@ void RayCastPolar2D::calcCoordsFromCurrentView(TsdGrid* grid, SensorPolar2D* sen
 }
 
 
-bool RayCastPolar2D::rayCastFromCurrentView(TsdGrid* grid, SensorPolar2D* sensor, const unsigned int beam, double coordinates[2], double normal[2])
+bool RayCastPolar2D::rayCastFromCurrentView(TsdGrid* grid, SensorPolar2D* sensor, double ray[2], double coordinates[2], double normal[2])
 {
   int xDim = grid->getCellsX();
   int yDim = grid->getCellsY();
@@ -68,12 +73,7 @@ bool RayCastPolar2D::rayCastFromCurrentView(TsdGrid* grid, SensorPolar2D* sensor
   sensor->getPosition(tr);
   double maxRange = sensor->getMaximumRange();
 
-  double ray[2];
   double position[2];
-
-  sensor->calcRay(beam, ray);
-  ray[0] *= cellSize;
-  ray[1] *= cellSize;
 
   // Interpolation weight
   double interp;

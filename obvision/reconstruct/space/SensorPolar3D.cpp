@@ -31,6 +31,31 @@ SensorPolar3D::SensorPolar3D(unsigned int beams, double thetaRes, double thetaMi
 
   System<double>::allocate(_height, _width, _distanceMap);
   System<int>::allocate(_height, _width, _indexMap);
+
+  unsigned int i=0;
+  _rays = new Matrix(3, _size);
+  for(unsigned int b=0; b<beams; b++)
+  {
+    for(unsigned int p=0; p<_width; p++, i++)
+    {
+      Matrix Rh(4, 1);
+      double theta = _thetaMin + ((double)b) * _thetaRes;
+      double x = sin(theta);
+      double z = cos(theta);
+
+      double phi = ((double)p) / ((double)_width) * M_PI - M_PI;
+
+      Rh(0,0) = cos(phi) * x;
+      Rh(1,0) = sin(phi) * x;
+      Rh(2,0) = z;
+      double len = sqrt(Rh(0,0)*Rh(0,0)+Rh(1,0)*Rh(1,0)+Rh(2,0)*Rh(2,0));
+      Rh(3,0) = 0.0;
+      Rh = (*_Pose) * Rh;
+      (*_rays)(0, i) = Rh(0, 0) / len;
+      (*_rays)(1, i) = Rh(1, 0) / len;
+      (*_rays)(2, i) = Rh(2, 0) / len;
+    }
+  }
 }
 
 SensorPolar3D::~SensorPolar3D()
@@ -39,9 +64,11 @@ SensorPolar3D::~SensorPolar3D()
   delete [] _mask;
   System<double>::deallocate(_distanceMap);
   System<int>::deallocate(_indexMap);
+
+  delete _rays;
 }
 
-void SensorPolar3D::calcRayFromCurrentPose(unsigned int beam, unsigned int plane, double ray[3])
+/*void SensorPolar3D::calcRayFromCurrentPose(unsigned int beam, unsigned int plane, double ray[3])
 {
   Matrix Rh(4, 1);
   double theta = _thetaMin + ((double)beam) * _thetaRes;
@@ -58,7 +85,7 @@ void SensorPolar3D::calcRayFromCurrentPose(unsigned int beam, unsigned int plane
   ray[0] = Rh(0,0);
   ray[1] = Rh(1,0);
   ray[2] = Rh(2,0);
-}
+}*/
 
 void SensorPolar3D::setDistanceMap(vector<float> phi, vector<float> dist)
 {
@@ -110,7 +137,7 @@ void SensorPolar3D::backProject(Matrix* M, int* indices)
 
   for(unsigned int i=0; i<M->getRows(); i++)
   {
-    double phi = atan2(coords3D(1,i), coords3D(1,0)) - M_PI;
+    double phi = atan2(coords3D(1,i), coords3D(0,i)) - M_PI;
     if(phi>M_PI) phi -= M_PI;
     if(phi<-M_PI) phi += M_PI;
 

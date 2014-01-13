@@ -46,6 +46,8 @@ public:
    */
   virtual double getMaximumRange();
 
+  virtual Matrix* getNormalizedRayMap(double norm);
+
   /**
    * Transform current sensor pose
    * @param[in] T transformation matrix
@@ -141,8 +143,6 @@ public:
    */
   virtual void backProject(Matrix* M, int* indices) = 0;
 
-  virtual void calcRayFromCurrentPose(unsigned int u, unsigned int v, double ray[3]);
-
 protected:
 
   Matrix* _Pose;
@@ -164,6 +164,10 @@ protected:
   unsigned int _width;
 
   unsigned int _height;
+
+  double _rayNorm;
+
+  Matrix* _rays;
 };
 
 }
