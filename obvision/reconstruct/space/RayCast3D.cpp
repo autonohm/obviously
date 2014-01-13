@@ -113,7 +113,7 @@ bool RayCast3D::calcCoordsFromCurrentPose(TsdSpace* space, Sensor* sensor, doubl
   Matrix M(4,1);
   Matrix N(4,1);
   M(3,0) = 1.0;
-  N(3,0) = 0.0; // no translation for normals  -> no homogenous coordinates???
+  N(3,0) = 0.0; // no translation for normals  -> no homogeneous coordinates???
   bool found = false;
   std::vector<double>::const_iterator offIter = offsets.begin();
   //unsigned int offCtr = 0;
