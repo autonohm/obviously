@@ -494,7 +494,7 @@ bool TsdGrid::coord2Cell(double coord[2], int* p, int* x, int* y, double* dx, do
     xIdx--;
     (*dx) -= _cellSize;
   }
-  if (coord[1] > *dy)
+  if (coord[1] < *dy)
   {
     yIdx--;
     (*dy) -= _cellSize;
@@ -509,6 +509,11 @@ bool TsdGrid::coord2Cell(double coord[2], int* p, int* x, int* y, double* dx, do
   *y = yIdx % _dimPartition;
 
   return true;
+}
+
+TsdGridPartition*** TsdGrid::getPartitions()
+{
+  return _partitions;
 }
 
 }

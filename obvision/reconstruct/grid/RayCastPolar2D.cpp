@@ -165,15 +165,31 @@ void RayCastPolar2D::calcCoordsAligned(TsdGrid* grid, double* coords, double* no
   double cellSize = grid->getCellSize();
   for (unsigned int y=0; y<grid->getCellsY(); y++)
   {
-    c[0] = cellSize * 0.5;
     c[1] = y*cellSize + cellSize * 0.5;
+
+    // Traverse partitions roughly to clip minimum index
+    int partitionSize = grid->getPartitionSize();
+    unsigned int idxMin = 1;
+    for(unsigned int x=1; x<grid->getCellsX(); x+=partitionSize)
+    {
+      double tsd_tmp;
+      c[0] = cellSize * (0.5 + x);
+      EnumTsdGridInterpolate retval = grid->interpolateBilinear(c, &tsd_tmp);
+      if(retval!=INTERPOLATE_EMPTYPARTITION)
+      {
+        break;
+      }
+      else
+        idxMin = x;
+    }
+
     double tsdf_prev;
     grid->interpolateBilinear(c, &tsdf_prev);
-    for (unsigned int x=1; x<grid->getCellsX(); x++)
+    for (unsigned int x=idxMin; x<grid->getCellsX(); x++)
     {
-      c[0] += cellSize;
+      c[0] = cellSize * (0.5 + x);
       double tsdf;
-      if(grid->interpolateBilinear(c, &tsdf))
+      if(grid->interpolateBilinear(c, &tsdf)==INTERPOLATE_SUCCESS)
       {
         // Check sign change
         if(tsdf_prev*tsdf < 0 && fabs(tsdf)<0.9999 && fabs(tsdf_prev)<0.99999)
@@ -191,14 +207,30 @@ void RayCastPolar2D::calcCoordsAligned(TsdGrid* grid, double* coords, double* no
   for (unsigned int x=0; x<grid->getCellsX(); x++)
   {
     c[0] = x*cellSize + cellSize * 0.5;
-    c[1] = cellSize * 0.5;
+
+    // Traverse partitions roughly to clip minimum index
+    int partitionSize = grid->getPartitionSize();
+    unsigned int idxMin = 1;
+    for(unsigned int y=1; y<grid->getCellsY(); y+=partitionSize)
+    {
+      double tsd_tmp;
+      c[1] = cellSize * (0.5 + y);
+      EnumTsdGridInterpolate retval = grid->interpolateBilinear(c, &tsd_tmp);
+      if(retval!=INTERPOLATE_EMPTYPARTITION)
+      {
+        break;
+      }
+      else
+        idxMin = y;
+    }
+
     double tsdf_prev;
     grid->interpolateBilinear(c, &tsdf_prev);
-    for (unsigned int y=1; y<grid->getCellsY(); y++)
+    for (unsigned int y=idxMin; y<grid->getCellsY(); y++)
     {
-      c[1] += cellSize;
+      c[1] = cellSize * (0.5 + y);
       double tsdf;
-      if(grid->interpolateBilinear(c, &tsdf))
+      if(grid->interpolateBilinear(c, &tsdf)==INTERPOLATE_SUCCESS)
       {
         // Check sign change
         if(tsdf_prev*tsdf < 0 && fabs(tsdf)<0.9999 && fabs(tsdf_prev)<0.99999)

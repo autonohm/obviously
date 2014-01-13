@@ -166,6 +166,8 @@ public:
    */
   bool coord2Cell(double coord[2], int* p, int* x, int* y, double* dx, double* dy);
 
+  TsdGridPartition*** getPartitions();
+
 private:
 
   void propagateBorders();
