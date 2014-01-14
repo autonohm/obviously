@@ -338,7 +338,6 @@ void TsdGrid::grid2ColorImage(unsigned char* image, unsigned int width, unsigned
 {
   unsigned char rgb[3];
 
-
   double stepW = getMaxX() / (double)width;
   double stepH = getMaxY() / (double)height;
 

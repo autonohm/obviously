@@ -185,6 +185,11 @@ double TsdSpace::getMaxTruncation()
   return _maxTruncation;
 }
 
+TsdSpacePartition**** TsdSpace::getPartitions()
+{
+  return _partitions;
+}
+
 void TsdSpace::push(Sensor* sensor)
 {
   Timer t;
