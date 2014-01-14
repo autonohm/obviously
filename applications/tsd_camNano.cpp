@@ -5,11 +5,11 @@
 *
 *
 */
-#include "obvision/reconstruct/SensorProjective3D.h"
-#include "obvision/reconstruct/TsdSpace.h"
+#include "obvision/reconstruct/space/SensorProjective3D.h"
+#include "obvision/reconstruct/space/TsdSpace.h"
 #include "obvision/icp/icp_def.h"
 
-#include "obvision/reconstruct/RayCast3D.h"
+#include "obvision/reconstruct/space/RayCast3D.h"
 #include "obcore/base/Timer.h"
 #include "obcore/base/Logger.h"
 #include "obcore/base/tools.h"
@@ -111,9 +111,9 @@ void _showSpaceFromAxesRayCast(void)
   double*        coords;
   double*        normals;
   unsigned char* rgb;
-  RayCast3D raycaster(_space);
+  RayCast3D raycaster;
 
-  raycaster.calcCoordsFromCurrentPose(_sensor, coords, normals, rgb, &size);
+  raycaster.calcCoordsFromCurrentPose(_space, _sensor, coords, normals, rgb, &size);
   _cloud->setCoords(coords,   size/3, 3);
   _cloud->setNormals(normals, size/3, 3);
   _viewer->update();
@@ -128,29 +128,23 @@ void _clearSpace(void)
 void _saveTsdToTmp(void)
 {
   std::cout << __PRETTY_FUNCTION__ << std::endl;
-  _space->serialize("/tmp/tsd_save");
+  //_space->serialize("/tmp/tsd_save");
 }
 
 
 void init(void)
 {
-
-  const double volumeSizeX = 0.5;
-  const double volumeSizeY = 0.5;
-  const double volumeSizeZ = 0.5;
-  const double voxelSize   = 0.004;
+  const double voxelSize   = 0.001;
   double d_maxIterations   = 50;
-  double d_subSampling     = 1;
 
   const unsigned int maxIterations = (unsigned int)(d_maxIterations);
-  const unsigned int subSampling   = (unsigned int)(d_subSampling);
 
   _cloud      = new VtkCloud();
   _cloudScene = new VtkCloud();
   _liveSensor = new VtkCloud();
 
   // TSD Space configuration
-  _space = new TsdSpace(volumeSizeY, volumeSizeX, volumeSizeZ, voxelSize);
+  _space = new TsdSpace(voxelSize, LAYOUT_8x8x8, LAYOUT_128x128x128);
   _space->setMaxTruncation(3.0*voxelSize);
 
   std::cout << "CamNano with " << _nano->getCols() << " x " << _nano->getRows() << std::endl;
@@ -165,12 +159,11 @@ void init(void)
   std::cout << "Size: " << _sensor->getRealMeasurementSize() << std::endl;
 
   // translation of sensor
-  double tx = volumeSizeX/2.0;
-  double ty = volumeSizeY/2.0;
-  double tz = volumeSizeZ/3.0;
-  double tf[16]={1, 0, 0, tx,
-                  0, 1, 0, ty,
-                  0, 0, 1, tz,
+  double tr[3];
+  _space->getCentroid(tr);
+  double tf[16]={1, 0, 0, tr[0],
+                  0, 1, 0, tr[1],
+                  0, 0, 1, tr[2],
                   0, 0, 0, 1};
   Matrix T(4, 4);
   T.setData(tf);
@@ -184,10 +177,6 @@ void init(void)
   _filterBounds = new OutOfBoundsFilter3D(_space->getMinX(), _space->getMaxX(), _space->getMinY(), _space->getMaxY(), _space->getMinZ(), _space->getMaxZ());
   _filterBounds->setPose(&T);
   assigner->addPreFilter(_filterBounds);
-
-  // Subsampling filter for accelartion of icp
-  IPreAssignmentFilter* filterS = (IPreAssignmentFilter*) new SubsamplingFilter(subSampling);
-  assigner->addPreFilter(filterS);
 
   // Decreasing threshhold filter
   IPostAssignmentFilter* filterD = (IPostAssignmentFilter*)new DistanceFilter(0.10, 0.01, maxIterations);
@@ -209,7 +198,7 @@ void init(void)
   double P[16];
   _sensor->getPose()->getData(P);
   _viewer->showSensorPose(P);
-  _viewer->addAxisAlignedCube(0, volumeSizeX, 0, volumeSizeY, 0, volumeSizeZ);
+  _viewer->addAxisAlignedCube(0, _space->getMaxX(), 0, _space->getMaxY(), 0, _space->getMaxZ());
   _viewer->showAxes();
 
   // initialize flags
@@ -237,14 +226,14 @@ void calc(void)
     _push = false;
 
     // get model from space
-    RayCast3D raycaster(_space);
+    RayCast3D raycaster;
     unsigned int size;
 
     double* coords      = new double        [_sensor->getWidth() * _sensor->getHeight() * 3];
     double* normals     = new double        [_sensor->getWidth() * _sensor->getHeight() * 3];
     unsigned char* rgb = new unsigned char[_sensor->getWidth() * _sensor->getHeight() * 3];
 
-    raycaster.calcCoordsFromCurrentPose(_sensor, coords, normals, rgb, &size);
+    raycaster.calcCoordsFromCurrentPose(_space, _sensor, coords, normals, rgb, &size);
 
     cout << "Received " << size/3 << " from TSD space" << endl;
     _cloud->setCoords(coords,   size/3, 3);
@@ -283,8 +272,9 @@ void calc(void)
       _cloudScene->serialize("scene.vtp");
 
       _icp->reset();
-//
-      _icp->setScene(coordsT, NULL, _nano->getCols()*_nano->getRows());
+
+      double d_subSampling     = 1.0; // 100% -> take every sample
+      _icp->setScene(coordsT, NULL, _nano->getCols()*_nano->getRows(), d_subSampling);
       _icp->setModel(coords, normals, size/3);
 
       // Perform ICP registration

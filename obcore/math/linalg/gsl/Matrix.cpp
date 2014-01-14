@@ -31,20 +31,6 @@ Matrix::Matrix(Matrix M, unsigned int i, unsigned int j, unsigned int rows, unsi
   gsl_matrix_memcpy(_M, &(V.matrix));
 }
 
-VectorView Matrix::getColumnView(unsigned int index)
-{
-  VectorView V;
-  V._V = gsl_matrix_column(_M, index);
-  return V;
-}
-
-VectorView Matrix::getRowView(unsigned int index)
-{
-  VectorView V;
-  V._V = gsl_matrix_row(_M, index);
-  return V;
-}
-
 Matrix::~Matrix()
 {
   gsl_matrix_free(_M);
@@ -71,10 +57,30 @@ Matrix& Matrix::operator -= (const Matrix &M)
   return *this;
 }
 
-/*double* Matrix::operator [] (unsigned int i)
+Matrix& Matrix::operator += (const Matrix &M)
 {
-  return gsl_matrix_ptr(_M, i, 0);
-}*/
+  gsl_matrix_add (_M, M._M);
+  return *this;
+}
+
+Matrix& Matrix::operator += (const double scalar)
+{
+  gsl_matrix_add_constant(_M, scalar);
+  return *this;
+}
+
+
+void Matrix::addToColumn(unsigned int column, const double scalar)
+{
+  gsl_vector_view V = gsl_matrix_column(_M, column);
+  gsl_vector_add_constant(&V.vector, scalar);
+}
+
+void Matrix::addToRow(unsigned int row, const double scalar)
+{
+  gsl_vector_view V = gsl_matrix_row(_M, row);
+  gsl_vector_add_constant(&V.vector, scalar);
+}
 
 double& Matrix::operator () (unsigned int row, unsigned int col)
 {
@@ -136,7 +142,7 @@ void Matrix::getData(double* array)
   }
 }
 
-void Matrix::setData(const double* array)
+void Matrix::setData(double* array)
 {
   gsl_matrix_const_view varray = gsl_matrix_const_view_array(array, _M->size1, _M->size2);
   gsl_matrix_memcpy(_M, &varray.matrix);
@@ -344,7 +350,7 @@ void Matrix::svd(Matrix* U, double* s, Matrix* V)
   gsl_vector_free(work);
 }
 
-void Matrix::solve(const double* b, double* x)
+void Matrix::solve(double* b, double* x)
 {
   unsigned int dim = getRows();
   gsl_vector_view vx = gsl_vector_view_array(x, dim);
@@ -462,6 +468,15 @@ Vector Matrix::multiply(const Matrix &M, const Vector &V, bool transpose)
   Vector V2(size);
   gsl_blas_dgemv(t, 1.0, M._M, V._V, 0.0, V2._V);
   return V2;
+}
+
+void Matrix::multiply(const Matrix &M1, double* array, unsigned int rows, unsigned int cols)
+{
+  gsl_matrix_view V = gsl_matrix_view_array(array, rows, cols);
+  gsl_matrix* work = gsl_matrix_alloc(rows, cols);
+  gsl_blas_dgemm(CblasNoTrans, CblasTrans, 1.0, &(V.matrix), M1._M, 0.0, work);
+  gsl_matrix_memcpy(&V.matrix, work);
+  gsl_matrix_free(work);
 }
 
 }

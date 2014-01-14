@@ -2,9 +2,9 @@
 #include "obgraphic/Obvious3D.h"
 #include "obcore/base/tools.h"
 #include "obcore/base/System.h"
-#include "obvision/reconstruct/TsdSpace.h"
-#include "obvision/reconstruct/SensorProjective3D.h"
-#include "obvision/reconstruct/RayCast3D.h"
+#include "obvision/reconstruct/space/TsdSpace.h"
+#include "obvision/reconstruct/space/SensorProjective3D.h"
+#include "obvision/reconstruct/space/RayCast3D.h"
 #include "obcore/base/Logger.h"
 
 using namespace std;
@@ -12,30 +12,30 @@ using namespace obvious;
 
 int main(void)
 {
-  LOGMSG_CONF("tsd_test.log", Logger::file_off|Logger::screen_on, DBG_DEBUG, DBG_WARN);
+  LOGMSG_CONF("tsd_test.log", Logger::file_off|Logger::screen_on, DBG_DEBUG, DBG_DEBUG);
 
-  int rows, cols;
+  double voxelSize = 0.02;
+  TsdSpace space(voxelSize, LAYOUT_8x8x8, LAYOUT_256x256x256);
+  space.setMaxTruncation(3.0*voxelSize);
 
   // translation of sensor
-  double tx = 0.5;
-  double ty = 0.5;
-  double tz = 0.0;
+  double tr[3];
+  space.getCentroid(tr);
+  tr[2] = 0.0;
 
   // rotation about y-axis of sensor
-  double theta = -10 * M_PI / 180;
+  double theta = -10.0 * M_PI / 180;
 
-  double tf[16]={cos(theta),  0, sin(theta), tx,
-                 0,           1, 0,          ty,
-                 -sin(theta), 0, cos(theta), tz,
+  double tf[16]={cos(theta),  0, sin(theta), tr[0],
+                 0,           1, 0,          tr[1],
+                 -sin(theta), 0, cos(theta), tr[2],
                  0,           0, 0,          1};
   Matrix T(4, 4);
   T.setData(tf);
 
-  rows = 480;
-  cols = 640;
+  int rows = 480;
+  int cols = 640;
 
-  double*** buf;
-  System<double>::allocate (cols, rows, 3, buf);
 
   // Setup synthetic perspective projection
   double su = 500;
@@ -44,41 +44,30 @@ int main(void)
   double tv = 240;
   double PData[12]  = {su, 0, tu, 0, 0, sv, tv, 0, 0, 0, 1, 0};
 
-  double voxelSize = 0.02;
-
   SensorProjective3D sensor(cols, rows, PData);
   sensor.transform(&T);
 
-  TsdSpace space(0.99, 0.99, 0.99, voxelSize);
-  space.setMaxTruncation(3.0*voxelSize);
-
   double distZ[cols*rows];
 
-  // Background with distance = 0.8m -> s=0.8
+  // Background with distance = 3.0m -> s=3.0
   for(int u=0; u<cols; u++)
     for(int v=0; v<rows; v++)
     {
-      double s = 0.8;
+      double s = 3.0;
       double x = s*(((double)u) - tu) / su;
       double y = s*(((double)v) - tv) / sv;
       double z = s;
-      buf[u][v][0] = x;
-      buf[u][v][1] = y;
-      buf[u][v][2] = z;
       distZ[v*cols+u] = sqrt(x*x+y*y+z*z);
     }
 
-  // Centered square with distance = 0.5m -> s=0.5
+  // Centered square with distance = 1.5m -> s=1.5
   for(int u=cols/4; u<3*cols/4; u++)
     for(int v=rows/4; v<3*rows/4; v++)
     {
-      double s = 0.5;
+      double s = 1.5;
       double x = s*(((double)u) - tu) / su;
       double y = s*(((double)v) - tv) / sv;
       double z = s;
-      buf[u][v][0] = x;
-      buf[u][v][1] = y;
-      buf[u][v][2] = z;
       distZ[v*cols+u] = sqrt(x*x+y*y+z*z);
     }
 
@@ -99,12 +88,12 @@ int main(void)
      }
 
   sensor.setRealMeasurementData(distZ);
-  sensor.setRealMeasurementRGB(texture);
+  //sensor.setRealMeasurementRGB(texture);
   Timer t;
   space.push(&sensor);
   cout << "Push elapsed: " << t.reset() << "ms" << endl;
 
-  unsigned char* buffer = new unsigned char[space.getXDimension()*space.getYDimension()*3];
+  /*unsigned char* buffer = new unsigned char[space.getXDimension()*space.getYDimension()*3];
   for(unsigned int i=0; i<space.getZDimension(); i++)
   {
     char path[64];
@@ -112,15 +101,15 @@ int main(void)
     space.buildSliceImage(i, buffer);
     serializePPM(path, buffer, space.getXDimension(), space.getYDimension(), 0);
   }
-  delete[] buffer;
+  delete[] buffer;*/
 
   t.reset();
-  RayCast3D raycaster(&space);
+  RayCast3D raycaster;
   unsigned int cnt;
   double* cloud = new double[rows*cols*3];
   double* normals = new double[rows*cols*3];
   unsigned char* rgb = new unsigned char[rows*cols*3];
-  raycaster.calcCoordsFromCurrentPose(&sensor, cloud, normals, rgb, &cnt);
+  raycaster.calcCoordsFromCurrentPose(&space, &sensor, cloud, normals, rgb, &cnt);
 
   cout << "Raycasting elapsed: " << t.reset() << "ms" << endl;
   cout << "Raycasting returned with " << cnt << " coordinates" << endl;

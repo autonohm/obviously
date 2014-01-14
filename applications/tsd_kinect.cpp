@@ -16,16 +16,15 @@
 #include "obcore/base/Logger.h"
 #include "obcore/math/mathbase.h"
 
-#include "obvision/reconstruct/TsdSpace.h"
-#include "obvision/reconstruct/SensorProjective3D.h"
-#include "obvision/reconstruct/RayCast3D.h"
+#include "obvision/reconstruct/space/TsdSpace.h"
+#include "obvision/reconstruct/space/SensorProjective3D.h"
+#include "obvision/reconstruct/space/RayCast3D.h"
 
 using namespace obvious;
 
-#define X_DIM 2
-#define Y_DIM 2
-#define Z_DIM 2
-#define VXLDIM 0.01
+#define VXLDIM 0.02
+#define LAYOUTPARTITION LAYOUT_8x8x8
+#define LAYOUTSPACE LAYOUT_256x256x256
 
 Matrix* _T;
 Matrix _Tinit(4, 4);
@@ -64,8 +63,12 @@ void _cbBuildSliceViews(void)
 	{
 		char path[128];
 		std::sprintf(path, "/tmp/slice%04d.ppm", i);
-		if((_space->buildSliceImage(i, buffer))!=true)
-		  LOGMSG(DBG_ERROR, "Error building sliceImage #" << i);
+
+		// not implemented yet
+		//if((_space->buildSliceImage(i, buffer))!=true)
+		LOGMSG(DBG_ERROR, "Error building sliceImage #" << i);
+		return;
+
 		obvious::serializePPM(path, buffer, _space->getXDimension(), _space->getYDimension(), 0);
 	}
 	delete[] buffer;
@@ -78,7 +81,7 @@ void _cbGenPointCloud(void)
   unsigned char* rgb=NULL;
   unsigned int size;
 
-  if(!(_rayCaster->calcCoordsAxisParallel(&cloud, &normals, &rgb, &size)))
+  if(!(_rayCaster->calcCoordsAxisParallel(_space, &cloud, &normals, &rgb, &size)))
   {
     LOGMSG(DBG_ERROR, "Error generating global point cloud");
     return;
@@ -107,7 +110,7 @@ void _cbGenMesh(void)
 
   unsigned int size = cols*rows*3;
 
-  _rayCaster->calcCoordsFromCurrentPoseMask(_sensor, coords, normals, rgb, mask, &size);
+  _rayCaster->calcCoordsFromCurrentPoseMask(_space, _sensor, coords, normals, rgb, mask, &size);
 
   TriangleMesh* mesh       = new TriangleMesh(rows*cols);
   mesh->createMeshFromOrganizedCloud(coords, rows, cols, rgb, mask);
@@ -142,12 +145,12 @@ void _cbGenMesh(void)
   _vModel->transform(P);
   double lightPos[3];
   double lightLookAt[3];
-  lightPos[0] = X_DIM / 2.0;
-  lightPos[1] = Y_DIM / 2.0;
+  lightPos[0] = _space->getMaxX() / 2.0;
+  lightPos[1] = _space->getMaxY() / 2.0;
   lightPos[2] = 0;
-  lightLookAt[0] = X_DIM / 2.0;
-  lightLookAt[1] = Y_DIM / 2.0;
-  lightLookAt[2] = Z_DIM / 2.0;
+  lightLookAt[0] = _space->getMaxX() / 2.0;
+  lightLookAt[1] = _space->getMaxY() / 2.0;
+  lightLookAt[2] = _space->getMaxZ() / 2.0;
   _viewer3D->addLight(lightPos, lightLookAt);
   _viewer3D->update();
 
@@ -176,7 +179,7 @@ void _cbRegNewImage(void)
   _filterBounds->setPose(_sensor->getPose());
 
   // Extract model from TSDF space
-  _rayCaster->calcCoordsFromCurrentPose(_sensor, coords, normals, rgb, &size);
+  _rayCaster->calcCoordsFromCurrentPose(_space, _sensor, coords, normals, rgb, &size);
 
   if(size==0)
   {
@@ -202,20 +205,21 @@ void _cbRegNewImage(void)
   _vModel->transform(P);
 
   _icp->reset();
-  _icp->setModel(coords, normals, size);
+  _icp->setModel(coords, normals, size, 0.2);
+  //cout << "ICP set model: " << t.getTime()-timeIcpStart << " ms" << endl;
 
   // Acquire scene image
-  for(unsigned int i=0; i<5; i++)
-    _kinect->grab();
+  //for(unsigned int i=0; i<5; i++)
+  _kinect->grab();
+  //cout << "ICP Grab: " << t.getTime()-timeIcpStart << " ms" << endl;
 
   double* coordsScene     = _kinect->getCoords();
   bool* maskScene         = _kinect->getMask();
   unsigned char* rgbScene = _kinect->getRGB();
 
-  // Subsample and filter scene
-  unsigned int subsamplingScene = 25;
+  // Assort invalid scene points
   unsigned int idx = 0;
-  for(unsigned int i=0; i<cols*rows; i+=subsamplingScene)
+  for(unsigned int i=0; i<cols*rows; i++)
   {
     if(maskScene[i])
     {
@@ -242,7 +246,8 @@ void _cbRegNewImage(void)
   _vScene->setColors(rgb, size / 3, 3);
   _vScene->removeInvalidPoints();
 
-  _icp->setScene(coords, NULL, idx);
+  _icp->setScene(coords, NULL, idx, 0.04);
+  //cout << "ICP Set scene: " << t.getTime()-timeIcpStart << " ms" << endl;
 
   // Perform ICP registration
   double rms = 0;
@@ -321,19 +326,19 @@ int main(void)
   unsigned int cols = _kinect->getCols();
   unsigned int rows = _kinect->getRows();
 
+  _space = new TsdSpace(VXLDIM, LAYOUTPARTITION, LAYOUTSPACE);
+  _space->setMaxTruncation(3.0 * VXLDIM);
+
   // Initial transformation of sensor
   // ------------------------------------------------------------------
-  double tx = X_DIM/2.0;
-  double ty = Y_DIM/2.0;
-  double tz = 0;
-  double tf[16]={1,  0, 0, tx,
-                 0,  1, 0, ty,
-                 0,  0, 1, tz,
+  double tr[3];
+  _space->getCentroid(tr);
+  tr[2] = 0.0;
+  double tf[16]={1,  0, 0, tr[0],
+                 0,  1, 0, tr[1],
+                 0,  0, 1, tr[2],
                  0,  0, 0, 1};
   _Tinit.setData(tf);
-
-  _space = new TsdSpace(Y_DIM, X_DIM, Z_DIM, VXLDIM);
-  _space->setMaxTruncation(3.0 * VXLDIM);
 
   // ICP configuration
   // ------------------------------------------------------------------
@@ -381,7 +386,7 @@ int main(void)
   _space->push(_sensor);
   delete [] dist;
 
-  _rayCaster = new RayCast3D(_space);
+  _rayCaster = new RayCast3D();
 
   // Displaying stuff
   // ------------------------------------------------------------------
@@ -389,7 +394,7 @@ int main(void)
   _vScene = new VtkCloud();
   _viewer3D = new Obvious3D("3DMapper");
   _viewer3D->addCloud(_vModel);
-  _viewer3D->addAxisAlignedCube(0, X_DIM, 0, Y_DIM, 0, Z_DIM);
+  _viewer3D->addAxisAlignedCube(0, _space->getMaxX(), 0, _space->getMaxY(), 0, _space->getMaxZ());
   //_viewer3D->addCloud(_vScene);
   _viewer3D->registerKeyboardCallback("space", _cbRegNewImage, "Register new image");
   _viewer3D->registerKeyboardCallback("c", _cbGenPointCloud, "Generate point cloud");

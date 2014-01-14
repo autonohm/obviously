@@ -26,7 +26,7 @@ Vector& Vector::operator =  (const Vector &V)
   return *this;
 }
 
-double& Vector::operator [] (unsigned int i)
+double& Vector::operator () (unsigned int i)
 {
   return *gsl_vector_ptr(_V, i);
 }

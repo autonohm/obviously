@@ -1,7 +1,7 @@
 #ifndef SENSOR_PROJECTIVE_3D_H
 #define SENSOR_PROJECTIVE_3D_H
 
-#include "Sensor.h"
+#include "obvision/reconstruct/Sensor.h"
 
 namespace obvious
 {
@@ -20,8 +20,9 @@ public:
    * @param[in] cols number of image columns
    * @param[in] rows number of image rows
    * @param[in] PData 3x4 projection matrix
+   * @param[in] maxRange maximum range
    */
-  SensorProjective3D(unsigned int cols, unsigned int rows, double PData[12]);
+  SensorProjective3D(unsigned int cols, unsigned int rows, double PData[12], double maxRange=NAN);
 
   /**
    * Copy constructor
@@ -50,18 +51,11 @@ public:
    */
   void backProject(Matrix* M, int* indices);
 
-  /**
-   *
-   */
-  void calcRayFromCurrentPose(const unsigned int row, const unsigned int col, double dirVec[3]);
-
 private:
 
   void init(unsigned int cols, unsigned int rows, double PData[12]);
 
   Matrix* _P;
-
-  Matrix*** _rays;
 
 };
 

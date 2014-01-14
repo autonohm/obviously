@@ -53,6 +53,17 @@ namespace obvious {
   }
 
   template <class T>
+  static inline void minmaxArray(const T* a, const unsigned int size, T* min, T* max)
+  {
+    *min = *max = a[0];
+    for(unsigned int i=1; i<size; i++)
+    {
+      if(*min > a[i]) *min = a[i];
+      else if (*max < a[i]) *max = a[i];
+    }
+  }
+
+  template <class T>
   void sort2( T* v )
   {
       if ( v[0] > v[1] )
@@ -349,7 +360,7 @@ namespace obvious {
    * @return Euklidean distance
    */
   template <class T>
-  inline float euklideanDistance(T* coords1, T* coords2, int size)
+  inline T euklideanDistance(T* coords1, T* coords2, int size)
   {
 	  T sqr = 0.0;
     for(int i=0; i<size; i++)

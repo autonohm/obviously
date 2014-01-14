@@ -1,7 +1,7 @@
 #ifndef SENSOR_POLAR_3D_H
 #define SENSOR_POLAR_3D_H
 
-#include "Sensor.h"
+#include "obvision/reconstruct/Sensor.h"
 
 namespace obvious
 {
@@ -22,20 +22,12 @@ public:
    * @param[in] thetaMin minimum angle from which beams are counted positive counter-clockwisely (rad)
    * @param[in] phiRes angular resolution, i.e. angle between scanning planes in rad
    */
-  SensorPolar3D(unsigned int beams, double thetaRes, double thetaMin, double phiRes=0.25);
+  SensorPolar3D(unsigned int beams, double thetaRes, double thetaMin, double phiRes=0.25, double maxRange=NAN);
 
   /**
    * Destructor
    */
   ~SensorPolar3D();
-
-  /**
-   * Calculate ray of specific beam
-   * @param[in] beam beam index
-   * @param[in] plane scanning plane index
-   * @param[out] ray vector
-   */
-  void calcRayFromCurrentPose(unsigned int beam, unsigned int plane, double ray[3]);
 
   /**
    * Parallel version of back projection

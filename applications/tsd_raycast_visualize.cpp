@@ -12,9 +12,9 @@
 #include "obcore/base/Logger.h"
 #include "obcore/math/mathbase.h"
 
-#include "obvision/reconstruct/SensorProjective3D.h"
-#include "obvision/reconstruct/SensorPolar3D.h"
-#include "obvision/reconstruct/RayCast3D.h"
+#include "obvision/reconstruct/space/SensorProjective3D.h"
+#include "obvision/reconstruct/space/SensorPolar3D.h"
+#include "obvision/reconstruct/space/RayCast3D.h"
 
 using namespace obvious;
 
@@ -73,14 +73,16 @@ int main(int argc, char* argv[])
   System<double>::allocate(width*height, 3, coordsStart);
   System<double>::allocate(width*height, 3, coordsEnd);
 
-  double* rays = new double[width*height*3];
-  memset(rays, 0, width*height*3*sizeof(double));
+  Matrix* R = sensor->getNormalizedRayMap(1.0);
   unsigned int size = 0;
-  for(unsigned int w=0; w<width; w+=subsamplingW)
-    for(unsigned int h=0; h<height; h+=subsamplingH)
+  for(unsigned int h=0; h<height; h+=subsamplingH)
+    for(unsigned int w=0; w<width; w+=subsamplingW)
     {
       double ray[3];
-      sensor->calcRayFromCurrentPose(h, w, ray);
+      unsigned int idx = h*width + w;
+      ray[0] = (*R)(0, idx);
+      ray[1] = (*R)(1, idx);
+      ray[2] = (*R)(2, idx);
 
       double fStart = factorStart;
       double fEnd   = factorEnd;
@@ -109,10 +111,14 @@ int main(int argc, char* argv[])
   {
     double** projectionPlane;
     System<double>::allocate(4, 3, projectionPlane);
-    sensor->calcRayFromCurrentPose(0, 0, projectionPlane[0]);
-    sensor->calcRayFromCurrentPose(height-subsamplingH, 0, projectionPlane[1]);
-    sensor->calcRayFromCurrentPose(height-subsamplingH, width-subsamplingW, projectionPlane[2]);
-    sensor->calcRayFromCurrentPose(0, width-subsamplingW, projectionPlane[3]);
+    unsigned int idx = 0;
+    projectionPlane[0][0] = (*R)(0, idx);    projectionPlane[0][1] = (*R)(1, idx);    projectionPlane[0][2] = (*R)(2, idx);
+    idx = (height-subsamplingH) * width;
+    projectionPlane[1][0] = (*R)(0, idx);    projectionPlane[1][1] = (*R)(1, idx);    projectionPlane[1][2] = (*R)(2, idx);
+    idx = (height-subsamplingH) * width + width-subsamplingW;
+    projectionPlane[2][0] = (*R)(0, idx);    projectionPlane[2][1] = (*R)(1, idx);    projectionPlane[2][2] = (*R)(2, idx);
+    idx = width-subsamplingW;
+    projectionPlane[3][0] = (*R)(0, idx);    projectionPlane[3][1] = (*R)(1, idx);    projectionPlane[3][2] = (*R)(2, idx);
     for(unsigned int i=0; i<3; i++)
     {
       projectionPlane[0][i] /= (projectionPlane[0][2]/(factorStart-0.01));

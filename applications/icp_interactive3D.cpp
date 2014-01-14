@@ -72,9 +72,6 @@ int main(int argc, char* argv[])
   if(pre == 2 || pre == 3)
     assigner->addPreFilter(filterO);
 
-  IPreAssignmentFilter* filterS = (IPreAssignmentFilter*) new SubsamplingFilter(25);
-  assigner->addPreFilter(filterS);
-
   /*ProjectionFilter* filterP = new ProjectionFilter(P, 640, 480);
   filterP->setModel(model);
   if(pre == 1 || pre == 3)
@@ -88,7 +85,7 @@ int main(int argc, char* argv[])
   _icp->setMaxRMS(0.0);
   _icp->setMaxIterations(iterations);
   _icp->setModel(model->getCoords(), model->getNormals());
-  _icp->setScene(scene->getCoords(), scene->getNormals());
+  _icp->setScene(scene->getCoords(), scene->getNormals(), 0.04);
 
   /**
    * Configure visualization

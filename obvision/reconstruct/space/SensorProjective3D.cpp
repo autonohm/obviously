@@ -6,12 +6,12 @@
 namespace obvious
 {
 
-SensorProjective3D::SensorProjective3D(unsigned int cols, unsigned int rows, double PData[12]) : Sensor(3)
+SensorProjective3D::SensorProjective3D(unsigned int cols, unsigned int rows, double PData[12], double maxRange) : Sensor(3, maxRange)
 {
   init(cols, rows, PData);
 }
 
-SensorProjective3D::SensorProjective3D(SensorProjective3D* sensor) : Sensor(3)
+SensorProjective3D::SensorProjective3D(SensorProjective3D* sensor) : Sensor(3, sensor->getMaximumRange())
 {
   double PData[12];
   sensor->_P->getData(PData);
@@ -33,20 +33,18 @@ void SensorProjective3D::init(unsigned int cols, unsigned int rows, double PData
   for(unsigned int i=0; i<_size; i++)
     _mask[i] = true;
 
-  System<Matrix*>::allocate(_width, _height, _rays);
-  for(unsigned int col=0; col<_width; col++)
-    for(unsigned int row=0; row<_height; row++)
+  _rays= new Matrix(3, _size);
+  unsigned int i=0;
+  for(unsigned int row=0; row<_height; row++)
+    for(unsigned int col=0; col<_width; col++, i++)
     {
-      _rays[col][row] = new Matrix(4, 1);
-      project2Space(col, row, 1.0, _rays[col][row]);
-
+      Matrix ray(3, 1);
+      project2Space(col, row, 1.0, &ray);
       // Normalize ray to 1.0
-      Matrix* M = _rays[col][row];
-      double len = sqrt((*M)(0,0)*(*M)(0,0) + (*M)(1,0)*(*M)(1,0) + (*M)(2,0)*(*M)(2,0));
-      (*M)(0,0) /= len;
-      (*M)(1,0) /= len;
-      (*M)(2,0) /= len;
-      (*M)(3,0) = 0.0;
+      double len = sqrt(ray(0,0)*ray(0,0) + ray(1,0)*ray(1,0) + ray(2,0)*ray(2,0));
+      (*_rays)(0, i) = ray(0, 0) / len;
+      (*_rays)(1, i) = ray(1, 0) / len;
+      (*_rays)(2, i) = ray(2, 0) / len;
     }
 }
 
@@ -55,25 +53,7 @@ SensorProjective3D::~SensorProjective3D()
   delete _P;
   delete[] _data; _data = NULL;
   delete[] _mask; _mask = NULL;
-
-  for(unsigned int col=0; col<_width; col++)
-    for(unsigned int row=0; row<_height; row++)
-      delete _rays[col][row];
-  System<Matrix*>::deallocate(_rays);
-}
-
-void SensorProjective3D::calcRayFromCurrentPose(const unsigned int row, const unsigned int col, double ray[3])
-{
-  Matrix r(4, 1);
-  Matrix* T = getPose();
-
-  // bring peakpoint in map coordinate system
-  r = *_rays[col][row];
-  r = *T * r;
-
-  ray[0] = r(0,0);
-  ray[1] = r(1,0);
-  ray[2] = r(2,0);
+  delete _rays;
 }
 
 void SensorProjective3D::project2Space(const unsigned int col, const unsigned int row, const double depth, Matrix* coord)
@@ -88,10 +68,9 @@ void SensorProjective3D::project2Space(const unsigned int col, const unsigned in
   //double lambda_inv = 1./sqrt(x * x + y * y + 1.);
   //double z = depth * lambda_inv;
 
-  (*coord)(0,0) = x;
-  (*coord)(1,0) = y;
-  (*coord)(2,0) = depth;
-  (*coord)(3,0) = 1.0;
+  (*coord)(0, 0) = x;
+  (*coord)(1, 0) = y;
+  (*coord)(2, 0) = depth;
 }
 
 void SensorProjective3D::backProject(Matrix* M, int* indices)

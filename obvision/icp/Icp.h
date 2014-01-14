@@ -78,30 +78,34 @@ public:
    * @param coords model coordinates, as tuples or triples
    * @param normals model normals, as tuples or triples, may be NULL
    * @param size number of points, i.e. coordinate triples
+   * @param probability probability of coordinates of being sampled (range [0.0 1.0])
    */
-	void setModel(double* coords, double* normals, const unsigned int size);
+	void setModel(double* coords, double* normals, const unsigned int size, double probability=1.0);
 
 	/**
 	 * Convenience method extracting all points from cloud to double array
    * @param coords model coordinates
    * @param normals model normals, may be NULL
+   * @param probability probability of coordinates of being sampled (range [0.0 1.0])
 	 */
-	void setModel(Matrix* coords, Matrix* normals = NULL);
+	void setModel(Matrix* coords, Matrix* normals = NULL, double probability=1.0);
 	
   /**
    * Copy scene to internal buffer
    * @param coords scene coordinates, as tuples or triples
    * @param normals scene normals, as tuples or triples, may be NULL
    * @param size number of points, i.e. coordinate triples
+   * @param probability probability of coordinates of being sampled (range [0.0 1.0])
    */
-  void setScene(double* coords, double* normals, const unsigned int size);
+  void setScene(double* coords, double* normals, const unsigned int size, double probability=1.0);
 
 	/**
 	 * Convenience method extracting data from cloud to double array
    * @param coords scene coordinates
    * @param normals scene normals, may be NULL
+   * @param probability probability of coordinates of being sampled (range [0.0 1.0])
 	 */
-	void setScene(Matrix* coords, Matrix* normals = NULL);
+	void setScene(Matrix* coords, Matrix* normals = NULL, double probability=1.0);
 	
 	/**
 	 * Set maximal RMS error interrupting iteration

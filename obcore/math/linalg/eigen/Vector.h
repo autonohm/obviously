@@ -53,7 +53,7 @@ public:
 	 * @param i element index
 	 * @return element
 	 */
-	double& operator [] (unsigned int i);
+	double& operator () (unsigned int i);
 
 	/**
 	 * Property accessor
@@ -82,7 +82,7 @@ private:
 	/**
 	 * Internal GSL representation
 	 */
-	Eigen::VectorXd* _V;
+	Eigen::VectorXd _V;
 
 };
 

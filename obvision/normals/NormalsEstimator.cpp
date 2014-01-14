@@ -93,20 +93,20 @@ void NormalsEstimator::estimateNormalsReverseMapping(Matrix* coords, Matrix* P, 
 
   int radius = 4;
   Vector xi(4);
-  xi[3] = 1.0;
+  xi(3) = 1.0;
 
   for(int i=0; i<w*h; i++)
     buf[i] = -1;
 
   for(unsigned int i=0; i<coords->getRows(); i++)
   {
-    xi[0] = (*coords)(i,0);
-    xi[1] = (*coords)(i,1);
-    xi[2] = (*coords)(i,2);
+    xi(0) = (*coords)(i,0);
+    xi(1) = (*coords)(i,1);
+    xi(2) = (*coords)(i,2);
     Vector ni = Matrix::multiply(*P, xi, false);
-    double du = ni[0];
-    double dv = ni[1];
-    double dw = ni[2];
+    double du = ni(0);
+    double dv = ni(1);
+    double dw = ni(2);
     if(dw > 10e-6)
     {
       int u = (int)( du / dw + 0.5);

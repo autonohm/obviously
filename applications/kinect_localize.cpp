@@ -105,7 +105,7 @@ void referenceCallback()
   _vmodel->setCoords(coords, size, 3, _normals);
   _vmodel->setColors(rgb,    size, 3);
 
-  _icp->setModel(model->getCoords(), model->getNormals());
+  _icp->setModel(model->getCoords(), model->getNormals(), 0.5);
 
   cout << "Reference set, size: " << model->size() << endl;
   _reference = true;
@@ -136,10 +136,6 @@ int main(int argc, char* argv[])
   //IRigidEstimator* estimator = (IRigidEstimator*) new PointToPointEstimator3D();
   IRigidEstimator* estimator = (IRigidEstimator*) new PointToPlaneEstimator3D();
   //IRigidEstimator* estimator = (IRigidEstimator*) new PlaneToPlaneEstimator3D();
-
-
-  IPreAssignmentFilter* filterS = (IPreAssignmentFilter*) new SubsamplingFilter(25);
-  assigner->addPreFilter(filterS);
 
   _filterP = new ProjectionFilter(P, 640, 480);
   assigner->addPreFilter(_filterP);

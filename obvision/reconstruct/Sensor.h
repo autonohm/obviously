@@ -3,6 +3,7 @@
 
 #include "obcore/math/linalg/linalg.h"
 #include <vector>
+#include <cmath>
 
 namespace obvious
 {
@@ -20,7 +21,7 @@ public:
    * Standard constructor
    * @param[in] dim dimensionality of representation
    */
-  Sensor(unsigned int dim);
+  Sensor(unsigned int dim, double maxRange);
 
   /**
    * Destructor
@@ -38,6 +39,14 @@ public:
    * @return size
    */
   virtual unsigned int getHeight();
+
+  /**
+   * Get maximum range
+   * @return maximum range
+   */
+  virtual double getMaximumRange();
+
+  virtual Matrix* getNormalizedRayMap(double norm);
 
   /**
    * Transform current sensor pose
@@ -134,13 +143,13 @@ public:
    */
   virtual void backProject(Matrix* M, int* indices) = 0;
 
-  virtual void calcRayFromCurrentPose(unsigned int u, unsigned int v, double ray[3]);
-
 protected:
 
   Matrix* _Pose;
 
   unsigned int _dim;
+
+  double _maxRange;
 
   unsigned int _size;
 
@@ -155,6 +164,10 @@ protected:
   unsigned int _width;
 
   unsigned int _height;
+
+  double _rayNorm;
+
+  Matrix* _rays;
 };
 
 }

@@ -2,22 +2,33 @@
 #define TSDGRID_H
 
 #include "obcore/math/linalg/linalg.h"
-#include "obvision/reconstruct/SensorPolar2D.h"
+#include "obvision/reconstruct/grid/SensorPolar2D.h"
 #include "TsdGridPartition.h"
 
 namespace obvious
 {
 
-/**
- * Cell structure for TsdGrid
- * @param tsdf value of the truncated signed distance function
- * @param weight used to calculate mean of all points in a voxel
- */
-struct TsdCell
-{
-  double tsdf;
-  double weight;
-};
+enum EnumTsdGridLayout { LAYOUT_1x1=0,
+                         LAYOUT_2x2=1,
+                         LAYOUT_4x4=2,
+                         LAYOUT_8x8=3,
+                         LAYOUT_16x16=4,
+                         LAYOUT_32x32=5,
+                         LAYOUT_64x64=6,
+                         LAYOUT_128x128=7,
+                         LAYOUT_256x256=8,
+                         LAYOUT_512x512=9,
+                         LAYOUT_1024x1024=10,
+                         LAYOUT_2048x2048=11,
+                         LAYOUT_4096x4096=12,
+                         LAYOUT_8192x8192=13,
+                         LAYOUT_16384x16384=14,
+                         LAYOUT_36768x36768=15};
+
+enum EnumTsdGridInterpolate { INTERPOLATE_SUCCESS=0,
+                              INTERPOLATE_INVALIDINDEX=1,
+                              INTERPOLATE_EMPTYPARTITION=2,
+                              INTERPOLATE_ISNAN=3};
 
 /**
  * @class TsdGrid
@@ -31,17 +42,25 @@ public:
   /**
    * Standard constructor
    * Allocates and initializes space and matrices
-   * @param[in] dimX Number of cells in x-dimension
-   * @param[in] dimY Number of cells in y-dimension
    * @param[in] cellSize Size of cell in meters
-   * @param[in] number of partitioned per dimension, i.e. in x- and y-direction
+   * @param[in] layoutPartition Partition layout, i.e., cells in partition
+   * @param[in] layoutGrid Grid layout, i.e., partitions in grid
    */
-  TsdGrid(const unsigned int dimX, const unsigned int dimY, const double cellSize, const unsigned int dimPartition);
+  TsdGrid(const double cellSize, const EnumTsdGridLayout layoutPartition, const EnumTsdGridLayout layoutGrid);
 
   /**
    * Destructor
    */
   virtual ~TsdGrid();
+
+  /**
+   * Access truncated signed distance at specific cell. This method does not check validity of indices.
+   * The specific cell might not be instantiated.
+   * @param y y coordinate
+   * @param x x coordinate
+   * @return truncated signed distance
+   */
+  double& operator () (unsigned int y, unsigned int x);
 
   /**
    * Get number of cells in x-dimension
@@ -74,6 +93,12 @@ public:
   double getMaxX();
 
   /**
+   * Get centroid of grid
+   * @param[out] centroid centroid coordinates
+   */
+  void getCentroid(double centroid[2]);
+
+  /**
    * Get minimum for y-coordinate
    * @return y-coordinate
    */
@@ -84,6 +109,8 @@ public:
    * @return y-coordinate
    */
   double getMaxY();
+
+  unsigned int getPartitionSize();
 
   /**
    * Set maximum truncation radius
@@ -102,20 +129,18 @@ public:
    * @param[in] virtual 2D measurement unit
    */
   void push(SensorPolar2D* sensor);
+  void pushTree(SensorPolar2D* sensor);
 
-  void pushPartitioned(SensorPolar2D* sensor);
-
-  /**
-   * Create grayscale image from tsdf grid
-   * @param[out] grayscale image
-   */
-  void grid2GrayscaleImage(unsigned char* image);
+  void pushRecursion(SensorPolar2D* sensor, double pos[2], TsdGridComponent* comp, vector<TsdGridPartition*> &partitionsToCheck);
 
   /**
    * Create color image from tsdf grid
    * @param[out] color image (3-channel)
    */
-  void grid2ColorImage(unsigned char* image);
+  void grid2ColorImage(unsigned char* image, unsigned int width, unsigned int height);
+
+
+  void getData(std::vector<double>& data);
 
   /**
    * Calculates normal of plain element hit by a ray caster
@@ -129,7 +154,7 @@ public:
    * @param coordinates pointer to coordinates of intersection
    * @param[out] tsdf interpolated TSD value
    */
-  bool interpolateBilinear(double coord[2], double* tsdf);
+  EnumTsdGridInterpolate interpolateBilinear(double coord[2], double* tsd);
 
   /**
    * Convert arbitrary coordinate to grid coordinates
@@ -139,50 +164,21 @@ public:
    * @param[out] dx x-coordinate of cell-center in metric space
    * @param[out] dy y-coordinate of cell-center in metric space
    */
-  bool coord2Cell(double coord[2], int* x, int* y, double* dx, double* dy);
+  bool coord2Cell(double coord[2], int* p, int* x, int* y, double* dx, double* dy);
 
-  /**
-   * Method to store the content of the grid in a file
-   * @param filename
-   */
-  void serialize(const char* filename);
-
-  /**
-   * Method to load values out of a file into the grid
-   * @param filename
-   */
-  void load(const char* filename);
-
-  /**
-   * Method to get direct access to the data
-   * @return Pointer to data
-   */
-  TsdCell** getData() const;
+  TsdGridPartition*** getPartitions();
 
 private:
 
-  /**
-   * Add tsdf value to grid
-   * @param[in] x index in x-dimension
-   * @param[in] y index in y-dimension
-   * @param[in] sdf signed distance function value
-   * @param[in] weight weighting of current measurement
-   */
-  void addTsdfValue(const unsigned int x, const unsigned int y, const double sdf, const double weight);
+  void propagateBorders();
 
-  void addTsdfValueEmptyCell(const unsigned int x, const unsigned int y);
+  TsdGridComponent* _tree;
 
   int _cellsX;
 
   int _cellsY;
 
   int _sizeOfGrid;
-
-  int _dimX;
-
-  int _dimY;
-
-  TsdCell** _grid;
 
   double _cellSize;
 
@@ -198,7 +194,13 @@ private:
 
   double _maxY;
 
-  vector<TsdGridPartition*> _partitions;
+  TsdGridPartition*** _partitions;
+
+  int _dimPartition;
+
+  int _partitionsInX;
+
+  int _partitionsInY;
 };
 
 }

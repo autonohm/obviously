@@ -8,8 +8,8 @@
 
 #include "obdevice/SickLMS100.h"
 
-#include "obvision/reconstruct/TsdGrid.h"
-#include "obvision/reconstruct/RayCastPolar2D.h"
+#include "obvision/reconstruct/grid/TsdGrid.h"
+#include "obvision/reconstruct/grid/RayCastPolar2D.h"
 #include "obvision/icp/icp_def.h"
 
 #include "obgraphic/Obvious2D.h"
@@ -42,7 +42,8 @@ void callbackAssignment(double** m, double** s, unsigned int size)
 
 void callbackSerializeTsdGrid()
 {
-  _grid->serialize("/tmp/tsdgrid.dat");
+  //_grid->serialize("/tmp/tsdgrid.dat");
+  cout << "WARNING: re-implement this method" << endl;
 }
 
 int main(int argc, char* argv[])
@@ -50,10 +51,7 @@ int main(int argc, char* argv[])
   LOGMSG_CONF("tsd_grid_test.log", Logger::file_off|Logger::screen_off, DBG_DEBUG, DBG_DEBUG);
 
   // Initialization of TSD grid
-  const double dimX = 36.0;
-  const double dimY = 36.0;
   const double cellSize = 0.06;
-  const unsigned int dimPartition = 100;
 
   // choose estimator type
   enum Est{PTP, PTL};
@@ -63,7 +61,7 @@ int main(int argc, char* argv[])
   else
     _estType = PTP;
 
-  _grid = new TsdGrid(dimX, dimY, cellSize, dimPartition);
+  _grid = new TsdGrid(cellSize, LAYOUT_64x64, LAYOUT_512x512);
   _grid->setMaxTruncation(4.0*cellSize);
 
 
@@ -71,15 +69,16 @@ int main(int argc, char* argv[])
   // image display is only possible for image dimensions divisible by 4
   const unsigned int w = _grid->getCellsX();
   const unsigned int h = _grid->getCellsY();
-  unsigned char* image = new unsigned char[3*w*h];
   double ratio = double(w)/double(h);
-  double screen_width = 1000;
-  Obvious2D viewer(screen_width, screen_width/ratio, "tsd_grid_lms100");
+  unsigned int screen_width = 1000;
+  unsigned int screen_height = (unsigned int)(((double)screen_width)/ratio);
+  unsigned char* image = new unsigned char[3*screen_width*screen_height];
+  Obvious2D viewer(screen_width, screen_height, "tsd_grid_lms100");
   viewer.registerKeyboardCallback('s', callbackSerializeTsdGrid);
 
   // Translation of sensor
-  double tx = dimX/2.0;
-  double ty = dimY/2.0;
+  double tx = _grid->getMaxX()/2.0;
+  double ty = _grid->getMaxY()/2.0;
 
   // Rotation about z-axis of sensor
   double phi = 0.0 * M_PI / 180.0;
@@ -204,10 +203,10 @@ int main(int argc, char* argv[])
     }
 
     // Visualize data
-    _grid->grid2ColorImage(image);
+    _grid->grid2ColorImage(image, screen_width, screen_height);
     unsigned int mapSize;
     rayCaster.calcCoordsAligned(_grid, map, NULL, &mapSize);
-    for(unsigned int i=0; i<mapSize/2; i++)
+    /*for(unsigned int i=0; i<mapSize/2; i++)
     {
       double x = map[2*i];
       double y = map[2*i+1];
@@ -220,17 +219,9 @@ int main(int argc, char* argv[])
         image[idx+1] = 0;
         image[idx+2] = 0;
       }
-    }
-    double position[2];
-    sensor.getPosition(position);
-    int x, y;
-    double dx, dy;
-    _grid->coord2Cell(position, &x, &y, &dx, &dy);
-    int idx = ((h-y)*w+x);
-    image[3*idx]   = 255;
-    image[3*idx+1] = 0;
-    image[3*idx+2] = 0;
-    viewer.draw(image, w, h, 3, 0, 0);
+    }*/
+
+    viewer.draw(image, screen_width, screen_height, 3, 0, 0);
 
     delete M;
     delete N;

@@ -8,7 +8,7 @@
 namespace obvious
 {
 
-SensorPolar2D::SensorPolar2D(unsigned int size, double angularRes, double phiMin) : Sensor(2)
+SensorPolar2D::SensorPolar2D(unsigned int size, double angularRes, double phiMin, double maxRange) : Sensor(2, maxRange)
 {
   _Pose = new Matrix(3, 3);
   _Pose->setIdentity();
@@ -32,24 +32,26 @@ SensorPolar2D::SensorPolar2D(unsigned int size, double angularRes, double phiMin
   {
     LOGMSG(DBG_ERROR, "Valid minimal angle < 180 degree");
   }
+
+  _rays = new Matrix(2, _size);
+
+  for(unsigned int i=0; i<_size; i++)
+  {
+    Matrix Rh(2, 1);
+    double phi = _phiMin + ((double)i) * _angularRes;
+    Rh(0,0) = cos(phi);
+    Rh(1,0) = sin(phi);
+    (*_rays)(0, i) = Rh(0,0);
+    (*_rays)(1, i) = Rh(1,0);
+  }
 }
 
 SensorPolar2D::~SensorPolar2D()
 {
   delete [] _data;
   delete [] _mask;
-}
 
-void SensorPolar2D::calcRay(unsigned int beam, double ray[2])
-{
-  Matrix Rh(3, 1);
-  double phi = _phiMin + ((double)beam) * _angularRes;
-  Rh(0,0) = cos(phi);
-  Rh(1,0) = sin(phi);
-  Rh(2,0) = 0.0;
-  Rh = (*_Pose) * Rh;
-  ray[0] = Rh(0,0);
-  ray[1] = Rh(1,0);
+  delete _rays;
 }
 
 int SensorPolar2D::backProject(double data[2])
@@ -86,13 +88,13 @@ void SensorPolar2D::backProject(Matrix* M, int* indices)
   }
 }
 
-double SensorPolar2D::angularRes(void)
+double SensorPolar2D::getAngularResolution(void)
 {
-  return(_angularRes);
+  return _angularRes;
 }
 
-double SensorPolar2D::phiMin(void)
+double SensorPolar2D::getPhiMin(void)
 {
-  return(_phiMin);
+  return _phiMin;
 }
 }

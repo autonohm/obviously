@@ -35,9 +35,14 @@ void RayCastPolar2D::calcCoordsFromCurrentView(TsdGrid* grid, SensorPolar2D* sen
   M(2,0) = 1.0;
   N(2,0) = 0.0; // no translation for normals
 
+  Matrix* R = sensor->getNormalizedRayMap(grid->getCellSize());
+
   for (unsigned int beam = 0; beam < sensor->getRealMeasurementSize(); beam++)
   {
-    if (rayCastFromCurrentView(grid, sensor, beam, c, n)) // Ray returned with coordinates
+    double ray[2];
+    ray[0] = (*R)(0, beam);
+    ray[1] = (*R)(1, beam);
+    if (rayCastFromCurrentView(grid, sensor, ray, c, n)) // Ray returned with coordinates
     {
       M(0,0) = c[0];
       M(1,0) = c[1];
@@ -58,7 +63,7 @@ void RayCastPolar2D::calcCoordsFromCurrentView(TsdGrid* grid, SensorPolar2D* sen
 }
 
 
-bool RayCastPolar2D::rayCastFromCurrentView(TsdGrid* grid, SensorPolar2D* sensor, const unsigned int beam, double coordinates[2], double normal[2])
+bool RayCastPolar2D::rayCastFromCurrentView(TsdGrid* grid, SensorPolar2D* sensor, double ray[2], double coordinates[2], double normal[2])
 {
   int xDim = grid->getCellsX();
   int yDim = grid->getCellsY();
@@ -66,14 +71,9 @@ bool RayCastPolar2D::rayCastFromCurrentView(TsdGrid* grid, SensorPolar2D* sensor
 
   double tr[2];
   sensor->getPosition(tr);
+  double maxRange = sensor->getMaximumRange();
 
-  double ray[2];
   double position[2];
-  double position_prev[2];
-
-  sensor->calcRay(beam, ray);
-  ray[0] *= cellSize;
-  ray[1] *= cellSize;
 
   // Interpolation weight
   double interp;
@@ -91,52 +91,68 @@ bool RayCastPolar2D::rayCastFromCurrentView(TsdGrid* grid, SensorPolar2D* sensor
   if(fabs(ray[1])>10e-6) ymax = ((double)(ray[1] > 0.0 ? (yDim-1)*cellSize : 0) - tr[1]) / ray[1];
   double idxMax = min(xmax, ymax);
 
-  if (idxMin >= idxMax)
+  if(!isnan(maxRange))
   {
-    return false;
+    double idxRange = maxRange / cellSize + 0.5;
+    idxMin = min(idxMin, idxRange) ;
+    idxMax = min(idxMax, idxRange);
   }
 
-  double tsdf_prev;
+  if (idxMin >= idxMax) return false;
+
+  // Traverse partitions roughly to clip minimum index
+  int partitionSize = grid->getPartitionSize();
+  for(int i=idxMin; i<idxMax; i+=partitionSize)
+  {
+    double tsd_tmp;
+    position[0] = tr[0] + i * ray[0];
+    position[1] = tr[1] + i * ray[1];
+    EnumTsdGridInterpolate retval = grid->interpolateBilinear(position, &tsd_tmp);
+    if(retval!=INTERPOLATE_EMPTYPARTITION && retval!=INTERPOLATE_INVALIDINDEX)
+      break;
+    else
+      idxMin = i;
+  }
+
+  double tsd_prev;
   position[0] = tr[0] + idxMin * ray[0];
   position[1] = tr[1] + idxMin * ray[1];
-  grid->interpolateBilinear(position, &tsdf_prev);
+  if(grid->interpolateBilinear(position, &tsd_prev)!=INTERPOLATE_SUCCESS)
+    tsd_prev = NAN;
 
   bool found = false;
   for(int i=idxMin; i<=idxMax; i++)
   {
-    // Calculate current position
-    memcpy(position_prev, position, 2 * sizeof(*position));
-
     position[0] += ray[0];
     position[1] += ray[1];
 
-    double tsdf;
-    if (!grid->interpolateBilinear(position, &tsdf))
+    double tsd;
+    if (grid->interpolateBilinear(position, &tsd)!=INTERPOLATE_SUCCESS)
     {
-      tsdf_prev = tsdf;
+      tsd_prev = tsd;
       continue;
     }
 
     // Check sign change
-    if(tsdf_prev > 0 && tsdf < 0)
+    if(tsd_prev > 0 && tsd < 0)
     {
-      interp = tsdf_prev / (tsdf_prev - tsdf);
+      interp = tsd_prev / (tsd_prev - tsd);
       found = true;
       break;
     }
 
-    tsdf_prev = tsdf;
+    tsd_prev = tsd;
   }
 
-  if(!found) return false;
-
-  coordinates[0] = position_prev[0] + ray[0] * interp;
-  coordinates[1] = position_prev[1] + ray[1] * interp;
-
-  if(!grid->interpolateNormal(coordinates, normal))
+  if(!found)
+  {
     return false;
+  }
 
-  return true;
+  coordinates[0] = position[0] + ray[0] * (interp-1.0);
+  coordinates[1] = position[1] + ray[1] * (interp-1.0);
+
+  return grid->interpolateNormal(coordinates, normal);
 }
 
 void RayCastPolar2D::calcCoordsAligned(TsdGrid* grid, double* coords, double* normals, unsigned int* cnt)
@@ -149,15 +165,31 @@ void RayCastPolar2D::calcCoordsAligned(TsdGrid* grid, double* coords, double* no
   double cellSize = grid->getCellSize();
   for (unsigned int y=0; y<grid->getCellsY(); y++)
   {
-    c[0] = cellSize * 0.5;
     c[1] = y*cellSize + cellSize * 0.5;
+
+    // Traverse partitions roughly to clip minimum index
+    int partitionSize = grid->getPartitionSize();
+    unsigned int idxMin = 1;
+    for(unsigned int x=1; x<grid->getCellsX(); x+=partitionSize)
+    {
+      double tsd_tmp;
+      c[0] = cellSize * (0.5 + x);
+      EnumTsdGridInterpolate retval = grid->interpolateBilinear(c, &tsd_tmp);
+      if(retval!=INTERPOLATE_EMPTYPARTITION)
+      {
+        break;
+      }
+      else
+        idxMin = x;
+    }
+
     double tsdf_prev;
     grid->interpolateBilinear(c, &tsdf_prev);
-    for (unsigned int x=1; x<grid->getCellsX(); x++)
+    for (unsigned int x=idxMin; x<grid->getCellsX(); x++)
     {
-      c[0] += cellSize;
+      c[0] = cellSize * (0.5 + x);
       double tsdf;
-      if(grid->interpolateBilinear(c, &tsdf))
+      if(grid->interpolateBilinear(c, &tsdf)==INTERPOLATE_SUCCESS)
       {
         // Check sign change
         if(tsdf_prev*tsdf < 0 && fabs(tsdf)<0.9999 && fabs(tsdf_prev)<0.99999)
@@ -175,14 +207,30 @@ void RayCastPolar2D::calcCoordsAligned(TsdGrid* grid, double* coords, double* no
   for (unsigned int x=0; x<grid->getCellsX(); x++)
   {
     c[0] = x*cellSize + cellSize * 0.5;
-    c[1] = cellSize * 0.5;
+
+    // Traverse partitions roughly to clip minimum index
+    int partitionSize = grid->getPartitionSize();
+    unsigned int idxMin = 1;
+    for(unsigned int y=1; y<grid->getCellsY(); y+=partitionSize)
+    {
+      double tsd_tmp;
+      c[1] = cellSize * (0.5 + y);
+      EnumTsdGridInterpolate retval = grid->interpolateBilinear(c, &tsd_tmp);
+      if(retval!=INTERPOLATE_EMPTYPARTITION)
+      {
+        break;
+      }
+      else
+        idxMin = y;
+    }
+
     double tsdf_prev;
     grid->interpolateBilinear(c, &tsdf_prev);
-    for (unsigned int y=1; y<grid->getCellsY(); y++)
+    for (unsigned int y=idxMin; y<grid->getCellsY(); y++)
     {
-      c[1] += cellSize;
+      c[1] = cellSize * (0.5 + y);
       double tsdf;
-      if(grid->interpolateBilinear(c, &tsdf))
+      if(grid->interpolateBilinear(c, &tsdf)==INTERPOLATE_SUCCESS)
       {
         // Check sign change
         if(tsdf_prev*tsdf < 0 && fabs(tsdf)<0.9999 && fabs(tsdf_prev)<0.99999)

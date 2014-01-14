@@ -3,8 +3,8 @@
 
 #include <vector>
 #include "obcore/math/linalg/linalg.h"
-#include "obvision/reconstruct/TsdGrid.h"
-#include "obvision/reconstruct/SensorPolar2D.h"
+#include "obvision/reconstruct/grid/TsdGrid.h"
+#include "obvision/reconstruct/grid/SensorPolar2D.h"
 
 namespace obvious
 {
@@ -28,7 +28,7 @@ public:
 
 private:
 
-  bool rayCastFromCurrentView(TsdGrid* grid, SensorPolar2D* sensor, const unsigned int beam, double coordinates[2], double normal[2]);
+  bool rayCastFromCurrentView(TsdGrid* grid, SensorPolar2D* sensor, double ray[2], double coordinates[2], double normal[2]);
 
   void calcRayFromCurrentView(const unsigned int beam, double dirVec[2]);
 

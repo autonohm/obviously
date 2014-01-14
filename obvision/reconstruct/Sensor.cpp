@@ -8,15 +8,18 @@
 namespace obvious
 {
 
-Sensor::Sensor(unsigned int dim)
+Sensor::Sensor(unsigned int dim, double maxRange)
 {
   _dim = dim;
+  _maxRange = maxRange;
 
   _Pose = new Matrix(_dim+1, _dim+1);
   _Pose->setIdentity();
 
   _rgb = NULL;
   _accuracy = NULL;
+
+  _rayNorm = 1.0;
 }
 
 Sensor::~Sensor()
@@ -24,6 +27,30 @@ Sensor::~Sensor()
   delete _Pose;
   if(_rgb) delete [] _rgb;
   if(_accuracy) delete [] _accuracy;
+}
+
+Matrix* Sensor::getNormalizedRayMap(double norm)
+{
+  if(norm != _rayNorm)
+  {
+    for(unsigned int i=0; i<_size; i++)
+    {
+      for(unsigned int j=0; j<_dim; j++)
+        (*_rays)(j, i) *= (norm/_rayNorm);
+    }
+    _rayNorm = norm;
+  }
+  return _rays;
+}
+
+void Sensor::transform(Matrix* T)
+{
+  (*_Pose) *= (*T);
+  Matrix R(_dim, _dim);
+  for(unsigned int r=0; r<_dim; r++)
+    for(unsigned int c=0; c<_dim; c++)
+      R(r, c) = (*T)(r, c);
+  (*_rays) = R * (*_rays);
 }
 
 unsigned int Sensor::getWidth()
@@ -41,22 +68,23 @@ unsigned int Sensor::getHeight()
   return _height;
 }
 
-void Sensor::transform(Matrix* T)
+double Sensor::getMaximumRange()
 {
-  (*_Pose) *= (*T);
+  return _maxRange;
 }
 
 void Sensor::translate(double* tr)
 {
-  (*_Pose)(0,_dim) += tr[0];
-  (*_Pose)(1,_dim) += tr[1];
-  if(_dim==3)
-    (*_Pose)(2,_dim) += tr[2];
+  for(unsigned int i=0; i<_dim; i++)
+    (*_Pose)(i, _dim) += tr[i];
 }
 
 void Sensor::setPose(Matrix* T)
 {
-  (*_Pose) = (*T);
+  Matrix Pinv = (*_Pose);
+  Pinv.invert();
+  transform(&Pinv);
+  transform(T);
 }
 
 Matrix* Sensor::getPose()
@@ -66,10 +94,8 @@ Matrix* Sensor::getPose()
 
 void Sensor::getPosition(double* tr)
 {
-  tr[0] = (*_Pose)(0,_dim);
-  tr[1] = (*_Pose)(1,_dim);
-  if(_dim==3)
-    tr[2] = (*_Pose)(2,_dim);
+  for(unsigned int i=0; i<_dim; i++)
+    tr[i] = (*_Pose)(i, _dim);
 }
 
 unsigned int Sensor::getRealMeasurementSize()
@@ -150,11 +176,6 @@ void Sensor::setRealMeasurementRGB(unsigned char* rgb)
 unsigned char* Sensor::getRealMeasurementRGB()
 {
   return _rgb;
-}
-
-void Sensor::calcRayFromCurrentPose(unsigned int u, unsigned int v, double ray[3])
-{
-  LOGMSG(DBG_WARN, "Method for determining measurement rays are not overwritten");
 }
 
 }

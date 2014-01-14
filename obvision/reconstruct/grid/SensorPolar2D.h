@@ -1,7 +1,7 @@
 #ifndef SENSOR_POLAR_2D_H
 #define SENSOR_POLAR_2D_H
 
-#include "Sensor.h"
+#include "obvision/reconstruct/Sensor.h"
 
 namespace obvious
 {
@@ -20,20 +20,14 @@ public:
    * @param[in] beams number of beams
    * @param[in] angularRes angular resolution, i.e. angle between beams in rad
    * @param[in] phiMin minimum angle from which beams are counted positive counter-clockwisely (rad)
+   * @param[in] maxRange maximum range
    */
-  SensorPolar2D(unsigned int beams, double angularRes, double phiMin);
+  SensorPolar2D(unsigned int beams, double angularRes, double phiMin, double maxRange=NAN);
 
   /**
    * Destructor
    */
   ~SensorPolar2D();
-
-  /**
-   * Calculate ray of specific beam
-   * @param[in] beam beam index
-   * @param[out] ray vector
-   */
-  void calcRay(unsigned int beam, double ray[2]);
 
   /**
    * Assign an arbitrary 2D coordinate to a measurement beam
@@ -53,13 +47,14 @@ public:
    * Get angular resolution
    * @return angular resolution
    */
-  double angularRes(void);
+  double getAngularResolution();
 
   /**
    * Get the minimum angle
    * @return minimum angle
    */
-  double phiMin(void);
+  double getPhiMin();
+
 private:
 
   double _angularRes;

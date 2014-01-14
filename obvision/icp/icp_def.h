@@ -5,7 +5,6 @@
 #include "obvision/icp/assign/filter/OcclusionFilter.h"
 #include "obvision/icp/assign/filter/TrimmedFilter.h"
 #include "obvision/icp/assign/filter/ReciprocalFilter.h"
-#include "obvision/icp/assign/filter/SubsamplingFilter.h"
 #include "obvision/icp/assign/filter/DistanceFilter.h"
 #include "obvision/icp/assign/filter/OutOfBoundsFilter2D.h"
 #include "obvision/icp/assign/filter/OutOfBoundsFilter3D.h"
