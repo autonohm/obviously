@@ -136,6 +136,8 @@ public:
   */
  TsdSpacePartition**** getPartitions();
 
+ bool isPartitionInitialized(double coord[3]);
+
  /**
   * Push sensor data to space
   * @param[in] sensor abstract sensor instance holding current data

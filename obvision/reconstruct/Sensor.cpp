@@ -75,8 +75,20 @@ double Sensor::getMaximumRange()
 
 void Sensor::translate(double* tr)
 {
+  Matrix R(_dim, _dim);
+  for(unsigned int r=0; r<_dim; r++)
+    for(unsigned int c=0; c<_dim; c++)
+      R(r, c) = (*_Pose)(r, c);
+  R.invert();
+
+  Matrix T(_dim, 1);
+  for(unsigned int r=0; r<_dim; r++)
+    T(r, 0) = tr[r];
+
+  T = R * T;
+
   for(unsigned int i=0; i<_dim; i++)
-    (*_Pose)(i, _dim) += tr[i];
+    (*_Pose)(i, _dim) += T(i, 0);
 }
 
 void Sensor::setPose(Matrix* T)

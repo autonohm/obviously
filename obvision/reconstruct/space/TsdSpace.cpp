@@ -190,6 +190,19 @@ TsdSpacePartition**** TsdSpace::getPartitions()
   return _partitions;
 }
 
+bool TsdSpace::isPartitionInitialized(double coord[3])
+{
+  int x = (int)(coord[0] * _invVoxelSize);
+  int y = (int)(coord[1] * _invVoxelSize);
+  int z = (int)(coord[2] * _invVoxelSize);
+
+  int px = _lutIndex2Partition[x];
+  int py = _lutIndex2Partition[y];
+  int pz = _lutIndex2Partition[z];
+
+  return _partitions[pz][py][px]->isInitialized();
+}
+
 void TsdSpace::push(Sensor* sensor)
 {
   Timer t;
@@ -201,7 +214,8 @@ void TsdSpace::push(Sensor* sensor)
   double tr[3];
   sensor->getPosition(tr);
 
-  Matrix* partCoords = _partitions[0][0][0]->getPartitionCoords();
+  Matrix* partCoords = TsdSpacePartition::getPartitionCoords();
+  //Matrix* cellCoordsHom = TsdSpacePartition::getCellCoordsHom();
 
 #pragma omp parallel
   {
@@ -215,12 +229,31 @@ void TsdSpace::push(Sensor* sensor)
       for(int px=0; px<_partitionsInX; px++)
       {
         TsdSpacePartition* part = _partitions[pz][py][px];
-        if(!part->isInRange(tr, sensor, _maxTruncation)) continue;
+        //if(!part->isInRange(tr, sensor, _maxTruncation)) continue;
 
         part->init();
 
+        double t[3];
+        part->getCellCoordsOffset(t);
         Matrix* cellCoordsHom = part->getCellCoordsHom();
+
+        //t[0] = -t[0]; t[1] = -t[1]; t[2] = -t[2];
+        //sensor->translate(t);
+        /*for(unsigned int i=0; i<cellCoordsHom->getRows(); i++)
+        {
+          (*cellCoordsHom)(i, 0) += t[0];
+          (*cellCoordsHom)(i, 1) += t[1];
+          (*cellCoordsHom)(i, 2) += t[2];
+        }*/
         sensor->backProject(cellCoordsHom, idx);
+
+        //sensor->translate(t);
+        /*for(unsigned int i=0; i<cellCoordsHom->getRows(); i++)
+        {
+          (*cellCoordsHom)(i, 0) -= t[0];
+          (*cellCoordsHom)(i, 1) -= t[1];
+          (*cellCoordsHom)(i, 2) -= t[2];
+        }*/
 
         for(unsigned int c=0; c<partSize; c++)
         {
@@ -246,7 +279,6 @@ void TsdSpace::push(Sensor* sensor)
               // TODO: Implement color support
               //unsigned char* color = NULL;
               //if(rgb) color = &(rgb[3*index]);
-
               part->addTsd((*partCoords)(c, 0), (*partCoords)(c, 1), (*partCoords)(c, 2), sd, _maxTruncation);
             }
           }
@@ -259,7 +291,8 @@ void TsdSpace::push(Sensor* sensor)
 
   propagateBorders();
 
-  LOGMSG(DBG_DEBUG, "Elapsed push: " << t.getTime() << "ms");
+  cout << "Distances pushed: " << TsdSpacePartition::getDistancesPushed() << endl;
+  LOGMSG(DBG_DEBUG, "Elapsed push: " << t.getTime() << "ms, Initialized partitions: " << TsdSpacePartition::getInitializedPartitionSize());
 }
 
 void TsdSpace::pushTree(Sensor* sensor)

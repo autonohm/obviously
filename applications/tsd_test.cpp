@@ -5,6 +5,7 @@
 #include "obvision/reconstruct/space/TsdSpace.h"
 #include "obvision/reconstruct/space/SensorProjective3D.h"
 #include "obvision/reconstruct/space/RayCast3D.h"
+#include "obvision/reconstruct/space/RayCastAxisAligned3D.h"
 #include "obcore/base/Logger.h"
 
 using namespace std;
@@ -14,8 +15,8 @@ int main(void)
 {
   LOGMSG_CONF("tsd_test.log", Logger::file_off|Logger::screen_on, DBG_DEBUG, DBG_DEBUG);
 
-  double voxelSize = 0.02;
-  TsdSpace space(voxelSize, LAYOUT_8x8x8, LAYOUT_256x256x256);
+  double voxelSize = 0.04;
+  TsdSpace space(voxelSize, LAYOUT_8x8x8, LAYOUT_128x128x128);
   space.setMaxTruncation(3.0*voxelSize);
 
   // translation of sensor
@@ -106,10 +107,13 @@ int main(void)
   t.reset();
   RayCast3D raycaster;
   unsigned int cnt;
-  double* cloud = new double[rows*cols*3];
-  double* normals = new double[rows*cols*3];
-  unsigned char* rgb = new unsigned char[rows*cols*3];
+  double* cloud = new double[rows*cols*3*100];
+  double* normals = new double[rows*cols*3*100];
+  unsigned char* rgb = new unsigned char[rows*cols*3*100];
   raycaster.calcCoordsFromCurrentPose(&space, &sensor, cloud, normals, rgb, &cnt);
+
+  //RayCastAxisAligned3D raycasterMap;
+  //raycasterMap.calcCoordsRoughly(&space, cloud, normals, &cnt);
 
   cout << "Raycasting elapsed: " << t.reset() << "ms" << endl;
   cout << "Raycasting returned with " << cnt << " coordinates" << endl;

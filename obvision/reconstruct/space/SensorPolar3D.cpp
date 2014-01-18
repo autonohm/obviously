@@ -16,8 +16,9 @@ SensorPolar3D::SensorPolar3D(unsigned int beams, double thetaRes, double thetaMi
   _thetaMin = thetaMin;
   _phiRes = phiRes;
 
-  _width = M_PI/_phiRes;
-  _height = beams;
+  _width = beams;
+  _height = M_PI/_phiRes;
+
   _size = _width*_height;
   _data = new double[_size];
   _mask = new bool[_size];
@@ -34,16 +35,16 @@ SensorPolar3D::SensorPolar3D(unsigned int beams, double thetaRes, double thetaMi
 
   unsigned int i=0;
   _rays = new Matrix(3, _size);
-  for(unsigned int b=0; b<beams; b++)
+  for(unsigned int p=0; p<_height; p++)
   {
-    for(unsigned int p=0; p<_width; p++, i++)
+    for(unsigned int b=0; b<beams; b++, i++)
     {
       Matrix Rh(4, 1);
       double theta = _thetaMin + ((double)b) * _thetaRes;
       double x = sin(theta);
       double z = cos(theta);
 
-      double phi = ((double)p) / ((double)_width) * M_PI - M_PI;
+      double phi = ((double)p) / ((double)_height) * M_PI - M_PI;
 
       Rh(0,0) = cos(phi) * x;
       Rh(1,0) = sin(phi) * x;
@@ -91,28 +92,28 @@ void SensorPolar3D::setDistanceMap(vector<float> phi, vector<float> dist)
 {
   LOGMSG(DBG_DEBUG, "SensorPolar3D::setDistanceMap");
 
-  if((_height*phi.size()) != dist.size())
+  if((_width*phi.size()) != dist.size())
   {
     LOGMSG(DBG_WARN, "SensorPolar3D::setDistanceMap: invalid size of vectors ... skipping");
     return;
   }
 
-  double phi_corr = (M_PI / (double)phi.size() / _height) * 270.0/360.0;
+  double phi_corr = (M_PI / (double)phi.size() / _width) * 270.0/360.0;
   for(unsigned int i=0; i<_width*_height; i++)
   {
     _distanceMap[0][i] = -1.0;
     _indexMap[0][i] = -1;
   }
 
-  for(unsigned int c=0; c<phi.size(); c++)
+  for(unsigned int r=0; r<phi.size(); r++)
   {
-    unsigned int cp = phi[c] / _phiRes;
-    for(unsigned int r=0; r<_height; r++)
+    unsigned int rp = phi[r] / _phiRes;
+    for(unsigned int c=0; c<_width; c++)
     {
-      unsigned int cpr = cp + (unsigned int)(phi_corr/_phiRes * (double)r);
-      if(cpr>_width) continue;
-      _distanceMap[r][cpr] = dist[c*_height+r];
-      _indexMap[r][cpr] = c*_height+r;
+      unsigned int rpr = rp + (unsigned int)(phi_corr/_phiRes * (double)c);
+      if(rpr>=_height) continue;
+      _distanceMap[rpr][c] = dist[r*_width+c];
+      _indexMap[rpr][c] = r*_width+c;
     }
   }
 
@@ -137,29 +138,33 @@ void SensorPolar3D::backProject(Matrix* M, int* indices)
 
   for(unsigned int i=0; i<M->getRows(); i++)
   {
-    double phi = atan2(coords3D(1,i), coords3D(0,i)) - M_PI;
+    double phi = atan2(coords3D(2,i), coords3D(0,i)) - M_PI;
     if(phi>M_PI) phi -= M_PI;
     if(phi<-M_PI) phi += M_PI;
 
     double r = sqrt(coords3D(0,i) * coords3D(0,i) + coords3D(1,i) * coords3D(1,i) + coords3D(2,i) * coords3D(2,i));
-    double theta = acos(coords3D(2,i) / r);
-    if(coords3D(1,i)>0)
+    double theta = acos(coords3D(1,i) / r);
+    if(coords3D(2,i)>0)
       theta = -theta;
 
     double t = theta-_thetaMin;
     if(t>0)
     {
-      unsigned int r = round(t / _thetaRes);
-      if(r<_height)
+      unsigned int c = round(t / _thetaRes);
+      if(c<_width)
       {
-        unsigned int c = (unsigned int)((M_PI+phi) / M_PI * (double)_width);
+        unsigned int r = (unsigned int)((M_PI+phi) / M_PI * (double)_height);
         indices[i] = _indexMap[r][c];
       }
       else
         indices[i] = -1;
     }
     else
+    {
+      //cout << "alert: " << t << " " << coords3D(0,i) << " " << coords3D(1,i) << " " << coords3D(2,i) << endl;
+      //abort();
       indices[i] = -1;
+    }
   }
 }
 

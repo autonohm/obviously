@@ -10,7 +10,11 @@
 namespace obvious
 {
 
-static Matrix* _partCoords;
+static Matrix* _partCoords = NULL;
+//static Matrix* _cellCoordsHom = NULL;
+
+static int _initializedPartitions = 0;
+static int _distancesPushed = 0;
 
 TsdSpacePartition::TsdSpacePartition(const unsigned int x,
                                      const unsigned int y,
@@ -25,30 +29,11 @@ TsdSpacePartition::TsdSpacePartition(const unsigned int x,
   _z = z;
 
   _space = NULL;
-  _cellCoordsHom = NULL;
 
   _cellSize = cellSize;
   _componentSize = cellSize * (double)cellsX;
 
   _initWeight = 0.0;
-
-  if(!_partCoords)
-  {
-    _partCoords = new Matrix(cellsX*cellsY*cellsZ, 3);
-    unsigned int i=0;
-    for(unsigned int iz=0; iz<cellsZ; iz++)
-    {
-      for(unsigned int iy=0; iy<cellsY; iy++)
-      {
-        for(unsigned int ix=0; ix<cellsX; ix++, i++)
-        {
-          (*_partCoords)(i, 0) = ix;
-          (*_partCoords)(i, 1) = iy;
-          (*_partCoords)(i, 2) = iz;
-        }
-      }
-    }
-  }
 
   _edgeCoordsHom = new Matrix(8, 4);
   (*_edgeCoordsHom)(0, 0) = ((double)x + 0.5) * _cellSize;
@@ -103,6 +88,46 @@ TsdSpacePartition::TsdSpacePartition(const unsigned int x,
   _cellsX = cellsX;
   _cellsY = cellsY;
   _cellsZ = cellsZ;
+
+  if(!_partCoords)
+  {
+    _partCoords = new Matrix(cellsX*cellsY*cellsZ, 3);
+    unsigned int i=0;
+    for(unsigned int iz=0; iz<cellsZ; iz++)
+    {
+      for(unsigned int iy=0; iy<cellsY; iy++)
+      {
+        for(unsigned int ix=0; ix<cellsX; ix++, i++)
+        {
+          (*_partCoords)(i, 0) = ix;
+          (*_partCoords)(i, 1) = iy;
+          (*_partCoords)(i, 2) = iz;
+        }
+      }
+    }
+  }
+
+  _cellCoordsOffset[0] = ((double)_x) * _cellSize;
+  _cellCoordsOffset[1] = ((double)_y) * _cellSize;
+  _cellCoordsOffset[2] = ((double)_z) * _cellSize;
+  //if(!_cellCoordsHom)
+  {
+    _cellCoordsHom = new Matrix(_cellsX*_cellsY*_cellsZ, 4);
+    unsigned int i=0;
+    for(unsigned int iz=_z; iz<_z+_cellsZ; iz++)
+    {
+      for(unsigned int iy=_y; iy<_y+_cellsY; iy++)
+      {
+        for(unsigned int ix=_x; ix<_x+_cellsX; ix++, i++)
+        {
+          (*_cellCoordsHom)(i,0) = ((double)ix + 0.5) * _cellSize;
+          (*_cellCoordsHom)(i,1) = ((double)iy + 0.5) * _cellSize;
+          (*_cellCoordsHom)(i,2) = ((double)iz + 0.5) * _cellSize;
+          (*_cellCoordsHom)(i,3) = 1.0;
+        }
+      }
+    }
+  }
 }
 
 TsdSpacePartition::~TsdSpacePartition()
@@ -112,16 +137,21 @@ TsdSpacePartition::~TsdSpacePartition()
   delete [] _edgeCoordsHom; _edgeCoordsHom = NULL;
 }
 
+int TsdSpacePartition::getInitializedPartitionSize()
+{
+  return _initializedPartitions;
+}
+
+int TsdSpacePartition::getDistancesPushed()
+{
+  return _distancesPushed;
+}
+
 void TsdSpacePartition::reset()
 {
   if(_space)
   {
     System<TsdVoxel>::deallocate(_space); _space = NULL;
-  }
-
-  if(_cellCoordsHom)
-  {
-    delete [] _cellCoordsHom; _cellCoordsHom = NULL;
   }
 }
 
@@ -134,6 +164,9 @@ void TsdSpacePartition::init()
 {
   if(_space) return;
 
+  _initializedPartitions++;
+
+  //cout << "init " << _cellsZ << "x" << _cellsY << "x" << _cellsX << endl;
   System<TsdVoxel>::allocate(_cellsZ+1, _cellsY+1, _cellsX+1, _space);
   for (unsigned int iz = 0; iz < _cellsZ+1; iz++)
   {
@@ -146,22 +179,7 @@ void TsdSpacePartition::init()
       }
     }
   }
-
-  _cellCoordsHom = new Matrix(_cellsX*_cellsY*_cellsZ, 4);
-  unsigned int i=0;
-  for(unsigned int iz=_z; iz<_z+_cellsZ; iz++)
-  {
-    for(unsigned int iy=_y; iy<_y+_cellsY; iy++)
-    {
-      for(unsigned int ix=_x; ix<_x+_cellsX; ix++, i++)
-      {
-        (*_cellCoordsHom)(i,0) = ((double)ix + 0.5) * _cellSize;
-        (*_cellCoordsHom)(i,1) = ((double)iy + 0.5) * _cellSize;
-        (*_cellCoordsHom)(i,2) = ((double)iz + 0.5) * _cellSize;
-        (*_cellCoordsHom)(i,3) = 1.0;
-      }
-    }
-  }
+  //cout << "ok" << endl;
 }
 
 bool TsdSpacePartition::isInitialized()
@@ -192,6 +210,13 @@ unsigned int TsdSpacePartition::getZ()
 Matrix* TsdSpacePartition::getCellCoordsHom()
 {
   return _cellCoordsHom;
+}
+
+void TsdSpacePartition::getCellCoordsOffset(double offset[3])
+{
+  offset[0] = _cellCoordsOffset[0];
+  offset[1] = _cellCoordsOffset[1];
+  offset[2] = _cellCoordsOffset[2];
 }
 
 Matrix* TsdSpacePartition::getPartitionCoords()
@@ -258,6 +283,8 @@ void TsdSpacePartition::addTsd(const unsigned int x, const unsigned int y, const
       voxel->weight = min(voxel->weight, TSDSPACEMAXWEIGHT);
       voxel->tsd   = (voxel->tsd * (voxel->weight - 1.0) + tsd) / voxel->weight;
     }
+
+    _distancesPushed++;
   }
 }
 

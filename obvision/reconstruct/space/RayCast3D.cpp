@@ -287,7 +287,7 @@ bool RayCast3D::rayCastFromSensorPose(TsdSpace* space, double pos[3], double ray
   if (idxMin >= idxMax)
     return false;
 
-  //int idxMinTmp = idxMin;
+  int idxMinTmp = idxMin;
 
   // Traverse partitions roughly to clip minimum index
   int partitionSize = space->getPartitionSize();
@@ -297,16 +297,23 @@ bool RayCast3D::rayCastFromSensorPose(TsdSpace* space, double pos[3], double ray
     position[0] = pos[0] + i * ray[0];
     position[1] = pos[1] + i * ray[1];
     position[2] = pos[2] + i * ray[2];
-    EnumTsdSpaceInterpolate retval = space->interpolateTrilinear(position, &tsd_tmp);
-    if(retval!=INTERPOLATE_EMPTYPARTITION && retval!=INTERPOLATE_INVALIDINDEX)
+    if(space->isPartitionInitialized(position))
     {
       break;
     }
     else
       idxMin = i;
+//    EnumTsdSpaceInterpolate retval = space->interpolateTrilinear(position, &tsd_tmp);
+//    if(retval!=INTERPOLATE_EMPTYPARTITION && retval!=INTERPOLATE_INVALIDINDEX)
+//    {
+//      break;
+//    }
+//    else
+//      idxMin = i;
   }
-  /*if((int)idxMin != idxMinTmp)
-    cout << idxMin << " " << idxMinTmp << endl;*/
+  static int skipped = 0;
+  if((int)idxMin != idxMinTmp)
+    skipped += (idxMin-idxMinTmp);
 
   double tsdf_prev;
   position[0] = pos[0] + idxMin * ray[0];
@@ -343,6 +350,10 @@ bool RayCast3D::rayCastFromSensorPose(TsdSpace* space, double pos[3], double ray
 
     tsdf_prev = tsdf;
   }
+
+  static int traversed = 0;
+  traversed += idxMax-idxMin;
+  //cout << "skipped: " << skipped << " traversed: " << traversed << endl;
 
   if(!found) return false;
 

@@ -45,6 +45,10 @@ public:
 
   ~TsdSpacePartition();
 
+  static int getInitializedPartitionSize();
+
+  static int getDistancesPushed();
+
   void reset();
 
   double& operator () (unsigned int z, unsigned int y, unsigned int x);
@@ -63,7 +67,9 @@ public:
 
   Matrix* getCellCoordsHom();
 
-  Matrix* getPartitionCoords();
+  void getCellCoordsOffset(double offset[3]);
+
+  static Matrix* getPartitionCoords();
 
   unsigned int getWidth();
 
@@ -85,7 +91,7 @@ private:
 
   double _cellSize;
 
-  Matrix* _cellCoordsHom;
+  double _cellCoordsOffset[3];
 
   unsigned int _cellsX;
 
@@ -100,6 +106,8 @@ private:
   unsigned int _z;
 
   double _initWeight;
+
+  Matrix* _cellCoordsHom;
 };
 
 }
