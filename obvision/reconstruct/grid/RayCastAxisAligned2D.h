@@ -9,8 +9,8 @@ class RayCastAxisAligned2D {
 public:
   RayCastAxisAligned2D();
   virtual ~RayCastAxisAligned2D();
-
   void calcCoords(TsdGrid* grid, double* coords, double* normals, unsigned int* cnt);
+  void calcCoords(TsdGrid* grid, double* coords, double* normals, unsigned int* cnt, char* occupiedGrid);
 };
 
 }
