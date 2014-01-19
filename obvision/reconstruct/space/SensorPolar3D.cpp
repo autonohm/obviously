@@ -10,7 +10,7 @@
 namespace obvious
 {
 
-SensorPolar3D::SensorPolar3D(unsigned int beams, double thetaRes, double thetaMin, double phiRes, double maxRange) : Sensor(3, maxRange)
+SensorPolar3D::SensorPolar3D(unsigned int beams, double thetaRes, double thetaMin, double phiRes, double maxRange, double minRange) : Sensor(3, maxRange, minRange)
 {
   _thetaRes = thetaRes;
   _thetaMin = thetaMin;
@@ -39,22 +39,22 @@ SensorPolar3D::SensorPolar3D(unsigned int beams, double thetaRes, double thetaMi
   {
     for(unsigned int b=0; b<beams; b++, i++)
     {
-      Matrix Rh(4, 1);
+      Matrix ray(3, 1);
       double theta = _thetaMin + ((double)b) * _thetaRes;
       double x = sin(theta);
       double z = cos(theta);
 
       double phi = ((double)p) / ((double)_height) * M_PI - M_PI;
 
-      Rh(0,0) = cos(phi) * x;
-      Rh(1,0) = sin(phi) * x;
-      Rh(2,0) = z;
-      double len = sqrt(Rh(0,0)*Rh(0,0)+Rh(1,0)*Rh(1,0)+Rh(2,0)*Rh(2,0));
-      Rh(3,0) = 0.0;
-      Rh = (*_Pose) * Rh;
-      (*_rays)(0, i) = Rh(0, 0) / len;
-      (*_rays)(1, i) = Rh(1, 0) / len;
-      (*_rays)(2, i) = Rh(2, 0) / len;
+      ray(0,0) = cos(phi) * x;
+      ray(1,0) = sin(phi) * x;
+      ray(2,0) = z;
+      double len = sqrt(ray(0,0)*ray(0,0)+ray(1,0)*ray(1,0)+ray(2,0)*ray(2,0));
+      ray = (*_View) * ray;
+
+      (*_rays)(0, i) = ray(0, 0) / len;
+      (*_rays)(1, i) = ray(1, 0) / len;
+      (*_rays)(2, i) = ray(2, 0) / len;
     }
   }
 }
@@ -128,11 +128,14 @@ void SensorPolar3D::setDistanceMap(vector<float> phi, vector<float> dist)
   delete [] map;*/
 }
 
-void SensorPolar3D::backProject(Matrix* M, int* indices)
+void SensorPolar3D::backProject(Matrix* M, int* indices, Matrix* T)
 {
   Timer t;
-  Matrix PoseInv = (*_Pose);
+  //Matrix PoseInv = (*_Pose);
+  Matrix PoseInv = getTransformation();
   PoseInv.invert();
+  if(T)
+    PoseInv *= *T;
 
   Matrix coords3D = Matrix::multiply(PoseInv, *M, false, true);
 

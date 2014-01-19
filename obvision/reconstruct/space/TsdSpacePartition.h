@@ -65,7 +65,7 @@ public:
 
   unsigned int getZ();
 
-  Matrix* getCellCoordsHom();
+  static Matrix* getCellCoordsHom();
 
   void getCellCoordsOffset(double offset[3]);
 
@@ -107,7 +107,7 @@ private:
 
   double _initWeight;
 
-  Matrix* _cellCoordsHom;
+  //Matrix* _cellCoordsHom;
 };
 
 }

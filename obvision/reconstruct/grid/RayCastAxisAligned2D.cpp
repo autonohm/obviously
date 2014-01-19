@@ -30,7 +30,6 @@ void RayCastAxisAligned2D::calcCoords(TsdGrid* grid, double* coords, double* nor
           {
             double tsd_prev = (*p)(py, 0);
             double interp = 0.0;
-            bool found = false;
             for(unsigned int px=1; px<p->getWidth(); px++)
             {
               double tsd = (*p)(py, px);

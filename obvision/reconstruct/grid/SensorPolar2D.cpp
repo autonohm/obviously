@@ -8,11 +8,8 @@
 namespace obvious
 {
 
-SensorPolar2D::SensorPolar2D(unsigned int size, double angularRes, double phiMin, double maxRange) : Sensor(2, maxRange)
+SensorPolar2D::SensorPolar2D(unsigned int size, double angularRes, double phiMin, double maxRange, double minRange) : Sensor(2, maxRange, minRange)
 {
-  _Pose = new Matrix(3, 3);
-  _Pose->setIdentity();
-
   _size = size;
   _data = new double[_size];
   _mask = new bool[_size];
@@ -60,7 +57,8 @@ int SensorPolar2D::backProject(double data[2])
   xh(0,0) = data[0];
   xh(1,0) = data[1];
   xh(2,0) = 1.0;
-  Matrix PoseInv = (*_Pose);
+  Matrix PoseInv = getTransformation();
+  //Matrix PoseInv = (*_Pose);
   PoseInv.invert();
   xh = PoseInv * xh;
 
@@ -71,11 +69,15 @@ int SensorPolar2D::backProject(double data[2])
   return round((phi-_phiMin) /_angularRes);
 }
 
-void SensorPolar2D::backProject(Matrix* M, int* indices)
+void SensorPolar2D::backProject(Matrix* M, int* indices, Matrix* T)
 {
   Timer t;
-  Matrix PoseInv = (*_Pose);
+  //Matrix PoseInv = (*_Pose);
+  Matrix PoseInv = getTransformation();
   PoseInv.invert();
+  if(T)
+    PoseInv *= *T;
+
   Matrix coords2D = Matrix::multiply(PoseInv, *M, false, true);
 
   const double angularResInv = 1.0 / _angularRes;

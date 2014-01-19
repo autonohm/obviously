@@ -25,15 +25,18 @@ void RayCast3D::calcCoordsFromCurrentPose(TsdSpace* space, Sensor* sensor, doubl
   Timer t;
   *size = 0;
 
-  Matrix* T = sensor->getPose();
+  //Matrix* T = sensor->getPose();
+  Matrix Tinv = sensor->getTransformation();
+  Tinv.invert();
+
   double tr[3];
   sensor->getPosition(tr);
 
-  Matrix Tinv(4, 4);
-  Tinv = T->getInverse();
-
   Matrix* R = sensor->getNormalizedRayMap(space->getVoxelSize());
   unsigned int count = sensor->getWidth() * sensor->getHeight();
+
+  _skipped = 0;
+  _traversed = 0;
 
 #pragma omp parallel
   {
@@ -58,6 +61,7 @@ void RayCast3D::calcCoordsFromCurrentPose(TsdSpace* space, Sensor* sensor, doubl
       ray[1] = (*R)(1, i);
       ray[2] = (*R)(2, i);
 
+      // Raycast returns with coordinates in world coordinate system
       if(rayCastFromSensorPose(space, tr, ray, c, n, color, &depth)) // Ray returned with coordinates
       {
         M(0,0) = c[0];
@@ -66,6 +70,7 @@ void RayCast3D::calcCoordsFromCurrentPose(TsdSpace* space, Sensor* sensor, doubl
         N(0,0) = n[0];
         N(1,0) = n[1];
         N(2,0) = n[2];
+        // Transform data to sensor coordinate system
         M = Tinv * M;
         N = Tinv * N;
         for (unsigned int i = 0; i < 3; i++)
@@ -90,15 +95,16 @@ void RayCast3D::calcCoordsFromCurrentPose(TsdSpace* space, Sensor* sensor, doubl
 
   LOGMSG(DBG_DEBUG, "Elapsed TSDF projection: " << t.getTime() << "ms");
   LOGMSG(DBG_DEBUG, "Raycasting finished! Found " << *size << " coordinates");
+  LOGMSG(DBG_DEBUG, "Traversed: " << _traversed << ", skipped: " << _skipped);
 }
 
 void RayCast3D::calcCoordsFromCurrentPoseMask(TsdSpace* space, Sensor* sensor, double* coords, double* normals, unsigned char* rgb, bool* mask, unsigned int* size)
 {
   Timer t;
 
-  Matrix* T = sensor->getPose();
-  Matrix Tinv(4, 4);
-  Tinv = T->getInverse();
+  //Matrix* T = sensor->getPose();
+  Matrix Tinv = sensor->getTransformation();
+  Tinv.invert();
 
   double tr[3];
   sensor->getPosition(tr);
@@ -109,6 +115,9 @@ void RayCast3D::calcCoordsFromCurrentPoseMask(TsdSpace* space, Sensor* sensor, d
 
   Matrix* R = sensor->getNormalizedRayMap(space->getVoxelSize());
   unsigned int count = sensor->getWidth() * sensor->getHeight();
+
+  _skipped = 0;
+  _traversed = 0;
 
 #pragma omp parallel
   {
@@ -180,6 +189,7 @@ void RayCast3D::calcCoordsFromCurrentPoseMask(TsdSpace* space, Sensor* sensor, d
   *size = ctr;
   LOGMSG(DBG_DEBUG, "Elapsed TSDF projection: " << t.getTime() << "ms");
   LOGMSG(DBG_DEBUG, "Raycasting finished! Found " << ctr << " coordinates");
+  LOGMSG(DBG_DEBUG, "Traversed: " << _traversed << ", skipped: " << _skipped);
 }
 
 /*bool RayCast3D::calcCoordsFromCurrentPose(TsdSpace* space, Sensor* sensor, double* coords, double* normals, unsigned char* rgb, const std::vector<TsdSpace*>& spaces,
@@ -266,22 +276,29 @@ bool RayCast3D::rayCastFromSensorPose(TsdSpace* space, double pos[3], double ray
   // Interpolation weight
   double interp;
 
-  // Leave out outmost cells in order to prevent access to invalid neighbors
   double xmin   = -10e9;
   double ymin   = -10e9;
   double zmin   = -10e9;
-  if(fabs(ray[0])>10e-6) xmin = ((double)(ray[0] > 0.0 ? 1.5*voxelSize : (((double)xDim)-1.5)*voxelSize) - pos[0]) / ray[0];
-  if(fabs(ray[1])>10e-6) ymin = ((double)(ray[1] > 0.0 ? 1.5*voxelSize : (((double)yDim)-1.5)*voxelSize) - pos[1]) / ray[1];
-  if(fabs(ray[2])>10e-6) zmin = ((double)(ray[2] > 0.0 ? 1.5*voxelSize : (((double)zDim)-1.5)*voxelSize) - pos[2]) / ray[2];
-  double idxMin = ceil(max(max(xmin, ymin), zmin));
-  idxMin        = max(idxMin, 0.0);
 
   double xmax   = 10e9;
   double ymax   = 10e9;
   double zmax   = 10e9;
-  if(fabs(ray[0])>10e-6) xmax = ((double)(ray[0] > 0.0 ? (((double)xDim)-1.5)*voxelSize : 1.5*voxelSize) - pos[0]) / ray[0];
-  if(fabs(ray[1])>10e-6) ymax = ((double)(ray[1] > 0.0 ? (((double)yDim)-1.5)*voxelSize : 1.5*voxelSize) - pos[1]) / ray[1];
-  if(fabs(ray[2])>10e-6) zmax = ((double)(ray[2] > 0.0 ? (((double)zDim)-1.5)*voxelSize : 1.5*voxelSize) - pos[2]) / ray[2];
+
+  // Leave out outmost cells in order to prevent access to invalid neighbors
+  double minSpaceCoord = 1.5*voxelSize;
+  double maxSpaceCoord = (((double)xDim)-1.5)*voxelSize;
+
+  if(fabs(ray[0])>10e-6) xmin = ((double)(ray[0] > 0.0 ? minSpaceCoord : maxSpaceCoord) - pos[0]) / ray[0];
+  if(fabs(ray[1])>10e-6) ymin = ((double)(ray[1] > 0.0 ? minSpaceCoord : maxSpaceCoord) - pos[1]) / ray[1];
+  if(fabs(ray[2])>10e-6) zmin = ((double)(ray[2] > 0.0 ? minSpaceCoord : maxSpaceCoord) - pos[2]) / ray[2];
+
+
+  if(fabs(ray[0])>10e-6) xmax = ((double)(ray[0] > 0.0 ? maxSpaceCoord : minSpaceCoord) - pos[0]) / ray[0];
+  if(fabs(ray[1])>10e-6) ymax = ((double)(ray[1] > 0.0 ? maxSpaceCoord : minSpaceCoord) - pos[1]) / ray[1];
+  if(fabs(ray[2])>10e-6) zmax = ((double)(ray[2] > 0.0 ? maxSpaceCoord : minSpaceCoord) - pos[2]) / ray[2];
+
+  double idxMin = ceil(max(max(xmin, ymin), zmin));
+  idxMin        = max(idxMin, 0.0);
   double idxMax = floor(min(min(xmax, ymax), zmax));
 
   if (idxMin >= idxMax)
@@ -311,9 +328,9 @@ bool RayCast3D::rayCastFromSensorPose(TsdSpace* space, double pos[3], double ray
 //    else
 //      idxMin = i;
   }
-  static int skipped = 0;
+
   if((int)idxMin != idxMinTmp)
-    skipped += (idxMin-idxMinTmp);
+    _skipped += (idxMin-idxMinTmp);
 
   double tsdf_prev;
   position[0] = pos[0] + idxMin * ray[0];
@@ -325,7 +342,9 @@ bool RayCast3D::rayCastFromSensorPose(TsdSpace* space, double pos[3], double ray
 
   bool found = false;
 
-  for(int i=idxMin; i<idxMax; i++)
+  unsigned int i;
+
+  for(i=idxMin; i<idxMax; i++)
   {
     position[0] += ray[0];
     position[1] += ray[1];
@@ -351,14 +370,12 @@ bool RayCast3D::rayCastFromSensorPose(TsdSpace* space, double pos[3], double ray
     tsdf_prev = tsdf;
   }
 
-  static int traversed = 0;
-  traversed += idxMax-idxMin;
-  //cout << "skipped: " << skipped << " traversed: " << traversed << endl;
+  _traversed += i-idxMin;
 
   if(!found) return false;
 
   // interpolate between voxels when sign changes
-  for (unsigned int i = 0; i < 3; i++)
+  for (i = 0; i < 3; i++)
     coordinates[i] = position[i] + ray[i] * (interp-1.0);
 
   if(!space->interpolateNormal(coordinates, normal))

@@ -21,8 +21,9 @@ public:
    * @param[in] rows number of image rows
    * @param[in] PData 3x4 projection matrix
    * @param[in] maxRange maximum range
+   * @param[in] minRange minimum range
    */
-  SensorProjective3D(unsigned int cols, unsigned int rows, double PData[12], double maxRange=NAN);
+  SensorProjective3D(unsigned int cols, unsigned int rows, double PData[12], double maxRange=INFINITY, double minRange=0.0);
 
   /**
    * Copy constructor
@@ -48,8 +49,9 @@ public:
    * Parallel version of back projection
    * @param[in] M matrix of homogeneous 3D coordinates
    * @param[out] indices vector of beam indices
+   * @param[in] T temporary transformation matrix of coordinates
    */
-  void backProject(Matrix* M, int* indices);
+  void backProject(Matrix* M, int* indices, Matrix* T=NULL);
 
 private:
 

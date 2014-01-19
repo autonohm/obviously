@@ -23,7 +23,7 @@
 
 using namespace obvious;
 
-#define VXLDIM 0.02
+#define VXLDIM 0.005
 #define LAYOUTPARTITION LAYOUT_8x8x8
 #define LAYOUTSPACE LAYOUT_256x256x256
 
@@ -174,8 +174,10 @@ void _cbRegNewImage(void)
   unsigned int size = cols*rows*3;
 
   LOGMSG(DBG_DEBUG, "Current Transformation: ");
-  _sensor->getPose()->print();
-  _filterBounds->setPose(_sensor->getPose());
+  Matrix T = _sensor->getTransformation();
+  T.print();
+
+  _filterBounds->setPose(&T);
 
   // Extract model from TSDF space
   _rayCaster->calcCoordsFromCurrentPose(_space, _sensor, coords, normals, rgb, &size);
@@ -196,15 +198,14 @@ void _cbRegNewImage(void)
   _vModel->removeInvalidPoints();
   _vModel->copyCoords(coords);
   _vModel->copyNormals(normals);
-  size = _vModel->getSize();
 
-  // Transform model in order to display it in space coordinates
+  // Transform model in world coordinate system in order to display it
   double P[16];
-  _sensor->getPose()->getData(P);
+  T.getData(P);
   _vModel->transform(P);
 
   _icp->reset();
-  _icp->setModel(coords, normals, size, 0.2);
+  _icp->setModel(coords, normals, _vModel->getSize(), 0.2);
   //cout << "ICP set model: " << t.getTime()-timeIcpStart << " ms" << endl;
 
   // Acquire scene image
@@ -241,8 +242,8 @@ void _cbRegNewImage(void)
     return;
   }
 
-  _vScene->setCoords(coords, size / 3, 3, normals);
-  _vScene->setColors(rgb, size / 3, 3);
+  _vScene->setCoords(coords, idx, 3, normals);
+  _vScene->setColors(rgb, idx, 3);
   _vScene->removeInvalidPoints();
 
   _icp->setScene(coords, NULL, idx, 0.04);
@@ -258,12 +259,21 @@ void _cbRegNewImage(void)
 
   if(((state == ICP_SUCCESS) && (rms < 0.1)) || ((state == ICP_MAXITERATIONS) && (rms < 0.1)))
   {
-    Matrix* T = _icp->getFinalTransformation();
-    T->print();
-    double Tdata[16];
-    T->getData(Tdata);
-    _vScene->transform(Tdata);
-    _sensor->transform(T);
+    // Obtain scene-to-model registration
+    Matrix T = *(_icp->getFinalTransformation());
+    T.print();
+
+    //double Tdata[16];
+    //T.getData(Tdata);
+    //_vScene->transform(Tdata);
+
+    _sensor->transform(&T);
+
+    cout << "Current Pose" << endl;
+    Matrix Tmp = _sensor->getTransformation();
+    Tmp.print();
+    _viewer3D->showSensorPose(Tmp);
+
     double* coords = _kinect->getCoords();
     double* dist = new double[cols*rows];
     for(unsigned int i=0; i<cols*rows; i++)
@@ -289,7 +299,9 @@ void _cbRegNewImage(void)
 void _cbReset(void)
 {
   _space->reset();
-  _sensor->setPose(&_Tinit);
+  //_sensor->setPose(&_Tinit);
+  _sensor->resetTransformation();
+  _sensor->transform(&_Tinit);
   _space->push(_sensor);
 }
 
@@ -343,9 +355,9 @@ int main(void)
   // ------------------------------------------------------------------
   unsigned int maxIterations = 35;
 
-  PairAssignment* assigner = (PairAssignment*)new FlannPairAssignment(3, 0.0, true);
+  //PairAssignment* assigner = (PairAssignment*)new FlannPairAssignment(3, 0.0, true);
   //PairAssignment* assigner = (PairAssignment*)new AnnPairAssignment(3);
-  //PairAssignment* assigner = (PairAssignment*)new ProjectivePairAssignment(Pdata, cols, rows);
+  PairAssignment* assigner = (PairAssignment*)new ProjectivePairAssignment(Pdata, cols, rows);
 
   IRigidEstimator* estimator = (IRigidEstimator*)new PointToPlaneEstimator3D();
   //IRigidEstimator* estimator = (IRigidEstimator*)new PointToPointEstimator3D();
@@ -353,6 +365,7 @@ int main(void)
   // Out-of-Bounds filter to remove measurements outside TSD space
   _filterBounds = new OutOfBoundsFilter3D(_space->getMinX(), _space->getMaxX(), _space->getMinY(), _space->getMaxY(), _space->getMinZ(), _space->getMaxZ());
   _filterBounds->setPose(&_Tinit);
+  //_filterBounds->setPose(&_Tinit);
   assigner->addPreFilter(_filterBounds);
 
   // Decreasing threshold filter
@@ -369,8 +382,13 @@ int main(void)
   _icp->setConvergenceCounter(maxIterations);
   // ------------------------------------------------------------------
 
-  _sensor = new SensorProjective3D(cols, rows, Pdata);
-  _sensor->setPose(&_Tinit);
+  _sensor = new SensorProjective3D(cols, rows, Pdata, 4.0, 0.4);
+  //_sensor->setPose(&_Tinit);
+  _sensor->transform(&_Tinit);
+
+  cout << "Initial Pose" << endl;
+  Matrix Tmp = _sensor->getTransformation();
+  Tmp.print();
 
   // Push first data set at initial pose
   // ------------------------------------------------------------------

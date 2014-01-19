@@ -11,7 +11,7 @@ namespace obvious
 {
 
 static Matrix* _partCoords = NULL;
-//static Matrix* _cellCoordsHom = NULL;
+static Matrix* _cellCoordsHom = NULL;
 
 static int _initializedPartitions = 0;
 static int _distancesPushed = 0;
@@ -36,44 +36,44 @@ TsdSpacePartition::TsdSpacePartition(const unsigned int x,
   _initWeight = 0.0;
 
   _edgeCoordsHom = new Matrix(8, 4);
-  (*_edgeCoordsHom)(0, 0) = ((double)x + 0.5) * _cellSize;
-  (*_edgeCoordsHom)(0, 1) = ((double)y + 0.5) * _cellSize;
-  (*_edgeCoordsHom)(0, 2) = ((double)z + 0.5) * _cellSize;
+  (*_edgeCoordsHom)(0, 0) = ((double)x) * _cellSize;
+  (*_edgeCoordsHom)(0, 1) = ((double)y) * _cellSize;
+  (*_edgeCoordsHom)(0, 2) = ((double)z) * _cellSize;
   (*_edgeCoordsHom)(0, 3) = 1.0;
 
-  (*_edgeCoordsHom)(1, 0) = ((double)(x+cellsX) + 0.5) * _cellSize;
-  (*_edgeCoordsHom)(1, 1) = ((double)y + 0.5) * _cellSize;
-  (*_edgeCoordsHom)(1, 2) = ((double)z + 0.5) * _cellSize;
+  (*_edgeCoordsHom)(1, 0) = ((double)(x+cellsX)) * _cellSize;
+  (*_edgeCoordsHom)(1, 1) = ((double)y) * _cellSize;
+  (*_edgeCoordsHom)(1, 2) = ((double)z) * _cellSize;
   (*_edgeCoordsHom)(1, 3) = 1.0;
 
-  (*_edgeCoordsHom)(2, 0) = ((double)x + 0.5) * _cellSize;
-  (*_edgeCoordsHom)(2, 1) = ((double)(y+cellsY) + 0.5) * _cellSize;
-  (*_edgeCoordsHom)(2, 2) = ((double)z + 0.5) * _cellSize;
+  (*_edgeCoordsHom)(2, 0) = ((double)x) * _cellSize;
+  (*_edgeCoordsHom)(2, 1) = ((double)(y+cellsY)) * _cellSize;
+  (*_edgeCoordsHom)(2, 2) = ((double)z) * _cellSize;
   (*_edgeCoordsHom)(2, 3) = 1.0;
 
-  (*_edgeCoordsHom)(3, 0) = ((double)(x+cellsX) + 0.5) * _cellSize;
-  (*_edgeCoordsHom)(3, 1) = ((double)(y+cellsY) + 0.5) * _cellSize;
-  (*_edgeCoordsHom)(3, 2) = ((double)z + 0.5) * _cellSize;
+  (*_edgeCoordsHom)(3, 0) = ((double)(x+cellsX)) * _cellSize;
+  (*_edgeCoordsHom)(3, 1) = ((double)(y+cellsY)) * _cellSize;
+  (*_edgeCoordsHom)(3, 2) = ((double)z) * _cellSize;
   (*_edgeCoordsHom)(3, 3) = 1.0;
 
-  (*_edgeCoordsHom)(4, 0) = ((double)x + 0.5) * _cellSize;
-  (*_edgeCoordsHom)(4, 1) = ((double)y + 0.5) * _cellSize;
-  (*_edgeCoordsHom)(4, 2) = ((double)(z+cellsZ) + 0.5) * _cellSize;
+  (*_edgeCoordsHom)(4, 0) = ((double)x) * _cellSize;
+  (*_edgeCoordsHom)(4, 1) = ((double)y) * _cellSize;
+  (*_edgeCoordsHom)(4, 2) = ((double)(z+cellsZ)) * _cellSize;
   (*_edgeCoordsHom)(4, 3) = 1.0;
 
-  (*_edgeCoordsHom)(5, 0) = ((double)(x+cellsX) + 0.5) * _cellSize;
-  (*_edgeCoordsHom)(5, 1) = ((double)y + 0.5) * _cellSize;
-  (*_edgeCoordsHom)(5, 2) = ((double)(z+cellsZ) + 0.5) * _cellSize;
+  (*_edgeCoordsHom)(5, 0) = ((double)(x+cellsX)) * _cellSize;
+  (*_edgeCoordsHom)(5, 1) = ((double)y) * _cellSize;
+  (*_edgeCoordsHom)(5, 2) = ((double)(z+cellsZ)) * _cellSize;
   (*_edgeCoordsHom)(5, 3) = 1.0;
 
-  (*_edgeCoordsHom)(6, 0) = ((double)x + 0.5) * _cellSize;
-  (*_edgeCoordsHom)(6, 1) = ((double)(y+cellsY) + 0.5) * _cellSize;
-  (*_edgeCoordsHom)(6, 2) = ((double)(z+cellsZ) + 0.5) * _cellSize;
+  (*_edgeCoordsHom)(6, 0) = ((double)x) * _cellSize;
+  (*_edgeCoordsHom)(6, 1) = ((double)(y+cellsY)) * _cellSize;
+  (*_edgeCoordsHom)(6, 2) = ((double)(z+cellsZ)) * _cellSize;
   (*_edgeCoordsHom)(6, 3) = 1.0;
 
-  (*_edgeCoordsHom)(7, 0) = ((double)(x+cellsX) + 0.5) * _cellSize;
-  (*_edgeCoordsHom)(7, 1) = ((double)(y+cellsY) + 0.5) * _cellSize;
-  (*_edgeCoordsHom)(7, 2) = ((double)(z+cellsZ) + 0.5) * _cellSize;
+  (*_edgeCoordsHom)(7, 0) = ((double)(x+cellsX)) * _cellSize;
+  (*_edgeCoordsHom)(7, 1) = ((double)(y+cellsY)) * _cellSize;
+  (*_edgeCoordsHom)(7, 2) = ((double)(z+cellsZ)) * _cellSize;
   (*_edgeCoordsHom)(7, 3) = 1.0;
 
   _centroid[0] = ((*_edgeCoordsHom)(7, 0)+(*_edgeCoordsHom)(0, 0)) / 2.0;
@@ -110,15 +110,32 @@ TsdSpacePartition::TsdSpacePartition(const unsigned int x,
   _cellCoordsOffset[0] = ((double)_x) * _cellSize;
   _cellCoordsOffset[1] = ((double)_y) * _cellSize;
   _cellCoordsOffset[2] = ((double)_z) * _cellSize;
-  //if(!_cellCoordsHom)
+
+  /*_cellCoordsHom = new Matrix(_cellsX*_cellsY*_cellsZ, 4);
+  unsigned int i=0;
+  for(unsigned int iz=_z; iz<_z+_cellsZ; iz++)
+  {
+    for(unsigned int iy=_y; iy<_y+_cellsY; iy++)
+    {
+      for(unsigned int ix=_x; ix<_x+_cellsX; ix++, i++)
+      {
+        (*_cellCoordsHom)(i,0) = ((double)ix + 0.5) * _cellSize;
+        (*_cellCoordsHom)(i,1) = ((double)iy + 0.5) * _cellSize;
+        (*_cellCoordsHom)(i,2) = ((double)iz + 0.5) * _cellSize;
+        (*_cellCoordsHom)(i,3) = 1.0;
+      }
+    }
+  }*/
+
+  if(!_cellCoordsHom)
   {
     _cellCoordsHom = new Matrix(_cellsX*_cellsY*_cellsZ, 4);
     unsigned int i=0;
-    for(unsigned int iz=_z; iz<_z+_cellsZ; iz++)
+    for(unsigned int iz=0; iz<_cellsZ; iz++)
     {
-      for(unsigned int iy=_y; iy<_y+_cellsY; iy++)
+      for(unsigned int iy=0; iy<_cellsY; iy++)
       {
-        for(unsigned int ix=_x; ix<_x+_cellsX; ix++, i++)
+        for(unsigned int ix=0; ix<_cellsX; ix++, i++)
         {
           (*_cellCoordsHom)(i,0) = ((double)ix + 0.5) * _cellSize;
           (*_cellCoordsHom)(i,1) = ((double)iy + 0.5) * _cellSize;

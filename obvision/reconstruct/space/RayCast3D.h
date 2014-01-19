@@ -59,7 +59,12 @@ private:
 
   bool rayCastFromSensorPose(TsdSpace* space, double pos[3], double ray[3], double coordinates[3], double normal[3], unsigned char rgb[3], double* depth);
 
-protected:
+  /**
+   *  Variables for statistics
+   */
+  unsigned int _skipped;
+
+  unsigned int _traversed;
 
 };
 

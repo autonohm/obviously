@@ -29,9 +29,10 @@ void RayCastPolar2D::calcCoordsFromCurrentView(TsdGrid* grid, SensorPolar2D* sen
   double n[2];
   Matrix M(3,1);
   Matrix N(3,1);
-  Matrix* T = sensor->getPose();
+  //Matrix* T = sensor->getPose();
+  Matrix T = sensor->getTransformation();
   Matrix Ti(3, 3);
-  Ti = T->getInverse();
+  Ti = T.getInverse();
   M(2,0) = 1.0;
   N(2,0) = 0.0; // no translation for normals
 

@@ -215,7 +215,7 @@ void TsdSpace::push(Sensor* sensor)
   sensor->getPosition(tr);
 
   Matrix* partCoords = TsdSpacePartition::getPartitionCoords();
-  //Matrix* cellCoordsHom = TsdSpacePartition::getCellCoordsHom();
+  Matrix* cellCoordsHom = TsdSpacePartition::getCellCoordsHom();
 
 #pragma omp parallel
   {
@@ -229,31 +229,13 @@ void TsdSpace::push(Sensor* sensor)
       for(int px=0; px<_partitionsInX; px++)
       {
         TsdSpacePartition* part = _partitions[pz][py][px];
-        //if(!part->isInRange(tr, sensor, _maxTruncation)) continue;
-
-        part->init();
+        if(!part->isInRange(tr, sensor, _maxTruncation)) continue;
 
         double t[3];
         part->getCellCoordsOffset(t);
-        Matrix* cellCoordsHom = part->getCellCoordsHom();
-
-        //t[0] = -t[0]; t[1] = -t[1]; t[2] = -t[2];
-        //sensor->translate(t);
-        /*for(unsigned int i=0; i<cellCoordsHom->getRows(); i++)
-        {
-          (*cellCoordsHom)(i, 0) += t[0];
-          (*cellCoordsHom)(i, 1) += t[1];
-          (*cellCoordsHom)(i, 2) += t[2];
-        }*/
-        sensor->backProject(cellCoordsHom, idx);
-
-        //sensor->translate(t);
-        /*for(unsigned int i=0; i<cellCoordsHom->getRows(); i++)
-        {
-          (*cellCoordsHom)(i, 0) -= t[0];
-          (*cellCoordsHom)(i, 1) -= t[1];
-          (*cellCoordsHom)(i, 2) -= t[2];
-        }*/
+        Matrix* T = MatrixFactory::TranslationMatrix44(t[0], t[1], t[2]);
+        sensor->backProject(cellCoordsHom, idx, T);
+        delete T;
 
         for(unsigned int c=0; c<partSize; c++)
         {
@@ -266,9 +248,9 @@ void TsdSpace::push(Sensor* sensor)
             {
               // calculate distance of current cell to sensor
               double crd[3];
-              crd[0] = (*cellCoordsHom)(c,0);
-              crd[1] = (*cellCoordsHom)(c,1);
-              crd[2] = (*cellCoordsHom)(c,2);
+              crd[0] = (*cellCoordsHom)(c,0) + t[0];
+              crd[1] = (*cellCoordsHom)(c,1) + t[1];
+              crd[2] = (*cellCoordsHom)(c,2) + t[2];
               double distance = euklideanDistance<double>(tr, crd, 3);
               double sd = data[index] - distance;
 
@@ -279,6 +261,7 @@ void TsdSpace::push(Sensor* sensor)
               // TODO: Implement color support
               //unsigned char* color = NULL;
               //if(rgb) color = &(rgb[3*index]);
+              part->init();
               part->addTsd((*partCoords)(c, 0), (*partCoords)(c, 1), (*partCoords)(c, 2), sd, _maxTruncation);
             }
           }
@@ -291,7 +274,7 @@ void TsdSpace::push(Sensor* sensor)
 
   propagateBorders();
 
-  cout << "Distances pushed: " << TsdSpacePartition::getDistancesPushed() << endl;
+  LOGMSG(DBG_DEBUG, "Distances pushed: " << TsdSpacePartition::getDistancesPushed());
   LOGMSG(DBG_DEBUG, "Elapsed push: " << t.getTime() << "ms, Initialized partitions: " << TsdSpacePartition::getInitializedPartitionSize());
 }
 

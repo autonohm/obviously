@@ -21,8 +21,9 @@ public:
    * @param[in] angularRes angular resolution, i.e. angle between beams in rad
    * @param[in] phiMin minimum angle from which beams are counted positive counter-clockwisely (rad)
    * @param[in] maxRange maximum range
+   * @param[in] minRange minimum range
    */
-  SensorPolar2D(unsigned int beams, double angularRes, double phiMin, double maxRange=NAN);
+  SensorPolar2D(unsigned int beams, double angularRes, double phiMin, double maxRange=INFINITY, double minRange=0.0);
 
   /**
    * Destructor
@@ -40,8 +41,9 @@ public:
    * Parallel version of back projection
    * @param[in] M matrix of homogeneous 2D coordinates
    * @param[out] indices vector of beam indices
+   * @param[in] T temporary transformation matrix of coordinates
    */
-  void backProject(Matrix* M, int* indices);
+  void backProject(Matrix* M, int* indices, Matrix* T=NULL);
 
   /**
    * Get angular resolution

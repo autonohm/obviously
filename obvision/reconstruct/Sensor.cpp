@@ -8,13 +8,23 @@
 namespace obvious
 {
 
-Sensor::Sensor(unsigned int dim, double maxRange)
+Sensor::Sensor(unsigned int dim, double maxRange, double minRange)
 {
   _dim = dim;
   _maxRange = maxRange;
+  _minRange = minRange;
 
-  _Pose = new Matrix(_dim+1, _dim+1);
-  _Pose->setIdentity();
+  //_Pose = new Matrix(_dim+1, _dim+1);
+  //_Pose->setIdentity();
+
+  _Position = new Matrix(_dim+1, 1);
+
+  for(unsigned int i=0; i<_dim; i++)
+    (*_Position)(i, 0) = 0.0;
+  (*_Position)(_dim, 0) = 1.0;
+
+  _View = new Matrix(_dim, _dim);
+  _View->setIdentity();
 
   _rgb = NULL;
   _accuracy = NULL;
@@ -24,7 +34,9 @@ Sensor::Sensor(unsigned int dim, double maxRange)
 
 Sensor::~Sensor()
 {
-  delete _Pose;
+  //delete _Pose;
+  delete _Position;
+  delete _View;
   if(_rgb) delete [] _rgb;
   if(_accuracy) delete [] _accuracy;
 }
@@ -45,12 +57,25 @@ Matrix* Sensor::getNormalizedRayMap(double norm)
 
 void Sensor::transform(Matrix* T)
 {
-  (*_Pose) *= (*T);
-  Matrix R(_dim, _dim);
+  //(*_Pose) = (*_Pose) * (*T);
+
+  Matrix R(*T, 0, 0, _dim, _dim);
+
+  //(*_Position) = (*T) * (*_Position);
   for(unsigned int r=0; r<_dim; r++)
-    for(unsigned int c=0; c<_dim; c++)
-      R(r, c) = (*T)(r, c);
+    (*_Position)(r, 0) += (*T)(r, _dim);
+  (*_View) = R * (*_View);
   (*_rays) = R * (*_rays);
+}
+
+void Sensor::translate(double* tr)
+{
+  //Matrix T(_dim+1, _dim+1);
+  //T.setIdentity();
+  for(unsigned int r=0; r<_dim; r++)
+    (*_Position)(r, 0) += tr[r];
+    //T(r, _dim) = tr[r];
+  //(*_Pose) = T * (*_Pose);
 }
 
 unsigned int Sensor::getWidth()
@@ -73,41 +98,55 @@ double Sensor::getMaximumRange()
   return _maxRange;
 }
 
-void Sensor::translate(double* tr)
+double Sensor::getMinimumRange()
 {
-  Matrix R(_dim, _dim);
-  for(unsigned int r=0; r<_dim; r++)
-    for(unsigned int c=0; c<_dim; c++)
-      R(r, c) = (*_Pose)(r, c);
-  R.invert();
-
-  Matrix T(_dim, 1);
-  for(unsigned int r=0; r<_dim; r++)
-    T(r, 0) = tr[r];
-
-  T = R * T;
-
-  for(unsigned int i=0; i<_dim; i++)
-    (*_Pose)(i, _dim) += T(i, 0);
+  return _minRange;
 }
 
-void Sensor::setPose(Matrix* T)
+
+Matrix Sensor::getTransformation()
 {
+  Matrix T(_dim+1, _dim+1);
+  T.setIdentity();
+  for(unsigned int r=0; r<_dim; r++)
+  {
+    for(unsigned int c=0; c<_dim; c++)
+      T(r, c) = (*_View)(r, c);
+    T(r, _dim) = (*_Position)(r, 0);
+  }
+  return T;
+}
+
+void Sensor::resetTransformation()
+{
+  for(unsigned int i=0; i<_dim; i++)
+    (*_Position)(i, 0) = 0.0;
+  _View->setIdentity();
+}
+
+/*void Sensor::setPose(Matrix* T)
+{
+  _Pose->setIdentity();
   Matrix Pinv = (*_Pose);
   Pinv.invert();
-  transform(&Pinv);
-  transform(T);
-}
 
-Matrix* Sensor::getPose()
+  // 1) set pose to identity
+  // 2) rotate rays back
+  transform(&Pinv);
+
+  transform(T);
+}*/
+
+/*Matrix* Sensor::getPose()
 {
   return _Pose;
-}
+}*/
 
 void Sensor::getPosition(double* tr)
 {
   for(unsigned int i=0; i<_dim; i++)
-    tr[i] = (*_Pose)(i, _dim);
+    //tr[i] = (*_Pose)(i, _dim);
+    tr[i] = (*_Position)(i, 0);
 }
 
 unsigned int Sensor::getRealMeasurementSize()

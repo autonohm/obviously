@@ -21,7 +21,7 @@ public:
    * Standard constructor
    * @param[in] dim dimensionality of representation
    */
-  Sensor(unsigned int dim, double maxRange);
+  Sensor(unsigned int dim, double maxRange, double minRange);
 
   /**
    * Destructor
@@ -46,6 +46,12 @@ public:
    */
   virtual double getMaximumRange();
 
+  /**
+   * Get minimum range
+   * @return minimum range
+   */
+  virtual double getMinimumRange();
+
   virtual Matrix* getNormalizedRayMap(double norm);
 
   /**
@@ -60,17 +66,21 @@ public:
    */
   virtual void translate(double* tr);
 
+  Matrix getTransformation();
+
+  void resetTransformation();
+
   /**
    * Mutator of sensor pose
    * @param[in] P pose
    */
-  virtual void setPose(Matrix* P);
+  //virtual void setPose(Matrix* P);
 
   /**
    * Accessor to sensor pose
    * @return pose
    */
-  virtual Matrix* getPose();
+  //virtual Matrix* getPose();
 
   /**
    * Accessor to sensor translation
@@ -140,16 +150,22 @@ public:
    * Project coordinate back to sensor index
    * @param[in] M matrix of coordinates (homogeneous)
    * @param[out] indices vector of projection results (must be allocated outside)
+   * @param[in] T temporary transformation matrix of coordinates
    */
-  virtual void backProject(Matrix* M, int* indices) = 0;
+  virtual void backProject(Matrix* M, int* indices, Matrix* T=NULL) = 0;
 
 protected:
 
-  Matrix* _Pose;
+  //Matrix* _Pose;
+  Matrix* _View;
+
+  Matrix* _Position;
 
   unsigned int _dim;
 
   double _maxRange;
+
+  double _minRange;
 
   unsigned int _size;
 

@@ -11,12 +11,14 @@
 using namespace std;
 using namespace obvious;
 
+#define SENSORRAYCAST 1
+
 int main(void)
 {
   LOGMSG_CONF("tsd_test.log", Logger::file_off|Logger::screen_on, DBG_DEBUG, DBG_DEBUG);
 
-  double voxelSize = 0.04;
-  TsdSpace space(voxelSize, LAYOUT_8x8x8, LAYOUT_128x128x128);
+  double voxelSize = 0.01;
+  TsdSpace space(voxelSize, LAYOUT_8x8x8, LAYOUT_512x512x512);
   space.setMaxTruncation(3.0*voxelSize);
 
   // translation of sensor
@@ -25,7 +27,7 @@ int main(void)
   tr[2] = 0.0;
 
   // rotation about y-axis of sensor
-  double theta = -10.0 * M_PI / 180;
+  double theta = 0.0 * M_PI / 180;
 
   double tf[16]={cos(theta),  0, sin(theta), tr[0],
                  0,           1, 0,          tr[1],
@@ -72,12 +74,6 @@ int main(void)
       distZ[v*cols+u] = sqrt(x*x+y*y+z*z);
     }
 
-  /*for(int u=0; u<cols; u++)
-	   for(int v=0; v<rows; v++)
-	   {
-	      distZ[v*cols+u] -= v * 0.0004;
-	   }*/
-
   unsigned char* texture = new unsigned char[cols*rows*3];
   for(int u=0; u<cols; u++)
      for(int v=0; v<rows; v++)
@@ -92,7 +88,6 @@ int main(void)
   //sensor.setRealMeasurementRGB(texture);
   Timer t;
   space.push(&sensor);
-  cout << "Push elapsed: " << t.reset() << "ms" << endl;
 
   /*unsigned char* buffer = new unsigned char[space.getXDimension()*space.getYDimension()*3];
   for(unsigned int i=0; i<space.getZDimension(); i++)
@@ -105,32 +100,45 @@ int main(void)
   delete[] buffer;*/
 
   t.reset();
-  RayCast3D raycaster;
+
   unsigned int cnt;
-  double* cloud = new double[rows*cols*3*100];
-  double* normals = new double[rows*cols*3*100];
-  unsigned char* rgb = new unsigned char[rows*cols*3*100];
-  raycaster.calcCoordsFromCurrentPose(&space, &sensor, cloud, normals, rgb, &cnt);
 
-  //RayCastAxisAligned3D raycasterMap;
-  //raycasterMap.calcCoordsRoughly(&space, cloud, normals, &cnt);
-
-  cout << "Raycasting elapsed: " << t.reset() << "ms" << endl;
-  cout << "Raycasting returned with " << cnt << " coordinates" << endl;
+#if SENSORRAYCAST
+  double* coords = new double[rows*cols*3];
+  double* normals = new double[rows*cols*3];
+  unsigned char* rgb = new unsigned char[rows*cols*3];
+  RayCast3D raycaster;
+  raycaster.calcCoordsFromCurrentPose(&space, &sensor, coords, normals, rgb, &cnt);
+#else
+  unsigned int cells = space.getXDimension()*space.getYDimension()*space.getZDimension();
+  double* coords = new double[cells];
+  double* normals = new double[cells];
+  unsigned char* rgb = NULL;
+  RayCastAxisAligned3D raycaster;
+  raycaster.calcCoords(&space, coords, normals, &cnt);
+#endif
 
   VtkCloud vcloud;
-  vcloud.setCoords(cloud, cnt/3, 3, normals);
+  vcloud.setCoords(coords, cnt/3, 3, normals);
+  Matrix P = sensor.getTransformation();
   if(sensor.hasRealMeasurmentRGB()) vcloud.setColors(rgb, cnt/3, 3);
 
   Obvious3D viewer("TSD Cloud");
-  viewer.showSensorPose(T);
+
+  viewer.showSensorPose(P);
+  viewer.addAxisAlignedCube(0, space.getMaxX(), 0, space.getMaxY(), 0, space.getMaxZ());
   viewer.showAxes(true);
   viewer.addCloud(&vcloud);
+#if SENSORRAYCAST
+  double Pdata[16];
+  P.getData(Pdata);
+  vcloud.transform(Pdata);
+#endif
   viewer.startRendering();
 
-  delete [] cloud;
+  delete [] coords;
   delete [] normals;
-  delete [] rgb;
+  if(rgb) delete [] rgb;
   delete [] texture;
 }
 

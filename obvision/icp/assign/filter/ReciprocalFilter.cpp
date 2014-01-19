@@ -52,6 +52,9 @@ void ReciprocalFilter::filter(double** model, double** scene, vector<StrCartesia
       pair.dDistanceSqr = (*distancesSqr)[i];
       vReciprocalPairs.push_back(pair);
   }
+
+  if(vReciprocalPairs.size()==0) return;
+
   std::sort(vReciprocalPairs.begin(), vReciprocalPairs.end());
 
   unsigned int unModelIndexLast = vReciprocalPairs[0].unModelIndex; // remember model point index of first pair

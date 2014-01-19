@@ -6,12 +6,12 @@
 namespace obvious
 {
 
-SensorProjective3D::SensorProjective3D(unsigned int cols, unsigned int rows, double PData[12], double maxRange) : Sensor(3, maxRange)
+SensorProjective3D::SensorProjective3D(unsigned int cols, unsigned int rows, double PData[12], double maxRange, double minRange) : Sensor(3, maxRange, minRange)
 {
   init(cols, rows, PData);
 }
 
-SensorProjective3D::SensorProjective3D(SensorProjective3D* sensor) : Sensor(3, sensor->getMaximumRange())
+SensorProjective3D::SensorProjective3D(SensorProjective3D* sensor) : Sensor(3, sensor->getMaximumRange(), sensor->getMinimumRange())
 {
   double PData[12];
   sensor->_P->getData(PData);
@@ -73,15 +73,20 @@ void SensorProjective3D::project2Space(const unsigned int col, const unsigned in
   (*coord)(2, 0) = depth;
 }
 
-void SensorProjective3D::backProject(Matrix* M, int* indices)
+void SensorProjective3D::backProject(Matrix* M, int* indices, Matrix* T)
 {
-  Matrix PoseInv = (*_Pose);
+  //Matrix PoseInv = (*_Pose);
+  Matrix PoseInv = getTransformation();
   PoseInv.invert();
+
+  // Provide temporary transformation of voxelCoords, i.e. shift of coordinate system (partitioning)
+  if(T)
+    PoseInv *= *T;
 
   Matrix Pgen(3, 4);
   Pgen = (*_P) * PoseInv;
 
-  // coords2D = P * Tinv * voxelCoords
+  // coords2D = P * Tinv * Ttmp * voxelCoords
   Matrix coords2D = Matrix::multiply(Pgen, *M, false, true);
 
   for(unsigned int i=0; i<M->getRows(); i++)
