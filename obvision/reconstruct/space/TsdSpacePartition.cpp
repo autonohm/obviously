@@ -111,22 +111,6 @@ TsdSpacePartition::TsdSpacePartition(const unsigned int x,
   _cellCoordsOffset[1] = ((double)_y) * _cellSize;
   _cellCoordsOffset[2] = ((double)_z) * _cellSize;
 
-  /*_cellCoordsHom = new Matrix(_cellsX*_cellsY*_cellsZ, 4);
-  unsigned int i=0;
-  for(unsigned int iz=_z; iz<_z+_cellsZ; iz++)
-  {
-    for(unsigned int iy=_y; iy<_y+_cellsY; iy++)
-    {
-      for(unsigned int ix=_x; ix<_x+_cellsX; ix++, i++)
-      {
-        (*_cellCoordsHom)(i,0) = ((double)ix + 0.5) * _cellSize;
-        (*_cellCoordsHom)(i,1) = ((double)iy + 0.5) * _cellSize;
-        (*_cellCoordsHom)(i,2) = ((double)iz + 0.5) * _cellSize;
-        (*_cellCoordsHom)(i,3) = 1.0;
-      }
-    }
-  }*/
-
   if(!_cellCoordsHom)
   {
     _cellCoordsHom = new Matrix(_cellsX*_cellsY*_cellsZ, 4);
@@ -183,7 +167,6 @@ void TsdSpacePartition::init()
 
   _initializedPartitions++;
 
-  //cout << "init " << _cellsZ << "x" << _cellsY << "x" << _cellsX << endl;
   System<TsdVoxel>::allocate(_cellsZ+1, _cellsY+1, _cellsX+1, _space);
   for (unsigned int iz = 0; iz < _cellsZ+1; iz++)
   {
@@ -196,7 +179,6 @@ void TsdSpacePartition::init()
       }
     }
   }
-  //cout << "ok" << endl;
 }
 
 bool TsdSpacePartition::isInitialized()

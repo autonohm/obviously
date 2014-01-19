@@ -12,8 +12,11 @@ namespace obvious
 
 SensorPolar3D::SensorPolar3D(unsigned int beams, double thetaRes, double thetaMin, double phiRes, double maxRange, double minRange) : Sensor(3, maxRange, minRange)
 {
+  // Rotation about scanning plane
   _thetaRes = thetaRes;
   _thetaMin = thetaMin;
+
+  // Rotation about scanning device
   _phiRes = phiRes;
 
   _width = beams;
@@ -42,19 +45,31 @@ SensorPolar3D::SensorPolar3D(unsigned int beams, double thetaRes, double thetaMi
       Matrix ray(3, 1);
       double theta = _thetaMin + ((double)b) * _thetaRes;
       double x = sin(theta);
-      double z = cos(theta);
+      double y = cos(theta);
 
       double phi = ((double)p) / ((double)_height) * M_PI - M_PI;
 
       ray(0,0) = cos(phi) * x;
-      ray(1,0) = sin(phi) * x;
-      ray(2,0) = z;
+      ray(1,0) = y;
+      ray(2,0) = sin(phi) * x;
       double len = sqrt(ray(0,0)*ray(0,0)+ray(1,0)*ray(1,0)+ray(2,0)*ray(2,0));
       ray = (*_View) * ray;
 
       (*_rays)(0, i) = ray(0, 0) / len;
       (*_rays)(1, i) = ray(1, 0) / len;
       (*_rays)(2, i) = ray(2, 0) / len;
+    }
+  }
+
+  double phi_corr = (M_PI / ((double)_height) / ((double)_width)) * 270.0/360.0;
+  for(unsigned int r=0; r<_height; r++)
+  {
+    unsigned int rp = ((double)r) / ((double)_height) *M_PI / _phiRes;
+    for(unsigned int c=0; c<_width; c++)
+    {
+      unsigned int rpr = rp + (unsigned int)(phi_corr/_phiRes * (double)c);
+      if(rpr>=_height) continue;
+      _indexMap[rpr][c] = r*_width+c;
     }
   }
 }
@@ -69,28 +84,9 @@ SensorPolar3D::~SensorPolar3D()
   delete _rays;
 }
 
-/*void SensorPolar3D::calcRayFromCurrentPose(unsigned int beam, unsigned int plane, double ray[3])
-{
-  Matrix Rh(4, 1);
-  double theta = _thetaMin + ((double)beam) * _thetaRes;
-  double x = sin(theta);
-  double z = cos(theta);
-
-  double phi = ((double)plane) / ((double)_width) * M_PI - M_PI;
-
-  Rh(0,0) = cos(phi) * x;
-  Rh(1,0) = sin(phi) * x;
-  Rh(2,0) = z;
-  Rh(3,0) = 0.0;
-  Rh = (*_Pose) * Rh;
-  ray[0] = Rh(0,0);
-  ray[1] = Rh(1,0);
-  ray[2] = Rh(2,0);
-}*/
-
 void SensorPolar3D::setDistanceMap(vector<float> phi, vector<float> dist)
 {
-  LOGMSG(DBG_DEBUG, "SensorPolar3D::setDistanceMap");
+  LOGMSG(DBG_DEBUG, "SensorPolar3D::setDistanceMap -> scanning planes: " << phi.size());
 
   if((_width*phi.size()) != dist.size())
   {
@@ -98,22 +94,22 @@ void SensorPolar3D::setDistanceMap(vector<float> phi, vector<float> dist)
     return;
   }
 
-  double phi_corr = (M_PI / (double)phi.size() / _width) * 270.0/360.0;
   for(unsigned int i=0; i<_width*_height; i++)
   {
     _distanceMap[0][i] = -1.0;
     _indexMap[0][i] = -1;
   }
 
+  double phi_corr = (M_PI / ((double)phi.size()) / ((double)_width)) * 270.0/360.0;
   for(unsigned int r=0; r<phi.size(); r++)
   {
-    unsigned int rp = phi[r] / _phiRes;
+    unsigned int row = phi[r] / _phiRes;
     for(unsigned int c=0; c<_width; c++)
     {
-      unsigned int rpr = rp + (unsigned int)(phi_corr/_phiRes * (double)c);
-      if(rpr>=_height) continue;
-      _distanceMap[rpr][c] = dist[r*_width+c];
-      _indexMap[rpr][c] = r*_width+c;
+      unsigned int row_corr = row + (unsigned int)(phi_corr/_phiRes * (double)c);
+      if(row_corr>=_height) continue;
+      _distanceMap[row_corr][c] = dist[r*_width+c];
+      _indexMap[row_corr][c] = r*_width+c;
     }
   }
 
@@ -123,15 +119,13 @@ void SensorPolar3D::setDistanceMap(vector<float> phi, vector<float> dist)
   unsigned char* map = new unsigned char[_width*_height];
   for(unsigned int r=0; r<_height; r++)
     for(unsigned int c=0; c<_width; c++)
-      map[r*_width+c] = (_indexMap[r][c]!=-1 ? 0 : 255);
+      map[r*_width+c] = (_indexMap[r][c]!=-1 ? 255 : 0);
   serializePBM(filename, map, _width, _height);
   delete [] map;*/
 }
 
 void SensorPolar3D::backProject(Matrix* M, int* indices, Matrix* T)
 {
-  Timer t;
-  //Matrix PoseInv = (*_Pose);
   Matrix PoseInv = getTransformation();
   PoseInv.invert();
   if(T)
@@ -164,8 +158,6 @@ void SensorPolar3D::backProject(Matrix* M, int* indices, Matrix* T)
     }
     else
     {
-      //cout << "alert: " << t << " " << coords3D(0,i) << " " << coords3D(1,i) << " " << coords3D(2,i) << endl;
-      //abort();
       indices[i] = -1;
     }
   }

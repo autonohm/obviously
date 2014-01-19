@@ -106,8 +106,6 @@ private:
   unsigned int _z;
 
   double _initWeight;
-
-  //Matrix* _cellCoordsHom;
 };
 
 }

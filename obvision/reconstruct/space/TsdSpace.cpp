@@ -205,7 +205,7 @@ bool TsdSpace::isPartitionInitialized(double coord[3])
 
 void TsdSpace::push(Sensor* sensor)
 {
-  Timer t;
+  Timer timer;
 
   double* data = sensor->getRealMeasurementData();
   bool* mask = sensor->getRealMeasurementMask();
@@ -275,12 +275,12 @@ void TsdSpace::push(Sensor* sensor)
   propagateBorders();
 
   LOGMSG(DBG_DEBUG, "Distances pushed: " << TsdSpacePartition::getDistancesPushed());
-  LOGMSG(DBG_DEBUG, "Elapsed push: " << t.getTime() << "ms, Initialized partitions: " << TsdSpacePartition::getInitializedPartitionSize());
+  LOGMSG(DBG_DEBUG, "Elapsed push: " << timer.getTime() << "ms, Initialized partitions: " << TsdSpacePartition::getInitializedPartitionSize());
 }
 
 void TsdSpace::pushTree(Sensor* sensor)
 {
-  Timer t;
+  Timer timer;
 
   double* data = sensor->getRealMeasurementData();
   bool* mask = sensor->getRealMeasurementMask();
@@ -293,9 +293,10 @@ void TsdSpace::pushTree(Sensor* sensor)
   vector<TsdSpacePartition*> partitionsToCheck;
   pushRecursion(sensor, tr, comp, partitionsToCheck);
 
-  cout << "Partitions to check: " << partitionsToCheck.size() << endl;
+  LOGMSG(DBG_DEBUG, "Partitions to check: " << partitionsToCheck.size());
 
-  Matrix* partCoords = _partitions[0][0][0]->getPartitionCoords();
+  Matrix* partCoords = TsdSpacePartition::getPartitionCoords();
+  Matrix* cellCoordsHom = TsdSpacePartition::getCellCoordsHom();
 
 #pragma omp parallel
   {
@@ -306,10 +307,11 @@ void TsdSpace::pushTree(Sensor* sensor)
   {
     TsdSpacePartition* part = partitionsToCheck[i];
 
-    part->init();
-
-    Matrix* cellCoordsHom = part->getCellCoordsHom();
-    sensor->backProject(cellCoordsHom, idx);
+    double t[3];
+    part->getCellCoordsOffset(t);
+    Matrix* T = MatrixFactory::TranslationMatrix44(t[0], t[1], t[2]);
+    sensor->backProject(cellCoordsHom, idx, T);
+    delete T;
 
     for(unsigned int c=0; c<partSize; c++)
     {
@@ -322,9 +324,9 @@ void TsdSpace::pushTree(Sensor* sensor)
         {
           // calculate distance of current cell to sensor
           double crd[3];
-          crd[0] = (*cellCoordsHom)(c,0);
-          crd[1] = (*cellCoordsHom)(c,1);
-          crd[2] = (*cellCoordsHom)(c,2);
+          crd[0] = (*cellCoordsHom)(c,0) + t[0];
+          crd[1] = (*cellCoordsHom)(c,1) + t[1];
+          crd[2] = (*cellCoordsHom)(c,2) + t[2];
           double distance = euklideanDistance<double>(tr, crd, 3);
           double sd = data[index] - distance;
 
@@ -336,6 +338,7 @@ void TsdSpace::pushTree(Sensor* sensor)
           //unsigned char* color = NULL;
           //if(rgb) color = &(rgb[3*index]);
 
+          part->init();
           part->addTsd((*partCoords)(c, 0), (*partCoords)(c, 1), (*partCoords)(c, 2), sd, _maxTruncation);
         }
       }
@@ -346,7 +349,8 @@ void TsdSpace::pushTree(Sensor* sensor)
 
   propagateBorders();
 
-  LOGMSG(DBG_DEBUG, "Elapsed push: " << t.getTime() << "ms");
+  LOGMSG(DBG_DEBUG, "Distances pushed: " << TsdSpacePartition::getDistancesPushed());
+  LOGMSG(DBG_DEBUG, "Elapsed push: " << timer.getTime() << "ms, Initialized partitions: " << TsdSpacePartition::getInitializedPartitionSize());
 }
 
 void TsdSpace::pushRecursion(Sensor* sensor, double pos[3], TsdSpaceComponent* comp, vector<TsdSpacePartition*> &partitionsToCheck)
@@ -577,10 +581,12 @@ bool TsdSpace::coord2Index(double coord[3], int* x, int* y, int* z, double* dx, 
   }
 
   // Check boundaries
-  /*if ((*x >= (int)_cellsX) || (*x < 0) || (*y >= (int)_cellsY) || (*y < 0) || (*z >= (int)_cellsZ) || *z < 0)
+  if ((*x >= (int)_cellsX) || (*x < 0) || (*y >= (int)_cellsY) || (*y < 0) || (*z >= (int)_cellsZ) || *z < 0)
   {
+    cout << "coord not in space: " << coord[0] << " " << coord[1] << " " << coord[2] << endl;
+    abort();
     return false;
-  }*/
+  }
 
 
 /*
@@ -606,6 +612,7 @@ EnumTsdSpaceInterpolate TsdSpace::interpolateTrilinear(double coord[3], double* 
   int px = _lutIndex2Partition[xIdx];
   int py = _lutIndex2Partition[yIdx];
   int pz = _lutIndex2Partition[zIdx];
+
   if(!_partitions[pz][py][px]->isInitialized()) return INTERPOLATE_EMPTYPARTITION;
 
   int x = _lutIndex2Cell[xIdx];

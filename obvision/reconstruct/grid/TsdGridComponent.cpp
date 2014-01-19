@@ -42,16 +42,30 @@ bool TsdGridComponent::isLeaf()
 
 bool TsdGridComponent::isInRange(double pos[2], Sensor* sensor, double maxTruncation)
 {
-  double range = sensor->getMaximumRange();
+  // Centroid-to-sensor distance
+  double distance = euklideanDistance<double>(pos, _centroid, 2);
+
+
+  double maxRange = sensor->getMaximumRange();
+
+  // closest possible distance of any voxel in partition
+  double minDist = distance - _circumradius - maxTruncation;
+
+  // check if partition is out of range
+  if(minDist > maxRange) return false;
+
+
+  double minRange = sensor->getMinimumRange();
+
+  // farthest possible distance of any voxel in partition
+  double maxDist = distance + _circumradius + maxTruncation;
+
+  // check if partition is too close
+  if(maxDist < minRange) return false;
+
   double* data = sensor->getRealMeasurementData();
   bool* mask = sensor->getRealMeasurementMask();
 
-  // Centroid-to-sensor distance
-  double distance = euklideanDistance<double>(pos, _centroid, 2);
-  if(!isnan(range))
-  {
-    if((distance-_circumradius) > range) return false;
-  }
 
   int idxEdge[4];
   sensor->backProject(_edgeCoordsHom, idxEdge);
@@ -65,27 +79,23 @@ bool TsdGridComponent::isInRange(double pos[2], Sensor* sensor, double maxTrunca
 
   if(minIdx<0) minIdx = 0;
 
-  double minDist = distance - _circumradius;
-  double maxDist = distance + _circumradius;
 
   // Check if any cell comes closer than the truncation radius
   bool isVisible = false;
+  bool isEmpty = true;
   for(int j=minIdx; j<maxIdx; j++)
   {
     if(mask[j])
     {
-      double sdf = data[j] - minDist;
-      isVisible = isVisible || (sdf >= -maxTruncation);
+      isVisible = isVisible || (data[j] > minDist);
+      if(isVisible)
+      {
+        isEmpty = isEmpty && (data[j] > maxDist);
+      }
     }
   }
-  if(!isVisible) return false;
 
-  bool isEmpty = true;
-  for(int j=minIdx; j<maxIdx; j++)
-  {
-    double sdf = data[j] - maxDist;
-    isEmpty = isEmpty && (sdf > maxTruncation) && mask[j];
-  }
+  if(!isVisible) return false;
 
   if(isEmpty)
   {
