@@ -73,6 +73,10 @@ public:
   */
  double getVoxelSize();
 
+ /**
+  * Get number of cells along edge
+  * @return number of cells
+  */
  unsigned int getPartitionSize();
 
  /**
@@ -136,7 +140,18 @@ public:
   */
  TsdSpacePartition**** getPartitions();
 
+ /**
+  * Check, if partition belonging to coordinate is initialized
+  * @param coord query coordinate
+  * @return initialization state
+  */
  bool isPartitionInitialized(double coord[3]);
+
+ /**
+  * Determine whether sensor is inside space
+  * @param sensor
+  */
+ bool isInsideSpace(Sensor* sensor);
 
  /**
   * Push sensor data to space
@@ -144,6 +159,10 @@ public:
   */
  void push(Sensor* sensor);
 
+ /**
+  * Push sensor data to space using octree insertion
+  * @param[in] sensor abstract sensor instance holding current data
+  */
  void pushTree(Sensor* sensor);
 
  /**
@@ -184,9 +203,6 @@ private:
 
  void propagateBorders();
 
- /**
-  *
-  */
  void addTsdValue(const unsigned int col, const unsigned int row, const unsigned int z, double sd, unsigned char* rgb);
 
  bool coord2Index(double coord[3], int* x, int* y, int* z, double* dx, double* dy, double* dz);

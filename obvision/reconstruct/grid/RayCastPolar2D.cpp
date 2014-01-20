@@ -12,7 +12,11 @@ namespace obvious
 
 RayCastPolar2D::RayCastPolar2D()
 {
+  _xmin   = NAN;
+  _ymin   = NAN;
 
+  _xmax   = NAN;
+  _ymax   = NAN;
 }
 
 RayCastPolar2D::~RayCastPolar2D()
@@ -37,6 +41,24 @@ void RayCastPolar2D::calcCoordsFromCurrentView(TsdGrid* grid, SensorPolar2D* sen
   N(2,0) = 0.0; // no translation for normals
 
   Matrix* R = sensor->getNormalizedRayMap(grid->getCellSize());
+
+  if(grid->isInsideGrid(sensor))
+  {
+    _xmin   = -10e9;
+    _ymin   = -10e9;
+
+    _xmax   = 10e9;
+    _ymax   = 10e9;
+  }
+  else
+  {
+    // prevent rays to be casted parallel to a plane outside of space
+    _xmin   = 10e9;
+    _ymin   = 10e9;
+
+    _xmax   = -10e9;
+    _ymax   = -10e9;
+  }
 
   for (unsigned int beam = 0; beam < sensor->getRealMeasurementSize(); beam++)
   {
@@ -79,15 +101,15 @@ bool RayCastPolar2D::rayCastFromCurrentView(TsdGrid* grid, SensorPolar2D* sensor
   // Interpolation weight
   double interp;
 
-  double xmin   = -10e9;
-  double ymin   = -10e9;
+  double xmin   = _xmin;
+  double ymin   = _ymin;
   if(fabs(ray[0])>10e-6) xmin = ((double)(ray[0] > 0.0 ? 0 : (xDim-1)*cellSize) - tr[0]) / ray[0];
   if(fabs(ray[1])>10e-6) ymin = ((double)(ray[1] > 0.0 ? 0 : (yDim-1)*cellSize) - tr[1]) / ray[1];
   double idxMin = max(xmin, ymin);
   idxMin        = max(idxMin, 0.0);
 
-  double xmax   = 10e9;
-  double ymax   = 10e9;
+  double xmax   = _xmax;
+  double ymax   = _ymax;
   if(fabs(ray[0])>10e-6) xmax = ((double)(ray[0] > 0.0 ? (xDim-1)*cellSize : 0) - tr[0]) / ray[0];
   if(fabs(ray[1])>10e-6) ymax = ((double)(ray[1] > 0.0 ? (yDim-1)*cellSize : 0) - tr[1]) / ray[1];
   double idxMax = min(xmax, ymax);

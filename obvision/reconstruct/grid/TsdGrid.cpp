@@ -516,4 +516,11 @@ TsdGridPartition*** TsdGrid::getPartitions()
   return _partitions;
 }
 
+bool TsdGrid::isInsideGrid(Sensor* sensor)
+{
+  double coord[2];
+  sensor->getPosition(coord);
+  return (coord[0]>_minX && coord[0]<_maxX && coord[1]>_minY && coord[1]<_maxY);
+}
+
 }

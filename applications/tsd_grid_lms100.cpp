@@ -172,17 +172,17 @@ int main(int argc, char* argv[])
 
     Matrix* T = icp->getFinalTransformation();
 
-    Matrix* Pose = sensor.getPose();
-    double poseX  = (*Pose)(0,2);
-    double poseY  = (*Pose)(1,2);
-    double curPhi = acos((*Pose)(0,0));
+    Matrix TSensor = sensor.getTransformation();
+    double poseX  = TSensor(0,2);
+    double poseY  = TSensor(1,2);
+    double curPhi = acos(TSensor(0,0));
 
     double deltaX   = poseX - lastX;
     double deltaY   = poseY - lastY;
     double deltaPhi = fabs(curPhi - lastPhi);
     double sqrt_delta = sqrt(deltaX*deltaX + deltaY*deltaY);
 
-    filterBounds->setPose(sensor.getPose());
+    filterBounds->setPose(&TSensor);
 
     /*T->print();*/
     //usleep(2000000);

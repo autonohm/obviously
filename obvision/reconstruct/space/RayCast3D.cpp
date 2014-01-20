@@ -12,7 +12,13 @@ namespace obvious
 
 RayCast3D::RayCast3D()
 {
+  _xmin   = NAN;
+  _ymin   = NAN;
+  _zmin   = NAN;
 
+  _xmax   = NAN;
+  _ymax   = NAN;
+  _zmax   = NAN;
 }
 
 RayCast3D::~RayCast3D()
@@ -33,6 +39,28 @@ void RayCast3D::calcCoordsFromCurrentPose(TsdSpace* space, Sensor* sensor, doubl
 
   Matrix* R = sensor->getNormalizedRayMap(space->getVoxelSize());
   unsigned int count = sensor->getWidth() * sensor->getHeight();
+
+  if(space->isInsideSpace(sensor))
+  {
+    _xmin   = -10e9;
+    _ymin   = -10e9;
+    _zmin   = -10e9;
+
+    _xmax   = 10e9;
+    _ymax   = 10e9;
+    _zmax   = 10e9;
+  }
+  else
+  {
+    // prevent rays to be casted parallel to a plane outside of space
+    _xmin   = 10e9;
+    _ymin   = 10e9;
+    _zmin   = 10e9;
+
+    _xmax   = -10e9;
+    _ymax   = -10e9;
+    _zmax   = -10e9;
+  }
 
   _skipped = 0;
   _traversed = 0;
@@ -113,6 +141,27 @@ void RayCast3D::calcCoordsFromCurrentPoseMask(TsdSpace* space, Sensor* sensor, d
 
   Matrix* R = sensor->getNormalizedRayMap(space->getVoxelSize());
   unsigned int count = sensor->getWidth() * sensor->getHeight();
+
+  if(space->isInsideSpace(sensor))
+  {
+    _xmin   = -10e9;
+    _ymin   = -10e9;
+    _zmin   = -10e9;
+
+    _xmax   = 10e9;
+    _ymax   = 10e9;
+    _zmax   = 10e9;
+  }
+  else
+  {
+    _xmin   = 10e9;
+    _ymin   = 10e9;
+    _zmin   = 10e9;
+
+    _xmax   = -10e9;
+    _ymax   = -10e9;
+    _zmax   = -10e9;
+  }
 
   _skipped = 0;
   _traversed = 0;
@@ -267,20 +316,18 @@ bool RayCast3D::rayCastFromSensorPose(TsdSpace* space, double pos[3], double ray
   double position[3];
 
   int xDim = space->getXDimension();
-  int yDim = space->getYDimension();
-  int zDim = space->getZDimension();
   double voxelSize = space->getVoxelSize();
 
   // Interpolation weight
   double interp;
 
-  double xmin   = -10e9;
-  double ymin   = -10e9;
-  double zmin   = -10e9;
+  double xmin   = _xmin;
+  double ymin   = _ymin;
+  double zmin   = _zmin;
 
-  double xmax   = 10e9;
-  double ymax   = 10e9;
-  double zmax   = 10e9;
+  double xmax   = _xmax;
+  double ymax   = _ymax;
+  double zmax   = _zmax;
 
   // Leave out outmost cells in order to prevent access to invalid neighbors
   double minSpaceCoord = 1.5*voxelSize;
@@ -306,7 +353,6 @@ bool RayCast3D::rayCastFromSensorPose(TsdSpace* space, double pos[3], double ray
   int partitionSize = space->getPartitionSize();
   for(int i=idxMin; i<idxMax; i+=partitionSize)
   {
-    double tsd_tmp;
     position[0] = pos[0] + i * ray[0];
     position[1] = pos[1] + i * ray[1];
     position[2] = pos[2] + i * ray[2];

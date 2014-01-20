@@ -66,7 +66,6 @@ private:
   double _phiLowerBound;
 
   double _phiUpperBound;
-
 };
 
 }

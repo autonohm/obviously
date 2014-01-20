@@ -110,6 +110,10 @@ public:
    */
   double getMaxY();
 
+  /**
+   * Get number of cells along edge
+   * @return number of cells
+   */
   unsigned int getPartitionSize();
 
   /**
@@ -130,8 +134,6 @@ public:
    */
   void push(SensorPolar2D* sensor);
   void pushTree(SensorPolar2D* sensor);
-
-  void pushRecursion(SensorPolar2D* sensor, double pos[2], TsdGridComponent* comp, vector<TsdGridPartition*> &partitionsToCheck);
 
   /**
    * Create color image from tsdf grid
@@ -166,9 +168,21 @@ public:
    */
   bool coord2Cell(double coord[2], int* p, int* x, int* y, double* dx, double* dy);
 
+  /**
+   * Get pointer to internal partition space
+   * @return pointer to 3D partition space
+   */
   TsdGridPartition*** getPartitions();
 
+  /**
+   * Determine whether sensor is in grid
+   * @param sensor
+   */
+  bool isInsideGrid(Sensor* sensor);
+
 private:
+
+  void pushRecursion(SensorPolar2D* sensor, double pos[2], TsdGridComponent* comp, vector<TsdGridPartition*> &partitionsToCheck);
 
   void propagateBorders();
 

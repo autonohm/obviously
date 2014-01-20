@@ -30,6 +30,11 @@ private:
 
   void calcRayFromCurrentView(const unsigned int beam, double dirVec[2]);
 
+  double _xmin;
+  double _ymin;
+
+  double _xmax;
+  double _ymax;
 };
 
 }

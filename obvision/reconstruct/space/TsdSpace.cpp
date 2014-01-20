@@ -203,6 +203,13 @@ bool TsdSpace::isPartitionInitialized(double coord[3])
   return _partitions[pz][py][px]->isInitialized();
 }
 
+bool TsdSpace::isInsideSpace(Sensor* sensor)
+{
+  double coord[3];
+  sensor->getPosition(coord);
+  return (coord[0]>_minX && coord[0]<_maxX && coord[1]>_minY && coord[1]<_maxY && coord[2]>_minZ && coord[2]<_maxZ);
+}
+
 void TsdSpace::push(Sensor* sensor)
 {
   Timer timer;

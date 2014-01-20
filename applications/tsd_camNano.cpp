@@ -72,7 +72,7 @@ public:
 
       _liveSensor->setCoords(_nano->getValidCoords(), _nano->getValidSize(), 3);
       double P[16];
-      _sensor->getPose()->getData(P);
+      _sensor->getTransformation().getData(P);
       _liveSensor->transform(P);
       _viewer->update();
 
@@ -196,7 +196,7 @@ void init(void)
 //  _viewer->addCloud(_cloudScene);
 
   double P[16];
-  _sensor->getPose()->getData(P);
+  _sensor->getTransformation().getData(P);
   _viewer->showSensorPose(P);
   _viewer->addAxisAlignedCube(0, _space->getMaxX(), 0, _space->getMaxY(), 0, _space->getMaxZ());
   _viewer->showAxes();
@@ -241,7 +241,8 @@ void calc(void)
     _cloud->serialize("model.vtp");
 
     // update pose from sensor
-    _sensor->getPose()->getData(P);
+    Matrix TSensor = _sensor->getTransformation();
+    TSensor.getData(P);
     _cloud->transform(P);
 
     // registration
@@ -262,12 +263,12 @@ void calc(void)
 
       _reg = false;
       LOGMSG(DBG_DEBUG, "Current Transformation: ");
-      _sensor->getPose()->print();
-      _filterBounds->setPose(_sensor->getPose());
+      TSensor.print();
+      _filterBounds->setPose(&TSensor);
 
 //      _cloudScene->setCoords(_nano->getValidCoords(), _nano->getValidSize(), 3);
       _cloudScene->setCoords(coordsT, _nano->getCols()*_nano->getRows(), 3);
-      _sensor->getPose()->getData(P);
+      TSensor.getData(P);
       _cloudScene->transform(P);
       _cloudScene->serialize("scene.vtp");
 
@@ -291,7 +292,7 @@ void calc(void)
         Matrix* T = _icp->getFinalTransformation();
         T->print();
         _sensor->transform(T);
-        _sensor->getPose()->getData(P);
+        _sensor->getTransformation().getData(P);
         _viewer->showSensorPose(P);
 //        _space->push(_sensor);
       }

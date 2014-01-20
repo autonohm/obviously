@@ -66,6 +66,13 @@ private:
 
   unsigned int _traversed;
 
+  double _xmin;
+  double _ymin;
+  double _zmin;
+
+  double _xmax;
+  double _ymax;
+  double _zmax;
 };
 
 }
