@@ -192,9 +192,39 @@ TsdSpacePartition**** TsdSpace::getPartitions()
 
 bool TsdSpace::isPartitionInitialized(double coord[3])
 {
-  int x = (int)(coord[0] * _invVoxelSize);
+  /*int x = (int)(coord[0] * _invVoxelSize);
   int y = (int)(coord[1] * _invVoxelSize);
   int z = (int)(coord[2] * _invVoxelSize);
+
+  int px = _lutIndex2Partition[x];
+  int py = _lutIndex2Partition[y];
+  int pz = _lutIndex2Partition[z];
+
+  return _partitions[pz][py][px]->isInitialized();*/
+
+  // Get cell indices
+  double dxIdx = floor(coord[0] * _invVoxelSize);
+  double dyIdx = floor(coord[1] * _invVoxelSize);
+  double dzIdx = floor(coord[2] * _invVoxelSize);
+
+  // Get center point of current cell
+  double dx = (dxIdx + 0.5) * _voxelSize;
+  double dy = (dyIdx + 0.5) * _voxelSize;
+  double dz = (dzIdx + 0.5) * _voxelSize;
+
+  int x = (int)dxIdx;
+  int y = (int)dyIdx;
+  int z = (int)dzIdx;
+
+  // Ensure that query point has 8 neighbors for trilinear interpolation
+  if (coord[0] < dx)
+    x--;
+
+  if (coord[1] < dy)
+    y--;
+
+  if (coord[2] < dz)
+    z--;
 
   int px = _lutIndex2Partition[x];
   int py = _lutIndex2Partition[y];

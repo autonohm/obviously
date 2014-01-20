@@ -24,6 +24,7 @@ void RayCastAxisAligned3D::calcCoords(TsdSpace* space, double* coords, double* n
 
   TsdSpacePartition**** partitions = space->getPartitions();
 
+#pragma omp parallel for
   for(unsigned int z=1; z<partitionsInZ-1; z++)
   {
     for(unsigned int y=1; y<partitionsInY-1; y++)
@@ -49,12 +50,15 @@ void RayCastAxisAligned3D::calcCoords(TsdSpace* space, double* coords, double* n
                   if(tsd_prev * tsd < 0)
                   {
                     interp = tsd_prev / (tsd_prev - tsd);
+#pragma omp critical
+{
                     coords[*cnt]     = px*cellSize + (x * p->getWidth()) * cellSize + cellSize * (interp-1.0) ;
                     coords[(*cnt)+1] = py*cellSize + (y * p->getHeight()) * cellSize;
                     coords[(*cnt)+2] = pz*cellSize + (z * p->getDepth()) * cellSize;
                     if(normals)
                       space->interpolateNormal(&coords[*cnt], &(normals[*cnt]));
                     (*cnt)+=3;
+}
                   }
                   tsd_prev = tsd;
                 }
@@ -74,12 +78,15 @@ void RayCastAxisAligned3D::calcCoords(TsdSpace* space, double* coords, double* n
                   if(tsd_prev * tsd < 0)
                   {
                     interp = tsd_prev / (tsd_prev - tsd);
+#pragma omp critical
+{
                     coords[*cnt]     = px*cellSize + (x * p->getWidth()) * cellSize;
                     coords[(*cnt)+1] = py*cellSize + (y * p->getHeight()) * cellSize + cellSize * (interp-1.0);
                     coords[(*cnt)+2] = pz*cellSize + (z * p->getDepth()) * cellSize;
                     if(normals)
                       space->interpolateNormal(&coords[*cnt], &(normals[*cnt]));
                     (*cnt)+=3;
+}
                   }
                   tsd_prev = tsd;
                 }
@@ -99,12 +106,15 @@ void RayCastAxisAligned3D::calcCoords(TsdSpace* space, double* coords, double* n
                   if(tsd_prev * tsd < 0)
                   {
                     interp = tsd_prev / (tsd_prev - tsd);
+#pragma omp critical
+{
                     coords[*cnt]     = px*cellSize + (x * p->getWidth()) * cellSize;
                     coords[(*cnt)+1] = py*cellSize + (y * p->getHeight()) * cellSize;
                     coords[(*cnt)+2] = pz*cellSize + (z * p->getDepth()) * cellSize + cellSize * (interp-1.0);
                     if(normals)
                       space->interpolateNormal(&coords[*cnt], &(normals[*cnt]));
                     (*cnt)+=3;
+}
                   }
                   tsd_prev = tsd;
                 }
