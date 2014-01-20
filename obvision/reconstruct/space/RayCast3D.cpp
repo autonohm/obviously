@@ -25,7 +25,6 @@ void RayCast3D::calcCoordsFromCurrentPose(TsdSpace* space, Sensor* sensor, doubl
   Timer t;
   *size = 0;
 
-  //Matrix* T = sensor->getPose();
   Matrix Tinv = sensor->getTransformation();
   Tinv.invert();
 
@@ -102,7 +101,6 @@ void RayCast3D::calcCoordsFromCurrentPoseMask(TsdSpace* space, Sensor* sensor, d
 {
   Timer t;
 
-  //Matrix* T = sensor->getPose();
   Matrix Tinv = sensor->getTransformation();
   Tinv.invert();
 
@@ -318,13 +316,6 @@ bool RayCast3D::rayCastFromSensorPose(TsdSpace* space, double pos[3], double ray
     }
     else
       idxMin = i;
-//    EnumTsdSpaceInterpolate retval = space->interpolateTrilinear(position, &tsd_tmp);
-//    if(retval!=INTERPOLATE_EMPTYPARTITION && retval!=INTERPOLATE_INVALIDINDEX)
-//    {
-//      break;
-//    }
-//    else
-//      idxMin = i;
   }
 
   if((int)idxMin != idxMinTmp)

@@ -66,21 +66,16 @@ public:
    */
   virtual void translate(double* tr);
 
+  /**
+   * Accessor to sensor transformation
+   * @return (dim+1)x(dim+1) transformation matrix (R | t; 0 1)
+   */
   Matrix getTransformation();
 
+  /**
+   * Reset sensor pose to identity
+   */
   void resetTransformation();
-
-  /**
-   * Mutator of sensor pose
-   * @param[in] P pose
-   */
-  //virtual void setPose(Matrix* P);
-
-  /**
-   * Accessor to sensor pose
-   * @return pose
-   */
-  //virtual Matrix* getPose();
 
   /**
    * Accessor to sensor translation
@@ -156,7 +151,6 @@ public:
 
 protected:
 
-  //Matrix* _Pose;
   Matrix* _View;
 
   Matrix* _Position;

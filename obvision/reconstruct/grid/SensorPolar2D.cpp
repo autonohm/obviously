@@ -58,7 +58,6 @@ int SensorPolar2D::backProject(double data[2])
   xh(1,0) = data[1];
   xh(2,0) = 1.0;
   Matrix PoseInv = getTransformation();
-  //Matrix PoseInv = (*_Pose);
   PoseInv.invert();
   xh = PoseInv * xh;
 
@@ -72,7 +71,6 @@ int SensorPolar2D::backProject(double data[2])
 void SensorPolar2D::backProject(Matrix* M, int* indices, Matrix* T)
 {
   Timer t;
-  //Matrix PoseInv = (*_Pose);
   Matrix PoseInv = getTransformation();
   PoseInv.invert();
   if(T)

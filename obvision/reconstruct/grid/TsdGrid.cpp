@@ -217,7 +217,7 @@ void TsdGrid::pushTree(SensorPolar2D* sensor)
   vector<TsdGridPartition*> partitionsToCheck;
   pushRecursion(sensor, tr, comp, partitionsToCheck);
 
-  cout << "Partitions to check: " << partitionsToCheck.size() << endl;
+  LOGMSG(DBG_DEBUG, "Partitions to check: " << partitionsToCheck.size());
 
 #pragma omp parallel
   {

@@ -42,26 +42,30 @@ bool TsdSpaceComponent::isLeaf()
 
 bool TsdSpaceComponent::isInRange(double pos[3], Sensor* sensor, double maxTruncation)
 {
-  double maxRange = sensor->getMaximumRange();
-  double minRange = sensor->getMinimumRange();
-
-  double* data = sensor->getRealMeasurementData();
-  bool* mask = sensor->getRealMeasurementMask();
-
   // Centroid-to-sensor distance
   double distance = euklideanDistance<double>(pos, _centroid, 3);
+
+
+  double maxRange = sensor->getMaximumRange();
 
   // closest possible distance of any voxel in partition
   double minDist = distance - _circumradius - maxTruncation;
 
-  // farest possible distance of any voxel in partition
-  double maxDist = distance + _circumradius + maxTruncation;
-
   // check if partition is out of range
   if(minDist > maxRange) return false;
 
+
+  double minRange = sensor->getMinimumRange();
+
+  // farthest possible distance of any voxel in partition
+  double maxDist = distance + _circumradius + maxTruncation;
+
   // check if partition is too close
   if(maxDist < minRange) return false;
+
+
+  double* data = sensor->getRealMeasurementData();
+  bool* mask = sensor->getRealMeasurementMask();
 
   int width = sensor->getWidth();
   int height = sensor->getHeight();
@@ -98,6 +102,8 @@ bool TsdSpaceComponent::isInRange(double pos[3], Sensor* sensor, double maxTrunc
   // Verify whether any measurement within the projection range is close enough for pushing data
   bool isVisible = false;
   bool isEmpty = true;
+  if(x_min<0) x_min = 0;
+  if(y_min<0) y_min = 0;
   for(int y=y_min; y<=y_max; y++)
   {
     for(int x=x_min; x<=x_max; x++)
