@@ -29,16 +29,12 @@ void callbackAssignment(double** m, double** s, unsigned int size)
   ofstream f;
   f.open(filename);
 
-
   for(unsigned int i=0; i<size; i++)
   {
     f << m[i][0] << " " << m[i][1] << " " << s[i][0] << " " << s[i][1] << endl;
   }
 
   f.close();
-
-  delete [] m;
-  delete [] s;
 }
 
 void callbackSerializeTsdGrid()
@@ -49,10 +45,10 @@ void callbackSerializeTsdGrid()
 
 int main(int argc, char* argv[])
 {
-  LOGMSG_CONF("tsd_grid_test.log", Logger::file_off|Logger::screen_off, DBG_DEBUG, DBG_DEBUG);
+  LOGMSG_CONF("tsd_grid_test.log", Logger::file_off|Logger::screen_on, DBG_DEBUG, DBG_DEBUG);
 
   // Initialization of TSD grid
-  const double cellSize = 0.06;
+  const double cellSize = 0.02;
 
   // choose estimator type
   enum Est{PTP, PTL};
@@ -71,8 +67,10 @@ int main(int argc, char* argv[])
   const unsigned int w = _grid->getCellsX();
   const unsigned int h = _grid->getCellsY();
   double ratio = double(w)/double(h);
-  unsigned int screen_width = 1000;
-  unsigned int screen_height = (unsigned int)(((double)screen_width)/ratio);
+  //unsigned int screen_width = 700;
+  //unsigned int screen_height = (unsigned int)(((double)screen_width)/ratio);
+  unsigned int screen_width = w;
+  unsigned int screen_height = h;
   unsigned char* image = new unsigned char[3*screen_width*screen_height];
   Obvious2D viewer(screen_width, screen_height, "tsd_grid_lms100");
   viewer.registerKeyboardCallback('s', callbackSerializeTsdGrid);
@@ -95,15 +93,20 @@ int main(int argc, char* argv[])
   SickLMS100 lms;
   int     rays       = lms.getNumberOfRays();
   double  angularRes = lms.getAngularRes();
-  double  minPhi     = lms.getStartAngle();
+  //double  minPhi     = lms.getStartAngle();
+  double minPhi = deg2rad(-135.0);
 
   cout << "Rays: " << rays << " angular resolution: " << angularRes << " " << " min Phi: " << minPhi << endl;
-  SensorPolar2D sensor(rays, angularRes, minPhi);
-
+  SensorPolar2D sensor(rays, angularRes, minPhi, 30.0, 0.3);
 
   RayCastPolar2D rayCaster;
   double* mCoords = new double[rays*2];
   double* mNormals = new double[rays*2];
+
+  double* sCoords = new double[rays*2];
+  double* sDists = new double[rays];
+  bool* sMask = new bool[rays];
+  unsigned int sSize;
 
   // Compose ICP modules
   int iterations                 = 25;
@@ -153,26 +156,54 @@ int main(int argc, char* argv[])
     rayCaster.calcCoordsFromCurrentView(_grid, &sensor, mCoords, mNormals, &mSize);
 //    LOGMSG(DBG_DEBUG, "Raycast resulted in " << mSize << " coordinates");
 
-    double* sCoords = lms.getCoords();
+    double* coords = lms.getCoords();
+    double* ranges = lms.getRanges();
+
+    sSize = 0;
+    for(unsigned int i=0; i<rays; i++)
+    {
+      sMask[i] = false;
+      if(fabs(ranges[i])>0.01)
+      {
+        //sCoords[2*sSize] = coords[2*i];
+        //sCoords[2*sSize+1] = coords[2*i+1];
+        sCoords[2*sSize] = -ranges[i] * sin(i*angularRes-minPhi);
+        sCoords[2*sSize+1] = ranges[i] * cos(i*angularRes-minPhi);
+        sDists[sSize] = ranges[i];
+        sMask[i] = true;
+        sSize++;
+      }
+    }
+
 
     Matrix* M = new Matrix(mSize/2, 2, mCoords);
     Matrix* N = new Matrix(mSize/2, 2, mNormals);
-    Matrix* S = new Matrix(rays, 2, sCoords);
+    Matrix* S = new Matrix(sSize, 2, sCoords);
 
     icp->reset();
-    icp->setModel(M, N);
-    icp->setScene(S);
+    //icp->setModel(M, N);
+    icp->setModel(mCoords, mNormals, mSize/2, 1.0);
+    //icp->setScene(S);
+    icp->setScene(sCoords, NULL, sSize, 1.0);
 
     double rms;
     unsigned int pairs;
     unsigned int it;
 
     icp->iterate(&rms, &pairs, &it);
-//    LOGMSG(DBG_DEBUG, "ICP result - RMS: " << rms << " pairs: " << pairs << " iterations: " << it << endl;)
+    LOGMSG(DBG_DEBUG, "ICP result - RMS: " << rms << " pairs: " << pairs << " iterations: " << it << endl;)
 
     Matrix* T = icp->getFinalTransformation();
 
+    sensor.setRealMeasurementData(ranges);
+    sensor.setRealMeasurementMask(sMask);
+    sensor.transform(T);
+
+
     Matrix TSensor = sensor.getTransformation();
+    TSensor.print();
+    filterBounds->setPose(&TSensor);
+
     double poseX  = TSensor(0,2);
     double poseY  = TSensor(1,2);
     double curPhi = acos(TSensor(0,0));
@@ -182,13 +213,8 @@ int main(int argc, char* argv[])
     double deltaPhi = fabs(curPhi - lastPhi);
     double sqrt_delta = sqrt(deltaX*deltaX + deltaY*deltaY);
 
-    filterBounds->setPose(&TSensor);
+    cout << "Phi: " << curPhi << " X: " << poseX << " Y: " << poseY << endl;
 
-    /*T->print();*/
-    //usleep(2000000);
-
-    sensor.setRealMeasurementData(lms.getRanges());
-    sensor.transform(T);
 
     if (initCount < 5 || sqrt_delta > 0.05 || deltaPhi > 0.05)
     {
@@ -204,9 +230,10 @@ int main(int argc, char* argv[])
 
     // Visualize data
     _grid->grid2ColorImage(image, screen_width, screen_height);
+    //memset(image, 0, screen_width*screen_height*3*sizeof(unsigned char));
 
-    /*unsigned int mapSize;
-    double* map      = new double[_grid->getCellsX()*_grid->getCellsY()*2];
+    unsigned int mapSize;
+    /*double* map      = new double[_grid->getCellsX()*_grid->getCellsY()*2];
     RayCastAxisAligned2D rayCasterMap;
     rayCasterMap.calcCoords(_grid, map, NULL, &mapSize);
     for(unsigned int i=0; i<mapSize/2; i++)
@@ -214,17 +241,60 @@ int main(int argc, char* argv[])
       double x = map[2*i];
       double y = map[2*i+1];
       int u = x / cellSize;
-      int v = h-(y / cellSize);
+      int v = y / cellSize;
       if(u>0 && u<(int)w && v>0 && v<(int)h)
       {
         int idx = 3*(v*w+u);
-        image[idx] = 0;
+        image[idx] = 255;
+        image[idx+1] = 255;
+        image[idx+2] = 255;
+      }
+    }
+    delete [] map;*/
+
+    Matrix* Sh = new Matrix(3, sSize);
+    for(unsigned int i=0; i<sSize; i++)
+    {
+      (*Sh)(0, i) = sCoords[2*i];
+      (*Sh)(1, i) = sCoords[2*i+1];
+      (*Sh)(2, i) = 1.0;
+    }
+    *Sh = TSensor * *Sh;
+    for(unsigned int i=0; i<sSize; i++)
+    {
+      int u = (*Sh)(0, i) / cellSize;
+      int v = (*Sh)(1, i) / cellSize;
+      if(u>0 && u<(int)w && v>0 && v<(int)h)
+      {
+        int idx = 3*(v*w+u);
+        image[idx] = 255;
         image[idx+1] = 0;
         image[idx+2] = 0;
       }
     }
-    delete [] map;
-    */
+    delete Sh;
+
+    Matrix* Mh = new Matrix(3, mSize/2);
+    for(unsigned int i=0; i<mSize/2; i++)
+    {
+      (*Mh)(0, i) = mCoords[2*i];
+      (*Mh)(1, i) = mCoords[2*i+1];
+      (*Mh)(2, i) = 1.0;
+    }
+    *Mh = TSensor * *Mh;
+    for(unsigned int i=0; i<mSize/2; i++)
+    {
+      int u = (*Mh)(0, i) / cellSize;
+      int v = (*Mh)(1, i) / cellSize;
+      if(u>0 && u<(int)w && v>0 && v<(int)h)
+      {
+        int idx = 3*(v*w+u);
+        image[idx] = 255;
+        image[idx+1] = 255;
+        image[idx+2] = 255;
+      }
+    }
+    delete Mh;
 
     viewer.draw(image, screen_width, screen_height, 3, 0, 0);
 

@@ -274,10 +274,10 @@ void Obvious3D::addSphere(double center[3], double radius, double rgb[])
   vtkSmartPointer<vtkSphereSource> sphereSource = vtkSmartPointer<vtkSphereSource>::New();
   sphereSource->SetCenter(center[0], center[1], center[2]);
   sphereSource->SetRadius(radius);
-  sphereSource->SetStartPhi(-135.0);
-  sphereSource->SetEndPhi(135.0);
+  sphereSource->SetStartPhi(-180.0);
+  sphereSource->SetEndPhi(180.0);
   sphereSource->SetThetaResolution(360);
-  sphereSource->SetPhiResolution(270);
+  sphereSource->SetPhiResolution(360);
   vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
   mapper->SetInputConnection(sphereSource->GetOutputPort());
 

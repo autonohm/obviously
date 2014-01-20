@@ -100,7 +100,6 @@ SickLMS100::SickLMS100()
     }
     while (stat != ready_for_measurement);
 
-    cout << "go" << endl;
     _laser.scanContinous(1);
 
     pthread_create(&_thread, NULL, &taskCode, NULL);
@@ -108,7 +107,7 @@ SickLMS100::SickLMS100()
   else
   {
     LOGMSG(DBG_ERROR, "Connection error")
-              exit(1);
+    exit(1);
   }
 
   this->calculateAngles();
@@ -191,7 +190,7 @@ bool SickLMS100::grab(void)
 
 void SickLMS100::calculateRanges(void)
 {
-  cout << _data.dist_len1 << endl;
+  //cout << _data.dist_len1 << endl;
   for(unsigned int i=0; i<(unsigned int)_data.dist_len1; i++)
     _ranges[i] = _data.dist1[i] * 0.001;
 }

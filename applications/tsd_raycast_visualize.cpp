@@ -59,8 +59,8 @@ int main(int argc, char* argv[])
     double thetaMin = deg2rad(-135.0);
     double phiRes   = deg2rad(1.0);
     sensor = new SensorPolar3D(1081, thetaRes, thetaMin, phiRes);
-    subsamplingH = 72;
-    subsamplingW = 24;
+    subsamplingH = 24;
+    subsamplingW = 72;
   }
 
   unsigned int width = sensor->getWidth();

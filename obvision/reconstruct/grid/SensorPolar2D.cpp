@@ -34,12 +34,9 @@ SensorPolar2D::SensorPolar2D(unsigned int size, double angularRes, double phiMin
 
   for(unsigned int i=0; i<_size; i++)
   {
-    Matrix Rh(2, 1);
     double phi = _phiMin + ((double)i) * _angularRes;
-    Rh(0,0) = cos(phi);
-    Rh(1,0) = sin(phi);
-    (*_rays)(0, i) = Rh(0,0);
-    (*_rays)(1, i) = Rh(1,0);
+    (*_rays)(0, i) = cos(phi);
+    (*_rays)(1, i) = sin(phi);
   }
 }
 

@@ -17,9 +17,11 @@ void RayCastAxisAligned2D::calcCoords(TsdGrid* grid, double* coords, double* nor
   double cellSize = grid->getCellSize();
   TsdGridPartition*** partitions = grid->getPartitions();
 
-  for(unsigned int y=0; y<partitionsInY; y++)
+  *cnt = 0;
+
+  for(unsigned int y=1; y<partitionsInY-1; y++)
   {
-    for(unsigned int x=0; x<partitionsInX; x++)
+    for(unsigned int x=1; x<partitionsInX-1; x++)
     {
       TsdGridPartition* p = partitions[y][x];
       if(p->isInitialized())

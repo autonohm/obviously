@@ -151,9 +151,7 @@ public:
 
 protected:
 
-  Matrix* _View;
-
-  Matrix* _Position;
+  Matrix* _T;
 
   unsigned int _dim;
 

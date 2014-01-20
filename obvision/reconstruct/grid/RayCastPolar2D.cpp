@@ -33,10 +33,8 @@ void RayCastPolar2D::calcCoordsFromCurrentView(TsdGrid* grid, SensorPolar2D* sen
   double n[2];
   Matrix M(3,1);
   Matrix N(3,1);
-  //Matrix* T = sensor->getPose();
   Matrix T = sensor->getTransformation();
-  Matrix Ti(3, 3);
-  Ti = T.getInverse();
+  T.invert();
   M(2,0) = 1.0;
   N(2,0) = 0.0; // no translation for normals
 
@@ -58,6 +56,8 @@ void RayCastPolar2D::calcCoordsFromCurrentView(TsdGrid* grid, SensorPolar2D* sen
 
     _xmax   = -10e9;
     _ymax   = -10e9;
+    cout << "ARGHH" << endl;
+    abort();
   }
 
   for (unsigned int beam = 0; beam < sensor->getRealMeasurementSize(); beam++)
@@ -71,8 +71,8 @@ void RayCastPolar2D::calcCoordsFromCurrentView(TsdGrid* grid, SensorPolar2D* sen
       M(1,0) = c[1];
       N(0,0) = n[0];
       N(1,0) = n[1];
-      M       = Ti * M;
-      N       = Ti * N;
+      M       = T * M;
+      N       = T * N;
       for (unsigned int i = 0; i < 2; i++)
       {
         coords[*cnt] = M(i,0);

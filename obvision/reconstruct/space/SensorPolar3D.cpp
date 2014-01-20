@@ -38,6 +38,8 @@ SensorPolar3D::SensorPolar3D(unsigned int beams, double thetaRes, double thetaMi
 
   unsigned int i=0;
   _rays = new Matrix(3, _size);
+  Matrix R = Matrix(*_T, 0, 0, 3, 3);
+
   for(unsigned int p=0; p<_height; p++)
   {
     for(unsigned int b=0; b<beams; b++, i++)
@@ -53,7 +55,7 @@ SensorPolar3D::SensorPolar3D(unsigned int beams, double thetaRes, double thetaMi
       ray(1,0) = y;
       ray(2,0) = sin(phi) * x;
       double len = sqrt(ray(0,0)*ray(0,0)+ray(1,0)*ray(1,0)+ray(2,0)*ray(2,0));
-      ray = (*_View) * ray;
+      ray = R * ray;
 
       (*_rays)(0, i) = ray(0, 0) / len;
       (*_rays)(1, i) = ray(1, 0) / len;
