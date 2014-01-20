@@ -364,11 +364,17 @@ void TsdGrid::grid2ColorImage(unsigned char* image, unsigned int width, unsigned
         isEmpty = _partitions[0][p]->isEmpty();
       }
 
-      if(tsd>0.0)
+      if((tsd>0.0) && (tsd<0.999999))
       {
         rgb[0] = static_cast<unsigned char>(tsd * 150.0);
         rgb[1] = 255;
         rgb[2] = static_cast<unsigned char>(tsd * 150.0);
+      }
+      else if(tsd >= 0.999999)
+      {
+        rgb[0] = 255;
+                rgb[1] = 255;
+                rgb[2] = 255;
       }
       else if(tsd<0.0)
       {

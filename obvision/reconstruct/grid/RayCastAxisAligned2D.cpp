@@ -38,8 +38,8 @@ void RayCastAxisAligned2D::calcCoords(TsdGrid* grid, double* coords, double* nor
               if(tsd_prev > 0 && tsd < 0)
               {
                 interp = tsd_prev / (tsd_prev - tsd);
-                coords[2*(*cnt)]   = px*cellSize + cellSize * (interp-1.0) + (x * p->getWidth()) * cellSize;
-                coords[2*(*cnt)+1] = py*cellSize + (y * p->getHeight())* cellSize;
+                coords[(*cnt)]   = px*cellSize + cellSize * (interp-1.0) + (x * p->getWidth()) * cellSize;
+                coords[(*cnt)+1] = py*cellSize + (y * p->getHeight())* cellSize;
                 if(normals)
                   grid->interpolateNormal(coords, &(normals[*cnt]));
                 (*cnt) += 2;
@@ -57,8 +57,8 @@ void RayCastAxisAligned2D::calcCoords(TsdGrid* grid, double* coords, double* nor
               if(tsd_prev > 0 && tsd < 0)
               {
                 interp = tsd_prev / (tsd_prev - tsd);
-                coords[2*(*cnt)]   = px*cellSize + (x * p->getWidth()) * cellSize;
-                coords[2*(*cnt)+1] = py*cellSize + cellSize * (interp-1.0) + (y * p->getHeight())* cellSize;
+                coords[(*cnt)]   = px*cellSize + (x * p->getWidth()) * cellSize;
+                coords[(*cnt)+1] = py*cellSize + cellSize * (interp-1.0) + (y * p->getHeight())* cellSize;
                 if(normals)
                   grid->interpolateNormal(coords, &(normals[*cnt]));
                 (*cnt) += 2;
@@ -106,8 +106,8 @@ void RayCastAxisAligned2D::calcCoords(TsdGrid* grid, double* coords, double* nor
               if(tsd_prev * tsd < 0)
               {
                 interp = tsd_prev / (tsd_prev - tsd);
-                coords[2*(*cnt)]   = px*cellSize + cellSize * (interp-1.0) + (x * p->getWidth()) * cellSize;
-                coords[2*(*cnt)+1] = py*cellSize + (y * p->getHeight())* cellSize;
+                coords[(*cnt)]   = px*cellSize + cellSize * (interp-1.0) + (x * p->getWidth()) * cellSize;
+                coords[(*cnt)+1] = py*cellSize + (y * p->getHeight())* cellSize;
                 if(normals)
                   grid->interpolateNormal(coords, &(normals[*cnt]));
                 (*cnt) += 2;
@@ -125,8 +125,8 @@ void RayCastAxisAligned2D::calcCoords(TsdGrid* grid, double* coords, double* nor
               if(tsd_prev > 0 && tsd < 0)
               {
                 interp = tsd_prev / (tsd_prev - tsd);
-                coords[2*(*cnt)]   = px*cellSize + (x * p->getWidth()) * cellSize;
-                coords[2*(*cnt)+1] = py*cellSize + cellSize * (interp-1.0) + (y * p->getHeight())* cellSize;
+                coords[(*cnt)]   = px*cellSize + (x * p->getWidth()) * cellSize;
+                coords[(*cnt)+1] = py*cellSize + cellSize * (interp-1.0) + (y * p->getHeight())* cellSize;
                 if(normals)
                   grid->interpolateNormal(coords, &(normals[*cnt]));
                 (*cnt) += 2;
