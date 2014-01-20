@@ -291,14 +291,12 @@ bool RayCast3D::rayCastFromSensorPose(TsdSpace* space, double pos[3], double ray
   if(fabs(ray[0])>10e-6) xmin = ((double)(ray[0] > 0.0 ? minSpaceCoord : maxSpaceCoord) - pos[0]) / ray[0];
   if(fabs(ray[1])>10e-6) ymin = ((double)(ray[1] > 0.0 ? minSpaceCoord : maxSpaceCoord) - pos[1]) / ray[1];
   if(fabs(ray[2])>10e-6) zmin = ((double)(ray[2] > 0.0 ? minSpaceCoord : maxSpaceCoord) - pos[2]) / ray[2];
-
+  double idxMin = ceil(max(max(xmin, ymin), zmin));
+  idxMin        = max(idxMin, 0.0);
 
   if(fabs(ray[0])>10e-6) xmax = ((double)(ray[0] > 0.0 ? maxSpaceCoord : minSpaceCoord) - pos[0]) / ray[0];
   if(fabs(ray[1])>10e-6) ymax = ((double)(ray[1] > 0.0 ? maxSpaceCoord : minSpaceCoord) - pos[1]) / ray[1];
   if(fabs(ray[2])>10e-6) zmax = ((double)(ray[2] > 0.0 ? maxSpaceCoord : minSpaceCoord) - pos[2]) / ray[2];
-
-  double idxMin = ceil(max(max(xmin, ymin), zmin));
-  idxMin        = max(idxMin, 0.0);
   double idxMax = floor(min(min(xmax, ymax), zmax));
 
   if (idxMin >= idxMax)
