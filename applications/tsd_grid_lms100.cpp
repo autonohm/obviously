@@ -48,7 +48,7 @@ int main(int argc, char* argv[])
   LOGMSG_CONF("tsd_grid_test.log", Logger::file_off|Logger::screen_on, DBG_DEBUG, DBG_DEBUG);
 
   // Initialization of TSD grid
-  const double cellSize = 0.02;
+  const double cellSize = 0.03;
 
   // choose estimator type
   enum Est{PTP, PTL};
@@ -58,7 +58,7 @@ int main(int argc, char* argv[])
   else
     estType = PTP;
 
-  _grid = new TsdGrid(cellSize, LAYOUT_64x64, LAYOUT_512x512);
+  _grid = new TsdGrid(cellSize, LAYOUT_16x16, LAYOUT_1024x1024);
   _grid->setMaxTruncation(4.0*cellSize);
 
 
@@ -67,10 +67,10 @@ int main(int argc, char* argv[])
   const unsigned int w = _grid->getCellsX();
   const unsigned int h = _grid->getCellsY();
   double ratio = double(w)/double(h);
-  //unsigned int screen_width = 700;
-  //unsigned int screen_height = (unsigned int)(((double)screen_width)/ratio);
-  unsigned int screen_width = w;
-  unsigned int screen_height = h;
+  unsigned int screen_width = 700;
+  unsigned int screen_height = (unsigned int)(((double)screen_width)/ratio);
+  //unsigned int screen_width = w;
+  //unsigned int screen_height = h;
   unsigned char* image = new unsigned char[3*screen_width*screen_height];
   Obvious2D viewer(screen_width, screen_height, "tsd_grid_lms100");
   viewer.registerKeyboardCallback('s', callbackSerializeTsdGrid);
@@ -97,7 +97,8 @@ int main(int argc, char* argv[])
   double minPhi = deg2rad(-135.0);
 
   cout << "Rays: " << rays << " angular resolution: " << angularRes << " " << " min Phi: " << minPhi << endl;
-  SensorPolar2D sensor(rays, angularRes, minPhi, 30.0, 0.3);
+  SensorPolar2D sensor(rays, angularRes, minPhi, 200.0, 0.0);
+  sensor.transform(&Tinit);
 
   RayCastPolar2D rayCaster;
   double* mCoords = new double[rays*2];
@@ -136,11 +137,8 @@ int main(int argc, char* argv[])
   // Set first model
   lms.grab();
   sensor.setRealMeasurementData(lms.getRanges());
-  sensor.transform(&Tinit);
 
-  //sensor.setRealMeasurementAccuracy(sensor.getRealMeasurementAccuracy());
 
-  //for(unsigned int i=0; i<10; i++)
   _grid->push(&sensor);
 
   double lastPhi = 0;
@@ -154,13 +152,13 @@ int main(int argc, char* argv[])
 
     unsigned int mSize = 0;
     rayCaster.calcCoordsFromCurrentView(_grid, &sensor, mCoords, mNormals, &mSize);
-//    LOGMSG(DBG_DEBUG, "Raycast resulted in " << mSize << " coordinates");
+    LOGMSG(DBG_DEBUG, "Raycast resulted in " << mSize << " coordinates");
 
-    double* coords = lms.getCoords();
+    //double* coords = lms.getCoords();
     double* ranges = lms.getRanges();
 
     sSize = 0;
-    for(unsigned int i=0; i<rays; i++)
+    for(int i=0; i<rays; i++)
     {
       sMask[i] = false;
       if(fabs(ranges[i])>0.01)
@@ -181,10 +179,8 @@ int main(int argc, char* argv[])
     Matrix* S = new Matrix(sSize, 2, sCoords);
 
     icp->reset();
-    //icp->setModel(M, N);
-    icp->setModel(mCoords, mNormals, mSize/2, 1.0);
-    //icp->setScene(S);
-    icp->setScene(sCoords, NULL, sSize, 1.0);
+    icp->setModel(M, N);
+    icp->setScene(S);
 
     double rms;
     unsigned int pairs;
@@ -230,28 +226,29 @@ int main(int argc, char* argv[])
 
     // Visualize data
     _grid->grid2ColorImage(image, screen_width, screen_height);
-    //memset(image, 0, screen_width*screen_height*3*sizeof(unsigned char));
+    memset(image, 0, screen_width*screen_height*3*sizeof(unsigned char));
 
     unsigned int mapSize;
-    /*double* map      = new double[_grid->getCellsX()*_grid->getCellsY()*2];
+    double* map      = new double[_grid->getCellsX()*_grid->getCellsY()*2];
     RayCastAxisAligned2D rayCasterMap;
     rayCasterMap.calcCoords(_grid, map, NULL, &mapSize);
     for(unsigned int i=0; i<mapSize/2; i++)
     {
       double x = map[2*i];
       double y = map[2*i+1];
-      int u = x / cellSize;
-      int v = y / cellSize;
-      if(u>0 && u<(int)w && v>0 && v<(int)h)
+      int u = x / cellSize * screen_width / w;
+      int v = y / cellSize * screen_height / h;
+      if(u>0 && u<(int)screen_width && v>0 && v<(int)screen_height)
       {
-        int idx = 3*(v*w+u);
+        int idx = 3*(v*screen_width+u);
         image[idx] = 255;
         image[idx+1] = 255;
         image[idx+2] = 255;
       }
     }
-    delete [] map;*/
+    delete [] map;
 
+    // Plot scene
     Matrix* Sh = new Matrix(3, sSize);
     for(unsigned int i=0; i<sSize; i++)
     {
@@ -262,11 +259,11 @@ int main(int argc, char* argv[])
     *Sh = TSensor * *Sh;
     for(unsigned int i=0; i<sSize; i++)
     {
-      int u = (*Sh)(0, i) / cellSize;
-      int v = (*Sh)(1, i) / cellSize;
-      if(u>0 && u<(int)w && v>0 && v<(int)h)
+      int u = (*Sh)(0, i) / cellSize * screen_width / w;
+      int v = (*Sh)(1, i) / cellSize * screen_height / h;
+      if(u>0 && u<(int)screen_width && v>0 && v<(int)screen_height)
       {
-        int idx = 3*(v*w+u);
+        int idx = 3*(v*screen_width+u);
         image[idx] = 255;
         image[idx+1] = 0;
         image[idx+2] = 0;
@@ -274,27 +271,16 @@ int main(int argc, char* argv[])
     }
     delete Sh;
 
-    Matrix* Mh = new Matrix(3, mSize/2);
-    for(unsigned int i=0; i<mSize/2; i++)
-    {
-      (*Mh)(0, i) = mCoords[2*i];
-      (*Mh)(1, i) = mCoords[2*i+1];
-      (*Mh)(2, i) = 1.0;
-    }
-    *Mh = TSensor * *Mh;
-    for(unsigned int i=0; i<mSize/2; i++)
-    {
-      int u = (*Mh)(0, i) / cellSize;
-      int v = (*Mh)(1, i) / cellSize;
-      if(u>0 && u<(int)w && v>0 && v<(int)h)
-      {
-        int idx = 3*(v*w+u);
-        image[idx] = 255;
-        image[idx+1] = 255;
-        image[idx+2] = 255;
-      }
-    }
-    delete Mh;
+    // Plot pose
+    int uSensor = TSensor(0,2) / cellSize / w * screen_width;
+    int vSensor = TSensor(1,2) / cellSize / h * screen_height;
+    int idx = 3*(vSensor*screen_width+uSensor);
+    image[idx] = 0;
+    image[idx+1] = 255;
+    image[idx+2] = 255;
+    image[idx+3] = 0;
+    image[idx+4] = 255;
+    image[idx+5] = 255;
 
     viewer.draw(image, screen_width, screen_height, 3, 0, 0);
 

@@ -23,9 +23,9 @@
 
 using namespace obvious;
 
-#define VXLDIM 0.005
+#define VXLDIM 0.01
 #define LAYOUTPARTITION LAYOUT_8x8x8
-#define LAYOUTSPACE LAYOUT_256x256x256
+#define LAYOUTSPACE LAYOUT_512x512x512
 
 Matrix* _T;
 Matrix _Tinit(4, 4);
@@ -77,8 +77,9 @@ void _cbBuildSliceViews(void)
 
 void _cbGenPointCloud(void)
 {
-  double* cloud = new double[1000*1000*3];
-  double* normals = new double[1000*1000*3];
+  unsigned int maxSize = _space->getXDimension()*_space->getYDimension()*_space->getZDimension() / 6;
+  double* cloud = new double[maxSize*3];
+  double* normals = new double[maxSize*3];
   //unsigned char* rgb=NULL;
   unsigned int size;
 
@@ -206,12 +207,10 @@ void _cbRegNewImage(void)
 
   _icp->reset();
   _icp->setModel(coords, normals, _vModel->getSize(), 0.2);
-  //cout << "ICP set model: " << t.getTime()-timeIcpStart << " ms" << endl;
 
   // Acquire scene image
   //for(unsigned int i=0; i<5; i++)
   _kinect->grab();
-  //cout << "ICP Grab: " << t.getTime()-timeIcpStart << " ms" << endl;
 
   double* coordsScene     = _kinect->getCoords();
   bool* maskScene         = _kinect->getMask();
@@ -247,7 +246,6 @@ void _cbRegNewImage(void)
   _vScene->removeInvalidPoints();
 
   _icp->setScene(coords, NULL, idx, 0.04);
-  //cout << "ICP Set scene: " << t.getTime()-timeIcpStart << " ms" << endl;
 
   // Perform ICP registration
   double rms = 0;
@@ -260,6 +258,7 @@ void _cbRegNewImage(void)
   if(((state == ICP_SUCCESS) && (rms < 0.1)) || ((state == ICP_MAXITERATIONS) && (rms < 0.1)))
   {
     // Obtain scene-to-model registration
+    cout << "Scene-to-model registration" << endl;
     Matrix T = *(_icp->getFinalTransformation());
     T.print();
 
@@ -269,7 +268,7 @@ void _cbRegNewImage(void)
 
     _sensor->transform(&T);
 
-    cout << "Current Pose" << endl;
+    cout << "Current sensor transformation" << endl;
     Matrix Tmp = _sensor->getTransformation();
     Tmp.print();
     _viewer3D->showSensorPose(Tmp);
@@ -299,7 +298,6 @@ void _cbRegNewImage(void)
 void _cbReset(void)
 {
   _space->reset();
-  //_sensor->setPose(&_Tinit);
   _sensor->resetTransformation();
   _sensor->transform(&_Tinit);
   _space->push(_sensor);
@@ -312,7 +310,6 @@ int main(void)
   // Projection matrix (needs to be determined by calibration) (tx smaller leftward -> ty smaller -> upwards
   // ------------------------------------------------------------------
   double Pdata[12] = {585.05108211, 0.0, 316.83800193, 0.0, 0.0, 585.05108211, 238.94140713, 0., 0.0, 0.0, 1.0, 0.0};
-  //double Pdata[12] = {585.05108211, 0.0, 315.83800193, 0.0, 0.0, 585.05108211, 242.94140713, 0., 0.0, 0.0, 1.0, 0.0};
 
   Matrix P(3, 4, Pdata);
   _kinect = new Kinect("kinect.xml");
@@ -365,11 +362,10 @@ int main(void)
   // Out-of-Bounds filter to remove measurements outside TSD space
   _filterBounds = new OutOfBoundsFilter3D(_space->getMinX(), _space->getMaxX(), _space->getMinY(), _space->getMaxY(), _space->getMinZ(), _space->getMaxZ());
   _filterBounds->setPose(&_Tinit);
-  //_filterBounds->setPose(&_Tinit);
   assigner->addPreFilter(_filterBounds);
 
   // Decreasing threshold filter
-  IPostAssignmentFilter* filterD = (IPostAssignmentFilter*)new DistanceFilter(0.5, 0.01, 10);
+  IPostAssignmentFilter* filterD = (IPostAssignmentFilter*)new DistanceFilter(0.5, 0.01, maxIterations-3);
   IPostAssignmentFilter* filterR = (IPostAssignmentFilter*)new ReciprocalFilter();
   assigner->addPostFilter(filterD);
   assigner->addPostFilter(filterR);
@@ -383,7 +379,6 @@ int main(void)
   // ------------------------------------------------------------------
 
   _sensor = new SensorProjective3D(cols, rows, Pdata, 4.0, 0.4);
-  //_sensor->setPose(&_Tinit);
   _sensor->transform(&_Tinit);
 
   cout << "Initial Pose" << endl;
