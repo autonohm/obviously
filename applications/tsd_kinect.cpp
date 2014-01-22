@@ -23,9 +23,9 @@
 
 using namespace obvious;
 
-#define VXLDIM 0.01
+#define VXLDIM 0.02
 #define LAYOUTPARTITION LAYOUT_8x8x8
-#define LAYOUTSPACE LAYOUT_512x512x512
+#define LAYOUTSPACE LAYOUT_256x256x256
 
 Matrix* _T;
 Matrix _Tinit(4, 4);
@@ -352,9 +352,9 @@ int main(void)
   // ------------------------------------------------------------------
   unsigned int maxIterations = 35;
 
-  //PairAssignment* assigner = (PairAssignment*)new FlannPairAssignment(3, 0.0, true);
+  PairAssignment* assigner = (PairAssignment*)new FlannPairAssignment(3, 0.0, true);
   //PairAssignment* assigner = (PairAssignment*)new AnnPairAssignment(3);
-  PairAssignment* assigner = (PairAssignment*)new ProjectivePairAssignment(Pdata, cols, rows);
+  //PairAssignment* assigner = (PairAssignment*)new ProjectivePairAssignment(Pdata, cols, rows);
 
   IRigidEstimator* estimator = (IRigidEstimator*)new PointToPlaneEstimator3D();
   //IRigidEstimator* estimator = (IRigidEstimator*)new PointToPointEstimator3D();

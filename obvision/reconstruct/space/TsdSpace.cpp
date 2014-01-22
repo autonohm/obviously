@@ -298,8 +298,11 @@ void TsdSpace::push(Sensor* sensor)
               // TODO: Implement color support
               //unsigned char* color = NULL;
               //if(rgb) color = &(rgb[3*index]);
-              part->init();
-              part->addTsd((*partCoords)(c, 0), (*partCoords)(c, 1), (*partCoords)(c, 2), sd, _maxTruncation);
+              if(sd >= -_maxTruncation)
+              {
+                part->init();
+                part->addTsd((*partCoords)(c, 0), (*partCoords)(c, 1), (*partCoords)(c, 2), sd, _maxTruncation);
+              }
             }
           }
         }

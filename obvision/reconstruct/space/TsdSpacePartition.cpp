@@ -245,7 +245,7 @@ unsigned int TsdSpacePartition::getSize()
 
 void TsdSpacePartition::addTsd(const unsigned int x, const unsigned int y, const unsigned int z, const double sd, const double maxTruncation)
 {
-  if(sd >= -maxTruncation)
+  //if(sd >= -maxTruncation)
   {
     TsdVoxel* voxel = &_space[z][y][x];
 
@@ -323,6 +323,8 @@ void TsdSpacePartition::increaseEmptiness()
 double TsdSpacePartition::interpolateTrilinear(int x, int y, int z, double dx, double dy, double dz)
 {
   double tsdf_cell = _space[z][y][x].tsd;
+
+  if(isnan(_space[z][y][x].tsd)) return NAN;
 
   // Interpolate
   return tsdf_cell * (1. - dx) * (1. - dy) * (1. - dz)
