@@ -51,7 +51,7 @@ CamNano::CamNano()
   /*
   * config logging messages
   */
-  LOGMSG_CONF("CamNano.log", Logger::file_off|Logger::screen_on, DBG_DEBUG, DBG_ERROR);
+  //LOGMSG_CONF("CamNano.log", Logger::file_off|Logger::screen_on, DBG_DEBUG, DBG_ERROR);
 
   _points    = _rows*_cols;
   _coordsV   = new double[_points*3];

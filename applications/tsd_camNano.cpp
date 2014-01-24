@@ -30,8 +30,8 @@ obvious::SensorProjective3D*     _sensor       = NULL;
 obvious::TsdSpace*               _space        = NULL;
 obvious::Icp*                    _icp          = NULL;
 obvious::OutOfBoundsFilter3D*    _filterBounds = NULL;
-double*                         _dists        = NULL;
-unsigned int                   _beams;
+double*                          _dists        = NULL;
+unsigned int                   	 _beams;
 
 bool _push;
 bool _reg;
@@ -134,8 +134,8 @@ void _saveTsdToTmp(void)
 
 void init(void)
 {
-  const double voxelSize   = 0.001;
-  double d_maxIterations   = 50;
+  const double voxelSize   = 0.002;
+  double d_maxIterations   = 25;
 
   const unsigned int maxIterations = (unsigned int)(d_maxIterations);
 
@@ -144,8 +144,8 @@ void init(void)
   _liveSensor = new VtkCloud();
 
   // TSD Space configuration
-  _space = new TsdSpace(voxelSize, LAYOUT_8x8x8, LAYOUT_128x128x128);
-  _space->setMaxTruncation(3.0*voxelSize);
+  _space = new TsdSpace(voxelSize, LAYOUT_8x8x8, LAYOUT_256x256x256);
+  _space->setMaxTruncation(2.0*voxelSize);
 
   std::cout << "CamNano with " << _nano->getCols() << " x " << _nano->getRows() << std::endl;
 
@@ -163,7 +163,7 @@ void init(void)
   _space->getCentroid(tr);
   double tf[16]={1, 0, 0, tr[0],
                   0, 1, 0, tr[1],
-                  0, 0, 1, tr[2],
+                  0, 0, 1, 0,
                   0, 0, 0, 1};
   Matrix T(4, 4);
   T.setData(tf);
@@ -213,17 +213,14 @@ void calc(void)
   double P[16];
 
   // in case of new push or registration
-  if(_push || _reg)
+  if(1)//_push || _reg)
   {
+	//_push = true; 
     // update sensor
     _nano->grab();
     _sensor->setRealMeasurementData(_nano->getDistImage());
     _sensor->setRealMeasurementMask(_nano->getMask());
 //    _sensor->setRealMeasurementAccuracy()                     --> what is this?
-
-    // only push if not registration
-    if(_push) _space->push(_sensor);
-    _push = false;
 
     // get model from space
     RayCast3D raycaster;
@@ -246,7 +243,7 @@ void calc(void)
     _cloud->transform(P);
 
     // registration
-    if (_reg)
+//    if ((size/3)>1000)//_reg)
     {
       unsigned int cols = _nano->getCols();
       unsigned int rows = _nano->getRows();
@@ -276,7 +273,7 @@ void calc(void)
 
       double d_subSampling     = 1.0; // 100% -> take every sample
       _icp->setScene(coordsT, NULL, _nano->getCols()*_nano->getRows(), d_subSampling);
-      _icp->setModel(coords, normals, size/3);
+      _icp->setModel(coords, normals, size/3, d_subSampling);
 
       // Perform ICP registration
       double       rms        = 0;
@@ -294,7 +291,7 @@ void calc(void)
         _sensor->transform(T);
         _sensor->getTransformation().getData(P);
         _viewer->showSensorPose(P);
-//        _space->push(_sensor);
+        _space->push(_sensor);
       }
       else
       {
@@ -334,6 +331,15 @@ int main(int argc, char* argv[])
   std::cout << "# h         ->      show whole space " << std::endl;
   std::cout << "# x         ->      clear space      " << std::endl;
   std::cout << "#####################################" << std::endl;
+
+
+    while(!_nano->grab());
+
+    unsigned int cols = _nano->getCols();
+    unsigned int rows = _nano->getRows();
+    _sensor->setRealMeasurementData(_nano->getDistImage());
+    _sensor->setRealMeasurementMask(_nano->getMask());
+    _space->push(_sensor);
 
   _viewer->startRendering();
 

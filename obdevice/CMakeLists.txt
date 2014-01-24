@@ -41,9 +41,9 @@ INCLUDE_DIRECTORIES(/usr/include/openni
                     )
 
 # check if necessary files for PMD are installed
-IF(EXISTS /usr/include/PMDSDK)
+IF(EXISTS /usr/local/include/PMDSDK)
     MESSAGE(STATUS "Build PMD stuff ...")
-    INCLUDE_DIRECTORIES(/usr/include/PMDSDK)
+    INCLUDE_DIRECTORIES(/usr/local/include/PMDSDK)
     SET(SOURCES ${SOURCES} CamNano.cpp)
 ENDIF()
 
