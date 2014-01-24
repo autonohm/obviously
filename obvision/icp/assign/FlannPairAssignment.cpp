@@ -130,12 +130,6 @@ void FlannPairAssignment::determinePairsParallel(double** scene, bool* mask, int
   flann::Matrix<int> indices(new int[1], 1, 1);
   flann::Matrix<double> dists(new double[1], 1, 1);
   flann::SearchParams p(-1, _eps);
-  unsigned int* buf_pair       = new unsigned int[size];
-  unsigned int* buf_nonpair    = new unsigned int[size];
-  unsigned int* buf_idx        = new unsigned int[size];
-  double* buf_dist             = new double[size];
-  unsigned int size_pairs      = 0;
-  unsigned int size_nonpairs   = 0;
 #pragma omp for schedule(dynamic)
   for(int i = 0; i < size; i++)
   {
@@ -145,42 +139,24 @@ void FlannPairAssignment::determinePairsParallel(double** scene, bool* mask, int
       int count = _index->knnSearch(query, indices, dists, 1, p);
       if(count > 0)
       {
-        buf_pair[size_pairs]   = indices[0][0];
-        buf_idx[size_pairs]    = i;
-        buf_dist[size_pairs++] = dists[0][0];
+#pragma omp critical
+{
+        addPair(indices[0][0], i, dists[0][0]);
+}
       }
       else
       {
         cout << "Error: no data found" << endl;
-        //abort();
       }
     }
     else
     {
-      buf_nonpair[size_nonpairs++] = i;
+#pragma omp critical
+{
+      addNonPair(i);
+}
     }
   }
-
-#pragma omp critical
-{
-  for(unsigned int j = 0; j < size_pairs; j++)
-  {
-    addPair(buf_pair[j], buf_idx[j], buf_dist[j]);
-  }
-}
-
-#pragma omp critical
-{
-  for(unsigned int k = 0; k < size_nonpairs; k++)
-  {
-    addNonPair(buf_nonpair[k]);
-  }
-}
-
-  delete[] buf_pair;
-  delete[] buf_nonpair;
-  delete[] buf_idx;
-  delete[] buf_dist;
   delete[] indices.ptr();
   delete[] dists.ptr();
 }

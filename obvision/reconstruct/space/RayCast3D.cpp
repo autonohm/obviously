@@ -77,7 +77,7 @@ void RayCast3D::calcCoordsFromCurrentPose(TsdSpace* space, Sensor* sensor, doubl
     unsigned char color[3]   = {255, 255, 255};
     double* c_tmp            = new double[count*3];
     double* n_tmp            = new double[count*3];
-    unsigned char* color_tmp = new unsigned char[count*3];
+    //unsigned char* color_tmp = new unsigned char[count*3];
     unsigned int size_tmp     = 0;
     Matrix M(4,1);
     Matrix N(4,1);
@@ -107,7 +107,7 @@ void RayCast3D::calcCoordsFromCurrentPose(TsdSpace* space, Sensor* sensor, doubl
         for (unsigned int i = 0; i < 3; i++)
         {
           c_tmp[size_tmp]      = M(i,0);
-          color_tmp[size_tmp]  = color[i];
+          //color_tmp[size_tmp]  = color[i];
           n_tmp[size_tmp++]    = N(i,0);
         }
       }
@@ -116,12 +116,12 @@ void RayCast3D::calcCoordsFromCurrentPose(TsdSpace* space, Sensor* sensor, doubl
     {
       memcpy(&coords[*size],  c_tmp,     size_tmp*sizeof(double));
       memcpy(&normals[*size], n_tmp,     size_tmp*sizeof(double));
-      memcpy(&rgb[*size],     color_tmp, size_tmp*sizeof(unsigned char));
+      //memcpy(&rgb[*size],     color_tmp, size_tmp*sizeof(unsigned char));
       *size += size_tmp;
     }
     delete[] c_tmp;     c_tmp = NULL;
     delete[] n_tmp;     n_tmp = NULL;
-    delete[] color_tmp; color_tmp = NULL;
+   // delete[] color_tmp; color_tmp = NULL;
   }
 
   LOGMSG(DBG_DEBUG, "Elapsed TSDF projection: " << t.getTime() << "ms");
@@ -180,7 +180,7 @@ void RayCast3D::calcCoordsFromCurrentPoseMask(TsdSpace* space, Sensor* sensor, d
     unsigned char color[3]   = {255, 255, 255};
     double* c_tmp            = new double[width*height*3];
     double* n_tmp            = new double[width*height*3];
-    unsigned char* color_tmp = new unsigned char[width*height*3];
+    //unsigned char* color_tmp = new unsigned char[width*height*3];
     bool* mask_tmp           = new bool[width*height];
     Matrix M(4,1);
     Matrix N(4,1);
@@ -210,7 +210,7 @@ void RayCast3D::calcCoordsFromCurrentPoseMask(TsdSpace* space, Sensor* sensor, d
         for (unsigned int i = 0; i < 3; i++)
         {
           c_tmp[cnt_tmp]      = M(i,0);
-          color_tmp[cnt_tmp]  = color[i];
+          //color_tmp[cnt_tmp]  = color[i];
           n_tmp[cnt_tmp++]    = N(i,0);
         }
       }
@@ -220,7 +220,7 @@ void RayCast3D::calcCoordsFromCurrentPoseMask(TsdSpace* space, Sensor* sensor, d
         for (unsigned int i = 0; i < 3; i++)
         {
           c_tmp[cnt_tmp]      = 0;
-          color_tmp[cnt_tmp]  = 0;
+          //color_tmp[cnt_tmp]  = 0;
           n_tmp[cnt_tmp++]    = 0;
         }
       }
@@ -229,13 +229,13 @@ void RayCast3D::calcCoordsFromCurrentPoseMask(TsdSpace* space, Sensor* sensor, d
     {
       memcpy(&coords[ctr],  c_tmp,     cnt_tmp*sizeof(double));
       memcpy(&normals[ctr], n_tmp,     cnt_tmp*sizeof(double));
-      memcpy(&rgb[ctr],     color_tmp, cnt_tmp*sizeof(unsigned char));
+      //memcpy(&rgb[ctr],     color_tmp, cnt_tmp*sizeof(unsigned char));
       memcpy(&mask[ctr/3],  mask_tmp,  cnt_tmp/3*sizeof(bool));
       ctr += cnt_tmp;
     }
     delete[] c_tmp;
     delete[] n_tmp;
-    delete[] color_tmp;
+    //delete[] color_tmp;
     delete[] mask_tmp;
   }
 

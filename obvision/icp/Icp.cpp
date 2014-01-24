@@ -365,9 +365,9 @@ void Icp::applyTransformation(double** data, unsigned int size, unsigned int dim
 
 }
 
-
 EnumIcpState Icp::step(double* rms, unsigned int* pairs)
 {
+  Timer t;
   if(_model==NULL || _scene == NULL) return ICP_ERROR;
 
   _reset = false;
@@ -375,7 +375,6 @@ EnumIcpState Icp::step(double* rms, unsigned int* pairs)
   vector<StrCartesianIndexPair>* pvPairs;
   _estimator->setScene(_scene, _sizeScene, _normalsS);
   _assigner->determinePairs(_scene, _sizeScene);
-
   pvPairs = _assigner->getPairs();
   *pairs = pvPairs->size();
 

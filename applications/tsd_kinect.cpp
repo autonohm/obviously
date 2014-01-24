@@ -170,7 +170,6 @@ void _cbRegNewImage(void)
 
   double* normals    = new double[cols * rows * 3];
   double* coords     = new double[cols * rows * 3];
-  unsigned char* rgb = new unsigned char[cols * rows * 3];
 
   unsigned int size = cols*rows*3;
 
@@ -181,43 +180,34 @@ void _cbRegNewImage(void)
   _filterBounds->setPose(&T);
 
   // Extract model from TSDF space
-  _rayCaster->calcCoordsFromCurrentPose(_space, _sensor, coords, normals, rgb, &size);
+  _rayCaster->calcCoordsFromCurrentPose(_space, _sensor, coords, normals, NULL, &size);
 
   if(size==0)
   {
     delete[] coords;
     delete[] normals;
-    delete[] rgb;
     return;
   }
 
   double timeIcpStart = t.getTime();
 
-  // Filter model to ensure proper normal vectors
-  _vModel->setCoords(coords, size / 3, 3, normals);
-  _vModel->setColors(rgb, size / 3, 3);
-  _vModel->removeInvalidPoints();
-  _vModel->copyCoords(coords);
-  _vModel->copyNormals(normals);
-
   // Transform model in world coordinate system in order to display it
+  _vModel->setCoords(coords, size / 3, 3, normals);
   double P[16];
   T.getData(P);
   _vModel->transform(P);
 
   _icp->reset();
-  _icp->setModel(coords, normals, _vModel->getSize(), 0.2);
-  //cout << "Set Model: " << t.getTime() - timeIcpStart << "ms" << endl;
-  //_icp->setModel(coords, normals, size, 0.2);
+  _icp->setModel(coords, normals, _vModel->getSize(), 0.1);
+  cout << "Set Model: " << t.getTime() - timeIcpStart << "ms" << endl;
 
   // Acquire scene image
   //for(unsigned int i=0; i<5; i++)
   _kinect->grab();
-  //cout << "Grab: " << t.getTime() - timeIcpStart << "ms" << endl;
+  cout << "Grab: " << t.getTime() - timeIcpStart << "ms" << endl;
 
   double* coordsScene     = _kinect->getCoords();
   bool* maskScene         = _kinect->getMask();
-  unsigned char* rgbScene = _kinect->getRGB();
 
   // Assort invalid scene points
   unsigned int idx = 0;
@@ -228,29 +218,23 @@ void _cbRegNewImage(void)
       coords[3*idx] = coordsScene[3*i];
       coords[3*idx+1] = coordsScene[3*i+1];
       coords[3*idx+2] = coordsScene[3*i+2];
-      rgb[3*idx] = rgbScene[3*i];
-      rgb[3*idx+1] = rgbScene[3*i+1];
-      rgb[3*idx+2] = rgbScene[3*i+2];
       idx++;
     }
   }
-  //cout << "Filter: " << t.getTime() - timeIcpStart << "ms" << endl;
+  cout << "Filter: " << t.getTime() - timeIcpStart << "ms" << endl;
 
   if(idx==0)
   {
     LOGMSG(DBG_ERROR, "Invalid scene");
     delete[] coords;
     delete[] normals;
-    delete[] rgb;
     return;
   }
 
-  _vScene->setCoords(coords, idx, 3, normals);
-  _vScene->setColors(rgb, idx, 3);
-  _vScene->removeInvalidPoints();
+  //_vScene->setCoords(coords, idx, 3, normals);
 
   _icp->setScene(coords, NULL, idx, 0.04);
-  //cout << "Set Scene: " << t.getTime() - timeIcpStart << "ms" << endl;
+  cout << "Set Scene: " << t.getTime() - timeIcpStart << "ms" << endl;
 
   // Perform ICP registration
   double rms = 0;
@@ -284,7 +268,6 @@ void _cbRegNewImage(void)
       dist[i] = abs3D(&coords[3*i]);
     _sensor->setRealMeasurementData(dist);
     _sensor->setRealMeasurementMask(_kinect->getMask());
-    //_sensor->setRealMeasurementRGB(_kinect->getRGB());
     _space->push(_sensor);
     delete[] dist;
   }
@@ -295,7 +278,6 @@ void _cbRegNewImage(void)
 
   delete[] coords;
   delete[] normals;
-  delete[] rgb;
 
   LOGMSG(DBG_ERROR, ": time elapsed = " << t.getTime() << " ms");
 }
@@ -355,7 +337,7 @@ int main(void)
 
   // ICP configuration
   // ------------------------------------------------------------------
-  unsigned int maxIterations = 35;
+  unsigned int maxIterations = 25;
 
   PairAssignment* assigner = (PairAssignment*)new FlannPairAssignment(3, 0.0, true);
   //PairAssignment* assigner = (PairAssignment*)new AnnPairAssignment(3);
