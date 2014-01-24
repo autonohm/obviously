@@ -47,4 +47,5 @@ add_library(obvision
 	reconstruct/space/TsdSpaceBranch.cpp
 	reconstruct/space/RayCast3D.cpp
 	reconstruct/space/RayCastAxisAligned3D.cpp
+	#reconstruct/space/RayCastBackProjection3D.cpp
 	)

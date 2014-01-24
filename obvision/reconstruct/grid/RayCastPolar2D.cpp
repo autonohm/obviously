@@ -60,6 +60,9 @@ void RayCastPolar2D::calcCoordsFromCurrentView(TsdGrid* grid, SensorPolar2D* sen
     abort();
   }
 
+  _idxMin = sensor->getMinimumRange() / grid->getCellSize();
+  _idxMax = sensor->getMaximumRange() / grid->getCellSize();
+
   for (unsigned int beam = 0; beam < sensor->getRealMeasurementSize(); beam++)
   {
     double ray[2];
@@ -94,7 +97,6 @@ bool RayCastPolar2D::rayCastFromCurrentView(TsdGrid* grid, SensorPolar2D* sensor
 
   double tr[2];
   sensor->getPosition(tr);
-  double maxRange = sensor->getMaximumRange();
 
   double position[2];
 
@@ -114,18 +116,14 @@ bool RayCastPolar2D::rayCastFromCurrentView(TsdGrid* grid, SensorPolar2D* sensor
   if(fabs(ray[1])>10e-6) ymax = ((double)(ray[1] > 0.0 ? (yDim-1)*cellSize : 0) - tr[1]) / ray[1];
   double idxMax = min(xmax, ymax);
 
-  if(!isnan(maxRange))
-  {
-    double idxRange = maxRange / cellSize + 0.5;
-    idxMin = min(idxMin, idxRange) ;
-    idxMax = min(idxMax, idxRange);
-  }
+  idxMin = max(idxMin, _idxMin);
+  idxMax = min(idxMax, _idxMax);
 
   if (idxMin >= idxMax) return false;
 
   // Traverse partitions roughly to clip minimum index
-  int partitionSize = grid->getPartitionSize();
-  for(int i=idxMin; i<idxMax; i+=partitionSize)
+  double partitionSize = grid->getPartitionSize();
+  for(double i=idxMin; i<idxMax; i+=partitionSize)
   {
     double tsd_tmp;
     position[0] = tr[0] + i * ray[0];
@@ -144,7 +142,7 @@ bool RayCastPolar2D::rayCastFromCurrentView(TsdGrid* grid, SensorPolar2D* sensor
     tsd_prev = NAN;
 
   bool found = false;
-  for(int i=idxMin; i<=idxMax; i++)
+  for(double i=idxMin; i<=idxMax; i+=1.0)
   {
     position[0] += ray[0];
     position[1] += ray[1];

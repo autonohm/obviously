@@ -185,6 +185,8 @@ public:
   */
  bool interpolateNormal(const double* coord, double* normal);
 
+ EnumTsdSpaceInterpolate getTsd(double coord[3], double* tsd);
+
  //bool buildSliceImage(const unsigned int depthIndex, unsigned char* image);
  /**
   * Method to store the content of the grid in a file

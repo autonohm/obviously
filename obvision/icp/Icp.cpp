@@ -332,24 +332,36 @@ void Icp::applyTransformation(double** data, unsigned int size, unsigned int dim
   Matrix R(*T, 0, 0, dim, dim);
   Matrix::multiply(R, *data, size, dim);
 
+  // Apply translation
+  if(_dim < 3)
+  {
+
 #pragma omp parallel
 {
 #pragma omp for
-  // Apply translation
   for(unsigned int i=0; i<size; i++)
   {
     data[i][0] += (*T)(0,3);
     data[i][1] += (*T)(1,3);
   }
-
-  if(_dim >= 3)
-  {
-#pragma omp for
-    for(unsigned int i=0; i<size; i++)
-      data[i][2] += (*T)(2,3);
-  }
-
 }
+
+  }
+  else
+  {
+
+#pragma omp parallel
+{
+#pragma omp for
+  for(unsigned int i=0; i<size; i++)
+  {
+    data[i][0] += (*T)(0,3);
+    data[i][1] += (*T)(1,3);
+    data[i][2] += (*T)(2,3);
+  }
+}
+
+  } // end if
 
 }
 

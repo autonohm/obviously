@@ -377,9 +377,11 @@ void TsdSpace::pushTree(Sensor* sensor)
           // TODO: Implement color support
           //unsigned char* color = NULL;
           //if(rgb) color = &(rgb[3*index]);
-
-          part->init();
-          part->addTsd((*partCoords)(c, 0), (*partCoords)(c, 1), (*partCoords)(c, 2), sd, _maxTruncation);
+          if(sd >= -_maxTruncation)
+          {
+            part->init();
+            part->addTsd((*partCoords)(c, 0), (*partCoords)(c, 1), (*partCoords)(c, 2), sd, _maxTruncation);
+          }
         }
       }
     }
@@ -628,13 +630,6 @@ bool TsdSpace::coord2Index(double coord[3], int* x, int* y, int* z, double* dx, 
     return false;
   }
 
-
-/*
-  *x = xIdx;
-  *y = yIdx;
-  *z = zIdx;
-  */
-
   return true;
 }
 
@@ -665,6 +660,35 @@ EnumTsdSpaceInterpolate TsdSpace::interpolateTrilinear(double coord[3], double* 
   double wz = fabs((coord[2] - dz) * _invVoxelSize);
 
   *tsd = part->interpolateTrilinear(x, y, z, wx, wy, wz);
+
+  if(isnan(*tsd)) return INTERPOLATE_ISNAN;
+
+  return INTERPOLATE_SUCCESS;
+}
+
+EnumTsdSpaceInterpolate TsdSpace::getTsd(double coord[3], double* tsd)
+{
+  double dx;
+  double dy;
+  double dz;
+
+  int xIdx;
+  int yIdx;
+  int zIdx;
+  if(!coord2Index(coord, &xIdx, &yIdx, &zIdx, &dx, &dy, &dz)) return INTERPOLATE_INVALIDINDEX;
+
+  int px = _lutIndex2Partition[xIdx];
+  int py = _lutIndex2Partition[yIdx];
+  int pz = _lutIndex2Partition[zIdx];
+
+  TsdSpacePartition* part = _partitions[pz][py][px];
+  if(!part->isInitialized()) return INTERPOLATE_EMPTYPARTITION;
+
+  int x = _lutIndex2Cell[xIdx];
+  int y = _lutIndex2Cell[yIdx];
+  int z = _lutIndex2Cell[zIdx];
+
+  *tsd = (*part)(z, y, x);
 
   if(isnan(*tsd)) return INTERPOLATE_ISNAN;
 

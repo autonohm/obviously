@@ -43,8 +43,9 @@ int main(void)
   double angularRes = deg2rad(0.25);
   double minPhi     = deg2rad(-95.0);
   double maxRange   = 30.0;
+  double minRange   = 0.3;
 
-  SensorPolar2D sensor(beams, angularRes, minPhi, maxRange);
+  SensorPolar2D sensor(beams, angularRes, minPhi, maxRange, minRange);
 
   // Sample data, to be replaced with real measurements
   double* data = new double[beams];

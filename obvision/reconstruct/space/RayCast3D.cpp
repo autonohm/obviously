@@ -64,6 +64,7 @@ void RayCast3D::calcCoordsFromCurrentPose(TsdSpace* space, Sensor* sensor, doubl
 
   _skipped = 0;
   _traversed = 0;
+
   _idxMin = sensor->getMinimumRange() / space->getVoxelSize();
   _idxMax = sensor->getMaximumRange() / space->getVoxelSize();
 
@@ -358,8 +359,8 @@ bool RayCast3D::rayCastFromSensorPose(TsdSpace* space, double pos[3], double ray
   int idxMinTmp = idxMin;
 
   // Traverse partitions roughly to clip minimum index
-  int partitionSize = space->getPartitionSize();
-  for(int i=idxMin; i<idxMax; i+=partitionSize)
+  double partitionSize = space->getPartitionSize();
+  for(double i=idxMin; i<idxMax; i+=partitionSize)
   {
     position[0] = pos[0] + i * ray[0];
     position[1] = pos[1] + i * ray[1];
@@ -369,26 +370,36 @@ bool RayCast3D::rayCastFromSensorPose(TsdSpace* space, double pos[3], double ray
       break;
     }
     else
-      idxMin = i+1;
+      idxMin = i+1.0;
   }
 
-  //cout << idxMin << " " << idxMax << endl;
+  // Traverse in single steps with quick test
+  for(double i=idxMin; i<idxMax; i+=1.0)
+  {
+    position[0] = pos[0] + i * ray[0];
+    position[1] = pos[1] + i * ray[1];
+    position[2] = pos[2] + i * ray[2];
+    double tsd;
+    EnumTsdSpaceInterpolate retval = space->getTsd(position, &tsd);
+    if(retval==INTERPOLATE_SUCCESS && fabs(tsd)<1.0)
+      break;
+    else
+      idxMin++;
+  }
+
   if((int)idxMin != idxMinTmp)
     _skipped += (idxMin-idxMinTmp);
 
   double tsd_prev;
-  position[0] = pos[0] + idxMin * ray[0];
-  position[1] = pos[1] + idxMin * ray[1];
-  position[2] = pos[2] + idxMin * ray[2];
 
   if(space->interpolateTrilinear(position, &tsd_prev)!=INTERPOLATE_SUCCESS)
     tsd_prev = NAN;
 
   bool found = false;
 
-  unsigned int i;
+  double i;
 
-  for(i=idxMin; i<idxMax; i++)
+  for(i=idxMin; i<idxMax; i+=1.0)
   {
     position[0] += ray[0];
     position[1] += ray[1];
@@ -419,8 +430,9 @@ bool RayCast3D::rayCastFromSensorPose(TsdSpace* space, double pos[3], double ray
   if(!found) return false;
 
   // interpolate between voxels when sign changes
-  for (i = 0; i < 3; i++)
-    coordinates[i] = position[i] + ray[i] * (interp-1.0);
+  coordinates[0] = position[0] + ray[0] * (interp-1.0);
+  coordinates[1] = position[1] + ray[1] * (interp-1.0);
+  coordinates[2] = position[2] + ray[2] * (interp-1.0);
 
   if(!space->interpolateNormal(coordinates, normal))
     return false;

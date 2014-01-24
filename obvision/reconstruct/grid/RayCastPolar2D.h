@@ -35,6 +35,9 @@ private:
 
   double _xmax;
   double _ymax;
+
+  double _idxMin;
+  double _idxMax;
 };
 
 }
