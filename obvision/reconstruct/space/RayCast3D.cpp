@@ -401,15 +401,14 @@ bool RayCast3D::rayCastFromSensorPose(TsdSpace* space, double pos[3], double ray
 
   for(i=idxMin; i<idxMax; i+=1.0)
   {
-    position[0] += ray[0];
-    position[1] += ray[1];
-    position[2] += ray[2];
-
     double tsd;
     EnumTsdSpaceInterpolate retval = space->interpolateTrilinear(position, &tsd);
     if (retval!=INTERPOLATE_SUCCESS)
     {
       tsd_prev = NAN;
+      position[0] += ray[0];
+      position[1] += ray[1];
+      position[2] += ray[2];
       continue;
     }
 
@@ -422,6 +421,9 @@ bool RayCast3D::rayCastFromSensorPose(TsdSpace* space, double pos[3], double ray
       break;
     }
 
+    position[0] += ray[0];
+    position[1] += ray[1];
+    position[2] += ray[2];
     tsd_prev = tsd;
   }
 

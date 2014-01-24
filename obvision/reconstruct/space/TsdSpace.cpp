@@ -60,6 +60,7 @@ TsdSpace::TsdSpace(const double voxelSize, const EnumTsdSpaceLayout layoutPartit
   _maxZ = ((double)_cellsZ + 0.5) * _voxelSize;
 
   LOGMSG(DBG_DEBUG, "Allocating " << _partitionsInX << "x" << _partitionsInY << "x" << _partitionsInZ << " partitions");
+  LOGMSG(DBG_DEBUG, "Spanning area: " << _maxX << " " << _maxY << " " << _maxZ << endl;)
   System<TsdSpacePartition*>::allocate(_partitionsInZ, _partitionsInY, _partitionsInX, _partitions);
 
   for(int pz=0; pz<_partitionsInZ; pz++)
@@ -625,7 +626,7 @@ bool TsdSpace::coord2Index(double coord[3], int* x, int* y, int* z, double* dx, 
   // Check boundaries
   if ((*x >= (int)_cellsX) || (*x < 0) || (*y >= (int)_cellsY) || (*y < 0) || (*z >= (int)_cellsZ) || *z < 0)
   {
-    cout << "coord not in space: " << coord[0] << " " << coord[1] << " " << coord[2] << endl;
+    cout << "coord not in space: " << coord[0] << " " << coord[1] << " " << coord[2] << " assigned: " << *x << " " << *y << " " << *z << endl;
     abort();
     return false;
   }
