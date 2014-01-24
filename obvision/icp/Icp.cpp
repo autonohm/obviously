@@ -28,7 +28,7 @@ Icp::Icp(PairAssignment* assigner, IRigidEstimator* estimator)
   _Tlast               = new Matrix(4, 4);
   _Tfinal4x4->setIdentity();
   _Tlast->setIdentity();
-
+  _reset = true;
   _convCnt = 5;
 
   _fptrCallbackPairs = NULL;
@@ -103,6 +103,7 @@ void Icp::setModel(double* coords, double* normals, const unsigned int size, dou
     }
   }
 
+
   if(normals)
   {
     checkMemory(_sizeModel, _dim, sizeNormalsBuf, _normalsM);
@@ -118,8 +119,8 @@ void Icp::setModel(double* coords, double* normals, const unsigned int size, dou
     }
   }
 
-  _assigner->setModel(_model, _sizeModel);
-  _estimator->setModel(_model, _sizeModel, _normalsM);
+  _assigner->setModel(_model, idx);
+  _estimator->setModel(_model, idx, _normalsM);
 
   delete [] mask;
 }
@@ -135,7 +136,6 @@ void Icp::setModel(Matrix* coords, Matrix* normals, double probability)
   unsigned int sizeSource = coords->getRows();
   _sizeModel = sizeSource;
   bool* mask = createSubsamplingMask(&_sizeModel, probability);
-
 
   unsigned int sizeNormals = _sizeModelBuf;
 
@@ -167,8 +167,10 @@ void Icp::setModel(Matrix* coords, Matrix* normals, double probability)
     }
   }
 
-  _assigner->setModel(_model, _sizeModel);
-  _estimator->setModel(_model, _sizeModel, _normalsM);
+  _assigner->setModel(_model, idx);
+  _estimator->setModel(_model, idx, _normalsM);
+
+  delete [] mask;
 }
 
 void Icp::setScene(double* coords, double* normals, const unsigned int size, double probability)
@@ -197,7 +199,6 @@ void Icp::setScene(double* coords, double* normals, const unsigned int size, dou
 
   if(normals)
   {
-    cout << "copy normals" << endl;
     checkMemory(_sizeScene, _dim, sizeNormalsBuf, _normalsS);
     idx = 0;
     for(unsigned int i=0; i<size; i++)
@@ -211,8 +212,12 @@ void Icp::setScene(double* coords, double* normals, const unsigned int size, dou
     }
   }
 
-  applyTransformation(_scene, _sizeScene, _dim, _Tfinal4x4);
-  if(normals) applyTransformation(_normalsS, _sizeScene, _dim, _Tfinal4x4);
+  // if final matrix is not identity
+  if(!_reset)
+  {
+    applyTransformation(_scene, idx, _dim, _Tfinal4x4);
+    if(normals) applyTransformation(_normalsS, idx, _dim, _Tfinal4x4);
+  }
 
   delete [] mask;
 }
@@ -257,8 +262,14 @@ void Icp::setScene(Matrix* coords, Matrix* normals, double probability)
     }
   }
 
-  applyTransformation(_scene, _sizeScene, _dim, _Tfinal4x4);
-  if(normals) applyTransformation(_normalsS, _sizeScene, _dim, _Tfinal4x4);
+  // if final matrix is not identity
+  if(!_reset)
+  {
+    applyTransformation(_scene, idx, _dim, _Tfinal4x4);
+    if(normals) applyTransformation(_normalsS, idx, _dim, _Tfinal4x4);
+  }
+
+  delete [] mask;
 }
 
 void Icp::checkMemory(unsigned int rows, unsigned int cols, unsigned int &memsize, double** &mem)
@@ -282,6 +293,7 @@ void Icp::reset()
 {
   _Tfinal4x4->setIdentity();
   _assigner->reset();
+  _reset = true;
 }
 
 void Icp::setMaxRMS(double rms)
@@ -320,6 +332,9 @@ void Icp::applyTransformation(double** data, unsigned int size, unsigned int dim
   Matrix R(*T, 0, 0, dim, dim);
   Matrix::multiply(R, *data, size, dim);
 
+#pragma omp parallel
+{
+#pragma omp for
   // Apply translation
   for(unsigned int i=0; i<size; i++)
   {
@@ -329,15 +344,21 @@ void Icp::applyTransformation(double** data, unsigned int size, unsigned int dim
 
   if(_dim >= 3)
   {
+#pragma omp for
     for(unsigned int i=0; i<size; i++)
       data[i][2] += (*T)(2,3);
   }
+
+}
+
 }
 
 
 EnumIcpState Icp::step(double* rms, unsigned int* pairs)
 {
   if(_model==NULL || _scene == NULL) return ICP_ERROR;
+
+  _reset = false;
 
   vector<StrCartesianIndexPair>* pvPairs;
   _estimator->setScene(_scene, _sizeScene, _normalsS);

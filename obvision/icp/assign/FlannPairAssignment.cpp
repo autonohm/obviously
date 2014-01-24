@@ -142,10 +142,18 @@ void FlannPairAssignment::determinePairsParallel(double** scene, bool* mask, int
     if(mask[i]==1)
     {
       flann::Matrix<double> query(&scene[i][0], 1, _nDimension);
-      _index->knnSearch(query, indices, dists, 1, p);
-      buf_pair[size_pairs]   = indices[0][0];
-      buf_idx[size_pairs]    = i;
-      buf_dist[size_pairs++] = dists[0][0];
+      int count = _index->knnSearch(query, indices, dists, 1, p);
+      if(count > 0)
+      {
+        buf_pair[size_pairs]   = indices[0][0];
+        buf_idx[size_pairs]    = i;
+        buf_dist[size_pairs++] = dists[0][0];
+      }
+      else
+      {
+        cout << "Error: no data found" << endl;
+        //abort();
+      }
     }
     else
     {
@@ -168,6 +176,7 @@ void FlannPairAssignment::determinePairsParallel(double** scene, bool* mask, int
     addNonPair(buf_nonpair[k]);
   }
 }
+
   delete[] buf_pair;
   delete[] buf_nonpair;
   delete[] buf_idx;

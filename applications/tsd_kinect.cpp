@@ -207,10 +207,13 @@ void _cbRegNewImage(void)
 
   _icp->reset();
   _icp->setModel(coords, normals, _vModel->getSize(), 0.2);
+  //cout << "Set Model: " << t.getTime() - timeIcpStart << "ms" << endl;
+  //_icp->setModel(coords, normals, size, 0.2);
 
   // Acquire scene image
   //for(unsigned int i=0; i<5; i++)
   _kinect->grab();
+  //cout << "Grab: " << t.getTime() - timeIcpStart << "ms" << endl;
 
   double* coordsScene     = _kinect->getCoords();
   bool* maskScene         = _kinect->getMask();
@@ -231,6 +234,7 @@ void _cbRegNewImage(void)
       idx++;
     }
   }
+  //cout << "Filter: " << t.getTime() - timeIcpStart << "ms" << endl;
 
   if(idx==0)
   {
@@ -246,6 +250,7 @@ void _cbRegNewImage(void)
   _vScene->removeInvalidPoints();
 
   _icp->setScene(coords, NULL, idx, 0.04);
+  //cout << "Set Scene: " << t.getTime() - timeIcpStart << "ms" << endl;
 
   // Perform ICP registration
   double rms = 0;

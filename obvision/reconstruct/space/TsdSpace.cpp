@@ -653,7 +653,8 @@ EnumTsdSpaceInterpolate TsdSpace::interpolateTrilinear(double coord[3], double* 
   int py = _lutIndex2Partition[yIdx];
   int pz = _lutIndex2Partition[zIdx];
 
-  if(!_partitions[pz][py][px]->isInitialized()) return INTERPOLATE_EMPTYPARTITION;
+  TsdSpacePartition* part = _partitions[pz][py][px];
+  if(!part->isInitialized()) return INTERPOLATE_EMPTYPARTITION;
 
   int x = _lutIndex2Cell[xIdx];
   int y = _lutIndex2Cell[yIdx];
@@ -663,7 +664,7 @@ EnumTsdSpaceInterpolate TsdSpace::interpolateTrilinear(double coord[3], double* 
   double wy = fabs((coord[1] - dy) * _invVoxelSize);
   double wz = fabs((coord[2] - dz) * _invVoxelSize);
 
-  *tsd = _partitions[pz][py][px]->interpolateTrilinear(x, y, z, wx, wy, wz);
+  *tsd = part->interpolateTrilinear(x, y, z, wx, wy, wz);
 
   if(isnan(*tsd)) return INTERPOLATE_ISNAN;
 

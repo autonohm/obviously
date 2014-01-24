@@ -263,6 +263,8 @@ private:
 	unsigned int _convCnt;
 
 	fptrAssignmentCallback _fptrCallbackPairs;
+
+	bool _reset;
 };
 
 }

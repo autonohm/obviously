@@ -322,12 +322,8 @@ void TsdSpacePartition::increaseEmptiness()
 
 double TsdSpacePartition::interpolateTrilinear(int x, int y, int z, double dx, double dy, double dz)
 {
-  double tsdf_cell = _space[z][y][x].tsd;
-
-  if(isnan(_space[z][y][x].tsd)) return NAN;
-
   // Interpolate
-  return tsdf_cell * (1. - dx) * (1. - dy) * (1. - dz)
+  return _space[z][y][x].tsd * (1. - dx) * (1. - dy) * (1. - dz)
         +  _space[z + 1][y + 0][x + 0].tsd * (1. - dx) * (1. - dy) * dz
         +  _space[z + 0][y + 1][x + 0].tsd * (1. - dx) * dy * (1. - dz)
         +  _space[z + 1][y + 1][x + 0].tsd * (1. - dx) * dy * dz

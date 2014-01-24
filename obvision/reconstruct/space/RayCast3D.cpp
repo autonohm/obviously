@@ -64,6 +64,9 @@ void RayCast3D::calcCoordsFromCurrentPose(TsdSpace* space, Sensor* sensor, doubl
 
   _skipped = 0;
   _traversed = 0;
+  _idxMin = sensor->getMinimumRange() / space->getVoxelSize();
+  _idxMax = sensor->getMaximumRange() / space->getVoxelSize();
+
 
 #pragma omp parallel
   {
@@ -165,6 +168,8 @@ void RayCast3D::calcCoordsFromCurrentPoseMask(TsdSpace* space, Sensor* sensor, d
 
   _skipped = 0;
   _traversed = 0;
+  _idxMin = sensor->getMinimumRange() / space->getVoxelSize();
+  _idxMax = sensor->getMaximumRange() / space->getVoxelSize();
 
 #pragma omp parallel
   {
@@ -344,6 +349,9 @@ bool RayCast3D::rayCastFromSensorPose(TsdSpace* space, double pos[3], double ray
   if(fabs(ray[2])>10e-6) zmax = ((double)(ray[2] > 0.0 ? maxSpaceCoord : minSpaceCoord) - pos[2]) / ray[2];
   double idxMax = floor(min(min(xmax, ymax), zmax));
 
+  idxMin = max(idxMin, _idxMin);
+  idxMax = min(idxMax, _idxMax);
+
   if (idxMin >= idxMax)
     return false;
 
@@ -361,19 +369,20 @@ bool RayCast3D::rayCastFromSensorPose(TsdSpace* space, double pos[3], double ray
       break;
     }
     else
-      idxMin = i;
+      idxMin = i+1;
   }
 
+  //cout << idxMin << " " << idxMax << endl;
   if((int)idxMin != idxMinTmp)
     _skipped += (idxMin-idxMinTmp);
 
-  double tsdf_prev;
+  double tsd_prev;
   position[0] = pos[0] + idxMin * ray[0];
   position[1] = pos[1] + idxMin * ray[1];
   position[2] = pos[2] + idxMin * ray[2];
 
-  if(space->interpolateTrilinear(position, &tsdf_prev)!=INTERPOLATE_SUCCESS)
-    tsdf_prev = NAN;
+  if(space->interpolateTrilinear(position, &tsd_prev)!=INTERPOLATE_SUCCESS)
+    tsd_prev = NAN;
 
   bool found = false;
 
@@ -385,24 +394,24 @@ bool RayCast3D::rayCastFromSensorPose(TsdSpace* space, double pos[3], double ray
     position[1] += ray[1];
     position[2] += ray[2];
 
-    double tsdf;
-    EnumTsdSpaceInterpolate retval = space->interpolateTrilinear(position, &tsdf);
+    double tsd;
+    EnumTsdSpaceInterpolate retval = space->interpolateTrilinear(position, &tsd);
     if (retval!=INTERPOLATE_SUCCESS)
     {
-      tsdf_prev = NAN;
+      tsd_prev = NAN;
       continue;
     }
 
     // check sign change
-    if(tsdf_prev > 0 && tsdf < 0)
+    if(tsd_prev > 0 && tsd < 0)
     {
-      interp = tsdf_prev / (tsdf_prev - tsdf);
+      interp = tsd_prev / (tsd_prev - tsd);
       //if(sensor->hasRealMeasurmentRGB()) space->interpolateTrilinearRGB(position, rgb);
       found = true;
       break;
     }
 
-    tsdf_prev = tsdf;
+    tsd_prev = tsd;
   }
 
   _traversed += i-idxMin;
