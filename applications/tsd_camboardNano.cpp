@@ -1,12 +1,12 @@
 /**
- * Kinect fusion example
- * @date 23.8.2013
- * @author Philipp Koch, Stefan May
+ * Camboard nano fusion example
+ * @date 24.1.2014
+ * @author Christian Pfitzner, Stefan May
  */
 
 #include <cstdio>
 
-#include "obdevice/Kinect.h"
+#include "obdevice/CamNano.h"
 #include "obgraphic/VtkCloud.h"
 #include "obgraphic/Obvious3D.h"
 #include "obvision/icp/icp_def.h"
@@ -23,13 +23,13 @@
 
 using namespace obvious;
 
-#define VXLDIM 0.02
+#define VXLDIM 0.004
 #define LAYOUTPARTITION LAYOUT_8x8x8
 #define LAYOUTSPACE LAYOUT_256x256x256
 
 Matrix* _T;
 Matrix _Tinit(4, 4);
-Kinect* _kinect;
+CamNano* _camNano;
 TsdSpace* _space;
 RayCast3D* _rayCaster;
 SensorProjective3D* _sensor;
@@ -38,6 +38,36 @@ VtkCloud* _vScene;
 Obvious3D* _viewer3D;
 Icp* _icp;
 OutOfBoundsFilter3D* _filterBounds;
+bool _contiuousRegistration = false;
+
+//PROTOTYPE
+void _cbRegNewImage(void);
+
+class vtkTimerCallback : public vtkCommand
+{
+public:
+  static vtkTimerCallback *New()
+  {
+    vtkTimerCallback *cb = new vtkTimerCallback;
+    return cb;
+  }
+  virtual void Execute(vtkObject *vtkNotUsed(caller), unsigned long eventId,  void *vtkNotUsed(callData))
+  {
+	if(_contiuousRegistration)
+	  _cbRegNewImage();
+  }
+
+private:
+
+};
+
+void _cbSwitchContinuous(void)
+{
+	if(_contiuousRegistration)
+		_contiuousRegistration = false;
+	else
+		_contiuousRegistration = true;
+}
 
 void _cbStoreModel(void)
 {
@@ -80,7 +110,6 @@ void _cbGenPointCloud(void)
   unsigned int maxSize = _space->getXDimension()*_space->getYDimension()*_space->getZDimension() / 6;
   double* cloud = new double[maxSize*3];
   double* normals = new double[maxSize*3];
-  //unsigned char* rgb=NULL;
   unsigned int size;
 
   RayCastAxisAligned3D rayCasterMap;
@@ -88,7 +117,6 @@ void _cbGenPointCloud(void)
 
   LOGMSG(DBG_DEBUG, "Cloud generated with " << size << " points";);
   _vModel->setCoords(cloud, size/3, 3, normals);
-  //_vModel->setColors(rgb, size/3, 3 );
 
   _viewer3D->update();
 
@@ -100,8 +128,8 @@ void _cbGenPointCloud(void)
 /*
 void _cbGenMesh(void)
 {
-  unsigned int cols = _kinect->getCols();
-  unsigned int rows = _kinect->getRows();
+  unsigned int cols = _camNano->getCols();
+  unsigned int rows = _camNano->getRows();
 
   double* normals    = new double[cols * rows * 3];
   double* coords     = new double[cols * rows * 3];
@@ -165,8 +193,8 @@ void _cbRegNewImage(void)
 {
   obvious::Timer t;
 
-  unsigned int cols = _kinect->getCols();
-  unsigned int rows = _kinect->getRows();
+  unsigned int cols = _camNano->getCols();
+  unsigned int rows = _camNano->getRows();
 
   double* normals    = new double[cols * rows * 3];
   double* coords     = new double[cols * rows * 3];
@@ -195,7 +223,6 @@ void _cbRegNewImage(void)
 
   // Filter model to ensure proper normal vectors
   _vModel->setCoords(coords, size / 3, 3, normals);
-  _vModel->setColors(rgb, size / 3, 3);
   _vModel->removeInvalidPoints();
   _vModel->copyCoords(coords);
   _vModel->copyNormals(normals);
@@ -206,18 +233,16 @@ void _cbRegNewImage(void)
   _vModel->transform(P);
 
   _icp->reset();
-  _icp->setModel(coords, normals, _vModel->getSize(), 0.2);
+  _icp->setModel(coords, normals, _vModel->getSize(), 0.4);
   //cout << "Set Model: " << t.getTime() - timeIcpStart << "ms" << endl;
   //_icp->setModel(coords, normals, size, 0.2);
 
   // Acquire scene image
-  //for(unsigned int i=0; i<5; i++)
-  _kinect->grab();
+  _camNano->grab();
   //cout << "Grab: " << t.getTime() - timeIcpStart << "ms" << endl;
 
-  double* coordsScene     = _kinect->getCoords();
-  bool* maskScene         = _kinect->getMask();
-  unsigned char* rgbScene = _kinect->getRGB();
+  double* coordsScene     = _camNano->getCoords();
+  bool* maskScene         = _camNano->getMask();
 
   // Assort invalid scene points
   unsigned int idx = 0;
@@ -225,12 +250,9 @@ void _cbRegNewImage(void)
   {
     if(maskScene[i])
     {
-      coords[3*idx] = coordsScene[3*i];
-      coords[3*idx+1] = coordsScene[3*i+1];
+      coords[3*idx] = -coordsScene[3*i];
+      coords[3*idx+1] = -coordsScene[3*i+1];
       coords[3*idx+2] = coordsScene[3*i+2];
-      rgb[3*idx] = rgbScene[3*i];
-      rgb[3*idx+1] = rgbScene[3*i+1];
-      rgb[3*idx+2] = rgbScene[3*i+2];
       idx++;
     }
   }
@@ -245,11 +267,14 @@ void _cbRegNewImage(void)
     return;
   }
 
-  _vScene->setCoords(coords, idx, 3, normals);
+  /*_vScene->setCoords(coords, idx, 3, normals);
   _vScene->setColors(rgb, idx, 3);
   _vScene->removeInvalidPoints();
+  double Tdata[16];
+  T.getData(Tdata);
+  _vScene->transform(Tdata);*/
 
-  _icp->setScene(coords, NULL, idx, 0.04);
+  _icp->setScene(coords, NULL, idx, 0.2);
   //cout << "Set Scene: " << t.getTime() - timeIcpStart << "ms" << endl;
 
   // Perform ICP registration
@@ -267,10 +292,6 @@ void _cbRegNewImage(void)
     Matrix T = *(_icp->getFinalTransformation());
     T.print();
 
-    //double Tdata[16];
-    //T.getData(Tdata);
-    //_vScene->transform(Tdata);
-
     _sensor->transform(&T);
 
     cout << "Current sensor transformation" << endl;
@@ -278,19 +299,19 @@ void _cbRegNewImage(void)
     Tmp.print();
     _viewer3D->showSensorPose(Tmp);
 
-    double* coords = _kinect->getCoords();
+    double* coords = _camNano->getCoords();
     double* dist = new double[cols*rows];
     for(unsigned int i=0; i<cols*rows; i++)
       dist[i] = abs3D(&coords[3*i]);
     _sensor->setRealMeasurementData(dist);
-    _sensor->setRealMeasurementMask(_kinect->getMask());
-    //_sensor->setRealMeasurementRGB(_kinect->getRGB());
+    _sensor->setRealMeasurementMask(_camNano->getMask());
     _space->push(_sensor);
     delete[] dist;
   }
   else
     LOGMSG(DBG_DEBUG, "Registration failed, RMS " << rms);
 
+  _viewer3D->showSensorPose(P);
   _viewer3D->update();
 
   delete[] coords;
@@ -298,6 +319,7 @@ void _cbRegNewImage(void)
   delete[] rgb;
 
   LOGMSG(DBG_ERROR, ": time elapsed = " << t.getTime() << " ms");
+  LOGMSG(DBG_DEBUG, ": frame rate = " << 1/t.getTime()*1000 << " FPS");
 }
 
 void _cbReset(void)
@@ -314,17 +336,19 @@ int main(void)
 
   // Projection matrix (needs to be determined by calibration) (tx smaller leftward -> ty smaller -> upwards
   // ------------------------------------------------------------------
-  double Pdata[12] = {585.05108211, 0.0, 316.83800193, 0.0, 0.0, 585.05108211, 238.94140713, 0., 0.0, 0.0, 1.0, 0.0};
+  double Pdata[12] = {90.1, 0.0,  82.0, 0.0,
+                      0.0,   90.1, 59.5, 0.0,
+                      0.0,   0.0,  1.0,  0.0};
 
   Matrix P(3, 4, Pdata);
-  _kinect = new Kinect("kinect.xml");
+  _camNano = new CamNano();
 
-  // Check access to kinect device
+  // Check access to cam nano device
   // ------------------------------------------------------------------
-  if((_kinect->grab()) != true)
+  if((_camNano->grab()) != true)
   {
     LOGMSG(DBG_ERROR, "Error grabbing first image!");
-    delete _kinect;
+    delete _camNano;
     exit(1);
   }
 
@@ -333,11 +357,11 @@ int main(void)
   unsigned int pre = 0;
   while(pre<5)
   {
-    if(_kinect->grab()) pre++;
+    if(_camNano->grab()) pre++;
   }
 
-  unsigned int cols = _kinect->getCols();
-  unsigned int rows = _kinect->getRows();
+  unsigned int cols = _camNano->getCols();
+  unsigned int rows = _camNano->getRows();
 
   _space = new TsdSpace(VXLDIM, LAYOUTPARTITION, LAYOUTSPACE);
   _space->setMaxTruncation(3.0 * VXLDIM);
@@ -383,7 +407,7 @@ int main(void)
   _icp->setConvergenceCounter(maxIterations);
   // ------------------------------------------------------------------
 
-  _sensor = new SensorProjective3D(cols, rows, Pdata, 4.0, 0.4);
+  _sensor = new SensorProjective3D(cols, rows, Pdata, 2.0, 0.1);
   _sensor->transform(&_Tinit);
 
   cout << "Initial Pose" << endl;
@@ -392,14 +416,17 @@ int main(void)
 
   // Push first data set at initial pose
   // ------------------------------------------------------------------
-  double* coords = _kinect->getCoords();
+  double* coords = _camNano->getCoords();
   // Convert to Euklidean distances
   double* dist = new double[cols*rows];
   for(unsigned int i=0; i<cols*rows; i++)
+  {
+	  //cout << i%cols << " " << coords[3*i] << " " << coords[3*i+1] << " " << coords[3*i+2] << endl;
     dist[i] = abs3D(&coords[3*i]);
+  }
+  //abort();
   _sensor->setRealMeasurementData(dist);
-  _sensor->setRealMeasurementMask(_kinect->getMask());
-  _sensor->setRealMeasurementRGB(_kinect->getRGB());
+  _sensor->setRealMeasurementMask(_camNano->getMask());
   _space->push(_sensor);
   delete [] dist;
 
@@ -410,6 +437,11 @@ int main(void)
   _vModel = new VtkCloud();
   _vScene = new VtkCloud();
   _viewer3D = new Obvious3D("3DMapper");
+  vtkSmartPointer<vtkTimerCallback> cb =  vtkSmartPointer<vtkTimerCallback>::New();
+  vtkSmartPointer<vtkRenderWindowInteractor> interactor = _viewer3D->getWindowInteractor();
+  interactor->AddObserver(vtkCommand::TimerEvent, cb);
+  interactor->CreateRepeatingTimer(30);
+
   _viewer3D->addCloud(_vModel);
   _viewer3D->addAxisAlignedCube(0, _space->getMaxX(), 0, _space->getMaxY(), 0, _space->getMaxZ());
   //_viewer3D->addCloud(_vScene);
@@ -420,10 +452,13 @@ int main(void)
   _viewer3D->registerKeyboardCallback("m", _cbStoreModel, "Save model");
   _viewer3D->registerKeyboardCallback("n", _cbStoreScene, "Save scene");
   _viewer3D->registerKeyboardCallback("i", _cbReset, "Reset TSD space");
+  _viewer3D->registerKeyboardCallback("g", _cbSwitchContinuous, "Continuous Registration");
+
+  _viewer3D->showAxes();
   _viewer3D->startRendering();
 
   delete _icp;
-  delete _kinect;
+  delete _camNano;
   delete _vModel;
   delete _vScene;
   delete _viewer3D;
