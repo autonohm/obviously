@@ -20,9 +20,9 @@ public:
    * @param[in] beams number of beams in scanning plane
    * @param[in] thetaRes angular resolution, i.e. angle between beams in rad
    * @param[in] thetaMin minimum angle from which beams are counted positive counter-clockwisely (rad)
-   * @param[in] phiRes angular resolution, i.e. angle between scanning planes in rad
+   * @param[in] planes scanning planes per half revolution
    */
-  SensorPolar3D(unsigned int beams, double thetaRes, double thetaMin, double phiRes=0.25, double maxRange=INFINITY, double minRange=0.0);
+  SensorPolar3D(unsigned int beams, double thetaRes, double thetaMin, unsigned int planes=360, double maxRange=INFINITY, double minRange=0.0);
 
   /**
    * Destructor

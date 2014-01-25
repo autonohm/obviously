@@ -17,7 +17,7 @@ struct TsdVoxel
 {
   double tsd;
   double weight;
-  unsigned char rgb[3];
+  //unsigned char rgb[3];
 };
 
 /**

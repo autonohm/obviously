@@ -1,13 +1,12 @@
 #ifndef TSDSPACECOMPONENT_H
 #define TSDSPACECOMPONENT_H
 
+#include "obvision/reconstruct/reconstruct_defs.h"
 #include "obcore/math/linalg/linalg.h"
 #include "obvision/reconstruct/Sensor.h"
 
 namespace obvious
 {
-
-#define TSDSPACEMAXWEIGHT 32.0
 
 /**
  * @class TsdSpaceComponent

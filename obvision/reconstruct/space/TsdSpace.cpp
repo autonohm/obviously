@@ -623,13 +623,16 @@ bool TsdSpace::coord2Index(double coord[3], int* x, int* y, int* z, double* dx, 
     (*dz) -= _voxelSize;
   }
 
-  // Check boundaries
-  if ((*x >= (int)_cellsX) || (*x < 0) || (*y >= (int)_cellsY) || (*y < 0) || (*z >= (int)_cellsZ) || *z < 0)
+  // Check boundaries -> should never happen
+  /*if ((*x >= (int)_cellsX) || (*x < 0) || (*y >= (int)_cellsY) || (*y < 0) || (*z >= (int)_cellsZ) || *z < 0)
   {
+#pragma omp critical
+{
     cout << "coord not in space: " << coord[0] << " " << coord[1] << " " << coord[2] << " assigned: " << *x << " " << *y << " " << *z << endl;
-    abort();
+    //abort();
+}
     return false;
-  }
+  }*/
 
   return true;
 }

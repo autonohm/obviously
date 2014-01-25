@@ -107,6 +107,12 @@ void TriangleMesh::createMeshFromOrganizedCloud(double* coords, unsigned int row
     {
       memcpy(_coords[_size], &coords[3*i], 3*sizeof(*coords));
       if(rgb) memcpy(_rgb[_size],    &rgb[3*i],    3*sizeof(*rgb));
+      else
+      {
+        _rgb[_size][0] = 255;
+        _rgb[_size][1] = 255;
+        _rgb[_size][2] = 255;
+      }
       if(normals) memcpy(_normals[_size],&normals[3*i],3*sizeof(*normals));
       _size++;
     }

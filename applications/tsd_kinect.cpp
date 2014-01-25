@@ -18,6 +18,7 @@
 
 #include "obvision/reconstruct/space/TsdSpace.h"
 #include "obvision/reconstruct/space/SensorProjective3D.h"
+#include "obvision/reconstruct/space/SensorPolar3D.h"
 #include "obvision/reconstruct/space/RayCast3D.h"
 #include "obvision/reconstruct/space/RayCastAxisAligned3D.h"
 
@@ -83,12 +84,20 @@ void _cbGenPointCloud(void)
   //unsigned char* rgb=NULL;
   unsigned int size;
 
-  RayCastAxisAligned3D rayCasterMap;
-  rayCasterMap.calcCoords(_space, cloud, normals, &size);
+  //RayCastAxisAligned3D rayCasterMap;
+  //rayCasterMap.calcCoords(_space, cloud, normals, &size);
+
+  SensorPolar3D sensor(2162, deg2rad(0.125), deg2rad(-135.0), 1440, 6.0, 0.3);
+  sensor.transform(&_Tinit);
+  _rayCaster->calcCoordsFromCurrentPose(_space, &sensor, cloud, normals, NULL, &size);
+
 
   LOGMSG(DBG_DEBUG, "Cloud generated with " << size << " points";);
   _vModel->setCoords(cloud, size/3, 3, normals);
   //_vModel->setColors(rgb, size/3, 3 );
+  double P[16];
+  _Tinit.getData(P);
+  _vModel->transform(P);
 
   _viewer3D->update();
 

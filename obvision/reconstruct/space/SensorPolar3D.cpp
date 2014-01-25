@@ -10,17 +10,17 @@
 namespace obvious
 {
 
-SensorPolar3D::SensorPolar3D(unsigned int beams, double thetaRes, double thetaMin, double phiRes, double maxRange, double minRange) : Sensor(3, maxRange, minRange)
+SensorPolar3D::SensorPolar3D(unsigned int beams, double thetaRes, double thetaMin, unsigned int planes, double maxRange, double minRange) : Sensor(3, maxRange, minRange)
 {
   // Rotation about scanning plane
   _thetaRes = thetaRes;
   _thetaMin = thetaMin;
 
   // Rotation about scanning device
-  _phiRes = phiRes;
+  _phiRes = M_PI / (double) planes;
 
   _width = beams;
-  _height = M_PI/_phiRes;
+  _height = planes;
 
   _size = _width*_height;
   _data = new double[_size];
@@ -153,7 +153,10 @@ void SensorPolar3D::backProject(Matrix* M, int* indices, Matrix* T)
       if(c<_width)
       {
         unsigned int r = (unsigned int)((M_PI+phi) / M_PI * (double)_height);
-        indices[i] = _indexMap[r][c];
+        if(r<_height)
+          indices[i] = _indexMap[r][c];
+        else
+          indices[i] = -1;
       }
       else
         indices[i] = -1;

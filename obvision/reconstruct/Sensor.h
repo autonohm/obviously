@@ -2,6 +2,7 @@
 #define SENSOR_H_
 
 #include "obcore/math/linalg/linalg.h"
+#include "obvision/reconstruct/reconstruct_defs.h"
 #include <vector>
 #include <cmath>
 

@@ -194,6 +194,7 @@ void Obvious3D::addCloud(VtkCloud* cloud, bool pickable, unsigned int pointsize,
   actor->SetMapper(mapper);
   actor->GetProperty()->SetPointSize(pointsize);
   actor->GetProperty()->SetOpacity(opacity);
+  actor->GetProperty()->BackfaceCullingOn();
 
   cloud->setActor(actor);
 

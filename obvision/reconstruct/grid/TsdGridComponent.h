@@ -2,12 +2,11 @@
 #define TSDGRIDCOMPONENT_H
 
 #include "obcore/math/linalg/linalg.h"
+#include "obvision/reconstruct/reconstruct_defs.h"
 #include "obvision/reconstruct/Sensor.h"
 
 namespace obvious
 {
-
-#define TSDGRIDMAXWEIGHT 32.0
 
 /**
  * @class TsdGridComponent

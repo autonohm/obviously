@@ -2,6 +2,7 @@
 #define TSDSPACE_H
 
 #include "obcore/math/linalg/linalg.h"
+#include "obvision/reconstruct/reconstruct_defs.h"
 #include "obvision/reconstruct/Sensor.h"
 #include "TsdSpacePartition.h"
 

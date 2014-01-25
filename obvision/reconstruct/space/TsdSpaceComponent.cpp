@@ -74,11 +74,10 @@ bool TsdSpaceComponent::isInRange(double pos[3], Sensor* sensor, double maxTrunc
   int idxEdge[8];
   sensor->backProject(_edgeCoordsHom, idxEdge);
 
-
   // Determine outmost projection range
-  int x_min = width;
+  int x_min = width-1;
   int x_max = -1;
-  int y_min = height;
+  int y_min = height-1;
   int y_max = -1;
   int validIndices = 0;
   for(int i=0; i<8; i++)
