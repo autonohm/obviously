@@ -15,6 +15,7 @@
 #include "obcore/base/tools.h"
 #include "obcore/base/Logger.h"
 #include "obcore/math/mathbase.h"
+#include "obcore/math/TransformationWatchdog.h"
 
 #include "obvision/reconstruct/space/TsdSpace.h"
 #include "obvision/reconstruct/space/SensorProjective3D.h"
@@ -23,21 +24,23 @@
 
 using namespace obvious;
 
-#define VXLDIM 0.004
+#define VXLDIM 0.003
 #define LAYOUTPARTITION LAYOUT_8x8x8
 #define LAYOUTSPACE LAYOUT_256x256x256
+//#define LAYOUTSPACE LAYOUT_512x512x512
 
-Matrix* _T;
-Matrix _Tinit(4, 4);
-CamNano* _camNano;
-TsdSpace* _space;
-RayCast3D* _rayCaster;
+Matrix* 		_T;
+Matrix 			_Tinit(4, 4);
+CamNano* 		_camNano;
+TsdSpace* 	_space;
+RayCast3D* 	_rayCaster;
 SensorProjective3D* _sensor;
-VtkCloud* _vModel;
-VtkCloud* _vScene;
-Obvious3D* _viewer3D;
-Icp* _icp;
-OutOfBoundsFilter3D* _filterBounds;
+VtkCloud* 	_vModel;
+VtkCloud* 	_vScene;
+Obvious3D* 	_viewer3D;
+Icp* 				_icp;
+OutOfBoundsFilter3D* 		_filterBounds;
+TransformationWatchdog 	_TFwatchdog;
 bool _contiuousRegistration = false;
 
 //PROTOTYPE
@@ -125,7 +128,7 @@ void _cbGenPointCloud(void)
   //delete rgb;
 }
 
-/*
+
 void _cbGenMesh(void)
 {
   unsigned int cols = _camNano->getCols();
@@ -138,10 +141,10 @@ void _cbGenMesh(void)
 
   unsigned int size = cols*rows*3;
 
-  _rayCaster->calcCoordsFromCurrentPoseMask(_space, _sensor, coords, normals, rgb, mask, &size);
+  _rayCaster->calcCoordsFromCurrentPoseMask(_space, _sensor, coords, normals, NULL, mask, &size);
 
   TriangleMesh* mesh       = new TriangleMesh(rows*cols);
-  mesh->createMeshFromOrganizedCloud(coords, rows, cols, rgb, mask);
+  mesh->createMeshFromOrganizedCloud(coords, rows, cols, NULL, mask);
 
   if(mesh->getNumberOfTriangles()==0)
   {
@@ -152,6 +155,13 @@ void _cbGenMesh(void)
     return;
   }
 
+  for(unsigned int i=0 ; i<size ; i++)
+  {
+  	rgb[i] = 255;
+  }
+
+  std::cout << "what" << std::endl;
+
   // Filter model to ensure proper normal vectors
   _vModel->setCoords(coords, size / 3, 3, normals);
   _vModel->setColors(rgb, size / 3, 3);
@@ -161,16 +171,20 @@ void _cbGenMesh(void)
 
   // Display model as mesh -> use calcCoordsFromCurrentViewMask above!!!
   double** mCoords         = mesh->getCoords();
-  unsigned char** mRGB     = mesh->getRGB();
+//  unsigned char** mRGB     = mesh->getRGB();
+//  unsigned char** mRGB		 = new unsigned char[cols][rows];
   unsigned int** mIndices  = mesh->getIndices();
   unsigned int points      = mesh->getNumberOfPoints();
   unsigned int triangles   = mesh->getNumberOfTriangles();
-  _vModel->setTriangles(mCoords, mRGB, points, mIndices, triangles);
+
+  _vModel->setTriangles(mCoords, NULL, points, mIndices, triangles);
 
   // Transform model in order to display it in space coordinates
   double P[16];
-  _sensor->getPose()->getData(P);
+  Matrix tmp = _sensor->getTransformation();
+  tmp.getData(P);
   _vModel->transform(P);
+
   double lightPos[3];
   double lightLookAt[3];
   lightPos[0] = _space->getMaxX() / 2.0;
@@ -179,6 +193,7 @@ void _cbGenMesh(void)
   lightLookAt[0] = _space->getMaxX() / 2.0;
   lightLookAt[1] = _space->getMaxY() / 2.0;
   lightLookAt[2] = _space->getMaxZ() / 2.0;
+
   _viewer3D->addLight(lightPos, lightLookAt);
   _viewer3D->update();
 
@@ -187,7 +202,7 @@ void _cbGenMesh(void)
   delete[] rgb;
   delete[] mask;
   delete mesh;
-}*/
+}
 
 void _cbRegNewImage(void)
 {
@@ -299,14 +314,18 @@ void _cbRegNewImage(void)
     Tmp.print();
     _viewer3D->showSensorPose(Tmp);
 
-    double* coords = _camNano->getCoords();
-    double* dist = new double[cols*rows];
-    for(unsigned int i=0; i<cols*rows; i++)
-      dist[i] = abs3D(&coords[3*i]);
-    _sensor->setRealMeasurementData(dist);
-    _sensor->setRealMeasurementMask(_camNano->getMask());
-    _space->push(_sensor);
-    delete[] dist;
+    // check if transformation is big enough to push
+    if(_TFwatchdog.checkWatchdog(Tmp))
+    {
+			double* coords = _camNano->getCoords();
+			double* dist = new double[cols*rows];
+			for(unsigned int i=0; i<cols*rows; i++)
+				dist[i] = abs3D(&coords[3*i]);
+			_sensor->setRealMeasurementData(dist);
+			_sensor->setRealMeasurementMask(_camNano->getMask());
+			_space->push(_sensor);
+			delete[] dist;
+    }
   }
   else
     LOGMSG(DBG_DEBUG, "Registration failed, RMS " << rms);
@@ -342,6 +361,7 @@ int main(void)
 
   Matrix P(3, 4, Pdata);
   _camNano = new CamNano();
+  _camNano->setIntegrationAuto();
 
   // Check access to cam nano device
   // ------------------------------------------------------------------
@@ -364,26 +384,26 @@ int main(void)
   unsigned int rows = _camNano->getRows();
 
   _space = new TsdSpace(VXLDIM, LAYOUTPARTITION, LAYOUTSPACE);
-  _space->setMaxTruncation(3.0 * VXLDIM);
+  _space->setMaxTruncation(4.0 * VXLDIM);
 
   // Initial transformation of sensor
   // ------------------------------------------------------------------
   double tr[3];
   _space->getCentroid(tr);
-  tr[2] = 0.0;
+//  tr[2] = 0.0;
   double tf[16]={1,  0, 0, tr[0],
                  0,  1, 0, tr[1],
-                 0,  0, 1, tr[2],
+                 0,  0, 1, tr[2]/1.5,
                  0,  0, 0, 1};
   _Tinit.setData(tf);
 
   // ICP configuration
   // ------------------------------------------------------------------
-  unsigned int maxIterations = 35;
+  unsigned int maxIterations = 30;
 
   PairAssignment* assigner = (PairAssignment*)new FlannPairAssignment(3, 0.0, true);
   //PairAssignment* assigner = (PairAssignment*)new AnnPairAssignment(3);
-  //PairAssignment* assigner = (PairAssignment*)new ProjectivePairAssignment(Pdata, cols, rows);
+//  PairAssignment* assigner = (PairAssignment*)new ProjectivePairAssignment(Pdata, cols, rows);
 
   IRigidEstimator* estimator = (IRigidEstimator*)new PointToPlaneEstimator3D();
   //IRigidEstimator* estimator = (IRigidEstimator*)new PointToPointEstimator3D();
@@ -413,6 +433,10 @@ int main(void)
   cout << "Initial Pose" << endl;
   Matrix Tmp = _sensor->getTransformation();
   Tmp.print();
+
+  _TFwatchdog.setInitTransformation(Tmp);
+  _TFwatchdog.setRotationThreshold(0.08);
+  _TFwatchdog.setTranslationThreshold(0.03);
 
   // Push first data set at initial pose
   // ------------------------------------------------------------------
@@ -447,7 +471,7 @@ int main(void)
   //_viewer3D->addCloud(_vScene);
   _viewer3D->registerKeyboardCallback("space", _cbRegNewImage, "Register new image");
   _viewer3D->registerKeyboardCallback("c", _cbGenPointCloud, "Generate point cloud");
-  //_viewer3D->registerKeyboardCallback("d", _cbGenMesh, "Generate mesh");
+  _viewer3D->registerKeyboardCallback("d", _cbGenMesh, "Generate mesh");
   _viewer3D->registerKeyboardCallback("v", _cbBuildSliceViews, "Build slice views");
   _viewer3D->registerKeyboardCallback("m", _cbStoreModel, "Save model");
   _viewer3D->registerKeyboardCallback("n", _cbStoreScene, "Save scene");

@@ -137,5 +137,8 @@ IF("${RET_OPENNI_CODE}" STREQUAL "0")
     TARGET_LINK_LIBRARIES(openni-device-stream ${VISIONLIBS} ${GRAPHICLIBS} ${DEVICELIBS} ${CORELIBS} ${XML_LIBRARIES} ${OPENNI_LIBRARIES})
 ENDIF()
 
+ADD_EXECUTABLE(watchdogTest                 transformationWatchdog_Test.cpp)
+TARGET_LINK_LIBRARIES(watchdogTest        ${CORELIBS})
+
 add_executable(integrator integrator.cpp)
 target_link_libraries(integrator ${CORELIBS}) 
