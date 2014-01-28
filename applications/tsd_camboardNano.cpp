@@ -248,7 +248,7 @@ void _cbRegNewImage(void)
   _vModel->transform(P);
 
   _icp->reset();
-  _icp->setModel(coords, normals, _vModel->getSize(), 0.4);
+  _icp->setModel(coords, normals, _vModel->getSize(), 0.3);
   //cout << "Set Model: " << t.getTime() - timeIcpStart << "ms" << endl;
   //_icp->setModel(coords, normals, size, 0.2);
 
@@ -362,6 +362,7 @@ int main(void)
   Matrix P(3, 4, Pdata);
   _camNano = new CamNano();
   _camNano->setIntegrationAuto();
+  _camNano->activeBilinearFilter(true);
 
   // Check access to cam nano device
   // ------------------------------------------------------------------
@@ -401,9 +402,9 @@ int main(void)
   // ------------------------------------------------------------------
   unsigned int maxIterations = 30;
 
-  PairAssignment* assigner = (PairAssignment*)new FlannPairAssignment(3, 0.0, true);
+//  PairAssignment* assigner = (PairAssignment*)new FlannPairAssignment(3, 0.0, true);
   //PairAssignment* assigner = (PairAssignment*)new AnnPairAssignment(3);
-//  PairAssignment* assigner = (PairAssignment*)new ProjectivePairAssignment(Pdata, cols, rows);
+  PairAssignment* assigner = (PairAssignment*)new ProjectivePairAssignment(Pdata, cols, rows);
 
   IRigidEstimator* estimator = (IRigidEstimator*)new PointToPlaneEstimator3D();
   //IRigidEstimator* estimator = (IRigidEstimator*)new PointToPointEstimator3D();

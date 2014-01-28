@@ -63,16 +63,19 @@ CamNano::CamNano()
 
   _meanAmp      = 0.0f;
   _intTime      = 0.0f;
-  _autoIntegrat = true;
-  _rawSet       = false;
-  _intrinsic    = true;
-  _init         = true;
-  _debug        = false;
 
-//  _cols = 165;
-//  _rows = 120;
+  // init flags
+  _autoIntegrat 		 = true;
+  _rawSet       		 = false;
+  _intrinsic    		 = true;
+  _init         		 = true;
+  _debug        		 = false;
+  _useBilinearFilter = false;
 
-  // init of pid controller
+  _jumpingEdgeTH = 155;
+
+
+  // init of pid controller for auto integration time
   _ctrl.setDebug(_debug);
   _ctrl.setP(2.0f);
   _ctrl.setI(0.5f);
@@ -189,6 +192,12 @@ bool CamNano::grab()
       minval = _amp[i];
   }
 
+
+  /*
+   * Jumping edge filter based on
+   * S. May. 3D Time-of-Flight Ranging for Robotic Perception in Dynamic Environments (Dissertation).
+   * Fortschr.-Ber. VDI Reihe 10 Nr. 798. Duesseldorf: VDI Verlag, 2009
+   */
   unsigned int k=0;
   for(unsigned int i=0 ; i<_rows*_cols*3 ; i+=3, k++)
   {
@@ -203,14 +212,14 @@ bool CamNano::grab()
     double n[24];
 
     int idx[8];
-    idx[0] = {i-_rows-3};       // up left
-    idx[1] = {i-_rows  };       // up
-    idx[2] = {i-_rows+3};       // up right
-    idx[3] = {i-3};             // left
-    idx[4] = {i+3};             // right
-    idx[5] = {i+_rows-3};       // down left
-    idx[6] = {i+_rows  };       // down
-    idx[7] = {i+_rows+3};       // down right
+    idx[0] = i-_rows-3;       // up left
+    idx[1] = i-_rows  ;       // up
+    idx[2] = i-_rows+3;       // up right
+    idx[3] = i-3;             // left
+    idx[4] = i+3;             // right
+    idx[5] = i+_rows-3;       // down left
+    idx[6] = i+_rows  ;       // down
+    idx[7] = i+_rows+3;       // down right
 
     // caluclate indices of neighbours
     for(unsigned int j=0 ; j<8 ; j++) {
@@ -236,7 +245,7 @@ bool CamNano::grab()
       }
     }
     bool angleFilter = false;
-    if(alpha_max>deg2rad(160.0))
+    if(alpha_max>deg2rad(_jumpingEdgeTH))
       angleFilter = true;
 
     bool edge = false;
@@ -250,7 +259,11 @@ bool CamNano::grab()
                     /*
                     (_z[k] > DIST_THRESHOLD_MIN); */
   }
+  // bilinear filter
+  if (_useBilinearFilter)
+  	this->filterBilinear(_mask, _z);
 
+  // auto intregration time for tof
   if (_autoIntegrat)
     this->setAutoIntegration();
   return(true);
@@ -300,6 +313,15 @@ void CamNano::setIntegrationAuto(bool autom)
   _autoIntegrat = autom;
 }
 
+void CamNano::setThresholdJumpingEdge(double threshold)
+{
+	if(threshold <= 180)
+		_jumpingEdgeTH = threshold;
+	else
+		LOGMSG(DBG_ERROR, "Threshold must be lower 180 Degrees");
+}
+
+
 /*
  * Function to get integration Time
  */
@@ -321,6 +343,70 @@ void CamNano::showParameters(void)
    std::cout << "Serial number of device: " << serialNr           << std::endl;
    std::cout << "Integration time: "     << i <<  " microseconds" << std::endl;
    std::cout << "Modulation frequency: 30 MHz"                    << std::endl;
+}
+
+void CamNano::filterBilinear(bool* mask, double* z_filtered)
+{
+//  DepthMetaData depthMD;
+  int mini, maxi;
+  int minj, maxj;
+  unsigned int radius = 5; // pixel radius?
+  double val;
+  double totalw;
+
+  double distance_dim;
+  double distance_range;
+  double sigmad = 1.0/(3.0*3.0);
+  double sigmar = 1.0/(30.0*30.0);
+
+//  _depth.GetMetaData(depthMD);
+
+	#pragma omp parallel
+	{
+  #pragma omp for
+  for (unsigned int i=0; i<_rows; i++)
+  {
+     mini = i - radius;
+     maxi = i + radius;
+     if (mini < 0) mini = 0;
+     if (maxi >= (int)_rows) maxi = _rows - 1;
+
+     for (unsigned int j=0; j<_cols; j++)
+     {
+        minj = j - radius;
+        maxj = j + radius;
+        if (minj < 0) minj = 0;
+        if (maxj >= (int)_cols) maxj = _cols - 1;
+
+        if (!mask[i*_cols+j]) continue;
+
+        val = 0; totalw = 0;
+
+        // get depth value of pixel
+        double depthCenter = _coords[3*(i*_rows+j)+2];
+        for (unsigned int k=mini; k<= maxi; k++)
+        {
+           double distRow2 = (i - k)*(i - k);
+           for (unsigned int l=minj; l<=maxj; l++)
+           {
+              if (!mask[k*_cols+l]) continue;
+              double depthNeighbor = _coords[3*(i*_rows+j)+2];
+
+              distance_dim   = distRow2 + (j - l)*(j - l) * sigmad;
+              distance_range = (depthCenter - depthNeighbor)*(depthCenter - depthNeighbor) * sigmar;
+
+              double w = exp(-0.5 * (distance_dim + distance_range));
+
+              val += w * depthNeighbor;
+              totalw += w;
+           }
+        }
+
+        val /= totalw;
+        z_filtered[i*_cols+j] = val;
+     }
+  }
+	}
 }
 
 /*
@@ -368,4 +454,10 @@ void CamNano::setAutoIntegration(void)
   if (_debug)
     this->showParameters();
 }
+
+void CamNano::activeBilinearFilter(bool activate)
+{
+	_useBilinearFilter = activate;
+}
+
 
