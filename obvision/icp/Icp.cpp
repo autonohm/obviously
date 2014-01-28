@@ -1,6 +1,8 @@
 #include "Icp.h"
 #include "obcore/base/tools.h"
 #include "obcore/base/Timer.h"
+#include "obcore/math/mathbase.h"
+
 namespace obvious
 {
 
@@ -102,7 +104,6 @@ void Icp::setModel(double* coords, double* normals, const unsigned int size, dou
       idx++;
     }
   }
-
 
   if(normals)
   {
@@ -378,6 +379,30 @@ EnumIcpState Icp::step(double* rms, unsigned int* pairs)
   pvPairs = _assigner->getPairs();
   *pairs = pvPairs->size();
 
+
+
+//  // bad hack
+//	vector<StrCartesianIndexPair>* pvPairsFiltered = new vector<StrCartesianIndexPair>;
+//  if(_normalsM!=NULL && _normalsS!=NULL)
+//  {
+//		// check for angle between assigned normals
+//		double angleThreshold = 0.05;
+//		for(unsigned int i=0 ; i< pvPairs->size() ; i++)
+//		{
+//			double angle = dot3(_normalsM[i], _normalsS[i])/(distSqr3D(_normalsM[i], _normalsS[i]));
+//			if (angle<=angleThreshold)
+//			{
+//				StrCartesianIndexPair pair;
+//				pair.indexFirst  = pvPairs->at(i).indexFirst;
+//				pair.indexSecond = pvPairs->at(i).indexSecond   ;
+//				pvPairsFiltered->push_back(pair);			// add pair to filtered vector
+//			}
+//		}
+//  }
+
+
+  // nothing to do
+
   if(_fptrCallbackPairs)
   {
     double** m;
@@ -399,6 +424,26 @@ EnumIcpState Icp::step(double* rms, unsigned int* pairs)
     System<double>::deallocate(s);
   }
 
+  // HIER ***********************
+//  if(pvPairsFiltered->size()>2 && _normalsS!=NULL && _normalsM != NULL)
+//  {
+//    // Estimate transformation
+//    _estimator->setPairs(pvPairsFiltered);
+//
+//    // get mapping error
+//    *rms = _estimator->getRMS();
+//
+//    // estimate transformation
+//    _estimator->estimateTransformation(_Tlast);
+//
+//    applyTransformation(_scene, _sizeScene, _dim, _Tlast);
+//    if(_normalsS)
+//      applyTransformation(_normalsS, _sizeScene, _dim, _Tlast);
+//
+//    // update overall transformation
+//    (*_Tfinal4x4) = (*_Tlast) * (*_Tfinal4x4);
+//    delete pvPairsFiltered;
+//  }
   if(pvPairs->size()>2)
   {
     // Estimate transformation
@@ -419,6 +464,7 @@ EnumIcpState Icp::step(double* rms, unsigned int* pairs)
   }
   else
   {
+//  	delete pvPairsFiltered;
     return ICP_NOTMATCHABLE;
   }
 

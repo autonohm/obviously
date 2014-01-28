@@ -24,8 +24,10 @@
 
 using namespace obvious;
 
-#define VXLDIM 0.003
+#define VXLDIM 0.004
+#define TRUNCATION 6
 #define LAYOUTPARTITION LAYOUT_8x8x8
+//#define LAYOUTPARTITION LAYOUT_128x128x128
 #define LAYOUTSPACE LAYOUT_256x256x256
 //#define LAYOUTSPACE LAYOUT_512x512x512
 
@@ -41,6 +43,7 @@ Obvious3D* 	_viewer3D;
 Icp* 				_icp;
 OutOfBoundsFilter3D* 		_filterBounds;
 TransformationWatchdog 	_TFwatchdog;
+NormalsEstimator* _nestimator;
 bool _contiuousRegistration = false;
 
 //PROTOTYPE
@@ -125,7 +128,6 @@ void _cbGenPointCloud(void)
 
   delete cloud;
   delete normals;
-  //delete rgb;
 }
 
 
@@ -156,9 +158,8 @@ void _cbGenMesh(void)
   }
 
   for(unsigned int i=0 ; i<size ; i++)
-  {
   	rgb[i] = 255;
-  }
+
 
   std::cout << "what" << std::endl;
 
@@ -248,7 +249,7 @@ void _cbRegNewImage(void)
   _vModel->transform(P);
 
   _icp->reset();
-  _icp->setModel(coords, normals, _vModel->getSize(), 0.3);
+  _icp->setModel(coords, normals, _vModel->getSize(), 0.2);
   //cout << "Set Model: " << t.getTime() - timeIcpStart << "ms" << endl;
   //_icp->setModel(coords, normals, size, 0.2);
 
@@ -288,8 +289,16 @@ void _cbRegNewImage(void)
   double Tdata[16];
   T.getData(Tdata);
   _vScene->transform(Tdata);*/
-
-  _icp->setScene(coords, NULL, idx, 0.2);
+  bool _useNormals = false;
+  if(_useNormals)
+  {
+  	_nestimator->estimateNormals3DGrid(cols, rows, coords, maskScene, normals);
+  	_icp->setScene(coords, normals, idx, 0.2);
+  }
+  else
+  {
+  	_icp->setScene(coords, NULL, idx, 0.1);
+  }
   //cout << "Set Scene: " << t.getTime() - timeIcpStart << "ms" << endl;
 
   // Perform ICP registration
@@ -385,7 +394,7 @@ int main(void)
   unsigned int rows = _camNano->getRows();
 
   _space = new TsdSpace(VXLDIM, LAYOUTPARTITION, LAYOUTSPACE);
-  _space->setMaxTruncation(4.0 * VXLDIM);
+  _space->setMaxTruncation(TRUNCATION * VXLDIM);
 
   // Initial transformation of sensor
   // ------------------------------------------------------------------
@@ -394,17 +403,17 @@ int main(void)
 //  tr[2] = 0.0;
   double tf[16]={1,  0, 0, tr[0],
                  0,  1, 0, tr[1],
-                 0,  0, 1, tr[2]/1.5,
+                 0,  0, 1, tr[2]/*/1.5*/,
                  0,  0, 0, 1};
   _Tinit.setData(tf);
 
   // ICP configuration
   // ------------------------------------------------------------------
-  unsigned int maxIterations = 30;
+  unsigned int maxIterations = 10;
 
-//  PairAssignment* assigner = (PairAssignment*)new FlannPairAssignment(3, 0.0, true);
+  PairAssignment* assigner = (PairAssignment*)new FlannPairAssignment(3, 0.0, true);
   //PairAssignment* assigner = (PairAssignment*)new AnnPairAssignment(3);
-  PairAssignment* assigner = (PairAssignment*)new ProjectivePairAssignment(Pdata, cols, rows);
+//  PairAssignment* assigner = (PairAssignment*)new ProjectivePairAssignment(Pdata, cols, rows);
 
   IRigidEstimator* estimator = (IRigidEstimator*)new PointToPlaneEstimator3D();
   //IRigidEstimator* estimator = (IRigidEstimator*)new PointToPointEstimator3D();
@@ -435,6 +444,8 @@ int main(void)
   Matrix Tmp = _sensor->getTransformation();
   Tmp.print();
 
+  _nestimator = new NormalsEstimator();
+
   _TFwatchdog.setInitTransformation(Tmp);
   _TFwatchdog.setRotationThreshold(0.08);
   _TFwatchdog.setTranslationThreshold(0.03);
@@ -445,11 +456,8 @@ int main(void)
   // Convert to Euklidean distances
   double* dist = new double[cols*rows];
   for(unsigned int i=0; i<cols*rows; i++)
-  {
-	  //cout << i%cols << " " << coords[3*i] << " " << coords[3*i+1] << " " << coords[3*i+2] << endl;
-    dist[i] = abs3D(&coords[3*i]);
-  }
-  //abort();
+      dist[i] = abs3D(&coords[3*i]);
+
   _sensor->setRealMeasurementData(dist);
   _sensor->setRealMeasurementMask(_camNano->getMask());
   _space->push(_sensor);
