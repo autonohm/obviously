@@ -205,6 +205,20 @@ void _cbGenMesh(void)
   delete mesh;
 }
 
+void pushToSpace(void)
+{
+	double* coords = _camNano->getCoords();
+	unsigned int cols = _camNano->getCols();
+	unsigned int rows = _camNano->getRows();
+	double* dist = new double[cols*rows];
+	for(unsigned int i=0; i<cols*rows; i++)
+		dist[i] = abs3D(&coords[3*i]);
+	_sensor->setRealMeasurementData(dist);
+	_sensor->setRealMeasurementMask(_camNano->getMask());
+	_space->push(_sensor);
+	delete[] dist;
+}
+
 void _cbRegNewImage(void)
 {
   obvious::Timer t;
@@ -326,14 +340,7 @@ void _cbRegNewImage(void)
     // check if transformation is big enough to push
     if(_TFwatchdog.checkWatchdog(Tmp))
     {
-			double* coords = _camNano->getCoords();
-			double* dist = new double[cols*rows];
-			for(unsigned int i=0; i<cols*rows; i++)
-				dist[i] = abs3D(&coords[3*i]);
-			_sensor->setRealMeasurementData(dist);
-			_sensor->setRealMeasurementMask(_camNano->getMask());
-			_space->push(_sensor);
-			delete[] dist;
+    	pushToSpace();
     }
   }
   else
