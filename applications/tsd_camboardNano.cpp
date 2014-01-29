@@ -5,6 +5,7 @@
  */
 
 #include <cstdio>
+#include <pthread.h>
 
 #include "obdevice/CamNano.h"
 #include "obgraphic/VtkCloud.h"
@@ -19,13 +20,15 @@
 
 #include "obvision/reconstruct/space/TsdSpace.h"
 #include "obvision/reconstruct/space/SensorProjective3D.h"
+#include "obvision/reconstruct/space/SensorPolar3D.h"
 #include "obvision/reconstruct/space/RayCast3D.h"
 #include "obvision/reconstruct/space/RayCastAxisAligned3D.h"
+//#include "obvision/reconstruct/space/RayCast"
 
 using namespace obvious;
 
 #define VXLDIM 0.004
-#define TRUNCATION 6
+#define TRUNCATION 10
 #define LAYOUTPARTITION LAYOUT_8x8x8
 //#define LAYOUTPARTITION LAYOUT_128x128x128
 #define LAYOUTSPACE LAYOUT_256x256x256
@@ -45,6 +48,19 @@ OutOfBoundsFilter3D* 		_filterBounds;
 TransformationWatchdog 	_TFwatchdog;
 NormalsEstimator* _nestimator;
 bool _contiuousRegistration = false;
+bool _thread_finished       = false;
+bool _threat_running 				= true;
+
+ofstream protocol;
+
+pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t  cond = PTHREAD_COND_INITIALIZER;
+int play 						 = 0;
+
+double* coordsScene;      //= _camNano->getCoords();
+bool* maskScene;          //= _camNano->getMask();
+
+
 
 //PROTOTYPE
 void _cbRegNewImage(void);
@@ -66,6 +82,8 @@ public:
 private:
 
 };
+
+void* grabData(void* params);
 
 void _cbSwitchContinuous(void)
 {
@@ -118,8 +136,12 @@ void _cbGenPointCloud(void)
   double* normals = new double[maxSize*3];
   unsigned int size;
 
-  RayCastAxisAligned3D rayCasterMap;
-  rayCasterMap.calcCoords(_space, cloud, normals, &size);
+//  RayCastAxisAligned3D rayCasterMap;
+//  rayCasterMap.calcCoords(_space, cloud, normals, &size);
+
+  SensorPolar3D sensor(2162, deg2rad(0.125), deg2rad(-180.0), 1440, 4.0, 0.0);
+  sensor.transform(&_Tinit);
+  _rayCaster->calcCoordsFromCurrentPose(_space, &sensor, cloud, normals, NULL, &size);
 
   LOGMSG(DBG_DEBUG, "Cloud generated with " << size << " points";);
   _vModel->setCoords(cloud, size/3, 3, normals);
@@ -219,12 +241,30 @@ void pushToSpace(void)
 	delete[] dist;
 }
 
+void* grabData(void* params)
+{
+	while(1){
+		_camNano->grab();
+	  coordsScene     = _camNano->getCoords();
+	  maskScene       = _camNano->getMask();
+		_thread_finished = true;
+//		pthread_exit(NULL);
+	}
+  return(0);
+}
+
 void _cbRegNewImage(void)
 {
   obvious::Timer t;
 
   unsigned int cols = _camNano->getCols();
   unsigned int rows = _camNano->getRows();
+
+  double * coordsScene_tmp = new double[cols*rows*3];
+  bool*    maskScene_tmp   = new bool[cols*rows];
+
+  memcpy(coordsScene_tmp, coordsScene, sizeof(double)*cols*rows*3);
+  memcpy(maskScene_tmp,   maskScene,   sizeof(bool)*cols*rows);
 
   double* normals    = new double[cols * rows * 3];
   double* coords     = new double[cols * rows * 3];
@@ -234,15 +274,17 @@ void _cbRegNewImage(void)
 
   LOGMSG(DBG_DEBUG, "Current Transformation: ");
   Matrix T = _sensor->getTransformation();
-  T.print();
+//  T.print();
 
   _filterBounds->setPose(&T);
 
   // Extract model from TSDF space
   _rayCaster->calcCoordsFromCurrentPose(_space, _sensor, coords, normals, rgb, &size);
 
+  protocol << t.getTime() << "; ";
   if(size==0)
   {
+    LOGMSG(DBG_ERROR, "Not enough points after raycasting");
     delete[] coords;
     delete[] normals;
     delete[] rgb;
@@ -263,16 +305,16 @@ void _cbRegNewImage(void)
   _vModel->transform(P);
 
   _icp->reset();
-  _icp->setModel(coords, normals, _vModel->getSize(), 0.2);
-  //cout << "Set Model: " << t.getTime() - timeIcpStart << "ms" << endl;
+  _icp->setModel(coords, normals, _vModel->getSize(), 0.1);
+  cout << "Set Model: " << t.getTime() - timeIcpStart << "ms" << endl;
   //_icp->setModel(coords, normals, size, 0.2);
 
   // Acquire scene image
-  _camNano->grab();
-  //cout << "Grab: " << t.getTime() - timeIcpStart << "ms" << endl;
+//  _camNano->grab();
+//  cout << "Grab: " << t.getTime() - timeIcpStart << "ms" << endl;
 
-  double* coordsScene     = _camNano->getCoords();
-  bool* maskScene         = _camNano->getMask();
+//  double* coordsScene     = _camNano->getCoords();
+//  bool* maskScene         = _camNano->getMask();
 
   // Assort invalid scene points
   unsigned int idx = 0;
@@ -286,7 +328,7 @@ void _cbRegNewImage(void)
       idx++;
     }
   }
-  //cout << "Filter: " << t.getTime() - timeIcpStart << "ms" << endl;
+  cout << "Filter: " << t.getTime() - timeIcpStart << "ms" << endl;
 
   if(idx==0)
   {
@@ -297,23 +339,17 @@ void _cbRegNewImage(void)
     return;
   }
 
-  /*_vScene->setCoords(coords, idx, 3, normals);
-  _vScene->setColors(rgb, idx, 3);
-  _vScene->removeInvalidPoints();
-  double Tdata[16];
-  T.getData(Tdata);
-  _vScene->transform(Tdata);*/
-  bool _useNormals = false;
+  bool _useNormals = true;
   if(_useNormals)
   {
   	_nestimator->estimateNormals3DGrid(cols, rows, coords, maskScene, normals);
-  	_icp->setScene(coords, normals, idx, 0.2);
+  	_icp->setScene(coords, normals, idx, 0.04);
   }
   else
   {
-  	_icp->setScene(coords, NULL, idx, 0.1);
+  	_icp->setScene(coords, NULL, idx, 0.04);
   }
-  //cout << "Set Scene: " << t.getTime() - timeIcpStart << "ms" << endl;
+  cout << "Set Scene: " << t.getTime() - timeIcpStart << "ms" << endl;
 
   // Perform ICP registration
   double rms = 0;
@@ -322,25 +358,32 @@ void _cbRegNewImage(void)
 
   EnumIcpState state = _icp->iterate(&rms, &pairs, &iterations);
   LOGMSG(DBG_DEBUG, "Elapsed ICP: " << t.getTime()-timeIcpStart << "ms, state " << state << ", pairs: " << pairs << ", rms: " << rms);
+  protocol << t.getTime()-timeIcpStart << "; ";
 
   if(((state == ICP_SUCCESS) && (rms < 0.1)) || ((state == ICP_MAXITERATIONS) && (rms < 0.1)))
   {
     // Obtain scene-to-model registration
     cout << "Scene-to-model registration" << endl;
     Matrix T = *(_icp->getFinalTransformation());
-    T.print();
+//    T.print();
 
     _sensor->transform(&T);
 
     cout << "Current sensor transformation" << endl;
     Matrix Tmp = _sensor->getTransformation();
-    Tmp.print();
+//    Tmp.print();
     _viewer3D->showSensorPose(Tmp);
 
     // check if transformation is big enough to push
     if(_TFwatchdog.checkWatchdog(Tmp))
     {
+    	double startPush = t.getTime();
     	pushToSpace();
+    	protocol << t.getTime() - startPush << "; ";
+    }
+    else
+    {
+    	protocol << "0.0" << "; ";
     }
   }
   else
@@ -354,6 +397,7 @@ void _cbRegNewImage(void)
   delete[] rgb;
 
   LOGMSG(DBG_ERROR, ": time elapsed = " << t.getTime() << " ms");
+  protocol << t.getTime() << "; " << std::endl;
   LOGMSG(DBG_DEBUG, ": frame rate = " << 1/t.getTime()*1000 << " FPS");
 }
 
@@ -365,9 +409,14 @@ void _cbReset(void)
   _space->push(_sensor);
 }
 
+
 int main(void)
 {
-  LOGMSG_CONF("mapper3D.log", Logger::screen_on | Logger::file_off, DBG_DEBUG, DBG_DEBUG);
+  LOGMSG_CONF("mapper3D.log", Logger::screen_off | Logger::file_off, DBG_DEBUG, DBG_DEBUG);
+
+  protocol.open("/tmp/protocol.csv");
+
+  protocol << "Time Raycasting; Time ICP; Time Push; Total" << std::endl;
 
   // Projection matrix (needs to be determined by calibration) (tx smaller leftward -> ty smaller -> upwards
   // ------------------------------------------------------------------
@@ -380,6 +429,8 @@ int main(void)
   _camNano->setIntegrationAuto();
   _camNano->activeBilinearFilter(true);
 
+
+
   // Check access to cam nano device
   // ------------------------------------------------------------------
   if((_camNano->grab()) != true)
@@ -387,14 +438,6 @@ int main(void)
     LOGMSG(DBG_ERROR, "Error grabbing first image!");
     delete _camNano;
     exit(1);
-  }
-
-  // Dismiss first images in order to clear buffer
-  // ------------------------------------------------------------------
-  unsigned int pre = 0;
-  while(pre<5)
-  {
-    if(_camNano->grab()) pre++;
   }
 
   unsigned int cols = _camNano->getCols();
@@ -416,7 +459,7 @@ int main(void)
 
   // ICP configuration
   // ------------------------------------------------------------------
-  unsigned int maxIterations = 10;
+  unsigned int maxIterations = 5;
 
   PairAssignment* assigner = (PairAssignment*)new FlannPairAssignment(3, 0.0, true);
   //PairAssignment* assigner = (PairAssignment*)new AnnPairAssignment(3);
@@ -459,6 +502,7 @@ int main(void)
 
   // Push first data set at initial pose
   // ------------------------------------------------------------------
+  _camNano->grab();
   double* coords = _camNano->getCoords();
   // Convert to Euklidean distances
   double* dist = new double[cols*rows];
@@ -472,6 +516,15 @@ int main(void)
 
   _rayCaster = new RayCast3D();
 
+  // create publisher thread
+  pthread_t handle;
+  int ret = pthread_create(&handle, NULL, grabData, NULL);
+  if(ret != 0)
+  {
+		printf("Error: pthread_create() failed\n");
+		exit(EXIT_FAILURE);
+  }
+
   // Displaying stuff
   // ------------------------------------------------------------------
   _vModel = new VtkCloud();
@@ -484,7 +537,6 @@ int main(void)
 
   _viewer3D->addCloud(_vModel);
   _viewer3D->addAxisAlignedCube(0, _space->getMaxX(), 0, _space->getMaxY(), 0, _space->getMaxZ());
-  //_viewer3D->addCloud(_vScene);
   _viewer3D->registerKeyboardCallback("space", _cbRegNewImage, "Register new image");
   _viewer3D->registerKeyboardCallback("c", _cbGenPointCloud, "Generate point cloud");
   _viewer3D->registerKeyboardCallback("d", _cbGenMesh, "Generate mesh");
@@ -504,4 +556,6 @@ int main(void)
   delete _viewer3D;
   delete _rayCaster;
   delete _space;
+
+  protocol.close();
 }

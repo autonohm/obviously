@@ -28,7 +28,7 @@ CamNano::CamNano()
      LOGMSG(DBG_ERROR, "Error openning sensor");
    }
    else
-     LOGMSG(DBG_ERROR, "Opened sensor");
+     LOGMSG(DBG_DEBUG, "Opened sensor");
 
 //   char loaded[8];
 //   pmdSourceCommand(&_hnd, loaded, 8, “IsCalibrationDataLoaded”);
@@ -81,7 +81,7 @@ CamNano::CamNano()
   _ctrl.setI(0.5f);
   _ctrl.setD(0.0f);
   _ctrl.setAWU(30.f);
-  _ctrl.setSetValue(250);
+  _ctrl.setSetValue(450);
   _ctrl.setMinValue(MIN_INTEGRATIONTIME);
   _ctrl.setMaxValue(MAX_INTEGRATIONTIME);
 }
@@ -350,7 +350,7 @@ void CamNano::filterBilinear(bool* mask, double* z_filtered)
 //  DepthMetaData depthMD;
   int mini, maxi;
   int minj, maxj;
-  unsigned int radius = 5; // pixel radius?
+  unsigned int radius = 4; // pixel radius?
   double val;
   double totalw;
 
