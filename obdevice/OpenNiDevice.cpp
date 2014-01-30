@@ -124,8 +124,10 @@ bool OpenNiDevice::init(void)
             _height = depthHeight;
             _z.resize(_width * _height);
             _coords.resize(_width * _height * 3);
-            _imgRgb = MatRGB(_height, _width);
-            _imgIr = MatRGB(_height, _width);
+            //_imgRgb = MatRGB(_height, _width);
+            //_imgIr = MatRGB(_height, _width);
+            _imgRgb = new unsigned char[_height*_width*3];
+            _imgIr = new unsigned char[_height*_width*3];
 
             if (_flags == Any)
                 _flags = static_cast<Flag>(Depth | Color | Ir);
@@ -148,7 +150,8 @@ bool OpenNiDevice::init(void)
         _height = depthVideoMode.getResolutionY();
         _z.resize(_width * _height);
         _coords.resize(_width * _height * 3);
-        _imgIr = MatRGB(_height, _width);
+        //_imgIr = MatRGB(_height, _width);
+        _imgIr = new unsigned char[_height*_width*3];
 
         if (_flags == Any)
             _flags = static_cast<Flag>(Depth | Ir);
@@ -164,7 +167,8 @@ bool OpenNiDevice::init(void)
         _height = depthVideoMode.getResolutionY();
         _z.resize(_width * _height);
         _coords.resize(_width * _height * 3);
-        _imgRgb = MatRGB(_height, _width);
+        //_imgRgb = MatRGB(_height, _width);
+        _imgRgb = new unsigned char[_height*_width*3];
 
         if (_flags == Any)
             _flags = static_cast<Flag>(Depth | Color);
@@ -176,7 +180,8 @@ bool OpenNiDevice::init(void)
         colorVideoMode = _color.getVideoMode();
         _width = colorVideoMode.getResolutionX();
         _height = colorVideoMode.getResolutionY();
-        _imgRgb = MatRGB(_height, _width);
+        //_imgRgb = MatRGB(_height, _width);
+        _imgRgb = new unsigned char[_height*_width*3];
 
         if (_flags == Any)
             _flags = Color;
@@ -227,16 +232,24 @@ bool OpenNiDevice::grab(void)
 
         const openni::RGB888Pixel* data = reinterpret_cast<const openni::RGB888Pixel*>(_frameColor.getData());
         const int size = _width * _height;
-        MatRGB::iterator red  (_imgRgb.begin(MatRGB::Red  ));
-        MatRGB::iterator green(_imgRgb.begin(MatRGB::Green));
-        MatRGB::iterator blue (_imgRgb.begin(MatRGB::Blue ));
+        //MatRGB::iterator red  (_imgRgb.begin(MatRGB::Red  ));
+        //MatRGB::iterator green(_imgRgb.begin(MatRGB::Green));
+        //MatRGB::iterator blue (_imgRgb.begin(MatRGB::Blue ));
 
-        for (int i = 0; i < size; ++i, ++data, ++red, ++green, ++blue)
+        /*for (int i = 0; i < size; ++i, ++data, ++red, ++green, ++blue)
         {
             *red   = data->r;
             *green = data->g;
             *blue  = data->b;
+        }*/
+
+        for(unsigned int i=0; i<size; i++, data++)
+        {
+          _imgRgb[3*i] = data->r;
+          _imgRgb[3*i+1] = data->g;
+          _imgRgb[3*i+2] = data->b;
         }
+
     }
 
     if (_ir.isValid())
@@ -245,15 +258,22 @@ bool OpenNiDevice::grab(void)
 
         const uint16_t* data = reinterpret_cast<const uint16_t*>(_frameIr.getData());
         const int size = _width * _height;
-        MatRGB::iterator red  (_imgIr.begin(MatRGB::Red  ));
-        MatRGB::iterator green(_imgIr.begin(MatRGB::Green));
-        MatRGB::iterator blue (_imgIr.begin(MatRGB::Blue ));
+//        MatRGB::iterator red  (_imgIr.begin(MatRGB::Red  ));
+//        MatRGB::iterator green(_imgIr.begin(MatRGB::Green));
+//        MatRGB::iterator blue (_imgIr.begin(MatRGB::Blue ));
+//
+//        for (int i = 0; i < size; ++i, ++data, ++red, ++green, ++blue)
+//        {
+//            *red   = *data >> 2;
+//            *green = *data >> 2;
+//            *blue  = *data >> 2;
+//        }
 
-        for (int i = 0; i < size; ++i, ++data, ++red, ++green, ++blue)
+        for(unsigned int i=0; i<size; i++, data++)
         {
-            *red   = *data >> 2;
-            *green = *data >> 2;
-            *blue  = *data >> 2;
+          _imgIr[3*i] = *data >> 2;
+          _imgIr[3*i+1] = *data >> 2;
+          _imgIr[3*i+2] = *data >> 2;
         }
     }
 
