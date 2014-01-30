@@ -17,36 +17,42 @@
 #include "obcore/base/Logger.h"
 #include "obcore/math/mathbase.h"
 #include "obcore/math/TransformationWatchdog.h"
+#include "obcore/math/Trajectory.h"
 
 #include "obvision/reconstruct/space/TsdSpace.h"
 #include "obvision/reconstruct/space/SensorProjective3D.h"
 #include "obvision/reconstruct/space/SensorPolar3D.h"
 #include "obvision/reconstruct/space/RayCast3D.h"
 #include "obvision/reconstruct/space/RayCastAxisAligned3D.h"
+
+#include <time.h>
 //#include "obvision/reconstruct/space/RayCast"
 
 using namespace obvious;
 
-#define VXLDIM 0.01
-#define TRUNCATION 8
+#define VXLDIM 0.004
+#define TRUNCATION 12
 #define LAYOUTPARTITION LAYOUT_8x8x8
 //#define LAYOUTPARTITION LAYOUT_128x128x128
 #define LAYOUTSPACE LAYOUT_256x256x256
 //#define LAYOUTSPACE LAYOUT_512x512x512
 
-Matrix* 		_T;
-Matrix 			_Tinit(4, 4);
-CamNano* 		_camNano;
-TsdSpace* 	_space;
-RayCast3D* 	_rayCaster;
-SensorProjective3D* _sensor;
-VtkCloud* 	_vModel;
-VtkCloud* 	_vScene;
-Obvious3D* 	_viewer3D;
-Icp* 				_icp;
+Matrix* 								_T;
+Matrix 									_Tinit(4, 4);
+CamNano* 								_camNano;
+TsdSpace* 							_space;
+RayCast3D* 							_rayCaster;
+SensorProjective3D* 		_sensor;
+VtkCloud* 							_vModel;
+VtkCloud* 							_vScene;
+Obvious3D* 						  _viewer3D;
+Icp* 										_icp;
 OutOfBoundsFilter3D* 		_filterBounds;
 TransformationWatchdog 	_TFwatchdog;
-NormalsEstimator* _nestimator;
+Trajectory 							_trajectory;
+NormalsEstimator* 		  _nestimator;
+
+
 bool _contiuousRegistration = false;
 bool _thread_finished       = false;
 bool _threat_running 				= true;
@@ -57,10 +63,8 @@ pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t  cond = PTHREAD_COND_INITIALIZER;
 int play 						 = 0;
 
-double* coordsScene;      //= _camNano->getCoords();
-bool* maskScene;          //= _camNano->getMask();
-
-
+double* coordsScene;
+bool* maskScene;
 
 //PROTOTYPE
 void _cbRegNewImage(void);
@@ -132,12 +136,9 @@ void _cbBuildSliceViews(void)
 void _cbGenPointCloud(void)
 {
   unsigned int maxSize = _space->getXDimension()*_space->getYDimension()*_space->getZDimension() / 6;
-  double* cloud = new double[maxSize*3];
-  double* normals = new double[maxSize*3];
+  double* cloud 		   = new double[maxSize*3];
+  double* normals 		 = new double[maxSize*3];
   unsigned int size;
-
-//  RayCastAxisAligned3D rayCasterMap;
-//  rayCasterMap.calcCoords(_space, cloud, normals, &size);
 
   SensorPolar3D sensor(2162, deg2rad(0.125), deg2rad(-180.0), 1440, 4.0, 0.0);
   sensor.transform(&_Tinit);
@@ -238,6 +239,8 @@ void pushToSpace(void)
 	_sensor->setRealMeasurementData(dist);
 	_sensor->setRealMeasurementMask(_camNano->getMask());
 	_space->push(_sensor);
+	_trajectory.setPose(_sensor->getTransformation());
+	_viewer3D->showTrajectory(_trajectory.getTrajectory());
 	delete[] dist;
 }
 
@@ -248,7 +251,6 @@ void* grabData(void* params)
 	  coordsScene     = _camNano->getCoords();
 	  maskScene       = _camNano->getMask();
 		_thread_finished = true;
-//		pthread_exit(NULL);
 	}
   return(0);
 }
@@ -256,7 +258,8 @@ void* grabData(void* params)
 void _cbRegNewImage(void)
 {
   obvious::Timer t;
-
+  time_t timeI = time(NULL);
+  protocol << timeI << "; ";
   unsigned int cols = _camNano->getCols();
   unsigned int rows = _camNano->getRows();
 
@@ -306,15 +309,7 @@ void _cbRegNewImage(void)
 
   _icp->reset();
   _icp->setModel(coords, normals, _vModel->getSize(), 0.1);
-  cout << "Set Model: " << t.getTime() - timeIcpStart << "ms" << endl;
-  //_icp->setModel(coords, normals, size, 0.2);
-
-  // Acquire scene image
-//  _camNano->grab();
-//  cout << "Grab: " << t.getTime() - timeIcpStart << "ms" << endl;
-
-//  double* coordsScene     = _camNano->getCoords();
-//  bool* maskScene         = _camNano->getMask();
+//  cout << "Set Model: " << t.getTime() - timeIcpStart << "ms" << endl;
 
   // Assort invalid scene points
   unsigned int idx = 0;
@@ -328,7 +323,7 @@ void _cbRegNewImage(void)
       idx++;
     }
   }
-  cout << "Filter: " << t.getTime() - timeIcpStart << "ms" << endl;
+//  cout << "Filter: " << t.getTime() - timeIcpStart << "ms" << endl;
 
   if(idx==0)
   {
@@ -349,7 +344,7 @@ void _cbRegNewImage(void)
   {
   	_icp->setScene(coords, NULL, idx, 0.04);
   }
-  cout << "Set Scene: " << t.getTime() - timeIcpStart << "ms" << endl;
+//  cout << "Set Scene: " << t.getTime() - timeIcpStart << "ms" << endl;
 
   // Perform ICP registration
   double rms = 0;
@@ -363,13 +358,13 @@ void _cbRegNewImage(void)
   if(((state == ICP_SUCCESS) && (rms < 0.1)) || ((state == ICP_MAXITERATIONS) && (rms < 0.1)))
   {
     // Obtain scene-to-model registration
-    cout << "Scene-to-model registration" << endl;
+//    cout << "Scene-to-model registration" << endl;
     Matrix T = *(_icp->getFinalTransformation());
 //    T.print();
 
     _sensor->transform(&T);
 
-    cout << "Current sensor transformation" << endl;
+//    cout << "Current sensor transformation" << endl;
     Matrix Tmp = _sensor->getTransformation();
 //    Tmp.print();
     _viewer3D->showSensorPose(Tmp);
@@ -414,9 +409,9 @@ int main(void)
 {
   LOGMSG_CONF("mapper3D.log", Logger::screen_off | Logger::file_off, DBG_DEBUG, DBG_DEBUG);
 
+  // set up protocol
   protocol.open("/tmp/protocol.csv");
-
-  protocol << "Time Raycasting; Time ICP; Time Push; Total" << std::endl;
+  protocol << "Time; Time Raycasting; Time ICP; Time Push; Total" << std::endl;
 
   // Projection matrix (needs to be determined by calibration) (tx smaller leftward -> ty smaller -> upwards
   // ------------------------------------------------------------------
@@ -460,7 +455,7 @@ int main(void)
 
   // ICP configuration
   // ------------------------------------------------------------------
-  unsigned int maxIterations = 3;
+  unsigned int maxIterations = 10;
 
   PairAssignment* assigner = (PairAssignment*)new FlannPairAssignment(3, 0.0, true);
   //PairAssignment* assigner = (PairAssignment*)new AnnPairAssignment(3);
