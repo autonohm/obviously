@@ -22,6 +22,7 @@
 #include <vtkCellArray.h>
 #include <vtkWindowToImageFilter.h>
 #include <vtkPNGWriter.h>
+#include <vtkArrowSource.h>
 
 #include <iostream>
 #include <string>
@@ -506,6 +507,46 @@ void Obvious3D::showSensorPose(Matrix& T)
   {
     _sensor_axes->SetUserTransform(transform);
   }
+}
+
+void Obvious3D::showTrajectory(std::vector<Matrix> trajectory)
+{
+	std::vector<Matrix>::iterator it = trajectory.begin();
+	for (/*it = trajectory.begin() */; it != trajectory.end() ; ++it)
+	{
+		// Create an arrow.
+		vtkSmartPointer<vtkArrowSource> 	 pose 	= vtkSmartPointer<vtkArrowSource>::New();
+		pose->SetShaftRadius(0.1);
+		pose->SetTipLength(0.2);
+	  vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+	  mapper->SetInputConnection(pose->GetOutputPort());
+
+	  vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
+	  actor->SetMapper(mapper);
+	  vtkSmartPointer<vtkTransform>   transform = vtkSmartPointer<vtkTransform>::New();
+
+	  vtkSmartPointer<vtkMatrix4x4> m =
+	    vtkSmartPointer<vtkMatrix4x4>::New();
+	  for(unsigned int i=0 ; i<=3 ; i++) {
+	  	for(unsigned int j=0 ; j<=3 ; j++) {
+	  		m->SetElement(i,j, it->operator ()(i,j));
+	  	}
+	  }
+	  transform->Scale(0.02, 0.02, 0.02);
+	  transform->SetMatrix(m);
+	  for(unsigned int i=0 ; i<=3 ; i++) {
+	  	for(unsigned int j=0 ; j<=3 ; j++) {
+	  		m->SetElement(i,j, 0.0);
+	  	}
+	  }
+
+	  actor->SetUserTransform(transform);
+	  actor->RotateY(-90);
+	  actor->SetUserTransform(transform);
+	  actor->GetProperty()->SetColor(1,0,0); //(R,G,B)
+	  transform->Scale(0.02, 0.02, 0.02);
+	  _renderer->AddActor(actor);
+	}
 }
 
 void Obvious3D::screenshot()
