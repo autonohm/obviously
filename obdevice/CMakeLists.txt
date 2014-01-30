@@ -23,13 +23,13 @@ SET(SOURCES
 )
 
 # if does exists find libopenni2 directories and libs
-#EXECUTE_PROCESS(COMMAND pkg-config libopenni2 --exists RESULT_VARIABLE RET_CODE)
-#IF(${RET_CODE} STREQUAL 0)
-#    MESSAGE(STATUS "Build with OpenNI2 ...")
-#    PKG_CHECK_MODULES(OPENNI libopenni2)
-#    INCLUDE_DIRECTORIES(${OPENNI_INCLUDE_DIRS})
-#    SET(SOURCES ${SOURCES} OpenNiDevice.cpp)
-#ENDIF()
+EXECUTE_PROCESS(COMMAND pkg-config libopenni2 --exists RESULT_VARIABLE RET_CODE)
+IF(${RET_CODE} STREQUAL 0)
+    MESSAGE(STATUS "Build with OpenNI2 ...")
+    PKG_CHECK_MODULES(OPENNI libopenni2)
+    INCLUDE_DIRECTORIES(${OPENNI_INCLUDE_DIRS})
+    SET(SOURCES ${SOURCES} OpenNiDevice.cpp)
+ENDIF()
 
 INCLUDE_DIRECTORIES(/usr/include/openni
                     /usr/include/ni
