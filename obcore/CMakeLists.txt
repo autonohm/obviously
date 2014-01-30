@@ -29,6 +29,7 @@ SET(LIBRARY     base/CartesianCloud.cpp
                 math/PID_Controller.cpp
                 math/IntegratorSimpson.cpp
                 math/TransformationWatchdog.cpp
+                math/Trajectory.cpp
                 filter/EuclideanFilter.cpp
                 filter/CartesianFilter.cpp
                 filter/NormalFilter.cpp
