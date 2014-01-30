@@ -39,7 +39,7 @@ namespace obvious {
 /// @def maximum threshold for distance filter
 #define DIST_THRESHOLD_MAX  1.0
 /// @def minimum threshold for distance filter
-#define DIST_THRESHOLD_MIN  0.1
+#define DIST_THRESHOLD_MIN  0.05
 /// @def threshold for amplitude
 /// @def maximal integration time
 #define AMP_THRESHOLD       320

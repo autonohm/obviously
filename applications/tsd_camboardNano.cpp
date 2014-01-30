@@ -27,8 +27,8 @@
 
 using namespace obvious;
 
-#define VXLDIM 0.004
-#define TRUNCATION 10
+#define VXLDIM 0.01
+#define TRUNCATION 8
 #define LAYOUTPARTITION LAYOUT_8x8x8
 //#define LAYOUTPARTITION LAYOUT_128x128x128
 #define LAYOUTSPACE LAYOUT_256x256x256
@@ -427,6 +427,7 @@ int main(void)
   Matrix P(3, 4, Pdata);
   _camNano = new CamNano();
   _camNano->setIntegrationAuto();
+//  _camNano->setIntegrationTime(300);
   _camNano->activeBilinearFilter(true);
 
 
@@ -459,7 +460,7 @@ int main(void)
 
   // ICP configuration
   // ------------------------------------------------------------------
-  unsigned int maxIterations = 5;
+  unsigned int maxIterations = 3;
 
   PairAssignment* assigner = (PairAssignment*)new FlannPairAssignment(3, 0.0, true);
   //PairAssignment* assigner = (PairAssignment*)new AnnPairAssignment(3);
@@ -474,7 +475,7 @@ int main(void)
   assigner->addPreFilter(_filterBounds);
 
   // Decreasing threshold filter
-  IPostAssignmentFilter* filterD = (IPostAssignmentFilter*)new DistanceFilter(0.5, 0.01, maxIterations-3);
+  IPostAssignmentFilter* filterD = (IPostAssignmentFilter*)new DistanceFilter(0.3, 0.01, maxIterations-3);
   IPostAssignmentFilter* filterR = (IPostAssignmentFilter*)new ReciprocalFilter();
   assigner->addPostFilter(filterD);
   assigner->addPostFilter(filterR);
@@ -498,7 +499,7 @@ int main(void)
 
   _TFwatchdog.setInitTransformation(Tmp);
   _TFwatchdog.setRotationThreshold(0.08);
-  _TFwatchdog.setTranslationThreshold(0.03);
+  _TFwatchdog.setTranslationThreshold(0.025);
 
   // Push first data set at initial pose
   // ------------------------------------------------------------------

@@ -30,9 +30,6 @@ CamNano::CamNano()
    else
      LOGMSG(DBG_DEBUG, "Opened sensor");
 
-//   char loaded[8];
-//   pmdSourceCommand(&_hnd, loaded, 8, “IsCalibrationDataLoaded”);
-
 
   /*
   * config pmd processing
@@ -40,13 +37,16 @@ CamNano::CamNano()
   char lens[128];
   pmdProcessingCommand(_hnd, lens, 128,  "GetLensParameters");
   pmdProcessingCommand(_hnd, 0, 0,       "SetAveraging On");
-  pmdProcessingCommand(_hnd, 0, 0,       "SetAveragingFrames 2");
+  pmdProcessingCommand(_hnd, 0, 0,       "SetAveragingFrames 1");
   pmdProcessingCommand(_hnd, 0, 0,       "SetConsistencyThreshold 0.5");
-  pmdProcessingCommand(_hnd, 0, 0,       "SetBilateralFilterKernelSize 10");
+  pmdProcessingCommand(_hnd, 0, 0,       "SetBilateralFilterKernelSize 5");
   pmdProcessingCommand(_hnd, 0, 0,       "SetBilateralFilter on");
-  pmdProcessingCommand(_hnd, 0, 0,       "SetBilateralFitlerSigmaRange 15");
-  pmdProcessingCommand(_hnd, 0, 0,       "SetBilateralFilterenhanceImage off");
+  pmdProcessingCommand(_hnd, 0, 0,       "SetBilateralFitlerSigmaRange 30");
+  pmdProcessingCommand(_hnd, 0, 0,			 "SetBilateralFilterSigmaSpatial 5.0");
+  pmdProcessingCommand(_hnd, 0, 0,       "SetBilateralFilterenhanceImage on");
   pmdProcessingCommand(_hnd, 0, 0,       "SetSignalStrengthCheck On");
+  pmdSourceCommand(_hnd, 0, 0, "SetPriority 3");
+
 
   /*
   * config logging messages
@@ -81,7 +81,7 @@ CamNano::CamNano()
   _ctrl.setI(0.5f);
   _ctrl.setD(0.0f);
   _ctrl.setAWU(30.f);
-  _ctrl.setSetValue(450);
+  _ctrl.setSetValue(200);
   _ctrl.setMinValue(MIN_INTEGRATIONTIME);
   _ctrl.setMaxValue(MAX_INTEGRATIONTIME);
 }
