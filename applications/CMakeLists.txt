@@ -21,8 +21,9 @@ PKG_CHECK_MODULES(XML libxml++-2.6)
 #    LINK_DIRECTORIES(${OPENNI_LIBRARY_DIRS})
 #ENDIF()
 
-INCLUDE_DIRECTORIES(/usr/include/openni
+INCLUDE_DIRECTORIES(/usr/include/openni2
                     /usr/include/ni
+		    /usr/include/openni
                     $ENV{OBVIOUSLY_ROOT}
                     /usr/local/include/
                     /usr/include/qt4/
@@ -60,6 +61,18 @@ if(EXISTS /usr/local/include/LMS1xx.h)
   TARGET_LINK_LIBRARIES(tsd_grid_lms100 ${VISIONLIBS} ${GRAPHICLIBS} ${DEVICELIBS} ${CORELIBS})
 endif()
 
+FIND_PACKAGE(PCL 1.6 REQUIRED)
+IF(PCL_FOUND)
+
+     ADD_DEFINITIONS(${PCL_DEFINITIONS})
+     LINK_DIRECTORIES(${PCL_LIBRARY_DIRS})
+     ADD_EXECUTABLE(tsd_save_to_file		  tsd_save_to_file.cpp)
+     ADD_EXECUTABLE(tsd_load_from_folder	  tsd_load_from_folder.cpp)
+     TARGET_LINK_LIBRARIES(tsd_save_to_file 	  ${VISIONLIBS}  ${GRAPHICLIBS} ${DEVICELIBS} ${CORELIBS}  ${PCL_LIBRARIES})
+     TARGET_LINK_LIBRARIES(tsd_load_from_folder   ${VISIONLIBS}  ${GRAPHICLIBS} ${DEVICELIBS} ${CORELIBS}  ${PCL_LIBRARIES})
+ENDIF()
+
+
 LINK_DIRECTORIES(/opt/ros/electric/stacks/perception_pcl/flann/lib64/
                  /usr/local/lib
                  ${OPENNI_LIBRARY_DIRS}
@@ -89,6 +102,7 @@ ADD_EXECUTABLE(logging_example            logging_example.cpp)
 ADD_EXECUTABLE(tsd_test                   tsd_test.cpp)
 ADD_EXECUTABLE(tsd_grid_test              tsd_grid_test.cpp)
 ADD_EXECUTABLE(tsd_kinect                 tsd_kinect.cpp)
+#ADD_EXECUTABLE(tsd_xtion                  tsd_xtion.cpp)
 #ADD_EXECUTABLE(tsd_load                   tsd_load.cpp)
 #ADD_EXECUTABLE(tsd_match_to_xtion         tsd_match_to_xtion.cpp)
 #SET_TARGET_PROPERTIES(tsd_kinect PROPERTIES COMPILE_FLAGS "-Wno-unknown-pragmas -Wno-reorder")
@@ -96,8 +110,8 @@ ADD_EXECUTABLE(tsd_raycast_visualize      tsd_raycast_visualize.cpp)
 ADD_EXECUTABLE(showCloud                  showCloud.cpp)
 ADD_EXECUTABLE(filterTest                 filter_test.cpp)
 #ADD_EXECUTABLE(cloud2grid                cloud2grid.cpp)
-ADD_EXECUTABLE(xtionStream                xtionStream.cpp)
-SET_TARGET_PROPERTIES(xtionStream PROPERTIES COMPILE_FLAGS "-Wno-unknown-pragmas -Wno-reorder")
+#ADD_EXECUTABLE(xtionStream                xtionStream.cpp)
+#SET_TARGET_PROPERTIES(xtionStream PROPERTIES COMPILE_FLAGS "-Wno-unknown-pragmas -Wno-reorder")
 #ADD_EXECUTABLE(obstacleView              obstacleView.cpp)
 
 
@@ -125,10 +139,11 @@ TARGET_LINK_LIBRARIES(tsd_test                 ${VISIONLIBS}  ${GRAPHICLIBS} ${C
 #TARGET_LINK_LIBRARIES(tsd_match_to_xtion       ${VISIONLIBS}  ${GRAPHICLIBS} ${DEVICELIBS} ${CORELIBS} ${XML_LIBRARIES} ${OPENNI_LIBRARIES})
 TARGET_LINK_LIBRARIES(tsd_grid_test            ${VISIONLIBS}  ${GRAPHICLIBS} ${CORELIBS})
 TARGET_LINK_LIBRARIES(tsd_kinect               ${VISIONLIBS}  ${DEVICELIBS}  ${GRAPHICLIBS} ${CORELIBS} ${XML_LIBRARIES})
+#TARGET_LINK_LIBRARIES(tsd_xtion                ${VISIONLIBS}  ${DEVICELIBS}  ${GRAPHICLIBS} ${CORELIBS} ${XML_LIBRARIES})
 TARGET_LINK_LIBRARIES(tsd_raycast_visualize    ${VISIONLIBS}  ${GRAPHICLIBS} ${CORELIBS})
 TARGET_LINK_LIBRARIES(showCloud                ${GRAPHICLIBS} ${CORELIBS})
 TARGET_LINK_LIBRARIES(filterTest               ${GRAPHICLIBS} ${CORELIBS})
-TARGET_LINK_LIBRARIES(xtionStream              ${VISIONLIBS}  ${GRAPHICLIBS} ${DEVICELIBS} ${CORELIBS} ${XML_LIBRARIES})
+#TARGET_LINK_LIBRARIES(xtionStream              ${VISIONLIBS}  ${GRAPHICLIBS} ${DEVICELIBS} ${CORELIBS} ${XML_LIBRARIES})
 #TARGET_LINK_LIBRARIES(cloud2grid              ${GRAPHICLIBS} ${CORELIBS})
 #TARGET_LINK_LIBRARIES(obstacleView            ${GRAPHICLIBS} ${DEVICELIBS} ${CORELIBS} ${XML_LIBRARIES})
 

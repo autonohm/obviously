@@ -42,9 +42,9 @@ void RayCast3D::calcCoordsFromCurrentPose(TsdSpace* space, Sensor* sensor, doubl
 
   if(space->isInsideSpace(sensor))
   {
-    _xmin   = -10e9;
-    _ymin   = -10e9;
-    _zmin   = -10e9;
+    _xmin   = 0.0;
+    _ymin   = 0.0;
+    _zmin   = 0.0;
 
     _xmax   = 10e9;
     _ymax   = 10e9;
@@ -53,13 +53,14 @@ void RayCast3D::calcCoordsFromCurrentPose(TsdSpace* space, Sensor* sensor, doubl
   else
   {
     // prevent rays to be casted parallel to a plane outside of space
+    // if we are outside, we might loose some reprojections
     _xmin   = 10e9;
     _ymin   = 10e9;
     _zmin   = 10e9;
 
-    _xmax   = -10e9;
-    _ymax   = -10e9;
-    _zmax   = -10e9;
+    _xmax   = 0.0;
+    _ymax   = 0.0;
+    _zmax   = 0.0;
   }
 
   _skipped = 0;
@@ -148,9 +149,9 @@ void RayCast3D::calcCoordsFromCurrentPoseMask(TsdSpace* space, Sensor* sensor, d
 
   if(space->isInsideSpace(sensor))
   {
-    _xmin   = -10e9;
-    _ymin   = -10e9;
-    _zmin   = -10e9;
+    _xmin   = 0.0;
+    _ymin   = 0.0;
+    _zmin   = 0.0;
 
     _xmax   = 10e9;
     _ymax   = 10e9;
@@ -158,13 +159,15 @@ void RayCast3D::calcCoordsFromCurrentPoseMask(TsdSpace* space, Sensor* sensor, d
   }
   else
   {
+    // prevent rays to be casted parallel to a plane outside of space
+    // if we are outside, we might loose some reprojections
     _xmin   = 10e9;
     _ymin   = 10e9;
     _zmin   = 10e9;
 
-    _xmax   = -10e9;
-    _ymax   = -10e9;
-    _zmax   = -10e9;
+    _xmax   = 0.0;
+    _ymax   = 0.0;
+    _zmax   = 0.0;
   }
 
   _skipped = 0;
@@ -339,20 +342,49 @@ bool RayCast3D::rayCastFromSensorPose(TsdSpace* space, double pos[3], double ray
   double minSpaceCoord = 1.5*voxelSize;
   double maxSpaceCoord = (((double)xDim)-1.5)*voxelSize;
 
-  xmin = ((double)(ray[0] > 0.0 ? minSpaceCoord : maxSpaceCoord) - pos[0]) / ray[0];
-  ymin = ((double)(ray[1] > 0.0 ? minSpaceCoord : maxSpaceCoord) - pos[1]) / ray[1];
-  zmin = ((double)(ray[2] > 0.0 ? minSpaceCoord : maxSpaceCoord) - pos[2]) / ray[2];
+  // Calculate minimum number of steps to reach bounds in each dimension
+  if(ray[0]>10e-6)
+  {
+    xmin = (minSpaceCoord - pos[0]) / ray[0];
+    xmax = (maxSpaceCoord - pos[0]) / ray[0];
+  }
+  else if(ray[0]<-10e-6)
+  {
+    xmin = (maxSpaceCoord - pos[0]) / ray[0];
+    xmax = (minSpaceCoord - pos[0]) / ray[0];
+  }
+
+  if(ray[1]>10e-6)
+  {
+    ymin = (minSpaceCoord - pos[1]) / ray[1];
+    ymax = (maxSpaceCoord - pos[1]) / ray[1];
+  }
+  else if(ray[1]<-10e-6)
+  {
+    ymin = (maxSpaceCoord - pos[1]) / ray[1];
+    ymax = (minSpaceCoord - pos[1]) / ray[1];
+  }
+
+  if(ray[2]>10e-6)
+  {
+    zmin = (minSpaceCoord - pos[2]) / ray[2];
+    zmax = (maxSpaceCoord - pos[2]) / ray[2];
+  }
+  else if(ray[2]<-10e-6)
+  {
+    zmin = (maxSpaceCoord - pos[2]) / ray[2];
+    zmax = (minSpaceCoord - pos[2]) / ray[2];
+  }
+
+  // At least the entry bounds of each dimension needs to be crossed
   double idxMin = max(max(xmin, ymin), zmin);
-  if(idxMin>0.0) idxMin = ceil(idxMin);
-  else idxMin = floor(idxMin);
+  idxMin = ceil(idxMin);
 
-  xmax = ((double)(ray[0] > 0.0 ? maxSpaceCoord : minSpaceCoord) - pos[0]) / ray[0];
-  ymax = ((double)(ray[1] > 0.0 ? maxSpaceCoord : minSpaceCoord) - pos[1]) / ray[1];
-  zmax = ((double)(ray[2] > 0.0 ? maxSpaceCoord : minSpaceCoord) - pos[2]) / ray[2];
+  // No exit bound must be crossed
   double idxMax = min(min(xmax, ymax), zmax);
-  if(idxMax>0.0) idxMax = floor(idxMax);
-  else idxMax = ceil(idxMax);
+  idxMax = floor(idxMax);
 
+  // clip steps to sensor modalities, i.e., the working range
   idxMin = max(idxMin, _idxMin);
   idxMax = min(idxMax, _idxMax);
 

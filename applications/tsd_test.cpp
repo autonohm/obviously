@@ -24,7 +24,7 @@ int main(void)
   // translation of sensor
   double tr[3];
   space.getCentroid(tr);
-  tr[2] = 0.0;
+  tr[2] = 0.001;
 
   // rotation about y-axis of sensor
   double theta = 0.0 * M_PI / 180;
