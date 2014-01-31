@@ -16,6 +16,8 @@ void PclCloudInterface::save(const double* coords,
     pcl::PointCloud<pcl::PointXYZRGBL> cloud(width, height);
     const double* coord = coords;
     const unsigned char* colour = rgb;
+    std::cout << "width = " << cloud.width << std::endl;
+std::cout << "height = " << cloud.height << std::endl;
 
     for (pcl::PointCloud<pcl::PointXYZRGBL>::iterator point(cloud.begin()); point < cloud.end(); ++point)
     {
@@ -49,7 +51,10 @@ void PclCloudInterface::loadAllCloudsFromDirectory(const std::string& dir,
 
     for (std::vector<std::string>::const_iterator file(fileNames.begin()); file < fileNames.end(); ++file)
     {
-        pcl::io::loadPCDFile(*file, cloud);
+        if (*file == ".." || *file == ".")
+	   continue;
+
+        pcl::io::loadPCDFile(std::string(dir).append(*file), cloud);
 
         coords.push_back(new double[3 * cloud.size()]);
         rgbs.push_back(new unsigned char[3 * cloud.size()]);
@@ -69,6 +74,7 @@ void PclCloudInterface::loadAllCloudsFromDirectory(const std::string& dir,
             *colour++ = point->g;
             *colour++ = point->b;
         }
+	std::cout << "Loaded: " << std::string(dir).append(*file) << std::endl; 
     }
 }
 
