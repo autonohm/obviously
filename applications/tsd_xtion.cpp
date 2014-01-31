@@ -23,6 +23,9 @@
 #include "obvision/reconstruct/space/RayCast3D.h"
 #include "obvision/reconstruct/space/RayCastAxisAligned3D.h"
 
+#include "obcore/math/TransformationWatchdog.h"
+
+
 using namespace obvious;
 
 #define VXLDIM 0.02
@@ -40,6 +43,39 @@ VtkCloud* _vScene;
 Obvious3D* _viewer3D;
 Icp* _icp;
 OutOfBoundsFilter3D* _filterBounds;
+
+TransformationWatchdog _TFwatchdog;
+
+bool _contiuousRegistration = false;
+
+void _cbRegNewImage(void);
+
+
+class vtkTimerCallback : public vtkCommand
+{
+public:
+  static vtkTimerCallback *New()
+  {
+    vtkTimerCallback *cb = new vtkTimerCallback;
+    return cb;
+  }
+  virtual void Execute(vtkObject *vtkNotUsed(caller), unsigned long eventId,  void *vtkNotUsed(callData))
+  {
+	if(_contiuousRegistration)
+	  _cbRegNewImage();
+  }
+
+private:
+
+};
+
+void _cbContinuous(void)
+{
+	if(_contiuousRegistration)
+		_contiuousRegistration = false;
+	else
+		_contiuousRegistration = true;
+}
 
 void _cbGenPointCloud(void)
 {
@@ -175,10 +211,14 @@ void _cbRegNewImage(void)
     cout << "Current sensor transformation" << endl;
     Matrix Tmp = _sensor->getTransformation();
     Tmp.print();
-    _viewer3D->showSensorPose(Tmp);
-    _sensor->setRealMeasurementData(dist);
-    _sensor->setRealMeasurementMask(maskScene);
-    _space->push(_sensor);
+
+    if(_TFwatchdog.checkWatchdog(Tmp))
+    {
+			_viewer3D->showSensorPose(Tmp);
+			_sensor->setRealMeasurementData(dist);
+			_sensor->setRealMeasurementMask(maskScene);
+			_space->push(_sensor);
+    }
   }
   else
     LOGMSG(DBG_DEBUG, "Registration failed, RMS " << rms);
@@ -209,10 +249,12 @@ int main(void)
   // ------------------------------------------------------------------
 
 //  double Pdata[12] = {575.240845/2.0, 0.000000, 317.010850/2.0, 0.000000, 0.000000, 574.940796/2.0, 240.797951/2.0, 0.000000, 0.000000, 0.000000, 1.000000, 0.000000};
-
-  double Pdata[12] = {569.586853/2.0, 0.000000, 316.552178/2.0, 0.000000, 0.000000, 570.121826/2.0, 241.277857/2.0, 0.000000, 0.000000, 0.000000, 1.000000, 0.000000};
+//  double Pdata[12] = {569.586853/2.0, 0.000000, 316.552178/2.0, 0.000000, 0.000000, 570.121826/2.0, 241.277857/2.0, 0.000000, 0.000000, 0.000000, 1.000000, 0.000000};
+  double Pdata[12] = {575.240845, 0.000000, 317.010850, 0.000000, 0.000000, 574.940796, 240.797951, 0.000000, 0.000000, 0.000000, 1.000000, 0.000000};
 
   Matrix P(3, 4, Pdata);
+
+
 
   _xtion.init();
   // Check access to kinect device
@@ -247,6 +289,10 @@ int main(void)
                  0,  0, 1, tr[2],
                  0,  0, 0, 1};
   _Tinit.setData(tf);
+
+  _TFwatchdog.setInitTransformation(_Tinit);
+  _TFwatchdog.setRotationThreshold(0.08);
+  _TFwatchdog.setTranslationThreshold(0.03);
 
   // ICP configuration
   // ------------------------------------------------------------------
@@ -310,12 +356,19 @@ int main(void)
   _vModel = new VtkCloud();
   _vScene = new VtkCloud();
   _viewer3D = new Obvious3D("3DMapper");
+
+  vtkSmartPointer<vtkTimerCallback> cb =  vtkSmartPointer<vtkTimerCallback>::New();
+  vtkSmartPointer<vtkRenderWindowInteractor> interactor = _viewer3D->getWindowInteractor();
+  interactor->AddObserver(vtkCommand::TimerEvent, cb);
+  interactor->CreateRepeatingTimer(30);
+
   _viewer3D->addCloud(_vModel);
   _viewer3D->addAxisAlignedCube(0, _space->getMaxX(), 0, _space->getMaxY(), 0, _space->getMaxZ());
   _viewer3D->addCloud(_vScene);
-  _viewer3D->registerKeyboardCallback("space", _cbRegNewImage, "Register new image");
-  _viewer3D->registerKeyboardCallback("c", _cbGenPointCloud, "Generate point cloud");
-  _viewer3D->registerKeyboardCallback("i", _cbReset, "Reset TSD space");
+  _viewer3D->registerKeyboardCallback("space", _cbRegNewImage, 	"Register new image");
+  _viewer3D->registerKeyboardCallback("c", _cbGenPointCloud, 		"Generate point cloud");
+  _viewer3D->registerKeyboardCallback("i", _cbReset, 						"Reset TSD space");
+  _viewer3D->registerKeyboardCallback("g", _cbContinuous, 		  "Continuous Registration");
   _viewer3D->startRendering();
 
   delete _icp;
