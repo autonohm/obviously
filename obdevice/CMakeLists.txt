@@ -31,6 +31,15 @@ SET(SOURCES
 #    SET(SOURCES ${SOURCES} OpenNiDevice.cpp)
 #ENDIF()
 
+FIND_PACKAGE(PCL 1.6 REQUIRED)
+IF(PCL_FOUND)
+     SET(SOURCES ${SOURCES} PclCloudInterface.cpp)
+     MESSAGE(STATUS "Build with PCL interface ...")
+     INCLUDE_DIRECTORIES(${PCL_INCLUDE_DIRS})
+     ADD_DEFINITIONS(${PCL_DEFINITIONS})
+     LINK_DIRECTORIES(${PCL_LIBRARY_DIRS})
+ENDIF()
+
 INCLUDE_DIRECTORIES(/usr/include/openni
                     /usr/include/ni
                     $ENV{OBVIOUSLY_ROOT}
