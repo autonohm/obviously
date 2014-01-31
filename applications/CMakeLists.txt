@@ -21,7 +21,7 @@ PKG_CHECK_MODULES(XML libxml++-2.6)
 #    LINK_DIRECTORIES(${OPENNI_LIBRARY_DIRS})
 #ENDIF()
 
-INCLUDE_DIRECTORIES(/usr/include/openni
+INCLUDE_DIRECTORIES(/usr/include/openni2
                     /usr/include/ni
                     $ENV{OBVIOUSLY_ROOT}
                     /usr/local/include/
@@ -35,7 +35,7 @@ INCLUDE_DIRECTORIES(/usr/include/openni
                     )
 
 SET(CORELIBS    obcore    gsl gslcblas lua5.1)
-SET(DEVICELIBS  obdevice  OpenNI v4l2 udev )
+SET(DEVICELIBS  obdevice  OpenNI2 OpenNI v4l2 udev )
 SET(GRAPHICLIBS obgraphic vtkHybrid glut GL jpeg)
 SET(VISIONLIBS  obvision  ann flann)
 
@@ -89,6 +89,7 @@ ADD_EXECUTABLE(logging_example            logging_example.cpp)
 ADD_EXECUTABLE(tsd_test                   tsd_test.cpp)
 ADD_EXECUTABLE(tsd_grid_test              tsd_grid_test.cpp)
 ADD_EXECUTABLE(tsd_kinect                 tsd_kinect.cpp)
+ADD_EXECUTABLE(tsd_xtion                  tsd_xtion.cpp)
 #ADD_EXECUTABLE(tsd_load                   tsd_load.cpp)
 #ADD_EXECUTABLE(tsd_match_to_xtion         tsd_match_to_xtion.cpp)
 #SET_TARGET_PROPERTIES(tsd_kinect PROPERTIES COMPILE_FLAGS "-Wno-unknown-pragmas -Wno-reorder")
@@ -125,6 +126,7 @@ TARGET_LINK_LIBRARIES(tsd_test                 ${VISIONLIBS}  ${GRAPHICLIBS} ${C
 #TARGET_LINK_LIBRARIES(tsd_match_to_xtion       ${VISIONLIBS}  ${GRAPHICLIBS} ${DEVICELIBS} ${CORELIBS} ${XML_LIBRARIES} ${OPENNI_LIBRARIES})
 TARGET_LINK_LIBRARIES(tsd_grid_test            ${VISIONLIBS}  ${GRAPHICLIBS} ${CORELIBS})
 TARGET_LINK_LIBRARIES(tsd_kinect               ${VISIONLIBS}  ${DEVICELIBS}  ${GRAPHICLIBS} ${CORELIBS} ${XML_LIBRARIES})
+TARGET_LINK_LIBRARIES(tsd_xtion                ${VISIONLIBS}  ${DEVICELIBS}  ${GRAPHICLIBS} ${CORELIBS} ${XML_LIBRARIES})
 TARGET_LINK_LIBRARIES(tsd_raycast_visualize    ${VISIONLIBS}  ${GRAPHICLIBS} ${CORELIBS})
 TARGET_LINK_LIBRARIES(showCloud                ${GRAPHICLIBS} ${CORELIBS})
 TARGET_LINK_LIBRARIES(filterTest               ${GRAPHICLIBS} ${CORELIBS})
@@ -136,6 +138,9 @@ IF("${RET_OPENNI_CODE}" STREQUAL "0")
     ADD_EXECUTABLE(openni-device-stream openni-device-stream.cpp)
     TARGET_LINK_LIBRARIES(openni-device-stream ${VISIONLIBS} ${GRAPHICLIBS} ${DEVICELIBS} ${CORELIBS} ${XML_LIBRARIES} ${OPENNI_LIBRARIES})
 ENDIF()
+
+ADD_EXECUTABLE(watchdogTest                 transformationWatchdog_Test.cpp)
+TARGET_LINK_LIBRARIES(watchdogTest        ${CORELIBS})
 
 add_executable(integrator integrator.cpp)
 target_link_libraries(integrator ${CORELIBS}) 
