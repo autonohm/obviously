@@ -4,6 +4,7 @@
 #include <dirent.h>
 #include <errno.h>
 
+#include <pcl/point_types.h>
 #include <pcl/point_cloud.h>
 #include <pcl/io/pcd_io.h>
 
