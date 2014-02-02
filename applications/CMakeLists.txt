@@ -61,16 +61,15 @@ if(EXISTS /usr/local/include/LMS1xx.h)
   TARGET_LINK_LIBRARIES(tsd_grid_lms100 ${VISIONLIBS} ${GRAPHICLIBS} ${DEVICELIBS} ${CORELIBS})
 endif()
 
-FIND_PACKAGE(PCL 1.6 REQUIRED)
-IF(PCL_FOUND)
-
-     ADD_DEFINITIONS(${PCL_DEFINITIONS})
-     LINK_DIRECTORIES(${PCL_LIBRARY_DIRS})
-     ADD_EXECUTABLE(tsd_save_to_file		  tsd_save_to_file.cpp)
-     ADD_EXECUTABLE(tsd_load_from_folder	  tsd_load_from_folder.cpp)
-     TARGET_LINK_LIBRARIES(tsd_save_to_file 	  ${VISIONLIBS}  ${GRAPHICLIBS} ${DEVICELIBS} ${CORELIBS}  ${PCL_LIBRARIES})
-     TARGET_LINK_LIBRARIES(tsd_load_from_folder   ${VISIONLIBS}  ${GRAPHICLIBS} ${DEVICELIBS} ${CORELIBS}  ${PCL_LIBRARIES})
-ENDIF()
+#FIND_PACKAGE(PCL 1.6 REQUIRED)
+#IF(PCL_FOUND)
+#     ADD_DEFINITIONS(${PCL_DEFINITIONS})
+#     LINK_DIRECTORIES(${PCL_LIBRARY_DIRS})
+#     ADD_EXECUTABLE(tsd_save_to_file		  tsd_save_to_file.cpp)
+#     ADD_EXECUTABLE(tsd_load_from_folder	  tsd_load_from_folder.cpp)
+#     TARGET_LINK_LIBRARIES(tsd_save_to_file 	  ${VISIONLIBS}  ${GRAPHICLIBS} ${DEVICELIBS} ${CORELIBS}  ${PCL_LIBRARIES})
+#     TARGET_LINK_LIBRARIES(tsd_load_from_folder   ${VISIONLIBS}  ${GRAPHICLIBS} ${DEVICELIBS} ${CORELIBS}  ${PCL_LIBRARIES})
+#ENDIF()
 
 
 LINK_DIRECTORIES(/opt/ros/electric/stacks/perception_pcl/flann/lib64/
