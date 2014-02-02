@@ -193,6 +193,7 @@ void _cbGenMesh(void)
   _vModel->copyCoords(coords);
   _vModel->copyNormals(normals);
 
+
   // Display model as mesh -> use calcCoordsFromCurrentViewMask above!!!
   double** mCoords         = mesh->getCoords();
 //  unsigned char** mRGB     = mesh->getRGB();
@@ -407,7 +408,7 @@ void _cbReset(void)
 
 int main(void)
 {
-  LOGMSG_CONF("mapper3D.log", Logger::screen_off | Logger::file_off, DBG_DEBUG, DBG_DEBUG);
+  LOGMSG_CONF("mapper3D.log", Logger::screen_on | Logger::file_off, DBG_DEBUG, DBG_DEBUG);
 
   // set up protocol
   protocol.open("/tmp/protocol.csv");

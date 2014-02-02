@@ -23,12 +23,12 @@ PKG_CHECK_MODULES(XML libxml++-2.6)
 
 INCLUDE_DIRECTORIES(/usr/include/openni2
                     /usr/include/ni
-		    /usr/include/openni
+		                /usr/include/openni
                     $ENV{OBVIOUSLY_ROOT}
                     /usr/local/include/
                     /usr/include/qt4/
                     /usr/include/lua5.1
-                    /opt/ros/electric/stacks/perception_pcl/flann/include/
+                    #/opt/ros/electric/stacks/perception_pcl/flann/include/
                     ../obcore/math
                     ../obcore/filter
                     ../obcore
@@ -39,6 +39,21 @@ SET(CORELIBS    obcore    gsl gslcblas lua5.1)
 SET(DEVICELIBS  obdevice  OpenNI v4l2 udev )
 SET(GRAPHICLIBS obgraphic vtkHybrid glut GL jpeg)
 SET(VISIONLIBS  obvision  ann flann)
+
+
+find_package(PCL 1.3 REQUIRED COMPONENTS common io)
+IF(PCL_FOUND)
+    include_directories(${PCL_INCLUDE_DIRS})
+    link_directories(${PCL_LIBRARY_DIRS})
+    add_definitions(${PCL_DEFINITIONS})
+    #add_executable(pcl_test pcl_test.cpp)
+    #target_link_libraries(pcl_test ${PCL_COMMON_LIBRARIES} ${PCL_IO_LIBRARIES})
+     #ADD_EXECUTABLE(tsd_save_to_file     tsd_save_to_file.cpp)
+     #ADD_EXECUTABLE(tsd_load_from_folder   tsd_load_from_folder.cpp)
+     #TARGET_LINK_LIBRARIES(tsd_save_to_file    ${VISIONLIBS}  ${GRAPHICLIBS} ${DEVICELIBS} ${CORELIBS}  ${PCL_IO_LIBRARIES}) #${PCL_LIBRARIES})
+     #TARGET_LINK_LIBRARIES(tsd_load_from_folder  ${VISIONLIBS}  ${GRAPHICLIBS} ${DEVICELIBS} ${CORELIBS}  ${PCL_LIBRARIES})
+ENDIF()
+
 
 # check if necessary files for PMD are installed
 if(EXISTS /usr/local/include/PMDSDK)
@@ -61,22 +76,12 @@ if(EXISTS /usr/local/include/LMS1xx.h)
   TARGET_LINK_LIBRARIES(tsd_grid_lms100 ${VISIONLIBS} ${GRAPHICLIBS} ${DEVICELIBS} ${CORELIBS})
 endif()
 
-FIND_PACKAGE(PCL 1.6 REQUIRED)
-IF(PCL_FOUND)
-
-     ADD_DEFINITIONS(${PCL_DEFINITIONS})
-     LINK_DIRECTORIES(${PCL_LIBRARY_DIRS})
-     ADD_EXECUTABLE(tsd_save_to_file		  tsd_save_to_file.cpp)
-     ADD_EXECUTABLE(tsd_load_from_folder	  tsd_load_from_folder.cpp)
-     TARGET_LINK_LIBRARIES(tsd_save_to_file 	  ${VISIONLIBS}  ${GRAPHICLIBS} ${DEVICELIBS} ${CORELIBS}  ${PCL_LIBRARIES})
-     TARGET_LINK_LIBRARIES(tsd_load_from_folder   ${VISIONLIBS}  ${GRAPHICLIBS} ${DEVICELIBS} ${CORELIBS}  ${PCL_LIBRARIES})
-ENDIF()
-
-
 LINK_DIRECTORIES(/opt/ros/electric/stacks/perception_pcl/flann/lib64/
                  /usr/local/lib
                  ${OPENNI_LIBRARY_DIRS}
                  )
+
+
 
 ADD_EXECUTABLE(obvious3D_show             obvious3D_show.cpp)
 #ADD_EXECUTABLE(obvious3D_map              obvious3D_map.cpp)
@@ -152,8 +157,8 @@ IF("${RET_OPENNI_CODE}" STREQUAL "0")
     TARGET_LINK_LIBRARIES(openni-device-stream ${VISIONLIBS} ${GRAPHICLIBS} ${DEVICELIBS} ${CORELIBS} ${XML_LIBRARIES} ${OPENNI_LIBRARIES})
 ENDIF()
 
-ADD_EXECUTABLE(watchdogTest                 transformationWatchdog_Test.cpp)
-TARGET_LINK_LIBRARIES(watchdogTest        ${CORELIBS})
+#ADD_EXECUTABLE(watchdogTest               transformationWatchdog_Test.cpp)
+#TARGET_LINK_LIBRARIES(watchdogTest        ${CORELIBS})
 
-add_executable(integrator integrator.cpp)
-target_link_libraries(integrator ${CORELIBS}) 
+#add_executable(integrator integrator.cpp)
+#target_link_libraries(integrator ${CORELIBS}) 

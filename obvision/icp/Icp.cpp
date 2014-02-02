@@ -380,7 +380,7 @@ EnumIcpState Icp::step(double* rms, unsigned int* pairs)
   *pairs = pvPairs->size();
 
 
-
+/*
 //  // bad hack
 	vector<StrCartesianIndexPair>* pvPairsFiltered = new vector<StrCartesianIndexPair>;
   if(_normalsM!=NULL && _normalsS!=NULL)
@@ -400,7 +400,7 @@ EnumIcpState Icp::step(double* rms, unsigned int* pairs)
 		}
   }
   *pairs = pvPairsFiltered->size();
-
+  */
 
   // nothing to do
 
@@ -424,7 +424,7 @@ EnumIcpState Icp::step(double* rms, unsigned int* pairs)
     System<double>::deallocate(m);
     System<double>::deallocate(s);
   }
-
+ /*
   // HIER ***********************
   if(pvPairsFiltered->size()>2 && _normalsS!=NULL && _normalsM != NULL)
   {
@@ -445,24 +445,25 @@ EnumIcpState Icp::step(double* rms, unsigned int* pairs)
     (*_Tfinal4x4) = (*_Tlast) * (*_Tfinal4x4);
     delete pvPairsFiltered;
   }
-//  if(pvPairs->size()>2)
-//  {
-//    // Estimate transformation
-//    _estimator->setPairs(pvPairs);
-//
-//    // get mapping error
-//    *rms = _estimator->getRMS();
-//
-//    // estimate transformation
-//    _estimator->estimateTransformation(_Tlast);
-//
-//    applyTransformation(_scene, _sizeScene, _dim, _Tlast);
-//    if(_normalsS)
-//      applyTransformation(_normalsS, _sizeScene, _dim, _Tlast);
-//
-//    // update overall transformation
-//    (*_Tfinal4x4) = (*_Tlast) * (*_Tfinal4x4);
-//  }
+  */
+  if(pvPairs->size()>2)
+  {
+    // Estimate transformation
+    _estimator->setPairs(pvPairs);
+
+    // get mapping error
+    *rms = _estimator->getRMS();
+
+    // estimate transformation
+    _estimator->estimateTransformation(_Tlast);
+
+    applyTransformation(_scene, _sizeScene, _dim, _Tlast);
+    if(_normalsS)
+      applyTransformation(_normalsS, _sizeScene, _dim, _Tlast);
+
+    // update overall transformation
+    (*_Tfinal4x4) = (*_Tlast) * (*_Tfinal4x4);
+  }
   else
   {
 //  	delete pvPairsFiltered;
