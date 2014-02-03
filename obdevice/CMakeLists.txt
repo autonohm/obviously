@@ -11,7 +11,7 @@ SET(OBDEVICE_VERSION_MINOR 1)
 
 PKG_CHECK_MODULES(XML libxml++-2.6)
 
-# source list
+# source listsdus
 SET(SOURCES
     Kinect.cpp
     KinectPlayback.cpp
@@ -31,14 +31,14 @@ IF(${RET_CODE} STREQUAL 0)
     SET(SOURCES ${SOURCES} OpenNiDevice.cpp)
 ENDIF()
 
-FIND_PACKAGE(PCL 1.3 REQUIRED)
-IF(PCL_FOUND)
-     SET(SOURCES ${SOURCES} PclCloudInterface.cpp)
-     MESSAGE(STATUS "Build with PCL interface ...")
-     INCLUDE_DIRECTORIES(${PCL_INCLUDE_DIRS})
-     ADD_DEFINITIONS(${PCL_DEFINITIONS})
-     LINK_DIRECTORIES(${PCL_LIBRARY_DIRS})
-ENDIF()
+#FIND_PACKAGE(PCL 1.3 REQUIRED)
+#IF(PCL_FOUND)
+#     SET(SOURCES ${SOURCES} PclCloudInterface.cpp)
+#     MESSAGE(STATUS "Build with PCL interface ...")
+#     INCLUDE_DIRECTORIES(${PCL_INCLUDE_DIRS})
+#     ADD_DEFINITIONS(${PCL_DEFINITIONS})
+#     LINK_DIRECTORIES(${PCL_LIBRARY_DIRS})
+#ENDIF()
 
 INCLUDE_DIRECTORIES(/usr/include/openni
                     /usr/include/ni

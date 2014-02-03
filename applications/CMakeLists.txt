@@ -41,18 +41,18 @@ SET(GRAPHICLIBS obgraphic vtkHybrid glut GL jpeg)
 SET(VISIONLIBS  obvision  ann flann)
 
 
-find_package(PCL 1.3 REQUIRED COMPONENTS common io)
-IF(PCL_FOUND)
-    include_directories(${PCL_INCLUDE_DIRS})
-    link_directories(${PCL_LIBRARY_DIRS})
-    add_definitions(${PCL_DEFINITIONS})
+#find_package(PCL 1.3 REQUIRED COMPONENTS common io)
+#IF(PCL_FOUND)
+    #include_directories(${PCL_INCLUDE_DIRS})
+    #link_directories(${PCL_LIBRARY_DIRS})
+    #add_definitions(${PCL_DEFINITIONS})
     #add_executable(pcl_test pcl_test.cpp)
     #target_link_libraries(pcl_test ${PCL_COMMON_LIBRARIES} ${PCL_IO_LIBRARIES})
      #ADD_EXECUTABLE(tsd_save_to_file     tsd_save_to_file.cpp)
      #ADD_EXECUTABLE(tsd_load_from_folder   tsd_load_from_folder.cpp)
      #TARGET_LINK_LIBRARIES(tsd_save_to_file    ${VISIONLIBS}  ${GRAPHICLIBS} ${DEVICELIBS} ${CORELIBS}  ${PCL_IO_LIBRARIES}) #${PCL_LIBRARIES})
      #TARGET_LINK_LIBRARIES(tsd_load_from_folder  ${VISIONLIBS}  ${GRAPHICLIBS} ${DEVICELIBS} ${CORELIBS}  ${PCL_LIBRARIES})
-ENDIF()
+#ENDIF()
 
 
 # check if necessary files for PMD are installed
