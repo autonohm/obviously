@@ -73,11 +73,11 @@ void serializeXML()
   cout << "serializing " << filename << endl;
   _cloud->serialize(filename, VTKCloud_XML);
 
-  /*CartesianCloud3D* cloud = new CartesianCloud3D(640*480, _kinect->getCoords(), _kinect->getRGB(), NULL);
-  for(int i=0; i<640*480; i++)
-    if(fabs((*cloud)[i][0])<1e-6) (cloud->getAttributes())[i] &= ~ePointAttrValid;
-  cloud->removeInvalidPoints();
-  CartesianCloudFactory::serialize("/tmp/serialize.txt", cloud, eFormatAscii);*/
+  CartesianCloud3D* cloud = new CartesianCloud3D(640*480, _kinect->getCoords(), _kinect->getRGB(), NULL);
+  //for(int i=0; i<640*480; i++)
+  //  if(fabs((*(cloud->getCoords()))(i,2))<1e-6) (cloud->getAttributes())[i] &= ~ePointAttrValid;
+  //cloud->removeInvalidPoints();
+  CartesianCloudFactory::serialize("/tmp/serialize.txt", cloud, eFormatAscii);
 }
 
 void recordCallback()

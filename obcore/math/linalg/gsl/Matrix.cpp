@@ -364,6 +364,22 @@ void Matrix::solve(double* b, double* x)
   gsl_permutation_free(perm);
 }
 
+void Matrix::leastSquares(double* b, double* x)
+{
+  unsigned int rows = getRows();
+  unsigned int cols = getCols();
+  unsigned int min = rows;
+  if(min>cols) min=cols;
+  gsl_vector_view vx = gsl_vector_view_array(x, cols);
+  gsl_vector_const_view vb = gsl_vector_const_view_array(b, rows);
+  gsl_vector* tau = gsl_vector_alloc(min);
+  gsl_vector* res = gsl_vector_alloc(rows);
+  gsl_linalg_QR_decomp(_M, tau);
+  gsl_linalg_QR_lssolve(_M, tau, &vb.vector, &vx.vector, res);
+  gsl_vector_free(tau);
+  gsl_vector_free(res);
+}
+
 Matrix Matrix::createTransform(Matrix T)
 {
   unsigned int dim = getCols();
