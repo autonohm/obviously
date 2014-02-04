@@ -23,12 +23,21 @@ SET(SOURCES
 )
 
 # if does exists find libopenni2 directories and libs
-#EXECUTE_PROCESS(COMMAND pkg-config libopenni2 --exists RESULT_VARIABLE RET_CODE)
-#IF(${RET_CODE} STREQUAL 0)
-#    MESSAGE(STATUS "Build with OpenNI2 ...")
-#    PKG_CHECK_MODULES(OPENNI libopenni2)
-#    INCLUDE_DIRECTORIES(${OPENNI_INCLUDE_DIRS})
-#    SET(SOURCES ${SOURCES} OpenNiDevice.cpp)
+EXECUTE_PROCESS(COMMAND pkg-config libopenni2 --exists RESULT_VARIABLE RET_CODE)
+IF(${RET_CODE} STREQUAL 0)
+    MESSAGE(STATUS "Build with OpenNI2 ...")
+    PKG_CHECK_MODULES(OPENNI libopenni2)
+    INCLUDE_DIRECTORIES(${OPENNI_INCLUDE_DIRS})
+    SET(SOURCES ${SOURCES} OpenNiDevice.cpp)
+ENDIF()
+
+#FIND_PACKAGE(PCL 1.6 REQUIRED)
+#IF(PCL_FOUND)
+#     SET(SOURCES ${SOURCES} PclCloudInterface.cpp)
+#     MESSAGE(STATUS "Build with PCL interface ...")
+#     INCLUDE_DIRECTORIES(${PCL_INCLUDE_DIRS})
+#     ADD_DEFINITIONS(${PCL_DEFINITIONS})
+#     LINK_DIRECTORIES(${PCL_LIBRARY_DIRS})
 #ENDIF()
 
 INCLUDE_DIRECTORIES(/usr/include/openni

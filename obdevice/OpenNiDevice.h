@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-#include "obcore/math/MatRGB.h"
+//#include "obcore/math/MatRGB.h"
 
 namespace obvious {
 
@@ -32,9 +32,9 @@ public:
     int height(void) const { return _height; }
     const std::vector<float>& z(void) const { return _z; }
     const std::vector<float>& coords(void) const { return _coords; }
-    const MatRGB& image(void) const { return _flags & Color ? _imgRgb : _imgIr; }
-    const MatRGB& ir(void) const { return _imgIr; }
-    const MatRGB& rgb(void) const { return _imgRgb; }
+//    const MatRGB& image(void) const { return _flags & Color ? _imgRgb : _imgIr; }
+//    const MatRGB& ir(void) const { return _imgIr; }
+//    const MatRGB& rgb(void) const { return _imgRgb; }
 
 private:
     openni::Status _status;
@@ -51,8 +51,10 @@ private:
     int _height;
     std::vector<float> _z;
     std::vector<float> _coords;
-    MatRGB _imgRgb;
-    MatRGB _imgIr;
+    unsigned char* _imgRgb;
+    unsigned char* _imgIr;
+//    MatRGB _imgRgb;
+//    MatRGB _imgIr;
 };
 
 } // end namespace obvious
