@@ -223,7 +223,7 @@ bool CamNano::grab()
 
     // caluclate indices of neighbours
     for(unsigned int j=0 ; j<8 ; j++) {
-      if(idx[j]>=0 && idx[j] <=_rows*_cols*3)
+      if(idx[j]>=0 && idx[j] <=(int)(_rows*_cols*3))
         memcpy(&n[3*j],      &(_coords[idx[j]]), 3*sizeof(double));
     }
 
@@ -384,10 +384,10 @@ void CamNano::filterBilinear(bool* mask, double* z_filtered)
 
         // get depth value of pixel
         double depthCenter = _coords[3*(i*_rows+j)+2];
-        for (unsigned int k=mini; k<= maxi; k++)
+        for (int k=mini; k<= maxi; k++)
         {
            double distRow2 = (i - k)*(i - k);
-           for (unsigned int l=minj; l<=maxj; l++)
+           for (int l=minj; l<=maxj; l++)
            {
               if (!mask[k*_cols+l]) continue;
               double depthNeighbor = _coords[3*(i*_rows+j)+2];
