@@ -201,6 +201,12 @@ void Matrix::solve(double* b, double* x)
   vx = _M.lu().solve(vb);
 }
 
+void Matrix::leastSquares(double* b, double* x)
+{
+  cout << "not implemented yet" << endl;
+  abort();
+}
+
 Matrix Matrix::createTransform(Matrix T)
 {
   unsigned int dim = getCols();
