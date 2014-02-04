@@ -218,6 +218,8 @@ public:
 	 */
 	void solve(double* b, double* x);
 
+	void leastSquares(double* b, double* x);
+
 	/**
    * Transform current matrix, i.e. with homogeneous transformation
    * @param[in] T transformation matrix
