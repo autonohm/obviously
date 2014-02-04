@@ -12,6 +12,8 @@
 #include <vtkAxesActor.h>
 #include "obcore/math/linalg/linalg.h"
 
+#include "obcore/math/Trajectory.h"
+
 #include "Obvious.h"
 
 namespace obvious
@@ -118,6 +120,8 @@ public:
    * @param T Transformation matrix
    */
   void showSensorPose(Matrix& T);
+
+  void showTrajectory(std::vector<Matrix> trajectory);
 
   /**
    * Save screenshot to /tmp directory. This method is also executed with the key 's'

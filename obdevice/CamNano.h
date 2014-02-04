@@ -39,7 +39,7 @@ namespace obvious {
 /// @def maximum threshold for distance filter
 #define DIST_THRESHOLD_MAX  1.0
 /// @def minimum threshold for distance filter
-#define DIST_THRESHOLD_MIN  0.1
+#define DIST_THRESHOLD_MIN  0.05
 /// @def threshold for amplitude
 /// @def maximal integration time
 #define AMP_THRESHOLD       320
@@ -67,6 +67,8 @@ public:
    * Standard destructor
    */
   virtual ~CamNano(void);
+
+  // ---> GETTER
   /**
    * Function to return valid size of coords
    * @return  valid size
@@ -91,11 +93,8 @@ public:
    * Function to get integration time of camera
    */
   float getIntegrationTime(void) const;
-  /**
-   * Grab new image with filtering and validation
-   * @return success of grabbing
-   */
-  bool grab(void);
+
+  // ---> SETTER
   /**
    * Function to grab new raw data from sensor (without filtering or validation)
    * @param[in]     raw     TRUE to get raw values with grab
@@ -114,15 +113,29 @@ public:
    */
   void setIntegrationAuto(bool autom = true);
   /**
-   * Function to show parameters of TOF camera in terminal
+   * Function to set threshold for jumping edge filter
+   * @param[in] 			threshold		threshold in degrees
    */
-  void showParameters(void);
+  void setThresholdJumpingEdge(double threshold = 160.0);
   /**
    * Function to set up debug
    * @param[in]     debug    TRUE to set debug mode (default: TRUE)
    */
   void setDebug(bool debug = true);
-
+  /**
+   * Function to activate bilinear filter
+   * @param[in] 		activate		default true
+   */
+  void activeBilinearFilter(bool activate = true);
+  /**
+   * Grab new image with filtering and validation
+   * @return success of grabbing
+   */
+  bool grab(void);
+  /**
+   * Function to show parameters of TOF camera in terminal
+   */
+  void showParameters(void);
 private:
   void record(void) {};
   /**
@@ -133,6 +146,7 @@ private:
    */
   void filterPoints(const float* points, const float* distances, const float* amplitudes);
 
+  void filterBilinear(bool* mask, double* z_filtered);
   /**
    * Function to set integration value automatically
    */
@@ -146,7 +160,7 @@ private:
   PID_Controller      _ctrl;          ///< pid controller for automatic integration set up
 
   int                 _res;           ///< error buffer of PMD devices
-  unsigned int       _points;        ///< number of points 2d
+  unsigned int        _points;        ///< number of points 2d
 
   float               _meanAmp;       ///< mean amplitude for controller
   float               _intTime;
@@ -156,13 +170,18 @@ private:
   float*              _coordsF;
   double*             _coordsV;
 
-  unsigned char*     _image;         ///< 2d image
+  double							_jumpingEdgeTH; //!< threshold for jumping edges in degrees
+
+  unsigned char*      _image;         ///< 2d image
   float*              _imageF;
-  bool                _intrinsic;     ///< object gives back nondistrubed point cloud @see grub
-  bool                _rawSet;        ///< TRUE for output of raw unfiltered data from sensor
-  bool                _init;          ///< TRUE if camera initialized
-  bool                _autoIntegrat;  ///< TRUE if auto integration timer
-  bool                _debug;         ///< TRUE if debug messages should be shown in terminal
+
+  // ---> FLAGS
+  bool                _intrinsic;     		///< object gives back nondistrubed point cloud @see grub
+  bool                _rawSet;        		///< TRUE for output of raw unfiltered data from sensor
+  bool                _init;          		///< TRUE if camera initialized
+  bool                _autoIntegrat;  		///< TRUE if auto integration timer
+  bool                _debug;         		///< TRUE if debug messages should be shown in terminal
+  bool 								_useBilinearFilter; //
 };
 
 } // end namespace obvious

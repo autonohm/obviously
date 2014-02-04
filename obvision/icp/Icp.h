@@ -211,7 +211,7 @@ private:
 	double** _model;
 
 	double** _normalsM;
-    double** _normalsS;
+  double** _normalsS;
 
 	/** 
 	 * size of model 
