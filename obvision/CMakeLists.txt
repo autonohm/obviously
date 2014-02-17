@@ -8,12 +8,14 @@ PROJECT(OBVISION)
 SET(OBVISION_VERSION_MAJOR 0)
 SET(OBVISION_VERSION_MINOR 1)
 
-INCLUDE_DIRECTORIES(..)
+INCLUDE_DIRECTORIES(..
+					/usr/include/eigen3)
 
 add_library(obvision
 	icp/assign/PairAssignment.cpp
 	icp/assign/AnnPairAssignment.cpp
 	icp/assign/FlannPairAssignment.cpp
+#	icp/assign/NaboPairAssignment.cpp
 	icp/assign/ProjectivePairAssignment.cpp
 	icp/assign/filter/ProjectionFilter.cpp
 	icp/assign/filter/OcclusionFilter.cpp

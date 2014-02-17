@@ -33,6 +33,7 @@ INCLUDE_DIRECTORIES(/usr/include/openni2
                     ../obcore/filter
                     ../obcore
                     ${XML_INCLUDE_DIRS}
+                    /usr/include/eigen3
                     )
 
 SET(CORELIBS    obcore    gsl gslcblas lua5.1)

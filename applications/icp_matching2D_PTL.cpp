@@ -92,7 +92,7 @@ int main(int argc, char** argv)
   unsigned int pairs;
   unsigned int it;
   icp->iterate(&rms, &pairs, &it);
-  Matrix* F = icp->getFinalTransformation4x4();
+  obvious::Matrix* F = icp->getFinalTransformation4x4();
   F->invert();
   F->print();
 

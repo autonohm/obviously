@@ -21,7 +21,7 @@ VtkCloud* _vscene                  = NULL;
 Icp* _icp;
 
 Obvious3D*        _viewer;
-Matrix            _Tfinal(4, 4);
+obvious::Matrix   _Tfinal(4, 4);
 
 
 int main(int argc, char* argv[])
@@ -113,7 +113,7 @@ void iterateCallback()
   EnumIcpState state  = _icp->iterate(&rms, &pairs, &iterations);
   cout << "ICP state: " << state << ", elapsed (" << iterations << " iterations): "  << timer.getTime() << " ms , rms = " << rms << ", # of pairs: " << pairs << endl;
 
-  Matrix* T           = _icp->getFinalTransformation();
+  obvious::Matrix* T           = _icp->getFinalTransformation();
   double Tdata[16];
   T->getData(Tdata);
   _vscene->transform(Tdata);
@@ -129,7 +129,7 @@ void stepCallback()
   EnumIcpState state  = _icp->step(&rms, &pairs);
   cout << "ICP state: " << state << ", elapsed (step): " << timer.getTime() << " ms , rms = " << rms << ", # of pairs: " << pairs << endl;
 
-  Matrix* T           = _icp->getLastTransformation();
+  obvious::Matrix* T           = _icp->getLastTransformation();
   double Tdata[16];
   T->getData(Tdata);
   _vscene->transform(Tdata);

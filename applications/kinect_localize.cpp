@@ -63,7 +63,7 @@ public:
         unsigned int it;
         EnumIcpState state  = _icp->iterate(&rms, &pairs, &it);
 
-        Matrix* T           = _icp->getFinalTransformation();
+        obvious::Matrix* T           = _icp->getFinalTransformation();
         //cout << "print T" << endl;
         //T->print();
         cout << "Success: " << state << ", found " << pairs << " pairs" << endl;

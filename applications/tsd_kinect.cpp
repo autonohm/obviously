@@ -24,12 +24,12 @@
 
 using namespace obvious;
 
-#define VXLDIM 0.02
+#define VXLDIM 0.01
 #define LAYOUTPARTITION LAYOUT_8x8x8
 #define LAYOUTSPACE LAYOUT_256x256x256
 
-Matrix* _T;
-Matrix _Tinit(4, 4);
+obvious::Matrix* _T;
+obvious::Matrix _Tinit(4, 4);
 Kinect* _kinect;
 TsdSpace* _space;
 RayCast3D* _rayCaster;
@@ -183,7 +183,7 @@ void _cbRegNewImage(void)
   unsigned int size = cols*rows*3;
 
   LOGMSG(DBG_DEBUG, "Current Transformation: ");
-  Matrix T = _sensor->getTransformation();
+  obvious::Matrix T = _sensor->getTransformation();
   T.print();
 
   _filterBounds->setPose(&T);
@@ -257,7 +257,7 @@ void _cbRegNewImage(void)
   {
     // Obtain scene-to-model registration
     cout << "Scene-to-model registration" << endl;
-    Matrix T = *(_icp->getFinalTransformation());
+    obvious::Matrix T = *(_icp->getFinalTransformation());
     T.print();
 
     //double Tdata[16];
@@ -267,7 +267,7 @@ void _cbRegNewImage(void)
     _sensor->transform(&T);
 
     cout << "Current sensor transformation" << endl;
-    Matrix Tmp = _sensor->getTransformation();
+    obvious::Matrix Tmp = _sensor->getTransformation();
     Tmp.print();
     _viewer3D->showSensorPose(Tmp);
 
@@ -305,9 +305,10 @@ int main(void)
 
   // Projection matrix (needs to be determined by calibration) (tx smaller leftward -> ty smaller -> upwards
   // ------------------------------------------------------------------
-  double Pdata[12] = {585.05108211, 0.0, 316.83800193, 0.0, 0.0, 585.05108211, 238.94140713, 0., 0.0, 0.0, 1.0, 0.0};
+  //double Pdata[12] = {585.05108211, 0.0, 316.83800193, 0.0, 0.0, 585.05108211, 238.94140713, 0., 0.0, 0.0, 1.0, 0.0};
+  double Pdata[12] = {575.81575, 0.0, 320.00000, 0.0, 0.0, 575.81575, 240.0, 0., 0.0, 0.0, 1.0, 0.0};
 
-  Matrix P(3, 4, Pdata);
+  obvious::Matrix P(3, 4, Pdata);
   _kinect = new Kinect("kinect.xml");
 
   // Check access to kinect device
@@ -378,7 +379,7 @@ int main(void)
   _sensor->transform(&_Tinit);
 
   cout << "Initial Pose" << endl;
-  Matrix Tmp = _sensor->getTransformation();
+  obvious::Matrix Tmp = _sensor->getTransformation();
   Tmp.print();
 
   // Push first data set at initial pose
