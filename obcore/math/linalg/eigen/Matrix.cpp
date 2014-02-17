@@ -6,13 +6,11 @@
 namespace obvious
 {
 
-using namespace Eigen;
-
 Matrix::Matrix(unsigned int rows, unsigned int cols, double* data)
 {
   if(data)
   {
-    Map< Eigen::Matrix<double, Dynamic, Dynamic, RowMajor> > M(data, rows, cols);
+    Eigen::Map< Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> > M(data, rows, cols);
     _M = M;
   }
   else
@@ -91,8 +89,8 @@ Matrix operator * (const Matrix &M1, const Matrix &M2)
 
 void Matrix::multiplyRight(const Matrix &M, bool transposeArg1, bool transposeArg2)
 {
-  MatrixXd Mleft = _M;
-  MatrixXd Mright = M._M;
+  Eigen::MatrixXd Mleft = _M;
+  Eigen::MatrixXd Mright = M._M;
   if(transposeArg1 && transposeArg2)
     _M.noalias() = Mleft.transpose() * Mright.transpose();
   else if(transposeArg1)
@@ -119,7 +117,7 @@ void Matrix::getData(double* array)
 
 void Matrix::setData(double* array)
 {
-  Map< Eigen::Matrix<double, Dynamic, Dynamic, RowMajor > > M(array, _M.rows(), _M.cols());
+  Eigen::Map< Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor > > M(array, _M.rows(), _M.cols());
   _M = M;
 }
 
@@ -186,18 +184,18 @@ void Matrix::svd(Matrix* U, double* s, Matrix* V)
     return;
   }
 
-  JacobiSVD<MatrixXd> svdOfM = _M.jacobiSvd(ComputeFullU | ComputeFullV);
+  Eigen::JacobiSVD<Eigen::MatrixXd> svdOfM = _M.jacobiSvd(Eigen::ComputeFullU | Eigen::ComputeFullV);
   U->_M = svdOfM.matrixU();
   V->_M = svdOfM.matrixV();
-  VectorXd singular = svdOfM.singularValues();
+  Eigen::VectorXd singular = svdOfM.singularValues();
   for(int i=0; i<singular.count(); i++)
     s[i] = singular(i);
 }
 
 void Matrix::solve(double* b, double* x)
 {
-  Map<MatrixXd> vb(b, _M.rows(), 1);
-  Map<MatrixXd> vx(x, _M.rows(), 1);
+  Eigen::Map<Eigen::MatrixXd> vb(b, _M.rows(), 1);
+  Eigen::Map<Eigen::MatrixXd> vx(x, _M.rows(), 1);
   vx = _M.lu().solve(vb);
 }
 
@@ -253,9 +251,9 @@ void Matrix::print()
 
 Matrix Matrix::multiply(const Matrix &M1, const Matrix &M2, bool transposeArg1, bool transposeArg2)
 {
-  MatrixXd Mleft = M1._M;
-  MatrixXd Mright = M2._M;
-  MatrixXd X;
+  Eigen::MatrixXd Mleft = M1._M;
+  Eigen::MatrixXd Mright = M2._M;
+  Eigen::MatrixXd X;
   if(transposeArg1 && transposeArg2)
     X = Mleft.transpose() * Mright.transpose();
   else if(transposeArg1)
@@ -279,7 +277,7 @@ Vector Matrix::multiply(const Matrix &M, const Vector &V, bool transpose)
   return V2;
 }
 
-typedef Map<Eigen::Matrix<double, Dynamic, Dynamic, RowMajor> > MapType;
+typedef Eigen::Map<Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> > MapType;
 void Matrix::multiply(const Matrix &M1, double* array, unsigned int rows, unsigned int cols)
 {
   MapType map(array, rows, cols);
