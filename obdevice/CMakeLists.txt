@@ -17,8 +17,6 @@ SET(SOURCES
     KinectPlayback.cpp
     UvcCam.cpp
     UvcVirtualCam.cpp
-    OpenNIDevice.cpp
-    Xtion.cpp
     ParentDevice3D.cpp
 )
 
