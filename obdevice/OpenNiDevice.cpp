@@ -48,18 +48,14 @@ OpenNiDevice::OpenNiDevice(const Flag flags, const std::string& deviceURI)
         if ((_status = _color.create(_device, openni::SENSOR_COLOR)) == openni::STATUS_OK)
         {
             std::cout << "Found color stream." << std::endl;
-
-            if ((_status = _color.start()) != openni::STATUS_OK)
-            {
+            if ((_status = _color.start()) != openni::STATUS_OK) {
                 std::cout << "Couldn't start color stream:" << std::endl << openni::OpenNI::getExtendedError();
                 openni::OpenNI::shutdown();
                 return;
             }
-
             std::cout << "Color stream started." << std::endl;
         }
-        else
-        {
+        else {
             std::cout << "Couldn't find any color stream:" << std::endl << openni::OpenNI::getExtendedError();
         }
     }
@@ -91,6 +87,12 @@ OpenNiDevice::OpenNiDevice(const Flag flags, const std::string& deviceURI)
         openni::OpenNI::shutdown();
         return;
     }
+    if(_device.isImageRegistrationModeSupported(openni::IMAGE_REGISTRATION_DEPTH_TO_COLOR)){
+        std::cout << "registration from color to depth is supported" << std::endl;
+        _device.setDepthColorSyncEnabled(true);
+        _device.setImageRegistrationMode(openni::IMAGE_REGISTRATION_DEPTH_TO_COLOR);
+    }
+
 }
 
 OpenNiDevice::~OpenNiDevice(void)
@@ -111,12 +113,12 @@ bool OpenNiDevice::init(void)
         colorVideoMode = _color.getVideoMode();
         irVideoMode    = _ir.getVideoMode();
 
-        const int depthWidth = depthVideoMode.getResolutionX();
+        const int depthWidth  = depthVideoMode.getResolutionX();
         const int depthHeight = depthVideoMode.getResolutionY();
-        const int colorWidth = colorVideoMode.getResolutionX();
+        const int colorWidth  = colorVideoMode.getResolutionX();
         const int colorHeight = colorVideoMode.getResolutionY();
-        const int irWidth = irVideoMode.getResolutionX();
-        const int irHeight = irVideoMode.getResolutionY();
+        const int irWidth     = irVideoMode.getResolutionX();
+        const int irHeight    = irVideoMode.getResolutionY();
 
         if (depthWidth == colorWidth && colorWidth == irWidth && depthHeight == colorHeight && colorHeight == irHeight)
         {
@@ -144,13 +146,12 @@ bool OpenNiDevice::init(void)
     else if (_depth.isValid() && _ir.isValid())
     {
         depthVideoMode = _depth.getVideoMode();
-        irVideoMode = _ir.getVideoMode();
+        irVideoMode    = _ir.getVideoMode();
 
         _width = depthVideoMode.getResolutionX();
         _height = depthVideoMode.getResolutionY();
         _z.resize(_width * _height);
         _coords.resize(_width * _height * 3);
-        //_imgIr = MatRGB(_height, _width);
         _imgIr = new unsigned char[_height*_width*3];
 
         if (_flags == Any)
@@ -167,7 +168,6 @@ bool OpenNiDevice::init(void)
         _height = depthVideoMode.getResolutionY();
         _z.resize(_width * _height);
         _coords.resize(_width * _height * 3);
-        //_imgRgb = MatRGB(_height, _width);
         _imgRgb = new unsigned char[_height*_width*3];
 
         if (_flags == Any)
@@ -232,20 +232,10 @@ bool OpenNiDevice::grab(void)
 
         const openni::RGB888Pixel* data = reinterpret_cast<const openni::RGB888Pixel*>(_frameColor.getData());
         const int size = _width * _height;
-        //MatRGB::iterator red  (_imgRgb.begin(MatRGB::Red  ));
-        //MatRGB::iterator green(_imgRgb.begin(MatRGB::Green));
-        //MatRGB::iterator blue (_imgRgb.begin(MatRGB::Blue ));
-
-        /*for (int i = 0; i < size; ++i, ++data, ++red, ++green, ++blue)
-        {
-            *red   = data->r;
-            *green = data->g;
-            *blue  = data->b;
-        }*/
 
         for(unsigned int i=0; i<size; i++, data++)
         {
-          _imgRgb[3*i] = data->r;
+          _imgRgb[3*i]   = data->r;
           _imgRgb[3*i+1] = data->g;
           _imgRgb[3*i+2] = data->b;
         }
@@ -258,16 +248,6 @@ bool OpenNiDevice::grab(void)
 
         const uint16_t* data = reinterpret_cast<const uint16_t*>(_frameIr.getData());
         const int size = _width * _height;
-//        MatRGB::iterator red  (_imgIr.begin(MatRGB::Red  ));
-//        MatRGB::iterator green(_imgIr.begin(MatRGB::Green));
-//        MatRGB::iterator blue (_imgIr.begin(MatRGB::Blue ));
-//
-//        for (int i = 0; i < size; ++i, ++data, ++red, ++green, ++blue)
-//        {
-//            *red   = *data >> 2;
-//            *green = *data >> 2;
-//            *blue  = *data >> 2;
-//        }
 
         for(unsigned int i=0; i<size; i++, data++)
         {
