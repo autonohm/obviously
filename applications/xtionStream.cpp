@@ -33,7 +33,7 @@ public:
     		coordsD[i] = coords[i];
 
         _cloud->setCoords(coordsD, _xtion->width()*_xtion->height(), 3);
-//        _cloud->setColors(_xtion->getRGB(),    _xtion->width()*_xtion->height(), 3);
+        _cloud->setColors(_xtion->rgb(),    _xtion->width()*_xtion->height(), 3);
         _viewer->update();
       }
     }
