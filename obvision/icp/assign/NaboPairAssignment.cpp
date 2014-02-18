@@ -21,18 +21,19 @@ NaboPairAssignment::~NaboPairAssignment()
 
 void NaboPairAssignment::setModel(double** model, int size)
 {
-	
 	if(_nns)
 	{
 		delete _nns;
 		_nns = NULL;
 	}
 	_ppdModel = model;
-	MatrixXf M(_nDimension, size);
+	_M.resize(_nDimension, size);
 	for(int i=0; i<size; i++)
 	  for(int j=0; j<_nDimension; j++)
-	    M(j, i) = model[i][j];
-	_nns = NNSearchF::createKDTreeLinearHeap(M);
+	  {
+	    _M(j, i) = model[i][j];
+	  }
+	_nns = NNSearchF::createKDTreeLinearHeap(_M);
 }
 
 void NaboPairAssignment::determinePairs(double** scene, bool* mask, int size)
@@ -48,7 +49,7 @@ void NaboPairAssignment::determinePairs(double** scene, bool* mask, int size)
       VectorXf q(_nDimension);
       for(int j=0; j<_nDimension; j++)
         q(j) = scene[i][j];
-      _nns->knn(q, indices, dists2, K);
+      _nns->knn(q, indices, dists2, K, 0, NNSearchF::ALLOW_SELF_MATCH);
       addPair((unsigned int)indices(0), i, (double)dists2(0));
     }
     else

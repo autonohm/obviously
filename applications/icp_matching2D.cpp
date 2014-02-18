@@ -8,13 +8,16 @@
 #include <iostream>
 
 #include "obcore/math/linalg/linalg.h"
+#include "obcore/base/Timer.h"
 #include "obvision/icp/icp_def.h"
+//#include "obvision/icp/assign/NaboPairAssignment.h"
 
 using namespace std;
 using namespace obvious;
 
 int main(int argc, char** argv)
 {
+  Timer timer;
   obvious::Matrix M(4, 2);
   M(0,0) = 0.0;  M(0,1) = 1.0;
   M(1,0) = 0.0;  M(1,1) = 0.0;
@@ -59,5 +62,6 @@ int main(int argc, char** argv)
   delete estimator;
   delete assigner;
 
+  cout << "elapsed: " << timer.getTime() << " ms" << endl;
   return 0;
 }
