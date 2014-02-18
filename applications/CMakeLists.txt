@@ -13,14 +13,6 @@ FIND_PACKAGE(VTK REQUIRED)
 INCLUDE(${VTK_USE_FILE})
 PKG_CHECK_MODULES(XML libxml++-2.6)
 
-# if does exists find libopenni2 directories and libs
-#EXECUTE_PROCESS(COMMAND pkg-config libopenni2 --exists RESULT_VARIABLE RET_OPENNI_CODE)
-#IF("${RET_OPENNI_CODE}" STREQUAL "0")
-#    PKG_CHECK_MODULES(OPENNI libopenni2)
-#    INCLUDE_DIRECTORIES(${OPENNI_INCLUDE_DIRS})
-#    LINK_DIRECTORIES(${OPENNI_LIBRARY_DIRS})
-#ENDIF()
-
 INCLUDE_DIRECTORIES(/usr/include/openni2
                     /usr/include/ni
 		    /usr/include/openni
@@ -60,6 +52,17 @@ if(EXISTS /usr/local/include/LMS1xx.h)
   TARGET_LINK_LIBRARIES(tsd_grid_lms100 ${VISIONLIBS} ${GRAPHICLIBS} ${DEVICELIBS} ${CORELIBS})
 endif()
 
+# if does exists find libopenni2 directories and libs
+EXECUTE_PROCESS(COMMAND pkg-config libopenni2 --exists RESULT_VARIABLE RET_OPENNI_CODE)
+IF("${RET_OPENNI_CODE}" STREQUAL "0")
+    PKG_CHECK_MODULES(OPENNI libopenni2)
+    INCLUDE_DIRECTORIES(${OPENNI_INCLUDE_DIRS})
+    LINK_DIRECTORIES(${OPENNI_LIBRARY_DIRS})
+    ADD_EXECUTABLE(xtionStream                xtionStream.cpp)
+	SET_TARGET_PROPERTIES(xtionStream PROPERTIES COMPILE_FLAGS "-Wno-unknown-pragmas -Wno-reorder")	
+    TARGET_LINK_LIBRARIES(xtionStream              ${VISIONLIBS}  ${GRAPHICLIBS} ${DEVICELIBS} ${CORELIBS} ${XML_LIBRARIES} ${OPENNI_LIBRARIES})
+ENDIF()
+
 LINK_DIRECTORIES(/opt/ros/electric/stacks/perception_pcl/flann/lib64/
                  /usr/local/lib
                  ${OPENNI_LIBRARY_DIRS}
@@ -92,9 +95,6 @@ ADD_EXECUTABLE(tsd_kinect                 tsd_kinect.cpp)
 #SET_TARGET_PROPERTIES(tsd_kinect PROPERTIES COMPILE_FLAGS "-Wno-unknown-pragmas -Wno-reorder")
 ADD_EXECUTABLE(tsd_raycast_visualize      tsd_raycast_visualize.cpp)
 ADD_EXECUTABLE(showCloud                  showCloud.cpp)
-#ADD_EXECUTABLE(xtionStream                xtionStream.cpp)
-#SET_TARGET_PROPERTIES(xtionStream PROPERTIES COMPILE_FLAGS "-Wno-unknown-pragmas -Wno-reorder")
-
 
 
 TARGET_LINK_LIBRARIES(obvious3D_show           ${GRAPHICLIBS} ${CORELIBS})
@@ -120,5 +120,5 @@ TARGET_LINK_LIBRARIES(tsd_kinect               ${VISIONLIBS}  ${DEVICELIBS}  ${G
 #TARGET_LINK_LIBRARIES(tsd_xtion                ${VISIONLIBS}  ${DEVICELIBS}  ${GRAPHICLIBS} ${CORELIBS} ${XML_LIBRARIES})
 TARGET_LINK_LIBRARIES(tsd_raycast_visualize    ${VISIONLIBS}  ${GRAPHICLIBS} ${CORELIBS})
 TARGET_LINK_LIBRARIES(showCloud                ${GRAPHICLIBS} ${CORELIBS})
-#TARGET_LINK_LIBRARIES(xtionStream              ${VISIONLIBS}  ${GRAPHICLIBS} ${DEVICELIBS} ${CORELIBS} ${XML_LIBRARIES})
+
 
