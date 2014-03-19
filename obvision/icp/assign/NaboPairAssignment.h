@@ -61,6 +61,8 @@ private:
 	 */
 	NNSearchF* _nns;
 
+	MatrixXf _M;
+
 };
 
 }
