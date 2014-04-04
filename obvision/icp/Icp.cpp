@@ -33,9 +33,9 @@ Icp::Icp(PairAssignment* assigner, IRigidEstimator* estimator)
   _reset = true;
   _convCnt = 5;
 
-  _fptrCallbackPairs = NULL;
-
   this->reset();
+
+  _trace = NULL;
 }
 
 Icp::~Icp()
@@ -44,17 +44,28 @@ Icp::~Icp()
   if(_scene != NULL) System<double>::deallocate(_scene);
   delete(_Tlast);
   delete(_Tfinal);
-}
-
-void Icp::setAssignmentCallback(fptrAssignmentCallback fptr)
-{
-  _fptrCallbackPairs = fptr;
+  if(_trace)
+  {
+    delete _trace;
+    _trace = NULL;
+  }
 }
 
 const char* Icp::state2char(EnumIcpState eState)
 {
   return g_icp_states[eState];
 };
+
+void Icp::activateTrace()
+{
+  _trace = new IcpTrace(_dim);
+}
+
+void Icp::deactivateTrace()
+{
+  delete _trace;
+  _trace = NULL;
+}
 
 PairAssignment* Icp::getPairAssigner()
 {
@@ -379,26 +390,7 @@ EnumIcpState Icp::step(double* rms, unsigned int* pairs)
   pvPairs = _assigner->getPairs();
   *pairs = pvPairs->size();
 
-  if(_fptrCallbackPairs)
-  {
-    double** m;
-    System<double>::allocate(pvPairs->size(), _dim, m);
-    double** s;
-    System<double>::allocate(pvPairs->size(), _dim, s);
-    for(unsigned int i=0; i<pvPairs->size(); i++)
-    {
-      unsigned int idxModel = ((*pvPairs)[i]).indexFirst;
-      unsigned int idxScene = ((*pvPairs)[i]).indexSecond;
-      for(unsigned int j=0; j<(unsigned int)_dim; j++)
-      {
-        m[i][j] = _model[idxModel][j];
-        s[i][j] = _scene[idxScene][j];
-      }
-    }
-    _fptrCallbackPairs(m, s, pvPairs->size());
-    System<double>::deallocate(m);
-    System<double>::deallocate(s);
-  }
+  if(_trace) _trace->addAssignment(_model, _sizeModel, _scene, _sizeScene, *pvPairs);
 
   if(pvPairs->size()>2)
   {
@@ -428,6 +420,8 @@ EnumIcpState Icp::step(double* rms, unsigned int* pairs)
 
 EnumIcpState Icp::iterate(double* rms, unsigned int* pairs, unsigned int* iterations)
 {
+  if(_trace) _trace->reset();
+
   EnumIcpState eRetval = ICP_PROCESSING;
   unsigned int iter = 0;
   double rms_prev = 10e12;
@@ -449,8 +443,17 @@ EnumIcpState Icp::iterate(double* rms, unsigned int* pairs, unsigned int* iterat
     rms_prev = *rms;
   }
   *iterations = iter;
+
   return eRetval;
 }	
+
+void Icp::serializeTrace(char* folder)
+{
+  if(_trace)
+  {
+    _trace->serialize(folder);
+  }
+}
 
 Matrix* Icp::getFinalTransformation4x4()
 {

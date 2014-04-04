@@ -36,7 +36,7 @@ int main(int argc, char** argv)
   /**
    * Compose ICP modules
    */
-  int iterations                 = 30;
+  int iterations                 = 100;
   //PairAssignment* assigner       = (PairAssignment*)  new AnnPairAssignment(2);
   PairAssignment* assigner       = (PairAssignment*)  new FlannPairAssignment(2);
   //PairAssignment* assigner       = (PairAssignment*)  new NaboPairAssignment(2);
@@ -49,6 +49,7 @@ int main(int argc, char** argv)
   icp->setScene(&S, NULL);
   icp->setMaxRMS(0.0);
   icp->setMaxIterations(iterations);
+  icp->activateTrace();
 
   double rms;
   unsigned int pairs;
@@ -64,6 +65,8 @@ int main(int argc, char** argv)
 
   cout << endl << "Error: " << estimator->getRMS() << endl;
   cout << "Iterations: " << estimator->getIterations() << endl;
+
+  icp->serializeTrace("trace");
 
   delete icp;
   delete estimator;

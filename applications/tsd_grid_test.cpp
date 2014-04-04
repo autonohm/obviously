@@ -20,10 +20,10 @@ int main(void)
   LOGMSG_CONF("tsd_grid_test.log", Logger::file_off|Logger::screen_on, DBG_DEBUG, DBG_DEBUG);
 
   // Initialization of TSD grid
-  double cellSize = 0.01;
+  double cellSize = 0.005;
 
-  TsdGrid* grid = new TsdGrid(cellSize, LAYOUT_32x32, LAYOUT_8192x8192);
-  grid->setMaxTruncation(6.0*cellSize);
+  TsdGrid* grid = new TsdGrid(cellSize, LAYOUT_32x32, LAYOUT_16384x16384);
+  grid->setMaxTruncation(500.0*cellSize);
 
   // Translation of sensor
   double t[2];
@@ -84,6 +84,7 @@ int main(void)
   unsigned int cnt;
   sensor.transform(&T);
   grid->pushTree(&sensor);
+  //grid->push(&sensor);
 
   rayCaster.calcCoordsFromCurrentView(grid, &sensor, coords, normals, &cnt);
   LOGMSG(DBG_DEBUG, "Found " << cnt/2 << " coordinate tuples");

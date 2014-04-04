@@ -12,6 +12,8 @@ using namespace std;
 
 #include "obcore/math/linalg/linalg.h"
 
+#include "obvision/icp/IcpTrace.h"
+
 using namespace obvious;
 
 namespace obvious
@@ -52,8 +54,6 @@ public:
 	 */
 	~Icp();
 	
-	void setAssignmentCallback(fptrAssignmentCallback fptr);
-
 	/**
 	 * convert enumeration to char*
 	 * @param eState state enumeration
@@ -61,6 +61,10 @@ public:
 	 */
 	const char* state2char(EnumIcpState eState);
 	
+	void activateTrace();
+
+	void deactivateTrace();
+
 	/**
 	 * Accessor to pair assigner
 	 * @return assigner
@@ -165,6 +169,8 @@ public:
 	 */
 	EnumIcpState iterate(double* rms, unsigned int* pairs, unsigned int* iterations);
 	
+	void serializeTrace(char* folder);
+
 	/**
 	 * Get final 4x4 rotation matrix determined through iteration
 	 * @return final transformation matrix
@@ -262,9 +268,9 @@ private:
 
 	unsigned int _convCnt;
 
-	fptrAssignmentCallback _fptrCallbackPairs;
-
 	bool _reset;
+
+	IcpTrace* _trace;
 };
 
 }

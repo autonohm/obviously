@@ -30,6 +30,7 @@ add_library(obvision
 	icp/PointToPlaneEstimator3D.cpp
 	icp/PointToLineEstimator2D.cpp
 	icp/Icp.cpp
+	icp/IcpTrace.cpp
 	normals/NormalsEstimator.cpp
 	mesh/TriangleMesh.cpp
 	reconstruct/Sensor.cpp
