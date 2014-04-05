@@ -44,7 +44,12 @@ public:
 	 */
 	void addAssignment(double** model, unsigned int sizeM, double** scene, unsigned int sizeS, vector<StrCartesianIndexPair> pairs);
 	
-	void serialize(char* folder);
+	/**
+	 * Serialize assignment to trace folder
+	 * @param folder trace folder (must not be existent)
+	 * @param delay animation delay (specified in delay*1/100s)
+	 */
+	void serialize(char* folder, unsigned int delay);
 
 private:
 	

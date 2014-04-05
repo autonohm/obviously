@@ -66,7 +66,7 @@ int main(int argc, char** argv)
   cout << endl << "Error: " << estimator->getRMS() << endl;
   cout << "Iterations: " << estimator->getIterations() << endl;
 
-  icp->serializeTrace("trace");
+  icp->serializeTrace("trace", 10);
 
   delete icp;
   delete estimator;

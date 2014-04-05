@@ -44,7 +44,7 @@ void IcpTrace::addAssignment(double** model, unsigned int sizeM, double** scene,
   _pairs.push_back(pairs);
 }
 
-void IcpTrace::serialize(char* folder)
+void IcpTrace::serialize(char* folder, unsigned int delay)
 {
   char cmd[256];
   sprintf(cmd, "mkdir %s", folder);
@@ -53,37 +53,85 @@ void IcpTrace::serialize(char* folder)
   {
     ofstream file;
     char filename[512];
+    double minCoord[3] = { 10e12,  10e12,  10e12};
+    double maxCoord[3] = {-10e12, -10e12, -10e12};
     for(unsigned int i=0; i<_models.size(); i++)
     {
-      snprintf(filename, 512, "%s/trace_%05d.dat", folder, i);
+      snprintf(filename, 512, "%s/dataset_%05d.dat", folder, i);
       file.open(filename, ios::out);
       Matrix* M = _models[i];
       Matrix* S = _scenes[i];
       for(unsigned int p=0; p<M->getRows(); p++)
       {
         for(unsigned int j=0; j<_dim; j++)
-          file << (*M)(p,j) << " ";
+        {
+          double coord = (*M)(p,j);
+          if(minCoord[j]>coord) minCoord[j] = coord;
+          if(maxCoord[j]<coord) maxCoord[j] = coord;
+          file << coord << " ";
+        }
         for(unsigned int j=0; j<_dim; j++)
-          file << (*S)(p,j) << " ";
+        {
+          double coord = (*S)(p,j);
+          if(minCoord[j]>coord) minCoord[j] = coord;
+          if(maxCoord[j]<coord) maxCoord[j] = coord;
+          file << coord << " ";
+        }
         file << endl;
       }
       file.close();
     }
 
-    snprintf(filename, 512, "%s/animate_trace.sh", folder);
-    file.open(filename, ios::out);
-    file << "#!/bin/bash" << endl << "echo \"clear\" > plot.gpi" << endl;
-    file << "echo \"reset\" >> plot.gpi" << endl << "echo \"set terminal gif animate delay 10\" >> plot.gpi" << endl;
-    file << "echo \"set output \\\"animate.gif\\\"\" >> plot.gpi" << endl;
-    file << "echo \"set isosample 40\" >> plot.gpi" << endl;
-    file << "echo \"set autoscale fix\" >> plot.gpi" << endl;
-    file << "for FILE in trace*.dat" << endl;
-    file << "do" << endl;
-    file << "echo \"plot \\\"./${FILE}\\\" u 1:2 w p t \\\"model\\\", \\\"./${FILE}\\\" u 3:4 w p t \\\"scene\\\"\" >> plot.gpi" << endl;
-    file << "done" << endl;
-    file.close();
+    for(unsigned int i=0; i<_pairs.size(); i++)
+    {
+      snprintf(filename, 512, "%s/pairs_%05d.dat", folder, i);
+      file.open(filename, ios::out);
+      Matrix* M = _models[i];
+      Matrix* S = _scenes[i];
+      vector<StrCartesianIndexPair> pairs = _pairs[i];
+      for(unsigned int p=0; p<pairs.size(); p++)
+      {
+        unsigned int idxM = pairs[p].indexFirst;
+        unsigned int idxS = pairs[p].indexSecond;
 
-    LOGMSG(DBG_DEBUG, "Trace serialized, execute animation script for gnuplot visualization");
+        for(unsigned int j=0; j<_dim; j++)
+        {
+          double coord = (*M)(idxM,j);
+          file << coord << " ";
+        }
+        for(unsigned int j=0; j<_dim; j++)
+        {
+          double coord = (*S)(idxS,j);
+          file << coord << " ";
+        }
+        file << endl;
+      }
+      file.close();
+    }
+
+    if(_dim==2)
+    {
+      snprintf(filename, 512, "%s/animate_trace.sh", folder);
+      file.open(filename, ios::out);
+      file << "#!/bin/bash" << endl << "echo \"clear\" > animate_trace.gpi" << endl;
+      file << "echo \"reset\" >> animate_trace.gpi" << endl << "echo \"set terminal gif animate delay " << delay << "\" >> animate_trace.gpi" << endl;
+      file << "echo \"set output \\\"animate_trace.gif\\\"\" >> animate_trace.gpi" << endl;
+      file << "echo \"set isosample 40\" >> animate_trace.gpi" << endl;
+      file << "echo \"set xrange [" << minCoord[0] << ":" << maxCoord[0] << "]\" >> animate_trace.gpi" << endl;
+      file << "echo \"set yrange [" << minCoord[1] << ":" << maxCoord[1] << "]\" >> animate_trace.gpi" << endl;
+      file << "for NR in `seq -f \"%05g\" 0 " << _models.size()-1 << "`" << endl;
+      file << "do" << endl;
+      file << "echo \"plot \\\"./dataset_${NR}.dat\\\" u 1:2 w p pt 19 ps 1 t \\\"model\\\"";
+      file << ", \\\"./dataset_${NR}.dat\\\" u 3:4 w p pt 19 t \\\"scene\\\"";
+      file << ", \\\"./pairs_${NR}.dat\\\" u 1:2 w p pt 20 t \\\"pairs (model)\\\"";
+      file << "\" >> animate_trace.gpi" << endl;
+      file << "done" << endl;
+      file.close();
+
+      LOGMSG(DBG_DEBUG, "Trace serialized, execute animation script for gnuplot visualization");
+    }
+    else
+      LOGMSG(DBG_DEBUG, "Trace serialized, animation script not available for 3D data");
   }
   else
   {

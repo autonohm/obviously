@@ -169,7 +169,12 @@ public:
 	 */
 	EnumIcpState iterate(double* rms, unsigned int* pairs, unsigned int* iterations);
 	
-	void serializeTrace(char* folder);
+  /**
+   * Serialize assignment to trace folder
+   * @param folder trace folder (must not be existent)
+   * @param delay animation delay (specified in delay*1/100s)
+   */
+	void serializeTrace(char* folder, unsigned int delay=10);
 
 	/**
 	 * Get final 4x4 rotation matrix determined through iteration
