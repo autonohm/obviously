@@ -40,13 +40,12 @@ public:
 	 **/
 	void setModel(double** model, int size);
 	
-	/**
-	 * Determine point pairs (nearest neighbors)
-	 * @param scene scene to be compared
-	 * @param size nr of points in scene
-	 * @param pairs return value of neighbors
-	 * @param nonPairs return value of points with no neighbors
-	 */
+  /**
+   * Determine point pairs
+   * @param scene scene to be compared
+   * @param msk validity mask
+   * @param size nr of points in scene
+   */
 	void determinePairs(double** scene, bool* msk, int size);
 	
 private:

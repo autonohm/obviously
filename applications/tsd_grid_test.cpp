@@ -8,6 +8,7 @@
 #include "obcore/math/mathbase.h"
 
 #include "obvision/reconstruct/grid/TsdGrid.h"
+#include "obvision/reconstruct/grid/TsdGridLocalization.h"
 #include "obvision/reconstruct/grid/RayCastPolar2D.h"
 
 #include "obgraphic/Obvious2D.h"
@@ -53,6 +54,8 @@ int main(void)
   for(int i=0; i<beams; i++)
   {
 #if 1
+    //data[i] = sin(((double)i)/((double)beams) * M_PI) * maxRange / 2.0;
+    //mask[i] = true;
     // circular structure
     data[i] = maxRange / 2.0;
     mask[i] = true;
@@ -86,9 +89,41 @@ int main(void)
   grid->pushTree(&sensor);
   //grid->push(&sensor);
 
+  cout << "Sensor pose" << endl;
+  sensor.getTransformation().print();
+
   rayCaster.calcCoordsFromCurrentView(grid, &sensor, coords, normals, &cnt);
   LOGMSG(DBG_DEBUG, "Found " << cnt/2 << " coordinate tuples");
 
+  // Test localization method
+  // Rotation about z-axis of sensor and translation
+  double phi2 = 90.0 * M_PI / 180.0;
+  double tf2[9] = {cos(phi2), -sin(phi2), 0.0,
+                   sin(phi2),  cos(phi2), 0.0,
+                           0,         0,     1};
+  Matrix T2(3, 3);
+  T2.setData(tf2);
+  sensor.transform(&T2);
+
+  cout << "Sensor pose unregistered" << endl;
+  sensor.getTransformation().print();
+
+  // Try to reconstruct previously applied transformation
+  TsdGridLocalization localizer(grid);
+  Matrix Tfinal = localizer.localize(&sensor);
+
+  /*cout << "Ground truth transformation" << endl;
+  T2.print();
+
+  cout << "Estimated transformation" << endl;
+  Tfinal.print();
+
+  cout << "Equality check" << endl;
+  Matrix Tcheck = Tfinal * T2;
+  Tcheck.print();*/
+
+  cout << "Sensor pose registered" << endl;
+  sensor.getTransformation().print();
 
   // Initialization of 2D viewer
   double ratio = double(grid->getCellsX())/double(grid->getCellsY());

@@ -83,7 +83,8 @@ int main(int argc, char** argv)
   cout << endl << "Error: " << estimator->getRMS() << endl;
   cout << "Iterations: " << estimator->getIterations() << endl;
 
-  icp->serializeTrace("trace", animationDelay);
+  char folder[6] = "trace";
+  icp->serializeTrace(folder, animationDelay);
 
   delete icp;
   delete estimator;

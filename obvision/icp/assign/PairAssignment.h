@@ -24,14 +24,14 @@ class PairAssignment
 {
 public:
   /**
-   * Standard constructor
+   * Default constructor
    */
   PairAssignment();
 
   /**
    * Standard constructor
    **/
-  PairAssignment(int nDimension);
+  PairAssignment(int dimension);
 
   /**
    * Standard destructor
@@ -67,18 +67,25 @@ public:
 
   /**
    * Set model as matching base
-   * @param ppdModel array of xy values
-   * @param nSize number of points
+   * @param model array of xy values
+   * @param size number of points
    **/
-  virtual void setModel(double** ppdModel, int nSize) = 0;
+  virtual void setModel(double** model, int size) = 0;
 
   /**
-   * Determine point pairs (nearest neighbors)
-   * @param ppdScene scene to be compared
-   * @param nSize nr of points in scene
+   * Determine point pairs (generic implementation)
+   * @param scene scene to be compared
+   * @param size nr of points in scene
    */
-  void determinePairs(double** ppdScene, int nSize);
-  virtual void determinePairs(double** ppdScene, bool* mask, int nSize) = 0;
+  void determinePairs(double** scene, int size);
+
+  /**
+   * Determine point pairs (concrete implementation)
+   * @param scene scene to be compared
+   * @param msk validity mask
+   * @param size nr of points in scene
+   */
+  virtual void determinePairs(double** scene, bool* mask, int size) = 0;
 
   /**
    * clear vector of Cartesian point pairs and reset post assignment filters
@@ -88,31 +95,32 @@ public:
 protected:
   /**
    * add assigned point to internal vector
-   * @param unIndexModel index of model point
-   * @param unIndexScene index of scene point
-   * @param dDistanceSqr squared distance between model and scene point
+   * @param indexModel index of model point
+   * @param indexScene index of scene point
+   * @param distanceSqr squared distance between model and scene point
    */
-  virtual void addPair(unsigned int unIndexModel, unsigned int unIndexScene, double dDistanceSqr);
+  virtual void addPair(unsigned int indexModel, unsigned int indexScene, double distanceSqr);
 
   /**
    * add non-assigned point to internal vector
-   * @param unIndexScene index of scene point
+   * @param indexScene index of scene point
    */
-  virtual void addNonPair(unsigned int unIndexScene);
+  virtual void addNonPair(unsigned int indexScene);
 
   /**
    * Dimension of space
    */
-  int _nDimension;
+  int _dimension;
 
   /**
    * the 2D or 3D model
    */
-  double** _ppdModel;
+  double** _model;
 
   /**
-   * model size / number of points */
-  int _nSizeModel;
+   * model size / number of points
+   */
+  int _sizeModel;
 
 
   vector<IPreAssignmentFilter*> _vPrefilter;

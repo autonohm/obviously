@@ -24,6 +24,8 @@ public:
 
   void calcCoordsFromCurrentView(TsdGrid* grid, SensorPolar2D* sensor, double* coords, double* normals, unsigned int* ctr);
 
+  void calcCoordsFromCurrentViewMask(TsdGrid* grid, SensorPolar2D* sensor, double* coords, double* normals, bool* mask);
+
 private:
 
   bool rayCastFromCurrentView(TsdGrid* grid, SensorPolar2D* sensor, double ray[2], double coordinates[2], double normal[2]);

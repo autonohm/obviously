@@ -37,8 +37,15 @@ void IcpTrace::reset()
 }
 void IcpTrace::setModel(double** model, unsigned int sizeM)
 {
-  if(_M) delete _M;
-  _M = new Matrix(sizeM, _dim, *model);
+  if(model)
+  {
+    if(_M) delete _M;
+    _M = new Matrix(sizeM, _dim, *model);
+  }
+  else
+  {
+    LOGMSG(DBG_WARN, "Empty model passed");
+  }
 }
 
 void IcpTrace::addAssignment(double** scene, unsigned int sizeS, vector<StrCartesianIndexPair> pairs)

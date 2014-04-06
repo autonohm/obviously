@@ -19,8 +19,6 @@ using namespace obvious;
 namespace obvious
 {
 
-typedef void (*fptrAssignmentCallback)(double**, double**, unsigned int);
-
 /**
  * ICP return states
  */
