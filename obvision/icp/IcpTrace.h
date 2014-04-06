@@ -35,14 +35,19 @@ public:
 	void reset();
 
 	/**
-	 * Add model and scene assignment to trace record
-	 * @param model model data
-	 * @param sizeM size of model
+   * Set model of trace record
+   * @param model model data
+   * @param sizeM size of model
+   */
+	void setModel(double** model, unsigned int sizeM);
+
+	/**
+	 * Add scene assignment to trace record
 	 * @param scene scene data
 	 * @param sizeS size of scene
 	 * @param pairs tuple of assigned indices
 	 */
-	void addAssignment(double** model, unsigned int sizeM, double** scene, unsigned int sizeS, vector<StrCartesianIndexPair> pairs);
+	void addAssignment(double** scene, unsigned int sizeS, vector<StrCartesianIndexPair> pairs);
 	
 	/**
 	 * Serialize assignment to trace folder
@@ -55,7 +60,7 @@ private:
 	
 	unsigned int _dim;
 
-	vector<Matrix*> _models;
+	Matrix* _M;
 	
 	vector<Matrix*> _scenes;
 	

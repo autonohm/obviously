@@ -17,21 +17,38 @@ using namespace obvious;
 
 int main(int argc, char** argv)
 {
-  Timer timer;
-  /*obvious::Matrix M(4, 2);
-  M(0,0) = 0.0;  M(0,1) = 1.0;
-  M(1,0) = 0.0;  M(1,1) = 0.0;
-  M(2,0) = 1.0;  M(2,1) = 0.0;
-  M(3,0) = 2.0;  M(3,1) = 0.0;*/
-
-  obvious::Matrix M(1000, 2);
-  for(int i=0; i<1000; i++)
+  int animationDelay = 10;
+  if(argc>1)
   {
-    M(i,0) = ((double)(rand()%100))/100.0; M(i,1) = ((double)(rand()%100))/100.0;
+    animationDelay = atoi(argv[1]);
+  }
+
+  Timer timer;
+
+  obvious::Matrix* M;
+
+  if(0)
+  {
+    M = new Matrix(1000, 2);
+    for(int i=0; i<1000; i++)
+    {
+      (*M)(i,0) = ((double)(rand()%100))/100.0;
+      (*M)(i,1) = ((double)(rand()%100))/100.0;
+    }
+  }
+  else
+  {
+    M = new Matrix(100, 2);
+    for(int i=0; i<100; i++)
+    {
+      double di = (double) i;
+      (*M)(i,0) = sin(di/50.0);
+      (*M)(i,1) = sin(di/10.0);
+    }
   }
 
   obvious::Matrix* T = MatrixFactory::TransformationMatrix33(deg2rad(9.0), 0.4, 0.35);
-  obvious::Matrix S = M.createTransform(*T);
+  obvious::Matrix S = M->createTransform(*T);
 
   /**
    * Compose ICP modules
@@ -45,7 +62,7 @@ int main(int argc, char** argv)
   IRigidEstimator* estimator     = (IRigidEstimator*) new ClosedFormEstimator2D();
 
   Icp* icp = new Icp(assigner, estimator);
-  icp->setModel(&M, NULL);
+  icp->setModel(M, NULL);
   icp->setScene(&S, NULL);
   icp->setMaxRMS(0.0);
   icp->setMaxIterations(iterations);
@@ -66,7 +83,7 @@ int main(int argc, char** argv)
   cout << endl << "Error: " << estimator->getRMS() << endl;
   cout << "Iterations: " << estimator->getIterations() << endl;
 
-  icp->serializeTrace("trace", 10);
+  icp->serializeTrace("trace", animationDelay);
 
   delete icp;
   delete estimator;

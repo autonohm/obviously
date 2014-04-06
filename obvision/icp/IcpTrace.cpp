@@ -11,18 +11,21 @@ namespace obvious
 IcpTrace::IcpTrace(unsigned int dim)
 {
   _dim = dim;
+  _M   = NULL;
 }
 		 
 IcpTrace::~IcpTrace()
 {
-
+  reset();
 }
 	
 void IcpTrace::reset()
 {
-  for(unsigned int i=0; i<_models.size(); i++)
-    delete  _models[i];
-  _models.clear();
+  if(_M)
+  {
+    delete _M;
+    _M = NULL;
+  }
 
   for(unsigned int i=0; i<_scenes.size(); i++)
     delete _scenes[i];
@@ -32,12 +35,14 @@ void IcpTrace::reset()
       _pairs[i].clear();
   _pairs.clear();
 }
-
-void IcpTrace::addAssignment(double** model, unsigned int sizeM, double** scene, unsigned int sizeS, vector<StrCartesianIndexPair> pairs)
+void IcpTrace::setModel(double** model, unsigned int sizeM)
 {
-  Matrix* m = new Matrix(sizeM, _dim, *model);
-  _models.push_back(m);
+  if(_M) delete _M;
+  _M = new Matrix(sizeM, _dim, *model);
+}
 
+void IcpTrace::addAssignment(double** scene, unsigned int sizeS, vector<StrCartesianIndexPair> pairs)
+{
   Matrix* s = new Matrix(sizeS, _dim, *scene);
   _scenes.push_back(s);
 
@@ -55,21 +60,32 @@ void IcpTrace::serialize(char* folder, unsigned int delay)
     char filename[512];
     double minCoord[3] = { 10e12,  10e12,  10e12};
     double maxCoord[3] = {-10e12, -10e12, -10e12};
-    for(unsigned int i=0; i<_models.size(); i++)
+
+    if(_M)
     {
-      snprintf(filename, 512, "%s/dataset_%05d.dat", folder, i);
+      snprintf(filename, 512, "%s/model.dat", folder);
       file.open(filename, ios::out);
-      Matrix* M = _models[i];
-      Matrix* S = _scenes[i];
-      for(unsigned int p=0; p<M->getRows(); p++)
+      for(unsigned int p=0; p<_M->getRows(); p++)
       {
         for(unsigned int j=0; j<_dim; j++)
         {
-          double coord = (*M)(p,j);
+          double coord = (*_M)(p,j);
           if(minCoord[j]>coord) minCoord[j] = coord;
           if(maxCoord[j]<coord) maxCoord[j] = coord;
           file << coord << " ";
         }
+        file << endl;
+      }
+      file.close();
+    }
+
+    for(unsigned int i=0; i<_scenes.size(); i++)
+    {
+      snprintf(filename, 512, "%s/scene_%05d.dat", folder, i);
+      file.open(filename, ios::out);
+      Matrix* S = _scenes[i];
+      for(unsigned int p=0; p<S->getRows(); p++)
+      {
         for(unsigned int j=0; j<_dim; j++)
         {
           double coord = (*S)(p,j);
@@ -86,7 +102,6 @@ void IcpTrace::serialize(char* folder, unsigned int delay)
     {
       snprintf(filename, 512, "%s/pairs_%05d.dat", folder, i);
       file.open(filename, ios::out);
-      Matrix* M = _models[i];
       Matrix* S = _scenes[i];
       vector<StrCartesianIndexPair> pairs = _pairs[i];
       for(unsigned int p=0; p<pairs.size(); p++)
@@ -96,7 +111,7 @@ void IcpTrace::serialize(char* folder, unsigned int delay)
 
         for(unsigned int j=0; j<_dim; j++)
         {
-          double coord = (*M)(idxM,j);
+          double coord = (*_M)(idxM,j);
           file << coord << " ";
         }
         for(unsigned int j=0; j<_dim; j++)
@@ -119,10 +134,10 @@ void IcpTrace::serialize(char* folder, unsigned int delay)
       file << "echo \"set isosample 40\" >> animate_trace.gpi" << endl;
       file << "echo \"set xrange [" << minCoord[0] << ":" << maxCoord[0] << "]\" >> animate_trace.gpi" << endl;
       file << "echo \"set yrange [" << minCoord[1] << ":" << maxCoord[1] << "]\" >> animate_trace.gpi" << endl;
-      file << "for NR in `seq -f \"%05g\" 0 " << _models.size()-1 << "`" << endl;
+      file << "for NR in `seq -f \"%05g\" 0 " << _scenes.size()-1 << "`" << endl;
       file << "do" << endl;
-      file << "echo \"plot \\\"./dataset_${NR}.dat\\\" u 1:2 w p pt 19 ps 1 t \\\"model\\\"";
-      file << ", \\\"./dataset_${NR}.dat\\\" u 3:4 w p pt 19 t \\\"scene\\\"";
+      file << "echo \"plot \\\"./model.dat\\\" u 1:2 w p pt 19 ps 1 t \\\"model\\\"";
+      file << ", \\\"./scene_${NR}.dat\\\" u 1:2 w p pt 19 t \\\"scene\\\"";
       file << ", \\\"./pairs_${NR}.dat\\\" u 1:2 w p pt 20 t \\\"pairs (model)\\\"";
       file << "\" >> animate_trace.gpi" << endl;
       file << "done" << endl;

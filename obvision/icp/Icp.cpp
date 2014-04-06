@@ -390,7 +390,10 @@ EnumIcpState Icp::step(double* rms, unsigned int* pairs)
   pvPairs = _assigner->getPairs();
   *pairs = pvPairs->size();
 
-  if(_trace) _trace->addAssignment(_model, _sizeModel, _scene, _sizeScene, *pvPairs);
+  if(_trace)
+  {
+    _trace->addAssignment(_scene, _sizeScene, *pvPairs);
+  }
 
   if(pvPairs->size()>2)
   {
@@ -420,7 +423,11 @@ EnumIcpState Icp::step(double* rms, unsigned int* pairs)
 
 EnumIcpState Icp::iterate(double* rms, unsigned int* pairs, unsigned int* iterations)
 {
-  if(_trace) _trace->reset();
+  if(_trace)
+  {
+    _trace->reset();
+    _trace->setModel(_model, _sizeModel);
+  }
 
   EnumIcpState eRetval = ICP_PROCESSING;
   unsigned int iter = 0;
