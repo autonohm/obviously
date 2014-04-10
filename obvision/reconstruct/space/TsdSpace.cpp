@@ -271,9 +271,8 @@ void TsdSpace::push(Sensor* sensor)
 
         double t[3];
         part->getCellCoordsOffset(t);
-        Matrix* T = MatrixFactory::TranslationMatrix44(t[0], t[1], t[2]);
-        sensor->backProject(cellCoordsHom, idx, T);
-        delete T;
+        Matrix T = MatrixFactory::TranslationMatrix44(t[0], t[1], t[2]);
+        sensor->backProject(cellCoordsHom, idx, &T);
 
         for(unsigned int c=0; c<partSize; c++)
         {
@@ -350,9 +349,8 @@ void TsdSpace::pushTree(Sensor* sensor)
 
     double t[3];
     part->getCellCoordsOffset(t);
-    Matrix* T = MatrixFactory::TranslationMatrix44(t[0], t[1], t[2]);
-    sensor->backProject(cellCoordsHom, idx, T);
-    delete T;
+    Matrix T = MatrixFactory::TranslationMatrix44(t[0], t[1], t[2]);
+    sensor->backProject(cellCoordsHom, idx, &T);
 
     for(unsigned int c=0; c<partSize; c++)
     {

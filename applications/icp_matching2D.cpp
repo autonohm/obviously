@@ -48,8 +48,8 @@ int main(int argc, char** argv)
     }
   }
 
-  obvious::Matrix* T = MatrixFactory::TransformationMatrix33(deg2rad(9.0), 0.4, 0.35);
-  obvious::Matrix S = M->createTransform(*T);
+  obvious::Matrix T = MatrixFactory::TransformationMatrix33(deg2rad(9.0), 0.4, 0.35);
+  obvious::Matrix S = M->createTransform(T);
 
   /**
    * Compose ICP modules
@@ -81,20 +81,29 @@ int main(int argc, char** argv)
   char folder[6] = "trace";
   icp->serializeTrace(folder, animationDelay);
   */
+  vector<Matrix> vT;
 
   Matrix Tinit(4, 4);
   Tinit.setIdentity();
-  Tinit(0, 3) = 5.0;
-  vector<Matrix> vT;
   vT.push_back(Tinit);
-  Tinit(0, 3) = 1.0;
+
+  Tinit = MatrixFactory::TransformationMatrix44(deg2rad(30), 0, 0, 0, 0, 0);
   vT.push_back(Tinit);
+
+  Tinit = MatrixFactory::TransformationMatrix44(deg2rad(-30), 0, 0, 0, 0, 0);
+  vT.push_back(Tinit);
+
+  /*Tinit = MatrixFactory::TranslationMatrix44(1.0, 0, 0);
+  vT.push_back(Tinit);
+
+  Tinit = MatrixFactory::TranslationMatrix44(0, 1.0, 0);
+  vT.push_back(Tinit);*/
 
   IcpMultiInitIterator multiIcp(vT);
   Matrix F = multiIcp.iterate(icp);
 
   cout << "Applied transformation:" << endl;
-  T->print();
+  T.print();
   cout << endl << "Estimated transformation:" << endl;
   F.print();
 

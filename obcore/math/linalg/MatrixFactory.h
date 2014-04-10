@@ -23,7 +23,7 @@ public:
    * @param tx x-component of translation
    * @param ty y-component of translation
    */
-  static Matrix* TranslationMatrix33(double tx, double ty);
+  static Matrix TranslationMatrix33(double tx, double ty);
 
   /**
    * Instantiate a 4x4 translation matrix, i.e. identity with last column set to translational input
@@ -31,7 +31,7 @@ public:
    * @param ty y-component of translation
    * @param tz z-component of translation
    */
-  static Matrix* TranslationMatrix44(double tx, double ty, double tz);
+  static Matrix TranslationMatrix44(double tx, double ty, double tz);
 
   /**
    * Instantiate a 3x3 transformation matrix
@@ -39,7 +39,7 @@ public:
    * @param tx x-component of translation
    * @param ty y-component of translation
    */
-  static Matrix* TransformationMatrix33(double phi, double tx, double ty);
+  static Matrix TransformationMatrix33(double phi, double tx, double ty);
 
 
   /**
@@ -51,7 +51,7 @@ public:
    * @param ty y-component of translation
    * @param tz z-component of translation
    */
-  static Matrix* TransformationMatrix44(double phi, double theta, double psi, double tx=0, double ty=0, double tz=0);
+  static Matrix TransformationMatrix44(double phi, double theta, double psi, double tx=0, double ty=0, double tz=0);
 
 private:
 

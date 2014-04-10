@@ -57,9 +57,9 @@ Matrix IcpMultiInitIterator::iterate(Icp* icp)
     icp->iterate(&rms, &pairs, &iterations, &(*it));
     bool retval = assignBetterSolution(rmsBest, pairsBest, iterationsBest, TBest, rms, pairs, iterations, icp->getFinalTransformation());
 
-    char folder[32];
+    /*char folder[32];
     sprintf(folder, "trace_%d_%d", cnt++, retval);
-    icp->serializeTrace(folder, 50);
+    icp->serializeTrace(folder, 50);*/
   }
 
   if(_Tlast)
@@ -69,9 +69,9 @@ Matrix IcpMultiInitIterator::iterate(Icp* icp)
     icp->iterate(&rms, &pairs, &iterations);
     bool retval = assignBetterSolution(rmsBest, pairsBest, iterationsBest, TBest, rms, pairs, iterations, *_Tlast);
 
-    char folder[32];
+    /*char folder[32];
     sprintf(folder, "trace_%d_%d", cnt++, retval);
-    icp->serializeTrace(folder, 50);
+    icp->serializeTrace(folder, 50);*/
   }
   else
   {
