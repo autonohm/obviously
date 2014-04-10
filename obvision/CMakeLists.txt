@@ -30,6 +30,8 @@ add_library(obvision
 	icp/PointToPlaneEstimator3D.cpp
 	icp/PointToLineEstimator2D.cpp
 	icp/Icp.cpp
+	icp/IcpTrace.cpp
+	icp/IcpMultiInitIterator.cpp
 	normals/NormalsEstimator.cpp
 	mesh/TriangleMesh.cpp
 	reconstruct/Sensor.cpp
@@ -40,6 +42,7 @@ add_library(obvision
 	reconstruct/grid/TsdGridBranch.cpp
 	reconstruct/grid/RayCastPolar2D.cpp
 	reconstruct/grid/RayCastAxisAligned2D.cpp
+	reconstruct/grid/TsdGridLocalization.cpp
 	reconstruct/space/SensorPolar3D.cpp
 	reconstruct/space/SensorProjective3D.cpp
 	reconstruct/space/SensorPolar3D.cpp

@@ -92,9 +92,9 @@ int main(int argc, char** argv)
   unsigned int pairs;
   unsigned int it;
   icp->iterate(&rms, &pairs, &it);
-  obvious::Matrix* F = icp->getFinalTransformation4x4();
-  F->invert();
-  F->print();
+  obvious::Matrix F = icp->getFinalTransformation4x4();
+  F.invert();
+  F.print();
 
   std::cout << "Error: " << estimator->getRMS() << std::endl;
   std::cout << "Iterations: " << estimator->getIterations() << std::endl;

@@ -26,10 +26,10 @@ void NaboPairAssignment::setModel(double** model, int size)
 		delete _nns;
 		_nns = NULL;
 	}
-	_ppdModel = model;
-	_M.resize(_nDimension, size);
+	_model = model;
+	_M.resize(_dimension, size);
 	for(int i=0; i<size; i++)
-	  for(int j=0; j<_nDimension; j++)
+	  for(int j=0; j<_dimension; j++)
 	  {
 	    _M(j, i) = (float)model[i][j];
 	  }
@@ -47,8 +47,8 @@ void NaboPairAssignment::determinePairs(double** scene, bool* mask, int size)
   {
     if(mask[i]==1)
     {
-      VectorXf q(_nDimension);
-      for(int j=0; j<_nDimension; j++)
+      VectorXf q(_dimension);
+      for(int j=0; j<_dimension; j++)
         q(j) = scene[i][j];
       _nns->knn(q, indices, dists2, 1, 0, NNSearchF::ALLOW_SELF_MATCH);
 #pragma omp critical

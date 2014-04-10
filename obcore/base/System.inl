@@ -1,11 +1,11 @@
 template <class T>
-void System<T>::allocate (unsigned int unRows, unsigned int unCols, T** &array2D)
+void System<T>::allocate (unsigned int rows, unsigned int cols, T** &array2D)
 {
-    array2D = new T*[unRows];
-    array2D[0] = new T[unRows*unCols];
-    for (unsigned int unRow = 1; unRow < unRows; unRow++)
+    array2D = new T*[rows];
+    array2D[0] = new T[rows*cols];
+    for (unsigned int row = 1; row < rows; row++)
     {
-        array2D[unRow] = &array2D[0][unCols*unRow];
+        array2D[row] = &array2D[0][cols*row];
     }
 }
 
@@ -18,11 +18,17 @@ void System<T>::deallocate (T**& array2D)
 }
 
 template <class T>
-void System<T>::allocate (unsigned int unRows, unsigned int unCols, unsigned int unSlices, T*** &array3D)
+void System<T>::copy (unsigned int rows, unsigned int cols, T** &src, T** &dst)
 {
-    array3D = new T**[unRows];
-    for (unsigned int unRow = 0; unRow < unRows; unRow++)
-    	System<T>::allocate(unCols, unSlices, array3D[unRow]);
+	memcpy(dst[0], src[0], rows*cols*sizeof(T));
+}
+
+template <class T>
+void System<T>::allocate (unsigned int rows, unsigned int cols, unsigned int slices, T*** &array3D)
+{
+    array3D = new T**[rows];
+    for (unsigned int row = 0; row < rows; row++)
+    	System<T>::allocate(cols, slices, array3D[row]);
 }
 
 template <class T>
@@ -32,4 +38,11 @@ void System<T>::deallocate (T***& array3D)
     delete[] array3D[0];
     delete[] array3D;
     array3D = 0;
+}
+
+template <class T>
+void System<T>::copy (unsigned int rows, unsigned int cols, unsigned int slices,  T*** &src, T*** &dst)
+{
+    for (unsigned int row = 0; row < rows; row++)
+    	System<T>::memcpy(cols, slices, src[row], dst[row]);
 }

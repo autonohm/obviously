@@ -18,43 +18,57 @@ Icp::Icp(PairAssignment* assigner, IRigidEstimator* estimator)
   _maxRMS              = 0.1;
   _model               = NULL;
   _scene               = NULL;
+  _sceneTmp            = NULL;
   _normalsM            = NULL;
   _normalsS            = NULL;
+  _normalsSTmp         = NULL;
   _sizeModelBuf        = 0;
   _sizeSceneBuf        = 0;
   _sizeModel           = 0;
   _sizeScene           = 0;
 
   _Tfinal4x4           = new Matrix(4, 4);
-  _Tfinal              = new Matrix(_dim+1, _dim+1);
   _Tlast               = new Matrix(4, 4);
   _Tfinal4x4->setIdentity();
   _Tlast->setIdentity();
-  _reset = true;
   _convCnt = 5;
 
-  _fptrCallbackPairs = NULL;
-
   this->reset();
+
+  _trace = NULL;
 }
 
 Icp::~Icp()
 {
-  if(_model != NULL) System<double>::deallocate(_model);
-  if(_scene != NULL) System<double>::deallocate(_scene);
-  delete(_Tlast);
-  delete(_Tfinal);
-}
-
-void Icp::setAssignmentCallback(fptrAssignmentCallback fptr)
-{
-  _fptrCallbackPairs = fptr;
+  if(_model != NULL)     System<double>::deallocate(_model);
+  if(_scene != NULL)     System<double>::deallocate(_scene);
+  if(_sceneTmp != NULL)  System<double>::deallocate(_sceneTmp);
+  if(_normalsM != NULL)  System<double>::deallocate(_normalsM);
+  if(_normalsS != NULL)  System<double>::deallocate(_normalsS);
+  if(_normalsSTmp!=NULL) System<double>::deallocate(_normalsSTmp);
+  delete _Tlast;
+  if(_trace)
+  {
+    delete _trace;
+    _trace = NULL;
+  }
 }
 
 const char* Icp::state2char(EnumIcpState eState)
 {
   return g_icp_states[eState];
 };
+
+void Icp::activateTrace()
+{
+  _trace = new IcpTrace(_dim);
+}
+
+void Icp::deactivateTrace()
+{
+  delete _trace;
+  _trace = NULL;
+}
 
 PairAssignment* Icp::getPairAssigner()
 {
@@ -197,6 +211,9 @@ void Icp::setScene(double* coords, double* normals, const unsigned int size, dou
       idx++;
     }
   }
+  if(_sceneTmp) System<double>::deallocate(_sceneTmp);
+  System<double>::allocate(_sizeScene, _dim, _sceneTmp);
+  System<double>::copy(_sizeScene, _dim, _scene, _sceneTmp);
 
   if(normals)
   {
@@ -211,13 +228,9 @@ void Icp::setScene(double* coords, double* normals, const unsigned int size, dou
         idx++;
       }
     }
-  }
-
-  // if final matrix is not identity
-  if(!_reset)
-  {
-    applyTransformation(_scene, idx, _dim, _Tfinal4x4);
-    if(normals) applyTransformation(_normalsS, idx, _dim, _Tfinal4x4);
+    if(_normalsSTmp) System<double>::deallocate(_normalsSTmp);
+    System<double>::allocate(_sizeScene, _dim, _normalsSTmp);
+    System<double>::copy(_sizeScene, _dim, _normalsS, _normalsSTmp);
   }
 
   delete [] mask;
@@ -247,6 +260,9 @@ void Icp::setScene(Matrix* coords, Matrix* normals, double probability)
       idx++;
     }
   }
+  if(_sceneTmp) System<double>::deallocate(_sceneTmp);
+  System<double>::allocate(_sizeScene, _dim, _sceneTmp);
+  System<double>::copy(_sizeScene, _dim, _scene, _sceneTmp);
 
   if(normals)
   {
@@ -261,13 +277,9 @@ void Icp::setScene(Matrix* coords, Matrix* normals, double probability)
         idx++;
       }
     }
-  }
-
-  // if final matrix is not identity
-  if(!_reset)
-  {
-    applyTransformation(_scene, idx, _dim, _Tfinal4x4);
-    if(normals) applyTransformation(_normalsS, idx, _dim, _Tfinal4x4);
+    if(_normalsSTmp) System<double>::deallocate(_normalsSTmp);
+    System<double>::allocate(_sizeScene, _dim, _normalsSTmp);
+    System<double>::copy(_sizeScene, _dim, _normalsS, _normalsSTmp);
   }
 
   delete [] mask;
@@ -294,7 +306,8 @@ void Icp::reset()
 {
   _Tfinal4x4->setIdentity();
   _assigner->reset();
-  _reset = true;
+  if(_sceneTmp) System<double>::copy(_sizeScene, _dim, _scene, _sceneTmp);
+  if(_normalsSTmp) System<double>::copy(_sizeScene, _dim, _normalsS, _normalsSTmp);
 }
 
 void Icp::setMaxRMS(double rms)
@@ -369,35 +382,19 @@ void Icp::applyTransformation(double** data, unsigned int size, unsigned int dim
 EnumIcpState Icp::step(double* rms, unsigned int* pairs)
 {
   Timer t;
-  if(_model==NULL || _scene == NULL) return ICP_ERROR;
+  if(_model==NULL || _sceneTmp == NULL) return ICP_ERROR;
 
-  _reset = false;
+  EnumIcpState retval = ICP_PROCESSING;
 
   vector<StrCartesianIndexPair>* pvPairs;
-  _estimator->setScene(_scene, _sizeScene, _normalsS);
-  _assigner->determinePairs(_scene, _sizeScene);
+  _estimator->setScene(_sceneTmp, _sizeScene, _normalsSTmp);
+  _assigner->determinePairs(_sceneTmp, _sizeScene);
   pvPairs = _assigner->getPairs();
   *pairs = pvPairs->size();
 
-  if(_fptrCallbackPairs)
+  if(_trace)
   {
-    double** m;
-    System<double>::allocate(pvPairs->size(), _dim, m);
-    double** s;
-    System<double>::allocate(pvPairs->size(), _dim, s);
-    for(unsigned int i=0; i<pvPairs->size(); i++)
-    {
-      unsigned int idxModel = ((*pvPairs)[i]).indexFirst;
-      unsigned int idxScene = ((*pvPairs)[i]).indexSecond;
-      for(unsigned int j=0; j<(unsigned int)_dim; j++)
-      {
-        m[i][j] = _model[idxModel][j];
-        s[i][j] = _scene[idxScene][j];
-      }
-    }
-    _fptrCallbackPairs(m, s, pvPairs->size());
-    System<double>::deallocate(m);
-    System<double>::deallocate(s);
+    _trace->addAssignment(_sceneTmp, _sizeScene, *pvPairs);
   }
 
   if(pvPairs->size()>2)
@@ -411,23 +408,38 @@ EnumIcpState Icp::step(double* rms, unsigned int* pairs)
     // estimate transformation
     _estimator->estimateTransformation(_Tlast);
 
-    applyTransformation(_scene, _sizeScene, _dim, _Tlast);
+    applyTransformation(_sceneTmp, _sizeScene, _dim, _Tlast);
     if(_normalsS)
-      applyTransformation(_normalsS, _sizeScene, _dim, _Tlast);
+      applyTransformation(_normalsSTmp, _sizeScene, _dim, _Tlast);
 
     // update overall transformation
     (*_Tfinal4x4) = (*_Tlast) * (*_Tfinal4x4);
   }
   else
   {
-    return ICP_NOTMATCHABLE;
+    retval = ICP_NOTMATCHABLE;
   }
 
-  return ICP_PROCESSING;
+  return retval;
 }
 
-EnumIcpState Icp::iterate(double* rms, unsigned int* pairs, unsigned int* iterations)
+EnumIcpState Icp::iterate(double* rms, unsigned int* pairs, unsigned int* iterations, Matrix* Tinit)
 {
+  if(_trace)
+  {
+    _trace->reset();
+    _trace->setModel(_model, _sizeModel);
+  }
+
+  _Tfinal4x4->setIdentity();
+
+  if(Tinit)
+  {
+    applyTransformation(_sceneTmp, _sizeScene, _dim, Tinit);
+    if(_normalsSTmp) applyTransformation(_normalsSTmp, _sizeScene, _dim, Tinit);
+    (*_Tfinal4x4) = (*Tinit) * (*_Tfinal4x4);
+  }
+
   EnumIcpState eRetval = ICP_PROCESSING;
   unsigned int iter = 0;
   double rms_prev = 10e12;
@@ -449,36 +461,46 @@ EnumIcpState Icp::iterate(double* rms, unsigned int* pairs, unsigned int* iterat
     rms_prev = *rms;
   }
   *iterations = iter;
+
   return eRetval;
 }	
 
-Matrix* Icp::getFinalTransformation4x4()
+void Icp::serializeTrace(char* folder, unsigned int delay)
 {
-  return _Tfinal4x4;
+  if(_trace)
+    _trace->serialize(folder, delay);
 }
 
-Matrix* Icp::getFinalTransformation()
+Matrix Icp::getFinalTransformation4x4()
 {
+  Matrix T = *_Tfinal4x4;
+  return T;
+}
+
+Matrix Icp::getFinalTransformation()
+{
+  Matrix T(_dim+1, _dim+1);
    for(int r=0; r<_dim; r++)
    {
       for(int c=0; c<_dim; c++)
       {
-         (*_Tfinal)(r,c) = (*_Tfinal4x4)(r,c);
+         T(r,c) = (*_Tfinal4x4)(r,c);
       }
-      (*_Tfinal)(r,_dim) = (*_Tfinal4x4)(r,3);
+      T(r,_dim) = (*_Tfinal4x4)(r,3);
    }
 
    for(int c=0; c<_dim; c++)
-      (*_Tfinal)(_dim,c) = 0;
+      T(_dim,c) = 0;
 
-   (*_Tfinal)(_dim,_dim) = 1;
+   T(_dim,_dim) = 1;
 
-  return _Tfinal;
+  return T;
 }
 
-Matrix* Icp::getLastTransformation()
+Matrix Icp::getLastTransformation()
 {
-  return _Tlast;
+  Matrix T = *_Tlast;
+  return T;
 }
 
 }

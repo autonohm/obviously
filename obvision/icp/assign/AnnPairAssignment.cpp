@@ -33,11 +33,11 @@ void AnnPairAssignment::setModel(double** model, int size)
 		delete _tree;
 		_tree = NULL;
 	}
-	_ppdModel = model;
+	_model = model;
 	_tree = new ANNkd_tree(			// build search structure
 				 			model,  	      // the data points
 				 			size,		        // number of points
-				 			_nDimension);   // dimension of space
+				 			_dimension);   // dimension of space
 }
 
 void AnnPairAssignment::determinePairs(double** scene, bool* mask, int size)

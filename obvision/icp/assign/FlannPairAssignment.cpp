@@ -37,9 +37,9 @@ void FlannPairAssignment::setModel(double** model, int size)
     delete _index;
     _index = NULL;
   }
-  _ppdModel = model;
+  _model = model;
 
-  _dataset = new flann::Matrix<double>(&model[0][0], size, _nDimension);
+  _dataset = new flann::Matrix<double>(&model[0][0], size, _dimension);
   flann::KDTreeSingleIndexParams p;
   //flann::KDTreeIndexParams p(16);
   //flann::AutotunedIndexParams p;
@@ -109,7 +109,7 @@ void FlannPairAssignment::determinePairsSequential(double** scene, bool* mask, i
   {
     if(mask[i]==1)
     {
-      flann::Matrix<double> query(&scene[i][0], 1, _nDimension);
+      flann::Matrix<double> query(&scene[i][0], 1, _dimension);
       _index->knnSearch(query, indices, dists, 1, p);
       addPair(indices[0][0], i, dists[0][0]);
     }
@@ -135,7 +135,7 @@ void FlannPairAssignment::determinePairsParallel(double** scene, bool* mask, int
   {
     if(mask[i]==1)
     {
-      flann::Matrix<double> query(&scene[i][0], 1, _nDimension);
+      flann::Matrix<double> query(&scene[i][0], 1, _dimension);
       int count = _index->knnSearch(query, indices, dists, 1, p);
       if(count > 0)
       {

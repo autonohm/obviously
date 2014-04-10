@@ -8,6 +8,7 @@
 #include "obcore/math/mathbase.h"
 
 #include "obvision/reconstruct/grid/TsdGrid.h"
+#include "obvision/reconstruct/grid/TsdGridLocalization.h"
 #include "obvision/reconstruct/grid/RayCastPolar2D.h"
 
 #include "obgraphic/Obvious2D.h"
@@ -20,10 +21,10 @@ int main(void)
   LOGMSG_CONF("tsd_grid_test.log", Logger::file_off|Logger::screen_on, DBG_DEBUG, DBG_DEBUG);
 
   // Initialization of TSD grid
-  double cellSize = 0.01;
+  double cellSize = 0.005;
 
-  TsdGrid* grid = new TsdGrid(cellSize, LAYOUT_32x32, LAYOUT_8192x8192);
-  grid->setMaxTruncation(6.0*cellSize);
+  TsdGrid* grid = new TsdGrid(cellSize, LAYOUT_32x32, LAYOUT_16384x16384);
+  grid->setMaxTruncation(500.0*cellSize);
 
   // Translation of sensor
   double t[2];
@@ -53,9 +54,11 @@ int main(void)
   for(int i=0; i<beams; i++)
   {
 #if 1
-    // circular structure
-    data[i] = maxRange / 2.0;
+    data[i] = sin(((double)i)/((double)beams) * M_PI) * maxRange / 2.0;
     mask[i] = true;
+    // circular structure
+    //data[i] = maxRange / 2.0;
+    //mask[i] = true;
 #else
     // plain wall
     mask[i] = false;
@@ -74,8 +77,6 @@ int main(void)
   }
   sensor.setRealMeasurementData(data);
   sensor.setRealMeasurementMask(mask);
-  delete[] data;
-  delete[] mask;
 
   RayCastPolar2D rayCaster;
   double* coords = new double[beams*2];
@@ -85,9 +86,47 @@ int main(void)
   sensor.transform(&T);
   grid->pushTree(&sensor);
 
-  rayCaster.calcCoordsFromCurrentView(grid, &sensor, coords, normals, &cnt);
-  LOGMSG(DBG_DEBUG, "Found " << cnt/2 << " coordinate tuples");
+  SensorPolar2D virtualSensor(beams, angularRes, minPhi, maxRange, minRange);
+  virtualSensor.transform(&T);
 
+  // Test localization method
+  // Rotation about z-axis of sensor and translation
+  double phi2 = 5.0 * M_PI / 180.0;
+  double tf2[9] = {cos(phi2), -sin(phi2), 0.0,
+                   sin(phi2),  cos(phi2), 0.0,
+                           0,         0,     1};
+  Matrix T2(3, 3);
+  T2.setData(tf2);
+  virtualSensor.transform(&T2);
+  cout << "Pose to be found" << endl;
+  virtualSensor.getTransformation().print();
+
+  rayCaster.calcCoordsFromCurrentViewMask(grid, &virtualSensor, coords, normals, mask);
+  //LOGMSG(DBG_DEBUG, "Found " << cnt/2 << " coordinate tuples");
+
+  for(unsigned int i=0; i<beams; i++)
+  {
+    data[i] = sqrt(coords[2*i]*coords[2*i] + coords[2*i+1]*coords[2*i+1]);
+  }
+  sensor.setRealMeasurementData(data);
+  sensor.setRealMeasurementMask(mask);
+
+  // Try to reconstruct pose of virtual sensor
+  TsdGridLocalization localizer(grid);
+  Matrix Tfinal = localizer.localize(&sensor);
+
+  /*cout << "Ground truth transformation" << endl;
+  T2.print();
+
+  cout << "Estimated transformation" << endl;
+  Tfinal.print();
+
+  cout << "Equality check" << endl;
+  Matrix Tcheck = Tfinal * T2;
+  Tcheck.print();*/
+
+  cout << "Sensor pose registered" << endl;
+  sensor.getTransformation().print();
 
   // Initialization of 2D viewer
   double ratio = double(grid->getCellsX())/double(grid->getCellsY());
@@ -111,6 +150,9 @@ int main(void)
   }
 
   serializePPM("/tmp/tsd_grid.pgm", image, w, h, true);
+
+  delete[] data;
+  delete[] mask;
 
   delete [] image;
   delete [] coords;

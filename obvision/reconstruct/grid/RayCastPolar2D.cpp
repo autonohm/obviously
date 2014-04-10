@@ -56,8 +56,8 @@ void RayCastPolar2D::calcCoordsFromCurrentView(TsdGrid* grid, SensorPolar2D* sen
 
     _xmax   = -10e9;
     _ymax   = -10e9;
-    cout << "ARGHH" << endl;
-    abort();
+
+    LOGMSG(DBG_WARN, "Sensor is outside of grid");
   }
 
   _idxMin = sensor->getMinimumRange() / grid->getCellSize();
@@ -88,6 +88,74 @@ void RayCastPolar2D::calcCoordsFromCurrentView(TsdGrid* grid, SensorPolar2D* sen
   LOGMSG(DBG_DEBUG, "Ray casting finished! Found " << *cnt << " coordinates");
 }
 
+void RayCastPolar2D::calcCoordsFromCurrentViewMask(TsdGrid* grid, SensorPolar2D* sensor, double* coords, double* normals, bool* mask)
+{
+  Timer t;
+  unsigned int cnt = 0;
+
+  double c[2];
+  double n[2];
+  Matrix M(3,1);
+  Matrix N(3,1);
+  Matrix T = sensor->getTransformation();
+  T.invert();
+  M(2,0) = 1.0;
+  N(2,0) = 0.0; // no translation for normals
+
+  Matrix* R = sensor->getNormalizedRayMap(grid->getCellSize());
+
+  if(grid->isInsideGrid(sensor))
+  {
+    _xmin   = -10e9;
+    _ymin   = -10e9;
+
+    _xmax   = 10e9;
+    _ymax   = 10e9;
+  }
+  else
+  {
+    // prevent rays to be casted parallel to a plane outside of space
+    _xmin   = 10e9;
+    _ymin   = 10e9;
+
+    _xmax   = -10e9;
+    _ymax   = -10e9;
+
+    LOGMSG(DBG_WARN, "Sensor is outside of grid");
+  }
+
+  _idxMin = sensor->getMinimumRange() / grid->getCellSize();
+  _idxMax = sensor->getMaximumRange() / grid->getCellSize();
+
+  for (unsigned int beam = 0; beam < sensor->getRealMeasurementSize(); beam++)
+  {
+    double ray[2];
+    ray[0] = (*R)(0, beam);
+    ray[1] = (*R)(1, beam);
+    if (rayCastFromCurrentView(grid, sensor, ray, c, n)) // Ray returned with coordinates
+    {
+      M(0,0) = c[0];
+      M(1,0) = c[1];
+      N(0,0) = n[0];
+      N(1,0) = n[1];
+      M       = T * M;
+      N       = T * N;
+      coords[2*beam] = M(0,0);
+      coords[2*beam+1] = M(1,0);
+      normals[2*beam] = N(0,0);
+      normals[2*beam+1] = N(1,0);
+      mask[beam] = true;
+      cnt++;
+    }
+    else
+    {
+      mask[beam] = false;
+    }
+  }
+
+  LOGMSG(DBG_DEBUG, "Elapsed TSDF projection: " << t.getTime() << "ms");
+  LOGMSG(DBG_DEBUG, "Ray casting finished! Found " << cnt << " valid coordinates");
+}
 
 bool RayCastPolar2D::rayCastFromCurrentView(TsdGrid* grid, SensorPolar2D* sensor, double ray[2], double coordinates[2], double normal[2])
 {

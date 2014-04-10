@@ -6,14 +6,14 @@ namespace obvious
 
 PairAssignment::PairAssignment()
 {
-	_nDimension   = DEFAULTDIMENSION;
+	_dimension   = DEFAULTDIMENSION;
 	_pairs        = &_initPairs;
 	_distancesSqr = &_initDistancesSqr;
 }
 
-PairAssignment::PairAssignment(int nDimension)
+PairAssignment::PairAssignment(int dimension)
 {
-	_nDimension   = nDimension;
+	_dimension   = dimension;
 	_pairs        = &_initPairs;
 	_distancesSqr = &_initDistancesSqr;
 }
@@ -35,18 +35,18 @@ void PairAssignment::addPostFilter(IPostAssignmentFilter* filter)
   _vPostfilter.push_back(filter);
 }
 
-void PairAssignment::determinePairs(double** ppdScene, int nSize)
+void PairAssignment::determinePairs(double** scene, int size)
 {
   unsigned int i;
-  bool* mask = new bool[nSize];
-  memset(mask, 1, nSize * sizeof(*mask));
+  bool* mask = new bool[size];
+  memset(mask, 1, size * sizeof(*mask));
   for(i=0; i<_vPrefilter.size(); i++)
   {
     IPreAssignmentFilter* filter = _vPrefilter[i];
-    filter->filter(ppdScene, nSize, mask);
+    filter->filter(scene, size, mask);
   }
   clearPairs();
-  determinePairs(ppdScene, mask, nSize);
+  determinePairs(scene, mask, size);
 
   _pairs        = &_initPairs;
   _distancesSqr = &_initDistancesSqr;
@@ -66,8 +66,8 @@ void PairAssignment::determinePairs(double** ppdScene, int nSize)
       _initDistancesSqr  = _filteredDistancesSqr;
     }
 
-    filter->filter(_ppdModel,
-                   ppdScene,
+    filter->filter(_model,
+                   scene,
                    &_initPairs,
                    &_initDistancesSqr,
                    &_filteredPairs,
@@ -98,23 +98,23 @@ vector<unsigned int>* PairAssignment::getNonPairs()
 	return &_nonPairs;	
 }
 
-void PairAssignment::addPair(unsigned int unIndexModel, unsigned int unIndexScene, double dDistanceSqr)
+void PairAssignment::addPair(unsigned int indexModel, unsigned int indexScene, double distanceSqr)
 {
 	StrCartesianIndexPair pair;
-	pair.indexFirst = unIndexModel;
-	pair.indexSecond = unIndexScene;
+	pair.indexFirst = indexModel;
+	pair.indexSecond = indexScene;
 	_initPairs.push_back(pair);
-	_initDistancesSqr.push_back(dDistanceSqr);
+	_initDistancesSqr.push_back(distanceSqr);
 }
 
-void PairAssignment::addNonPair(unsigned int unIndexScene)
+void PairAssignment::addNonPair(unsigned int indexScene)
 {
-	_nonPairs.push_back(unIndexScene);
+	_nonPairs.push_back(indexScene);
 }
 
 int PairAssignment::getDimension()
 {
-	return _nDimension;	
+	return _dimension;
 }
 
 void PairAssignment::clearPairs()

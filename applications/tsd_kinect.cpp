@@ -257,7 +257,7 @@ void _cbRegNewImage(void)
   {
     // Obtain scene-to-model registration
     cout << "Scene-to-model registration" << endl;
-    obvious::Matrix T = *(_icp->getFinalTransformation());
+    obvious::Matrix T = _icp->getFinalTransformation();
     T.print();
 
     //double Tdata[16];

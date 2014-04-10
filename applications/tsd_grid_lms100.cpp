@@ -189,11 +189,11 @@ int main(int argc, char* argv[])
     icp->iterate(&rms, &pairs, &it);
     LOGMSG(DBG_DEBUG, "ICP result - RMS: " << rms << " pairs: " << pairs << " iterations: " << it << endl;)
 
-    Matrix* T = icp->getFinalTransformation();
+    Matrix T = icp->getFinalTransformation();
 
     sensor.setRealMeasurementData(ranges);
     sensor.setRealMeasurementMask(sMask);
-    sensor.transform(T);
+    sensor.transform(&T);
 
 
     Matrix TSensor = sensor.getTransformation();
@@ -216,7 +216,7 @@ int main(int argc, char* argv[])
     {
       //sensor.setRealMeasurementAccuracy(sensor.getRealMeasurementAccuracy());
       _grid->push(&sensor);
-      LastScanPose = *T;
+      LastScanPose = T;
       //std::cout << "Pushed to grid" << std::endl;
       if(initCount < 5) initCount++;
       lastPhi = curPhi;

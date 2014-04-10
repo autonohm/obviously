@@ -113,9 +113,9 @@ void iterateCallback()
   EnumIcpState state  = _icp->iterate(&rms, &pairs, &iterations);
   cout << "ICP state: " << state << ", elapsed (" << iterations << " iterations): "  << timer.getTime() << " ms , rms = " << rms << ", # of pairs: " << pairs << endl;
 
-  obvious::Matrix* T           = _icp->getFinalTransformation();
+  obvious::Matrix T           = _icp->getFinalTransformation();
   double Tdata[16];
-  T->getData(Tdata);
+  T.getData(Tdata);
   _vscene->transform(Tdata);
   _viewer->update();
 }
@@ -129,9 +129,9 @@ void stepCallback()
   EnumIcpState state  = _icp->step(&rms, &pairs);
   cout << "ICP state: " << state << ", elapsed (step): " << timer.getTime() << " ms , rms = " << rms << ", # of pairs: " << pairs << endl;
 
-  obvious::Matrix* T           = _icp->getLastTransformation();
+  obvious::Matrix T           = _icp->getLastTransformation();
   double Tdata[16];
-  T->getData(Tdata);
+  T.getData(Tdata);
   _vscene->transform(Tdata);
   _viewer->update();
 }

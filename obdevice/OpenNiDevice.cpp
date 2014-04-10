@@ -97,7 +97,7 @@ OpenNiDevice::OpenNiDevice(const Flag flags, const std::string& deviceURI)
 
 OpenNiDevice::~OpenNiDevice(void)
 {
-    if (_status == openni::STATUS_OK)
+    //if (_status == openni::STATUS_OK)
         openni::OpenNI::shutdown();
 }
 
