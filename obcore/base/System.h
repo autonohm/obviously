@@ -18,29 +18,51 @@ class System
 public:
     /**
      * Allocation of 2D arrays
-     * @param unRows number of rows
-     * @param unCols number of columns
-     * @param aatArray data array
+     * @param rows number of rows
+     * @param cols number of columns
+     * @param array2D data array
      */
-    static void allocate (unsigned int unRows, unsigned int unCols, T** &array2D);
+    static void allocate (unsigned int rows, unsigned int cols, T** &array2D);
+
     /**
      * Deallocation of 2D arrays. Pointers are set to null.
-     * @param aatArray data array
+     * @param array2D data array
      */
     static void deallocate (T** &array2D);
+
+    /**
+     * Memcpy two-dimensional array
+     * @param rows number of rows
+     * @param cols number of columns
+     * @param src source array
+     * @param dst destination array
+     */
+    static void copy (unsigned int rows, unsigned int cols, T** &src, T** &dst);
+
     /**
      * Allocation of 3D arrays
-     * @param unRows number of rows
-     * @param unCols number of columns
-     * @param unSlices number of slices
-     * @param aaatArray data array
+     * @param rows number of rows
+     * @param cols number of columns
+     * @param slices number of slices
+     * @param array3D data array
      */
-    static void allocate (unsigned int unRows, unsigned int unCols, unsigned int unSlices, T*** &array3D);
+    static void allocate (unsigned int rows, unsigned int cols, unsigned int slices, T*** &array3D);
+
     /**
      * Deallocation of 3D arrays. Pointers are set to null.
-     * @param aaatArray data array
+     * @param array3D data array
      */        
     static void deallocate (T*** &array3D);
+
+    /**
+     * Memcpy three-dimensional array
+     * @param rows number of rows
+     * @param cols number of columns
+     * @param slices number of slices
+     * @param src source array
+     * @param dst destination array
+     */
+    static void copy (unsigned int rows, unsigned int cols, unsigned int slices,  T*** &src, T*** &dst);
 };
 
 #include "System.inl"

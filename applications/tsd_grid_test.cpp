@@ -54,11 +54,11 @@ int main(void)
   for(int i=0; i<beams; i++)
   {
 #if 1
-    //data[i] = sin(((double)i)/((double)beams) * M_PI) * maxRange / 2.0;
-    //mask[i] = true;
-    // circular structure
-    data[i] = maxRange / 2.0;
+    data[i] = sin(((double)i)/((double)beams) * M_PI) * maxRange / 2.0;
     mask[i] = true;
+    // circular structure
+    //data[i] = maxRange / 2.0;
+    //mask[i] = true;
 #else
     // plain wall
     mask[i] = false;
@@ -77,8 +77,6 @@ int main(void)
   }
   sensor.setRealMeasurementData(data);
   sensor.setRealMeasurementMask(mask);
-  delete[] data;
-  delete[] mask;
 
   RayCastPolar2D rayCaster;
   double* coords = new double[beams*2];
@@ -87,28 +85,33 @@ int main(void)
   unsigned int cnt;
   sensor.transform(&T);
   grid->pushTree(&sensor);
-  //grid->push(&sensor);
 
-  cout << "Sensor pose" << endl;
-  sensor.getTransformation().print();
-
-  rayCaster.calcCoordsFromCurrentView(grid, &sensor, coords, normals, &cnt);
-  LOGMSG(DBG_DEBUG, "Found " << cnt/2 << " coordinate tuples");
+  SensorPolar2D virtualSensor(beams, angularRes, minPhi, maxRange, minRange);
+  virtualSensor.transform(&T);
 
   // Test localization method
   // Rotation about z-axis of sensor and translation
-  double phi2 = 90.0 * M_PI / 180.0;
+  double phi2 = 5.0 * M_PI / 180.0;
   double tf2[9] = {cos(phi2), -sin(phi2), 0.0,
                    sin(phi2),  cos(phi2), 0.0,
                            0,         0,     1};
   Matrix T2(3, 3);
   T2.setData(tf2);
-  sensor.transform(&T2);
+  virtualSensor.transform(&T2);
+  cout << "Pose to be found" << endl;
+  virtualSensor.getTransformation().print();
 
-  cout << "Sensor pose unregistered" << endl;
-  sensor.getTransformation().print();
+  rayCaster.calcCoordsFromCurrentViewMask(grid, &virtualSensor, coords, normals, mask);
+  //LOGMSG(DBG_DEBUG, "Found " << cnt/2 << " coordinate tuples");
 
-  // Try to reconstruct previously applied transformation
+  for(unsigned int i=0; i<beams; i++)
+  {
+    data[i] = sqrt(coords[2*i]*coords[2*i] + coords[2*i+1]*coords[2*i+1]);
+  }
+  sensor.setRealMeasurementData(data);
+  sensor.setRealMeasurementMask(mask);
+
+  // Try to reconstruct pose of virtual sensor
   TsdGridLocalization localizer(grid);
   Matrix Tfinal = localizer.localize(&sensor);
 
@@ -147,6 +150,9 @@ int main(void)
   }
 
   serializePPM("/tmp/tsd_grid.pgm", image, w, h, true);
+
+  delete[] data;
+  delete[] mask;
 
   delete [] image;
   delete [] coords;

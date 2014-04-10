@@ -10,6 +10,7 @@
 #include "obcore/math/linalg/linalg.h"
 #include "obcore/base/Timer.h"
 #include "obvision/icp/icp_def.h"
+#include "obvision/icp/IcpMultiInitIterator.h"
 //#include "obvision/icp/assign/NaboPairAssignment.h"
 
 using namespace std;
@@ -27,7 +28,7 @@ int main(int argc, char** argv)
 
   obvious::Matrix* M;
 
-  if(0)
+  if(1)
   {
     M = new Matrix(1000, 2);
     for(int i=0; i<1000; i++)
@@ -68,23 +69,34 @@ int main(int argc, char** argv)
   icp->setMaxIterations(iterations);
   icp->activateTrace();
 
-  double rms;
+  /*double rms;
   unsigned int pairs;
   unsigned int it;
   icp->iterate(&rms, &pairs, &it);
-  obvious::Matrix* F = icp->getFinalTransformation();
-  F->invert();
-
-  cout << "Applied transformation:" << endl;
-  T->print();
-  cout << endl << "Estimated transformation:" << endl;
-  F->print();
-
+  obvious::Matrix F = icp->getFinalTransformation();
+  F.invert();
   cout << endl << "Error: " << estimator->getRMS() << endl;
   cout << "Iterations: " << estimator->getIterations() << endl;
 
   char folder[6] = "trace";
   icp->serializeTrace(folder, animationDelay);
+  */
+
+  Matrix Tinit(4, 4);
+  Tinit.setIdentity();
+  Tinit(0, 3) = 5.0;
+  vector<Matrix> vT;
+  vT.push_back(Tinit);
+  Tinit(0, 3) = 1.0;
+  vT.push_back(Tinit);
+
+  IcpMultiInitIterator multiIcp(vT);
+  Matrix F = multiIcp.iterate(icp);
+
+  cout << "Applied transformation:" << endl;
+  T->print();
+  cout << endl << "Estimated transformation:" << endl;
+  F.print();
 
   delete icp;
   delete estimator;

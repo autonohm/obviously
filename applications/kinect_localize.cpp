@@ -46,8 +46,6 @@ public:
 
       if(_reference)
       {
-
-        _icp->getFinalTransformation()->setIdentity();
         _nestimator->estimateNormals3DGrid(cols, rows, coords, mask, _normals);
         CartesianCloud3D*  scene = new CartesianCloud3D(size, coords, rgb,  _normals);
         scene->maskPoints(mask);
@@ -63,14 +61,14 @@ public:
         unsigned int it;
         EnumIcpState state  = _icp->iterate(&rms, &pairs, &it);
 
-        obvious::Matrix* T           = _icp->getFinalTransformation();
+        obvious::Matrix T           = _icp->getFinalTransformation();
         //cout << "print T" << endl;
         //T->print();
         cout << "Success: " << state << ", found " << pairs << " pairs" << endl;
         cout << "Needed iterations: " << it << endl;
 
         double Tdata[16];
-        T->getData(Tdata);
+        T.getData(Tdata);
 
         _vscene->transform(Tdata);
 
