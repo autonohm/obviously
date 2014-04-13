@@ -104,7 +104,7 @@ int main(void)
   rayCaster.calcCoordsFromCurrentViewMask(grid, &virtualSensor, coords, normals, mask);
   //LOGMSG(DBG_DEBUG, "Found " << cnt/2 << " coordinate tuples");
 
-  for(unsigned int i=0; i<beams; i++)
+  for(int i=0; i<beams; i++)
   {
     data[i] = sqrt(coords[2*i]*coords[2*i] + coords[2*i+1]*coords[2*i+1]);
   }

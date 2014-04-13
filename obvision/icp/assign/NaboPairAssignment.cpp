@@ -42,6 +42,10 @@ void NaboPairAssignment::determinePairs(double** scene, bool* mask, int size)
 {
   VectorXi indices(1);
   VectorXf dists2(1);
+  vector<double> vDist;
+  vector<int> vIndicesM;
+  vector<int> vIndicesS;
+  vector<int> vNonPair;
 #pragma omp for schedule(dynamic)
   for(int i = 0; i < size; i++)
   {
@@ -51,19 +55,28 @@ void NaboPairAssignment::determinePairs(double** scene, bool* mask, int size)
       for(int j=0; j<_dimension; j++)
         q(j) = scene[i][j];
       _nns->knn(q, indices, dists2, 1, 0, NNSearchF::ALLOW_SELF_MATCH);
-#pragma omp critical
-{
-      addPair((unsigned int)indices(0), i, (double)dists2(0));
-}
+      vIndicesM.push_back((unsigned int)indices(0));
+      vIndicesS.push_back(i);
+      vDist.push_back((double)dists2(0));
     }
     else
     {
-#pragma omp critical
-{
-      addNonPair(i);
-}
+      vNonPair.push_back(i);
     }
   }
+
+#pragma omp critical
+{
+  for(unsigned int i=0; i<vDist.size(); i++)
+    addPair(vIndicesM[i], vIndicesS[i], vDist[i]);
+}
+
+#pragma omp critical
+{
+  for(unsigned int i=0; i<vNonPair.size(); i++)
+    addNonPair(vNonPair[i]);
+}
+
 }
 }
 

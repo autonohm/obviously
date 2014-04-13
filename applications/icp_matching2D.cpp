@@ -30,7 +30,7 @@ int main(int argc, char** argv)
 
   if(1)
   {
-    M = new Matrix(1000, 2);
+    M = new obvious::Matrix(1000, 2);
     for(int i=0; i<1000; i++)
     {
       (*M)(i,0) = ((double)(rand()%100))/100.0;
@@ -39,7 +39,7 @@ int main(int argc, char** argv)
   }
   else
   {
-    M = new Matrix(100, 2);
+    M = new obvious::Matrix(100, 2);
     for(int i=0; i<100; i++)
     {
       double di = (double) i;
@@ -56,7 +56,7 @@ int main(int argc, char** argv)
    */
   int iterations                 = 100;
   //PairAssignment* assigner       = (PairAssignment*)  new AnnPairAssignment(2);
-  PairAssignment* assigner       = (PairAssignment*)  new FlannPairAssignment(2);
+  PairAssignment* assigner       = (PairAssignment*)  new FlannPairAssignment(2, 0.0, true);
   //PairAssignment* assigner       = (PairAssignment*)  new NaboPairAssignment(2);
   IPostAssignmentFilter* filterD = (IPostAssignmentFilter*) new DistanceFilter(1.5, 0.01, iterations);
   assigner->addPostFilter(filterD);
@@ -81,9 +81,9 @@ int main(int argc, char** argv)
   char folder[6] = "trace";
   icp->serializeTrace(folder, animationDelay);
   */
-  vector<Matrix> vT;
+  vector<obvious::Matrix> vT;
 
-  Matrix Tinit(4, 4);
+  obvious::Matrix Tinit(4, 4);
   Tinit.setIdentity();
   vT.push_back(Tinit);
 
@@ -100,7 +100,7 @@ int main(int argc, char** argv)
   vT.push_back(Tinit);*/
 
   IcpMultiInitIterator multiIcp(vT);
-  Matrix F = multiIcp.iterate(icp);
+  obvious::Matrix F = multiIcp.iterate(icp);
 
   cout << "Applied transformation:" << endl;
   T.print();

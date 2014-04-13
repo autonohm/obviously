@@ -29,16 +29,11 @@ void RayCastPolar2D::calcCoordsFromCurrentView(TsdGrid* grid, SensorPolar2D* sen
   Timer t;
   *cnt = 0;
 
-  double c[2];
-  double n[2];
-  Matrix M(3,1);
-  Matrix N(3,1);
   Matrix T = sensor->getTransformation();
   T.invert();
-  M(2,0) = 1.0;
-  N(2,0) = 0.0; // no translation for normals
 
   Matrix* R = sensor->getNormalizedRayMap(grid->getCellSize());
+  unsigned int count = sensor->getRealMeasurementSize();
 
   if(grid->isInsideGrid(sensor))
   {
@@ -63,7 +58,20 @@ void RayCastPolar2D::calcCoordsFromCurrentView(TsdGrid* grid, SensorPolar2D* sen
   _idxMin = sensor->getMinimumRange() / grid->getCellSize();
   _idxMax = sensor->getMaximumRange() / grid->getCellSize();
 
-  for (unsigned int beam = 0; beam < sensor->getRealMeasurementSize(); beam++)
+#pragma omp parallel
+{
+  double c[2];
+  double n[2];
+  Matrix M(3,1);
+  Matrix N(3,1);
+  M(2,0) = 1.0;
+  N(2,0) = 0.0; // no translation for normals
+  unsigned int size_tmp    = 0;
+  double* c_tmp            = new double[count*2];
+  double* n_tmp            = new double[count*2];
+
+#pragma omp for schedule(dynamic)
+  for (unsigned int beam = 0; beam < count; beam++)
   {
     double ray[2];
     ray[0] = (*R)(0, beam);
@@ -78,11 +86,23 @@ void RayCastPolar2D::calcCoordsFromCurrentView(TsdGrid* grid, SensorPolar2D* sen
       N       = T * N;
       for (unsigned int i = 0; i < 2; i++)
       {
-        coords[*cnt] = M(i,0);
-        normals[(*cnt)++] = N(i,0);
+        c_tmp[size_tmp] = M(i,0);
+        n_tmp[size_tmp++] = N(i,0);
       }
     }
   }
+
+#pragma omp critical
+  {
+      memcpy(&coords[*cnt],  c_tmp,     size_tmp*sizeof(double));
+      memcpy(&normals[*cnt], n_tmp,     size_tmp*sizeof(double));
+      //memcpy(&rgb[*size],     color_tmp, size_tmp*sizeof(unsigned char));
+      *cnt += size_tmp;
+  }
+    delete[] c_tmp;     c_tmp = NULL;
+    delete[] n_tmp;     n_tmp = NULL;
+   // delete[] color_tmp; color_tmp = NULL;
+}
 
   LOGMSG(DBG_DEBUG, "Elapsed TSDF projection: " << t.getTime() << "ms");
   LOGMSG(DBG_DEBUG, "Ray casting finished! Found " << *cnt << " coordinates");
@@ -91,16 +111,9 @@ void RayCastPolar2D::calcCoordsFromCurrentView(TsdGrid* grid, SensorPolar2D* sen
 void RayCastPolar2D::calcCoordsFromCurrentViewMask(TsdGrid* grid, SensorPolar2D* sensor, double* coords, double* normals, bool* mask)
 {
   Timer t;
-  unsigned int cnt = 0;
 
-  double c[2];
-  double n[2];
-  Matrix M(3,1);
-  Matrix N(3,1);
   Matrix T = sensor->getTransformation();
   T.invert();
-  M(2,0) = 1.0;
-  N(2,0) = 0.0; // no translation for normals
 
   Matrix* R = sensor->getNormalizedRayMap(grid->getCellSize());
 
@@ -127,6 +140,16 @@ void RayCastPolar2D::calcCoordsFromCurrentViewMask(TsdGrid* grid, SensorPolar2D*
   _idxMin = sensor->getMinimumRange() / grid->getCellSize();
   _idxMax = sensor->getMaximumRange() / grid->getCellSize();
 
+#pragma omp parallel
+{
+  double c[2];
+  double n[2];
+  Matrix M(3,1);
+  Matrix N(3,1);
+  M(2,0) = 1.0;
+  N(2,0) = 0.0; // no translation for normals
+
+#pragma omp for schedule (dynamic)
   for (unsigned int beam = 0; beam < sensor->getRealMeasurementSize(); beam++)
   {
     double ray[2];
@@ -145,16 +168,16 @@ void RayCastPolar2D::calcCoordsFromCurrentViewMask(TsdGrid* grid, SensorPolar2D*
       normals[2*beam] = N(0,0);
       normals[2*beam+1] = N(1,0);
       mask[beam] = true;
-      cnt++;
     }
     else
     {
       mask[beam] = false;
     }
   }
+}
 
   LOGMSG(DBG_DEBUG, "Elapsed TSDF projection: " << t.getTime() << "ms");
-  LOGMSG(DBG_DEBUG, "Ray casting finished! Found " << cnt << " valid coordinates");
+  LOGMSG(DBG_DEBUG, "Ray casting finished!");
 }
 
 bool RayCastPolar2D::rayCastFromCurrentView(TsdGrid* grid, SensorPolar2D* sensor, double ray[2], double coordinates[2], double normal[2])

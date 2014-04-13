@@ -51,13 +51,13 @@ void ClosedFormEstimator2D::setPairs(std::vector<StrCartesianIndexPair>* pairs)
   for (unsigned int i = 0; i < size; i++)
   {
     StrCartesianIndexPair pair = (*pairs)[i];
-    double* pdPointModel = _model[pair.indexFirst];
-    double* pdPointScene = _scene[pair.indexSecond];
-    _cm[0] += pdPointModel[0];
-    _cm[1] += pdPointModel[1];
-    _cs[0] += pdPointScene[0];
-    _cs[1] += pdPointScene[1];
-    _rms += distSqr2D(pdPointModel,pdPointScene);
+    double* pointModel = _model[pair.indexFirst];
+    double* pointScene = _scene[pair.indexSecond];
+    _cm[0] += pointModel[0];
+    _cm[1] += pointModel[1];
+    _cs[0] += pointScene[0];
+    _cs[1] += pointScene[1];
+    _rms += distSqr2D(pointModel, pointScene);
   }
   double dSize = (double) size;
   _rms /= dSize;
@@ -80,6 +80,7 @@ unsigned int ClosedFormEstimator2D::getIterations(void)
 void ClosedFormEstimator2D::estimateTransformation(Matrix* T)
 {
   double dNominator = 0.0, dDenominator = 0.0;
+
   for (unsigned int i = 0; i < (*_pairs).size(); i++)
   {
     double dXFCm = _model[(*_pairs)[i].indexFirst][0]  - _cm[0];
