@@ -19,34 +19,31 @@ using namespace obvious;
 int main(int argc, char** argv)
 {
   int animationDelay = 10;
+
   if(argc>1)
-  {
     animationDelay = atoi(argv[1]);
-  }
 
   Timer timer;
 
-  obvious::Matrix* M;
+  // Model coordinates
+  obvious::Matrix* M = new obvious::Matrix(100, 2);
 
-  if(1)
+  // Normals
+  obvious::Matrix* N = new obvious::Matrix(100, 2);
+
+  for(int i=0; i<100; i++)
   {
-    M = new obvious::Matrix(1000, 2);
-    for(int i=0; i<1000; i++)
+    double di = (double) i;
+    (*M)(i,0) = sin(di/50.0);
+    (*M)(i,1) = sin(di/10.0);
+    if(i>0)
     {
-      (*M)(i,0) = ((double)(rand()%100))/100.0;
-      (*M)(i,1) = ((double)(rand()%100))/100.0;
+      (*N)(i-1, 0) = -((*M)(i, 1) - (*M)(i-1, 1));
+      (*N)(i-1, 1) = (*M)(i, 0) - (*M)(i-1, 0);
     }
   }
-  else
-  {
-    M = new obvious::Matrix(100, 2);
-    for(int i=0; i<100; i++)
-    {
-      double di = (double) i;
-      (*M)(i,0) = sin(di/50.0);
-      (*M)(i,1) = sin(di/10.0);
-    }
-  }
+  (*N)(99, 0) = (*N)(98, 0);
+  (*N)(99, 1) = (*N)(98, 1);
 
   obvious::Matrix T = MatrixFactory::TransformationMatrix33(deg2rad(9.0), 0.4, 0.35);
   obvious::Matrix S = M->createTransform(T);
@@ -61,15 +58,16 @@ int main(int argc, char** argv)
   IPostAssignmentFilter* filterD = (IPostAssignmentFilter*) new DistanceFilter(1.5, 0.01, iterations);
   assigner->addPostFilter(filterD);
   IRigidEstimator* estimator     = (IRigidEstimator*) new ClosedFormEstimator2D();
+  //IRigidEstimator* estimator     = (IRigidEstimator*) new PointToLine2DEstimator();
 
   Icp* icp = new Icp(assigner, estimator);
-  icp->setModel(M, NULL);
+  icp->setModel(M, N);
   icp->setScene(&S, NULL);
   icp->setMaxRMS(0.0);
   icp->setMaxIterations(iterations);
   icp->activateTrace();
 
-  /*double rms;
+  double rms;
   unsigned int pairs;
   unsigned int it;
   icp->iterate(&rms, &pairs, &it);
@@ -80,8 +78,10 @@ int main(int argc, char** argv)
 
   char folder[6] = "trace";
   icp->serializeTrace(folder, animationDelay);
-  */
-  vector<obvious::Matrix> vT;
+
+
+  // Test with multiple initialization matrices
+  /*vector<obvious::Matrix> vT;
 
   obvious::Matrix Tinit(4, 4);
   Tinit.setIdentity();
@@ -93,14 +93,14 @@ int main(int argc, char** argv)
   Tinit = MatrixFactory::TransformationMatrix44(deg2rad(-30), 0, 0, 0, 0, 0);
   vT.push_back(Tinit);
 
-  /*Tinit = MatrixFactory::TranslationMatrix44(1.0, 0, 0);
+  Tinit = MatrixFactory::TranslationMatrix44(1.0, 0, 0);
   vT.push_back(Tinit);
 
   Tinit = MatrixFactory::TranslationMatrix44(0, 1.0, 0);
-  vT.push_back(Tinit);*/
+  vT.push_back(Tinit);
 
   IcpMultiInitIterator multiIcp(vT);
-  obvious::Matrix F = multiIcp.iterate(icp);
+  obvious::Matrix F = multiIcp.iterate(icp);*/
 
   cout << "Applied transformation:" << endl;
   T.print();
