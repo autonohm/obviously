@@ -93,14 +93,28 @@ void TsdGridPartition::init()
   if(_grid) return;
 
   System<TsdCell>::allocate(_cellsY+1, _cellsX+1, _grid);
-  for (unsigned int iy = 0; iy <= _cellsY; iy++)
-  {
-    for (unsigned int ix = 0; ix <= _cellsX; ix++)
+  if(_initWeight>0.0)
     {
-      _grid[iy][ix].tsd    = NAN;
-      _grid[iy][ix].weight = _initWeight;
+      for (unsigned int iy = 0; iy <= _cellsY; iy++)
+      {
+        for (unsigned int ix = 0; ix <= _cellsX; ix++)
+        {
+          _grid[iy][ix].tsd    = 1.0;
+          _grid[iy][ix].weight = _initWeight;
+        }
+      }
     }
-  }
+    else
+    {
+      for (unsigned int iy = 0; iy <= _cellsY; iy++)
+      {
+        for (unsigned int ix = 0; ix <= _cellsX; ix++)
+        {
+          _grid[iy][ix].tsd    = NAN;
+          _grid[iy][ix].weight = _initWeight;
+        }
+      }
+    }
 
   _cellCoordsHom = new Matrix(_cellsX*_cellsY, 3);
   unsigned int i=0;
