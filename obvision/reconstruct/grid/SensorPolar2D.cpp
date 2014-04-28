@@ -94,4 +94,9 @@ double SensorPolar2D::getPhiMin(void)
 {
   return _phiMin;
 }
+
+void SensorPolar2D::setTransformation(obvious::Matrix& T)
+{
+  *_T = T;
+}
 }

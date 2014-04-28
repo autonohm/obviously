@@ -30,6 +30,7 @@ public:
    */
   ~SensorPolar2D();
 
+
   /**
    * Assign an arbitrary 2D coordinate to a measurement beam
    * @param[in] coordinate vector
@@ -56,6 +57,8 @@ public:
    * @return minimum angle
    */
   double getPhiMin();
+
+  void setTransformation(obvious::Matrix& T);
 
 private:
 
