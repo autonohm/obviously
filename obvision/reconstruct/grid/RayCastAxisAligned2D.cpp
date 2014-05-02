@@ -45,14 +45,27 @@ void RayCastAxisAligned2D::calcCoords(TsdGrid* grid, double* coords, double* nor
               if(occupiedGrid)
                 occupiedGrid[gridOffset + py * grid->getCellsX() + px ] = ((tsd > 0.0) ? 0 : -1);
               // Check sign change
-              if(tsd_prev > 0 && tsd < 0)
+              if((tsd_prev > 0 && tsd < 0) || (tsd_prev < 0 && tsd > 0))
               {
                 interp = tsd_prev / (tsd_prev - tsd);
-                coords[(*cnt)]   = px*cellSize + cellSize * (interp-1.0) + (x * p->getWidth()) * cellSize;
-                coords[(*cnt)+1] = py*cellSize + (y * p->getHeight())* cellSize;
+                //                coords[(*cnt)]   = px*cellSize + cellSize * (interp-1.0) + (x * p->getWidth()) * cellSize;
+                //                coords[(*cnt)+1] = py*cellSize + (y * p->getHeight())* cellSize;
+                double cordsTmpX = coords[(*cnt)]   = px*cellSize + cellSize * (interp-1.0) + (x * p->getWidth()) * cellSize;
+                double cordsTmpY = py*cellSize + (y * p->getHeight())* cellSize;
+                double smCellSize = 0.3 * cellSize;
+                coords[(*cnt)++]   = cordsTmpX;
+                coords[(*cnt)++] = cordsTmpY;
+                coords[(*cnt)++] = cordsTmpX + smCellSize;
+                coords[(*cnt)++] = cordsTmpY + smCellSize;
+                coords[(*cnt)++] = cordsTmpX - smCellSize;
+                coords[(*cnt)++] = cordsTmpY - smCellSize;
+                coords[(*cnt)++] = cordsTmpX + smCellSize;
+                coords[(*cnt)++] = cordsTmpY - smCellSize;
+                coords[(*cnt)++] = cordsTmpX - smCellSize;
+                coords[(*cnt)++] = cordsTmpY + smCellSize;
                 if(normals)
                   grid->interpolateNormal(coords, &(normals[*cnt]));
-                (*cnt) += 2;
+                //(*cnt) += 2;
               }
               tsd_prev = tsd;
             }
@@ -67,14 +80,44 @@ void RayCastAxisAligned2D::calcCoords(TsdGrid* grid, double* coords, double* nor
               if(tsd_prev > 0 && tsd < 0)
               {
                 interp = tsd_prev / (tsd_prev - tsd);
-                coords[(*cnt)]   = px*cellSize + (x * p->getWidth()) * cellSize;
-                coords[(*cnt)+1] = py*cellSize + cellSize * (interp-1.0) + (y * p->getHeight())* cellSize;
+                //                coords[(*cnt)]   = px*cellSize + (x * p->getWidth()) * cellSize;
+                //                coords[(*cnt)+1] = py*cellSize + cellSize * (interp-1.0) + (y * p->getHeight())* cellSize;
+                double cordsTmpX = coords[(*cnt)]   = px*cellSize + cellSize * (interp-1.0) + (x * p->getWidth()) * cellSize;
+                double cordsTmpY = py*cellSize + (y * p->getHeight())* cellSize;
+                double smCellSize = 0.3 * cellSize;
+                coords[(*cnt)++]   = cordsTmpX;
+                coords[(*cnt)++] = cordsTmpY;
+                coords[(*cnt)++] = cordsTmpX + smCellSize;
+                coords[(*cnt)++] = cordsTmpY + smCellSize;
+                coords[(*cnt)++] = cordsTmpX - smCellSize;
+                coords[(*cnt)++] = cordsTmpY - smCellSize;
+                coords[(*cnt)++] = cordsTmpX + smCellSize;
+                coords[(*cnt)++] = cordsTmpY - smCellSize;
+                coords[(*cnt)++] = cordsTmpX - smCellSize;
+                coords[(*cnt)++] = cordsTmpY + smCellSize;
                 if(normals)
                   grid->interpolateNormal(coords, &(normals[*cnt]));
-                (*cnt) += 2;
+                //(*cnt) += 2;
               }
               tsd_prev = tsd;
             }
+          }
+        }
+      }
+      else   //partition is not initialized
+      {
+        if(p->isEmpty())  //partition is empty
+        {
+//          std::cout << __PRETTY_FUNCTION__ << " isempty!\n";
+          if(occupiedGrid)
+            gridOffset = y * cellsPPart * partitionsInX + x * cellsPPX;
+          for(unsigned int py=0; py<p->getHeight(); py++)
+          {
+            if(occupiedGrid)
+              occupiedGrid[gridOffset + py * grid->getCellsX()] = 0;
+            for(unsigned int px=1; px<p->getWidth(); px++)
+              if(occupiedGrid)
+                occupiedGrid[gridOffset + py * grid->getCellsX() + px ] = 0;
           }
         }
       }
