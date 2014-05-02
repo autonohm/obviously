@@ -46,6 +46,9 @@ void SensorProjective3D::init(unsigned int cols, unsigned int rows, double PData
       (*_rays)(1, i) = ray(1, 0) / len;
       (*_rays)(2, i) = ray(2, 0) / len;
     }
+
+  _raysLocal = new Matrix(3, _size);
+  *_raysLocal = *_rays;
 }
 
 SensorProjective3D::~SensorProjective3D()
@@ -54,6 +57,7 @@ SensorProjective3D::~SensorProjective3D()
   delete[] _data; _data = NULL;
   delete[] _mask; _mask = NULL;
   delete _rays;
+  delete _raysLocal;
 }
 
 void SensorProjective3D::project2Space(const unsigned int col, const unsigned int row, const double depth, Matrix* coord)

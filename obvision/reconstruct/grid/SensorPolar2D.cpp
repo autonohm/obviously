@@ -38,6 +38,9 @@ SensorPolar2D::SensorPolar2D(unsigned int size, double angularRes, double phiMin
     (*_rays)(0, i) = cos(phi);
     (*_rays)(1, i) = sin(phi);
   }
+
+  _raysLocal = new Matrix(2, size);
+  *_raysLocal = *_rays;
 }
 
 SensorPolar2D::~SensorPolar2D()
@@ -46,6 +49,7 @@ SensorPolar2D::~SensorPolar2D()
   delete [] _mask;
 
   delete _rays;
+  delete _raysLocal;
 }
 
 int SensorPolar2D::backProject(double data[2])

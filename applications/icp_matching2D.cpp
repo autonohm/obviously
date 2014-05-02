@@ -36,14 +36,30 @@ int main(int argc, char** argv)
     double di = (double) i;
     (*M)(i,0) = sin(di/50.0);
     (*M)(i,1) = sin(di/10.0);
-    if(i>0)
-    {
-      (*N)(i-1, 0) = -((*M)(i, 1) - (*M)(i-1, 1));
-      (*N)(i-1, 1) = (*M)(i, 0) - (*M)(i-1, 0);
-    }
   }
-  (*N)(99, 0) = (*N)(98, 0);
-  (*N)(99, 1) = (*N)(98, 1);
+
+  // compute mean of components build by left and right neighbors
+  for(int i=1; i<99; i++)
+  {
+    double xleft  = (*M)(i, 0) - (*M)(i-1, 0);
+    double xright = (*M)(i+1, 0) - (*M)(i, 0);
+    double yleft  = (*M)(i, 1) - (*M)(i-1, 1);
+    double yright = (*M)(i+1, 1) - (*M)(i, 1);
+
+    // x-component of normal
+    (*N)(i-1, 0) = -(yright+yleft)/2.0;
+
+    // y-component of normal
+    (*N)(i-1, 1) =  (xright+xleft)/2.0;
+  }
+
+  // left bound
+  (*N)(0, 0) = -((*M)(1, 1) - (*M)(0, 1));
+  (*N)(0, 1) =  (*M)(1, 0) - (*M)(0, 0);
+
+  // right bound
+  (*N)(99, 0) = -((*M)(99, 1) - (*M)(98, 1));
+  (*N)(99, 1) =  (*M)(99, 0) - (*M)(98, 0);
 
   obvious::Matrix T = MatrixFactory::TransformationMatrix33(deg2rad(9.0), 0.4, 0.35);
   obvious::Matrix S = M->createTransform(T);
@@ -57,8 +73,8 @@ int main(int argc, char** argv)
   //PairAssignment* assigner       = (PairAssignment*)  new NaboPairAssignment(2);
   IPostAssignmentFilter* filterD = (IPostAssignmentFilter*) new DistanceFilter(1.5, 0.01, iterations);
   assigner->addPostFilter(filterD);
-  IRigidEstimator* estimator     = (IRigidEstimator*) new ClosedFormEstimator2D();
-  //IRigidEstimator* estimator     = (IRigidEstimator*) new PointToLine2DEstimator();
+  //IRigidEstimator* estimator     = (IRigidEstimator*) new ClosedFormEstimator2D();
+  IRigidEstimator* estimator     = (IRigidEstimator*) new PointToLine2DEstimator();
 
   Icp* icp = new Icp(assigner, estimator);
   icp->setModel(M, N);

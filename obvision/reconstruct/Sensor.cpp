@@ -50,6 +50,9 @@ void Sensor::transform(Matrix* T)
 
   (*_rays) = R * (*_rays);
 
+  // Transform sensor in his own coordinate system
+  // P' = P T = [Rp | tp] [R | t] = [Rp R | Rp t + tp]
+  // , where P is the old and P' is the new pose
   (*_T) = (*_T) * *T;
 }
 
@@ -91,6 +94,11 @@ Matrix Sensor::getTransformation()
   return T;
 }
 
+void Sensor::setTransformation(Matrix T)
+{
+  *_T = T;
+}
+
 void Sensor::resetTransformation()
 {
   _T->setIdentity();
@@ -126,12 +134,40 @@ void Sensor::setRealMeasurementData(vector<float> data, float scale)
   }
 
   for(unsigned int i=0; i<data.size(); i++)
-    _data[i] = data[i] * scale;
+    _data[i] = (double)(data[i] * scale);
 }
 
 double* Sensor::getRealMeasurementData()
 {
   return _data;
+}
+
+unsigned int Sensor::dataToCartesianVector(double* &coords)
+{
+  unsigned int cnt = 0;
+  for(unsigned int i=0; i<_size; i++)
+  {
+    if(_mask[i])
+    {
+      for(unsigned int j=0; j<_dim; j++)
+      {
+        coords[cnt++] = (*_raysLocal)(j, i) * _data[i];
+      }
+    }
+  }
+  return cnt;
+}
+
+Matrix Sensor::dataToHomogeneousCoordMatrix()
+{
+  Matrix M(_dim+1, _size);
+  for(unsigned int i=0; i<_size; i++)
+  {
+    for(unsigned int j=0; j<_dim; j++)
+      M(j, i) = (*_raysLocal)(j, i) * _data[i];
+    M(_dim, i) = 1.0;
+  }
+  return M;
 }
 
 void Sensor::setRealMeasurementAccuracy(double* accuracy)

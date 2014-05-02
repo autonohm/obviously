@@ -63,6 +63,9 @@ SensorPolar3D::SensorPolar3D(unsigned int beams, double thetaRes, double thetaMi
     }
   }
 
+  _raysLocal = new Matrix(3, _size);
+  *_raysLocal = *_rays;
+
   double phi_corr = (M_PI / ((double)_height) / ((double)_width)) * 270.0/360.0;
   for(unsigned int r=0; r<_height; r++)
   {
@@ -84,6 +87,7 @@ SensorPolar3D::~SensorPolar3D()
   System<int>::deallocate(_indexMap);
 
   delete _rays;
+  delete _raysLocal;
 }
 
 void SensorPolar3D::setDistanceMap(vector<float> phi, vector<float> dist)

@@ -66,9 +66,9 @@ void RayCastPolar2D::calcCoordsFromCurrentView(TsdGrid* grid, SensorPolar2D* sen
   Matrix N(3,1);
   M(2,0) = 1.0;
   N(2,0) = 0.0; // no translation for normals
-  unsigned int size_tmp    = 0;
-  double* c_tmp            = new double[count*2];
-  double* n_tmp            = new double[count*2];
+  unsigned int size_tmp = 0;
+  double* c_tmp         = new double[count*2];
+  double* n_tmp         = new double[count*2];
 
 #pragma omp for schedule(dynamic)
   for (unsigned int beam = 0; beam < count; beam++)
@@ -76,12 +76,12 @@ void RayCastPolar2D::calcCoordsFromCurrentView(TsdGrid* grid, SensorPolar2D* sen
     double ray[2];
     ray[0] = (*R)(0, beam);
     ray[1] = (*R)(1, beam);
-    if (rayCastFromCurrentView(grid, sensor, ray, c, n)) // Ray returned with coordinates
+    if (rayCastFromCurrentView(grid, sensor, ray, c, n))
     {
-      M(0,0) = c[0];
-      M(1,0) = c[1];
-      N(0,0) = n[0];
-      N(1,0) = n[1];
+      M(0,0)  = c[0];
+      M(1,0)  = c[1];
+      N(0,0)  = n[0];
+      N(1,0)  = n[1];
       M       = T * M;
       N       = T * N;
       for (unsigned int i = 0; i < 2; i++)
@@ -94,14 +94,12 @@ void RayCastPolar2D::calcCoordsFromCurrentView(TsdGrid* grid, SensorPolar2D* sen
 
 #pragma omp critical
   {
-      memcpy(&coords[*cnt],  c_tmp,     size_tmp*sizeof(double));
-      memcpy(&normals[*cnt], n_tmp,     size_tmp*sizeof(double));
-      //memcpy(&rgb[*size],     color_tmp, size_tmp*sizeof(unsigned char));
+      memcpy(&coords[*cnt],  c_tmp, size_tmp*sizeof(double));
+      memcpy(&normals[*cnt], n_tmp, size_tmp*sizeof(double));
       *cnt += size_tmp;
   }
     delete[] c_tmp;     c_tmp = NULL;
     delete[] n_tmp;     n_tmp = NULL;
-   // delete[] color_tmp; color_tmp = NULL;
 }
 
   LOGMSG(DBG_DEBUG, "Elapsed TSDF projection: " << t.getTime() << "ms");
@@ -155,17 +153,17 @@ void RayCastPolar2D::calcCoordsFromCurrentViewMask(TsdGrid* grid, SensorPolar2D*
     double ray[2];
     ray[0] = (*R)(0, beam);
     ray[1] = (*R)(1, beam);
-    if (rayCastFromCurrentView(grid, sensor, ray, c, n)) // Ray returned with coordinates
+    if (rayCastFromCurrentView(grid, sensor, ray, c, n))
     {
-      M(0,0) = c[0];
-      M(1,0) = c[1];
-      N(0,0) = n[0];
-      N(1,0) = n[1];
-      M       = T * M;
-      N       = T * N;
-      coords[2*beam] = M(0,0);
-      coords[2*beam+1] = M(1,0);
-      normals[2*beam] = N(0,0);
+      M(0,0)            = c[0];
+      M(1,0)            = c[1];
+      N(0,0)            = n[0];
+      N(1,0)            = n[1];
+      M                 = T * M;
+      N                 = T * N;
+      coords[2*beam]    = M(0,0);
+      coords[2*beam+1]  = M(1,0);
+      normals[2*beam]   = N(0,0);
       normals[2*beam+1] = N(1,0);
       mask[beam] = true;
     }

@@ -111,22 +111,19 @@ int main(int argc, char* argv[])
 
   // Compose ICP modules
   int iterations                 = 25;
-  PairAssignment* assigner       = (PairAssignment*)  new AnnPairAssignment(2);
+  PairAssignment* assigner       = (PairAssignment*)  new FlannPairAssignment(2, 0.0, true);
   OutOfBoundsFilter2D* filterBounds = new OutOfBoundsFilter2D(_grid->getMinX(), _grid->getMaxX(), _grid->getMinY(), _grid->getMaxY());
   filterBounds->setPose(&Tinit);
   assigner->addPreFilter(filterBounds);
   DistanceFilter* filterDist = new DistanceFilter(2.0, 0.01, iterations-3);
   assigner->addPostFilter(filterDist);
 
-//  // choose estimator
-//  IRigidEstimator* estimator;
-//  if (estType == PTP)
-//    estimator     = (IRigidEstimator*) new ClosedFormEstimator2D();
-//  else
-//    IRigidEstimator* estimator    = (IRigidEstimator*) new PointToLine2DEstimator();
-
-  IRigidEstimator* estimator    = (IRigidEstimator*) new ClosedFormEstimator2D();
-
+  // choose estimator
+  IRigidEstimator* estimator;
+  if (estType == PTP)
+    estimator     = (IRigidEstimator*) new ClosedFormEstimator2D();
+  else
+    estimator    = (IRigidEstimator*) new PointToLine2DEstimator();
 
   Icp* icp = new Icp(assigner, estimator);
   icp->setMaxRMS(0.0);

@@ -53,10 +53,16 @@ public:
    */
   virtual double getMinimumRange();
 
+  /**
+   * Access matrix of measurement rays with parameterizable normalization
+   * @param norm normalization value
+   * @return Ray matrix, i.e. R(dimensionality, measurement size)
+   */
   virtual Matrix* getNormalizedRayMap(double norm);
 
   /**
-   * Transform current sensor pose
+   * Transform current sensor pose in his own coordinate system
+   * P' = P T = [Rp | tp] [R | t] = [Rp R | Rp t + tp], where P is the old and P' is the new pose
    * @param[in] T transformation matrix
    */
   virtual void transform(Matrix* T);
@@ -72,6 +78,12 @@ public:
    * @return (dim+1)x(dim+1) transformation matrix (R | t; 0 1)
    */
   Matrix getTransformation();
+
+  /**
+   * Set transformation matrix
+   * @param T transformation matrix
+   */
+  void setTransformation(Matrix T);
 
   /**
    * Reset sensor pose to identity
@@ -104,6 +116,14 @@ public:
    * @return vector of distance data
    */
   virtual double* getRealMeasurementData();
+
+  /**
+   * Convert distance data in measurement array to Cartesian coordinates in sensor coordinate system
+   * @param coords Output array of size dim*size. Output is grouped in n-tuples [x1 y1 ....]
+   */
+  unsigned int dataToCartesianVector(double* &coords);
+
+  Matrix dataToHomogeneousCoordMatrix();
 
   virtual void setRealMeasurementAccuracy(double* accuracy);
 
@@ -176,7 +196,11 @@ protected:
 
   double _rayNorm;
 
+  // Ray matrix in world coordinate frame
   Matrix* _rays;
+
+  // Ray matrix in sensor coordinate frame
+  Matrix* _raysLocal;
 };
 
 }
