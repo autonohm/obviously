@@ -58,8 +58,6 @@ public:
    */
   double getPhiMin();
 
-  void setTransformation(obvious::Matrix& T);
-
 private:
 
   double _angularRes;
