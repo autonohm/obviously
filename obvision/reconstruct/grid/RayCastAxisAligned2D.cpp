@@ -77,7 +77,7 @@ void RayCastAxisAligned2D::calcCoords(TsdGrid* grid, double* coords, double* nor
             for(unsigned int py = 0; py < p->getHeight(); py++)
             {
               double tsd = (*p)(py, px);
-              if(tsd_prev > 0 && tsd < 0)
+              if((tsd_prev > 0 && tsd < 0) || (tsd_prev < 0 && tsd > 0))
               {
                 interp = tsd_prev / (tsd_prev - tsd);
                 //                coords[(*cnt)]   = px*cellSize + (x * p->getWidth()) * cellSize;
