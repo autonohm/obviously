@@ -33,13 +33,16 @@ void RayCastAxisAligned2D::calcCoords(TsdGrid* grid, double* coords, double* nor
         {
           if(occupiedGrid)
             gridOffset = y * cellsPPart * partitionsInX + x * cellsPPX;
-          for(unsigned int py=0; py<p->getHeight(); py++)
+
+          // Access cells of partition including its border, i. e. dimension+1!
+          for(unsigned int py=0; py<p->getHeight()+1; py++)
           {
             double tsd_prev = (*p)(py, 0);
             double interp = 0.0;
             if(occupiedGrid)
               occupiedGrid[gridOffset + py * grid->getCellsX()] = ((tsd_prev > 0.0) ? 0 : -1);
-            for(unsigned int px=1; px<p->getWidth(); px++)
+            // Access cells of partition including its border, i. e. dimension+1!
+            for(unsigned int px=1; px<p->getWidth()+1; px++)
             {
               double tsd = (*p)(py, px);
               if(occupiedGrid)
@@ -48,56 +51,33 @@ void RayCastAxisAligned2D::calcCoords(TsdGrid* grid, double* coords, double* nor
               if((tsd_prev > 0 && tsd < 0) || (tsd_prev < 0 && tsd > 0))
               {
                 interp = tsd_prev / (tsd_prev - tsd);
-                //                coords[(*cnt)]   = px*cellSize + cellSize * (interp-1.0) + (x * p->getWidth()) * cellSize;
-                //                coords[(*cnt)+1] = py*cellSize + (y * p->getHeight())* cellSize;
-                double cordsTmpX = coords[(*cnt)]   = px*cellSize + cellSize * (interp-1.0) + (x * p->getWidth()) * cellSize;
-                double cordsTmpY = py*cellSize + (y * p->getHeight())* cellSize;
-                double smCellSize = 0.3 * cellSize;
-                coords[(*cnt)++]   = cordsTmpX;
-                coords[(*cnt)++] = cordsTmpY;
-                coords[(*cnt)++] = cordsTmpX + smCellSize;
-                coords[(*cnt)++] = cordsTmpY + smCellSize;
-                coords[(*cnt)++] = cordsTmpX - smCellSize;
-                coords[(*cnt)++] = cordsTmpY - smCellSize;
-                coords[(*cnt)++] = cordsTmpX + smCellSize;
-                coords[(*cnt)++] = cordsTmpY - smCellSize;
-                coords[(*cnt)++] = cordsTmpX - smCellSize;
-                coords[(*cnt)++] = cordsTmpY + smCellSize;
+                coords[(*cnt)]   = px*cellSize + cellSize * (interp-1.0) + (x * p->getWidth()) * cellSize;
+                coords[(*cnt)+1] = py*cellSize + (y * p->getHeight())* cellSize;
                 if(normals)
                   grid->interpolateNormal(coords, &(normals[*cnt]));
-                //(*cnt) += 2;
+                (*cnt) += 2;
               }
               tsd_prev = tsd;
             }
           }
-          for(unsigned int px = 1; px  < p->getWidth(); px++)
+          // Access cells of partition including its border, i. e. dimension+1!
+          for(unsigned int px=0; px<p->getWidth()+1; px++)
           {
             double tsd_prev = (*p)(0, px);
             double interp = 0.0;
-            for(unsigned int py = 0; py < p->getHeight(); py++)
+            // Access cells of partition including its border, i. e. dimension+1!
+            for(unsigned int py=1; py<p->getHeight()+1; py++)
             {
               double tsd = (*p)(py, px);
+              // Check sign change
               if((tsd_prev > 0 && tsd < 0) || (tsd_prev < 0 && tsd > 0))
               {
                 interp = tsd_prev / (tsd_prev - tsd);
-                //                coords[(*cnt)]   = px*cellSize + (x * p->getWidth()) * cellSize;
-                //                coords[(*cnt)+1] = py*cellSize + cellSize * (interp-1.0) + (y * p->getHeight())* cellSize;
-                double cordsTmpX = coords[(*cnt)]   = px*cellSize + cellSize * (interp-1.0) + (x * p->getWidth()) * cellSize;
-                double cordsTmpY = py*cellSize + (y * p->getHeight())* cellSize;
-                double smCellSize = 0.3 * cellSize;
-                coords[(*cnt)++]   = cordsTmpX;
-                coords[(*cnt)++] = cordsTmpY;
-                coords[(*cnt)++] = cordsTmpX + smCellSize;
-                coords[(*cnt)++] = cordsTmpY + smCellSize;
-                coords[(*cnt)++] = cordsTmpX - smCellSize;
-                coords[(*cnt)++] = cordsTmpY - smCellSize;
-                coords[(*cnt)++] = cordsTmpX + smCellSize;
-                coords[(*cnt)++] = cordsTmpY - smCellSize;
-                coords[(*cnt)++] = cordsTmpX - smCellSize;
-                coords[(*cnt)++] = cordsTmpY + smCellSize;
+                coords[(*cnt)]   = px*cellSize + (x * p->getWidth()) * cellSize;
+                coords[(*cnt)+1] = py*cellSize + cellSize * (interp-1.0) + (y * p->getHeight())* cellSize;
                 if(normals)
                   grid->interpolateNormal(coords, &(normals[*cnt]));
-                //(*cnt) += 2;
+                (*cnt) += 2;
               }
               tsd_prev = tsd;
             }
@@ -106,9 +86,8 @@ void RayCastAxisAligned2D::calcCoords(TsdGrid* grid, double* coords, double* nor
       }
       else   //partition is not initialized
       {
-        if(p->isEmpty())  //partition is empty
+        if(p->isEmpty())
         {
-//          std::cout << __PRETTY_FUNCTION__ << " isempty!\n";
           if(occupiedGrid)
             gridOffset = y * cellsPPart * partitionsInX + x * cellsPPX;
           for(unsigned int py=0; py<p->getHeight(); py++)

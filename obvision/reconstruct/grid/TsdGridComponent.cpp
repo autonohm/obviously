@@ -76,7 +76,7 @@ bool TsdGridComponent::isInRange(double pos[2], Sensor* sensor, double maxTrunca
 
     // Check if any cell comes closer than the truncation radius
     bool isVisible = false;
-    for(int j=minIdx; j<maxIdx; j++)
+    for(int j=minIdx; j<=maxIdx; j++)
     {
       if(mask[j])
         isVisible = isVisible || (data[j] > minDist);
@@ -85,7 +85,7 @@ bool TsdGridComponent::isInRange(double pos[2], Sensor* sensor, double maxTrunca
     if(!isVisible) return false;
 
     bool isEmpty = true;
-    for(int j=minIdx; j<maxIdx; j++)
+    for(int j=minIdx; j<=maxIdx; j++)
       isEmpty = isEmpty && (data[j] > maxDist) && mask[j];
 
     if(isEmpty)
