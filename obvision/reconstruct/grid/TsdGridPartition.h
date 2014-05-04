@@ -88,6 +88,8 @@ private:
   unsigned int _y;
 
   double _initWeight;
+
+  bool _initialized;
 };
 
 }

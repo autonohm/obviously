@@ -13,11 +13,13 @@ namespace obvious
 static Matrix* _partCoords;
 
 TsdGridPartition::TsdGridPartition(const unsigned int x,
-                                   const unsigned int y,
-                                   const unsigned int cellsX,
-                                   const unsigned int cellsY,
-                                   const double cellSize) : TsdGridComponent(true)
+    const unsigned int y,
+    const unsigned int cellsX,
+    const unsigned int cellsY,
+    const double cellSize) : TsdGridComponent(true)
 {
+  _initialized = false;
+
   _x = x;
   _y = y;
 
@@ -90,31 +92,31 @@ double& TsdGridPartition::operator () (unsigned int y, unsigned int x)
 
 void TsdGridPartition::init()
 {
-  if(_grid) return;
+  if(_initialized) return;
 
   System<TsdCell>::allocate(_cellsY+1, _cellsX+1, _grid);
   if(_initWeight>0.0)
+  {
+    for (unsigned int iy = 0; iy <= _cellsY; iy++)
     {
-      for (unsigned int iy = 0; iy <= _cellsY; iy++)
+      for (unsigned int ix = 0; ix <= _cellsX; ix++)
       {
-        for (unsigned int ix = 0; ix <= _cellsX; ix++)
-        {
-          _grid[iy][ix].tsd    = 1.0;
-          _grid[iy][ix].weight = _initWeight;
-        }
+        _grid[iy][ix].tsd    = 1.0;
+        _grid[iy][ix].weight = _initWeight;
       }
     }
-    else
+  }
+  else
+  {
+    for (unsigned int iy = 0; iy <= _cellsY; iy++)
     {
-      for (unsigned int iy = 0; iy <= _cellsY; iy++)
+      for (unsigned int ix = 0; ix <= _cellsX; ix++)
       {
-        for (unsigned int ix = 0; ix <= _cellsX; ix++)
-        {
-          _grid[iy][ix].tsd    = NAN;
-          _grid[iy][ix].weight = _initWeight;
-        }
+        _grid[iy][ix].tsd    = NAN;
+        _grid[iy][ix].weight = _initWeight;
       }
     }
+  }
 
   _cellCoordsHom = new Matrix(_cellsX*_cellsY, 3);
   unsigned int i=0;
@@ -127,16 +129,18 @@ void TsdGridPartition::init()
       (*_cellCoordsHom)(i,2) = 1.0;
     }
   }
+
+  _initialized = true;
 }
 
 bool TsdGridPartition::isInitialized()
 {
-  return _grid!=NULL;
+  return _initialized;
 }
 
 bool TsdGridPartition::isEmpty()
 {
-  return (_grid==NULL && _initWeight > 0.0);
+  return (!_initialized && _initWeight > 0.0);
 }
 
 unsigned int TsdGridPartition::getX()
@@ -200,7 +204,7 @@ void TsdGridPartition::addTsd(const unsigned int x, const unsigned int y, const 
 
 void TsdGridPartition::increaseEmptiness()
 {
-  if(_grid)
+  if(_initialized)
   {
     for(unsigned int y=0; y<=_cellsY; y++)
     {
@@ -232,9 +236,9 @@ double TsdGridPartition::interpolateBilinear(int x, int y, double dx, double dy)
 {
   // Interpolate
   return   _grid[y][x].tsd * (1. - dy) * (1. - dx)
-         + _grid[y + 1][x + 0].tsd *       dy  * (1. - dx)
-         + _grid[y + 0][x + 1].tsd * (1. - dy) *       dx
-         + _grid[y + 1][x + 1].tsd *       dy  *       dx;
+      + _grid[y + 1][x + 0].tsd *       dy  * (1. - dx)
+      + _grid[y + 0][x + 1].tsd * (1. - dy) *       dx
+      + _grid[y + 1][x + 1].tsd *       dy  *       dx;
 }
 
 }
