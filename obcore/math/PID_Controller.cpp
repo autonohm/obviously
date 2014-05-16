@@ -10,31 +10,47 @@
 using namespace obvious;
 
 PID_Controller::PID_Controller(void)
-: _p(0), _i(0), _d(0), _awu(0),
-  _maxOutput(-100000), _minOutput(100000),
-  _setValue(0), _isValue(0), _debug(false)
 {
+  _p         = 0;
+  _i         = 0;
+  _d         = 0;
+  _awu       = 0;
+  _maxOutput = -1e6;
+  _minOutput = 1e6;
+  _setValue  = 0;
+  _isValue   = 0;
+  _debug     = false;
 
+  _timer.reset();
 }
 
-float PID_Controller::controll(const float& isValue)
+double PID_Controller::control(const double& isValue)
 {
-  static float oldError;
-  static float i_ctrl_output;
+  static double oldError = 0.0;
+
+  // determine deltaT in seconds
+  double static lastTime = _timer.getTime();
+  const double time      = _timer.getTime();
+  const double deltaT    = (time - lastTime) / 1000.0;
+  lastTime               =  time;
 
   _isValue = isValue;
 
-  float error = _setValue - _isValue;
+  double error = _setValue - _isValue;
 
-  // calculate single controller values
-  float  p_ctrl_output  = error * _p;
-  float  d_ctrl_output  = (error - oldError) * _d;
-  i_ctrl_output         = _integrator.integrate(error);
+  double p_ctrl_output = error * _p;
+  double i_ctrl_output = _integrator.integrate(error, deltaT);
 
-  // calculate controller value
+  // ensure numerical stability
+  if(deltaT<1e-6)
+  {
+    return (p_ctrl_output + i_ctrl_output);
+  }
+
+  double d_ctrl_output = (error - oldError) / deltaT * _d;
   _setValue = p_ctrl_output + i_ctrl_output + d_ctrl_output;
 
-  // check borders
+  // check limits
   if (_setValue >= _maxOutput)
     _setValue = _maxOutput;
   if (_setValue <= _minOutput)
@@ -42,7 +58,7 @@ float PID_Controller::controll(const float& isValue)
 
   if (_debug)
   {
-    std::cout << "Error : "   << error         << std::endl;
+    std::cout << "Error : "   << error        << std::endl;
     std::cout << "p value: " << p_ctrl_output << std::endl;
     std::cout << "i value: " << i_ctrl_output << std::endl;
     std::cout << "d value: " << d_ctrl_output << std::endl;

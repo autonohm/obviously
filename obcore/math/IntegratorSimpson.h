@@ -8,8 +8,6 @@
 #ifndef INTEGRATORSIMPSON_H_
 #define INTEGRATORSIMPSON_H_
 
-#include "obcore/base/Timer.h"
-
 /**
  * @namespace obvious
  */
@@ -26,16 +24,19 @@ public:
   /**
    * Standard constructor
    */
+
   IntegratorSimpson(void);
   /**
    * Default destructor
    */
   ~IntegratorSimpson(void);
+
   /**
    * Function to set rest time of integrator
    * @param T_n                 rest time in seconds
    */
   void setRestTime(const double& T_n);
+
   /**
    * Function to set anti wind up rules
    * @param upperLimit          upper limit of output
@@ -43,12 +44,14 @@ public:
    */
   void setAntiWindup(const double& upperLimit =  10000,
                      const double& lowerLimit = -10000);
+
   /**
    * Function to update integrator with a new value
    * @param     y_n             new value
    * @return    output
    */
-  const double& integrate(const double& error);
+  const double& integrate(const double& error, const double& deltaT);
+
   /**
    * Function to reset integrator
    */
@@ -61,8 +64,6 @@ private:
 
   double                _e_n, _e_n_1, _e_n_2;  //!< error variables
   double                _y_n, _y_n_1, _y_n_2;  //!< output variables
-
-  Timer                 _timer;                //!< timer necessary to get delta t
 };
 
 } // namespace
