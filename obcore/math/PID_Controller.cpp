@@ -39,7 +39,7 @@ double PID_Controller::control(const double& isValue)
   double error = _setValue - _isValue;
 
   double p_ctrl_output = error * _p;
-  double i_ctrl_output = _integrator.integrate(error, deltaT);
+  double i_ctrl_output = _i * _integrator.integrate(error, deltaT);
 
   // ensure numerical stability
   if(deltaT<1e-6)
@@ -48,6 +48,7 @@ double PID_Controller::control(const double& isValue)
   }
 
   double d_ctrl_output = (error - oldError) / deltaT * _d;
+
   _setValue = p_ctrl_output + i_ctrl_output + d_ctrl_output;
 
   // check limits
