@@ -9,35 +9,39 @@ namespace obvious
 {
 
 enum EnumTsdGridLayout { LAYOUT_1x1=0,
-                         LAYOUT_2x2=1,
-                         LAYOUT_4x4=2,
-                         LAYOUT_8x8=3,
-                         LAYOUT_16x16=4,
-                         LAYOUT_32x32=5,
-                         LAYOUT_64x64=6,
-                         LAYOUT_128x128=7,
-                         LAYOUT_256x256=8,
-                         LAYOUT_512x512=9,
-                         LAYOUT_1024x1024=10,
-                         LAYOUT_2048x2048=11,
-                         LAYOUT_4096x4096=12,
-                         LAYOUT_8192x8192=13,
-                         LAYOUT_16384x16384=14,
-                         LAYOUT_36768x36768=15};
+  LAYOUT_2x2=1,
+  LAYOUT_4x4=2,
+  LAYOUT_8x8=3,
+  LAYOUT_16x16=4,
+  LAYOUT_32x32=5,
+  LAYOUT_64x64=6,
+  LAYOUT_128x128=7,
+  LAYOUT_256x256=8,
+  LAYOUT_512x512=9,
+  LAYOUT_1024x1024=10,
+  LAYOUT_2048x2048=11,
+  LAYOUT_4096x4096=12,
+  LAYOUT_8192x8192=13,
+  LAYOUT_16384x16384=14,
+  LAYOUT_36768x36768=15};
 
 enum EnumTsdGridInterpolate { INTERPOLATE_SUCCESS=0,
-                              INTERPOLATE_INVALIDINDEX=1,
-                              INTERPOLATE_EMPTYPARTITION=2,
-                              INTERPOLATE_ISNAN=3};
+  INTERPOLATE_INVALIDINDEX=1,
+  INTERPOLATE_EMPTYPARTITION=2,
+  INTERPOLATE_ISNAN=3};
+
+enum EnumTsdGridPartitionIdentifier{ UNINITIALIZED = 0,
+  EMPTY = 1,
+  CONTENT = 2};
 
 /**
  * @class TsdGrid
  * @brief Grid on the basis of true signed distance functions
  * @author Stefan May, Philipp Koch
  */
-class TsdGrid
-{
-public:
+ class TsdGrid
+ {
+ public:
 
   /**
    * Standard constructor
@@ -47,6 +51,13 @@ public:
    * @param[in] layoutGrid Grid layout, i.e., partitions in grid
    */
   TsdGrid(const double cellSize, const EnumTsdGridLayout layoutPartition, const EnumTsdGridLayout layoutGrid);
+
+  /**
+   * Constructor
+   * Loads the grid data out of a given file. File has to be correct it is not being checked.
+   * @param[in] path path to the data file
+   */
+  TsdGrid(const std::string& path);
 
   /**
    * Destructor
@@ -180,7 +191,16 @@ public:
    */
   bool isInsideGrid(Sensor* sensor);
 
-private:
+  /**
+   * Method to write the content of the grid into a given file
+   * @param path Path where data file is created
+   * @return True in case of success
+   */
+  bool storeGrid(const std::string& path);
+
+ private:
+
+  void init(const double cellSize, const EnumTsdGridLayout layoutPartition, const EnumTsdGridLayout layoutGrid);
 
   void pushRecursion(SensorPolar2D* sensor, double pos[2], TsdGridComponent* comp, vector<TsdGridPartition*> &partitionsToCheck);
 
@@ -215,7 +235,12 @@ private:
   int _partitionsInX;
 
   int _partitionsInY;
-};
+
+  EnumTsdGridLayout _layoutPartitions;
+
+  EnumTsdGridLayout _layoutGrid;
+
+ };
 
 }
 

@@ -16,18 +16,103 @@ namespace obvious
 
 TsdGrid::TsdGrid(const double cellSize, const EnumTsdGridLayout layoutPartition, const EnumTsdGridLayout layoutGrid)
 {
+  this->init(cellSize, layoutPartition, layoutGrid);
+}
+
+TsdGrid::TsdGrid(const std::string& path)
+{
+  /* Data file:
+   * Cell dimensions
+   * Grid dimensions
+   * Grid data partition[row][col].cells[row][col]
+   */
+  std::fstream inFile;
+  char buffer[1000];
+  double cellSize=0.0;
+  double maxTruncation=0.0;
+  EnumTsdGridLayout layoutPartition;
+  EnumTsdGridLayout layoutGrid;
+
+  inFile.open(path.c_str(), std::fstream::in);
+  if(!inFile.is_open())
+  {
+    LOGMSG(DBG_ERROR, " error opening file " << path << "\n");
+    std::exit(2);
+  }
+  inFile.getline(buffer, 1000);
+  cellSize = std::atof(buffer);
+  inFile.getline(buffer, 1000);
+  layoutPartition = static_cast<EnumTsdGridLayout>(std::atoi(buffer));
+  inFile.getline(buffer, 1000);
+  layoutGrid = static_cast<EnumTsdGridLayout>(std::atoi(buffer));
+  if( (layoutGrid < 0) || (layoutPartition < 0) || (layoutGrid > 15) || (layoutPartition > 15) )
+  {
+    LOGMSG(DBG_ERROR, " error! Partition or Gridlayout invalid!\n");
+    inFile.close();
+    std::exit(3);
+  }
+  inFile.getline(buffer, 1000);
+  maxTruncation=std::atof(buffer);
+  this->init(cellSize, layoutPartition, layoutGrid);
+  this->setMaxTruncation(maxTruncation);
+  for(int y = 0; y < _partitionsInY; y++)
+  {
+    for(int x = 0; x < _partitionsInX; x++)
+    {
+      inFile.getline(buffer, 1000);
+      EnumTsdGridPartitionIdentifier id = static_cast<EnumTsdGridPartitionIdentifier>(std::atoi(buffer));
+      TsdGridPartition* curPart = _partitions[y][x];
+      if(id == UNINITIALIZED)
+      {
+        continue;
+      }
+      else if(id == EMPTY)
+      {
+        inFile.getline(buffer, 1000);
+        curPart->_initWeight = std::atof(buffer);
+        curPart->_initWeight = std::min(curPart->_initWeight, TSDGRIDMAXWEIGHT);
+      }
+      else if(id == CONTENT)
+      {
+        curPart->init();
+        for(unsigned int py=0; py < curPart->getHeight(); py++)
+        {
+          for(unsigned int px = 0; px < curPart->getWidth(); px++)
+          {
+            inFile.getline(buffer, 1000);
+            curPart->_grid[py][px].tsd = std::atof(buffer);
+            inFile.getline(buffer, 1000);
+            curPart->_grid[py][px].weight = std::atof(buffer);
+          }
+        }
+      }
+      else
+      {
+        LOGMSG(DBG_ERROR, " error! Unknown partition identifier partition(" << x << "/" << y << ")\n");
+        inFile.close();
+        std::exit(3);
+      }
+    }
+  }
+  inFile.close();
+  if(inFile.is_open())
+    LOGMSG(DBG_DEBUG, " warning! Closing of file " << path << " failed.\n");
+}
+
+void TsdGrid::init(const double cellSize, const EnumTsdGridLayout layoutPartition, const EnumTsdGridLayout layoutGrid)
+{
   _cellSize = cellSize;
   _invCellSize = 1.0 / _cellSize;
 
   _cellsX = (unsigned int)pow(2.0,layoutGrid);
-  _cellsY = _cellsX;
+  _cellsY = _cellsX; //toDo: What if the grid is not quadratic?
 
   _dimPartition = (unsigned int)pow(2.0,layoutPartition);
 
   if(_dimPartition > _cellsX)
   {
     LOGMSG(DBG_ERROR, "Insufficient partition size : " << _dimPartition << "x" << _dimPartition << " in "
-                                                       << _cellsX << "x" << _cellsY << " grid");
+        << _cellsX << "x" << _cellsY << " grid");
     return;
   }
 
@@ -39,7 +124,7 @@ TsdGrid::TsdGrid(const double cellSize, const EnumTsdGridLayout layoutPartition,
   _maxTruncation = 2.0*cellSize;
 
   LOGMSG(DBG_DEBUG, "Grid dimensions: " << _cellsX << "x" << _cellsY << " cells" <<
-                    " = " << ((double)_cellsX)*cellSize << "x" << ((double)_cellsY)*cellSize << " sqm");
+      " = " << ((double)_cellsX)*cellSize << "x" << ((double)_cellsY)*cellSize << " sqm");
 
   _minX = 0.0;
   _maxX = ((double)_cellsX + 0.5) * _cellSize;
@@ -67,6 +152,8 @@ TsdGrid::TsdGrid(const double cellSize, const EnumTsdGridLayout layoutPartition,
     TsdGridBranch* tree = new TsdGridBranch((TsdGridComponent***)_partitions, 0, 0, depthTree);
     _tree = tree;
   }
+  _layoutPartitions = layoutPartition;
+  _layoutGrid = layoutGrid;
 }
 
 TsdGrid::~TsdGrid(void)
@@ -161,42 +248,42 @@ void TsdGrid::push(SensorPolar2D* sensor)
 
 #pragma omp parallel
   {
-  unsigned int partSize = (_partitions[0][0])->getSize();
-  int* idx = new int[partSize];
+    unsigned int partSize = (_partitions[0][0])->getSize();
+    int* idx = new int[partSize];
 #pragma omp for schedule(dynamic)
-  for(unsigned int i=0; i<(unsigned int)(_partitionsInX*_partitionsInY); i++)
-  {
-    TsdGridPartition* part = _partitions[0][i];
-    if(!part->isInRange(tr, sensor, _maxTruncation)) continue;
-
-    part->init();
-
-    Matrix* partCoords = part->getPartitionCoords();
-    Matrix* cellCoordsHom = part->getCellCoordsHom();
-    sensor->backProject(cellCoordsHom, idx);
-
-    for(unsigned int c=0; c<partSize; c++)
+    for(unsigned int i=0; i<(unsigned int)(_partitionsInX*_partitionsInY); i++)
     {
-      // Index of laser beam
-      int index = idx[c];
+      TsdGridPartition* part = _partitions[0][i];
+      if(!part->isInRange(tr, sensor, _maxTruncation)) continue;
 
-      if(index>=0)
+      part->init();
+
+      Matrix* partCoords = part->getPartitionCoords();
+      Matrix* cellCoordsHom = part->getCellCoordsHom();
+      sensor->backProject(cellCoordsHom, idx);
+
+      for(unsigned int c=0; c<partSize; c++)
       {
-        if(mask[index])
-        {
-          // calculate distance of current cell to sensor
-          double crd[2];
-          crd[0] = (*cellCoordsHom)(c,0);
-          crd[1] = (*cellCoordsHom)(c,1);
-          double distance = euklideanDistance<double>(tr, crd, 2);
-          double sd = data[index] - distance;
+        // Index of laser beam
+        int index = idx[c];
 
-          part->addTsd((*partCoords)(c, 0), (*partCoords)(c, 1), sd, _maxTruncation);
+        if(index>=0)
+        {
+          if(mask[index])
+          {
+            // calculate distance of current cell to sensor
+            double crd[2];
+            crd[0] = (*cellCoordsHom)(c,0);
+            crd[1] = (*cellCoordsHom)(c,1);
+            double distance = euklideanDistance<double>(tr, crd, 2);
+            double sd = data[index] - distance;
+
+            part->addTsd((*partCoords)(c, 0), (*partCoords)(c, 1), sd, _maxTruncation);
+          }
         }
       }
     }
-  }
-  delete [] idx;
+    delete [] idx;
   }
 
   propagateBorders();
@@ -221,40 +308,40 @@ void TsdGrid::pushTree(SensorPolar2D* sensor)
 
 #pragma omp parallel
   {
-  unsigned int partSize = (_partitions[0][0])->getSize();
-  int* idx = new int[partSize];
+    unsigned int partSize = (_partitions[0][0])->getSize();
+    int* idx = new int[partSize];
 #pragma omp for schedule(dynamic)
-  for(unsigned int i=0; i<partitionsToCheck.size(); i++)
-  {
-    TsdGridPartition* part = partitionsToCheck[i];
-    part->init();
-
-    Matrix* partCoords = part->getPartitionCoords();
-    Matrix* cellCoordsHom = part->getCellCoordsHom();
-    sensor->backProject(cellCoordsHom, idx);
-
-    for(unsigned int c=0; c<partSize; c++)
+    for(unsigned int i=0; i<partitionsToCheck.size(); i++)
     {
-      // Index of laser beam
-      int index = idx[c];
+      TsdGridPartition* part = partitionsToCheck[i];
+      part->init();
 
-      if(index>=0)
+      Matrix* partCoords = part->getPartitionCoords();
+      Matrix* cellCoordsHom = part->getCellCoordsHom();
+      sensor->backProject(cellCoordsHom, idx);
+
+      for(unsigned int c=0; c<partSize; c++)
       {
-        if(mask[index])
-        {
-          // calculate distance of current cell to sensor
-          double crd[2];
-          crd[0] = (*cellCoordsHom)(c,0);
-          crd[1] = (*cellCoordsHom)(c,1);
-          double distance = euklideanDistance<double>(tr, crd, 2);
-          double sdf = data[index] - distance;
+        // Index of laser beam
+        int index = idx[c];
 
-          part->addTsd((*partCoords)(c, 0), (*partCoords)(c, 1), sdf, _maxTruncation);
+        if(index>=0)
+        {
+          if(mask[index])
+          {
+            // calculate distance of current cell to sensor
+            double crd[2];
+            crd[0] = (*cellCoordsHom)(c,0);
+            crd[1] = (*cellCoordsHom)(c,1);
+            double distance = euklideanDistance<double>(tr, crd, 2);
+            double sdf = data[index] - distance;
+
+            part->addTsd((*partCoords)(c, 0), (*partCoords)(c, 1), sdf, _maxTruncation);
+          }
         }
       }
     }
-  }
-  delete [] idx;
+    delete [] idx;
   }
 
   propagateBorders();
@@ -267,7 +354,7 @@ void TsdGrid::pushRecursion(SensorPolar2D* sensor, double pos[2], TsdGridCompone
   if(comp->isInRange(pos, sensor, _maxTruncation))
   {
     if(comp->isLeaf())
-        partitionsToCheck.push_back((TsdGridPartition*)comp);
+      partitionsToCheck.push_back((TsdGridPartition*)comp);
     else
     {
       vector<TsdGridComponent*> children = ((TsdGridBranch*)comp)->getChildren();
@@ -373,8 +460,8 @@ void TsdGrid::grid2ColorImage(unsigned char* image, unsigned int width, unsigned
       else if(tsd >= 0.999999)
       {
         rgb[0] = 255;
-                rgb[1] = 255;
-                rgb[2] = 255;
+        rgb[1] = 255;
+        rgb[2] = 255;
       }
       else if(tsd<0.0)
       {
@@ -529,4 +616,64 @@ bool TsdGrid::isInsideGrid(Sensor* sensor)
   return (coord[0]>_minX && coord[0]<_maxX && coord[1]>_minY && coord[1]<_maxY);
 }
 
+bool TsdGrid::storeGrid(const std::string& path)
+{
+  if(!path.size())
+  {
+    LOGMSG(DBG_ERROR, " error! Path invalid!\n");
+    return(false);
+  }
+  std::fstream outFile;
+  outFile.open(path.c_str(), std::fstream::out);
+  if(!outFile.is_open())
+  {
+    LOGMSG(DBG_ERROR, " error opening file " << path << "\n");
+    return(false);
+  }
+  //store grid layout and cellsize
+  outFile << _cellSize << "\n" << _layoutPartitions << "\n" << _layoutGrid << "\n" << _maxTruncation << "\n";
+
+  //read the grid partition wise and fill the cell data into the file
+  //loop over all partitions
+  for(int y = 0; y < _partitionsInY; y++)
+  {
+    for(int x = 0; x < _partitionsInX; x++)
+    {
+      //generate partition identifier
+      TsdGridPartition* curPart = _partitions[y][x];
+      EnumTsdGridPartitionIdentifier id;
+      if(curPart->isInitialized())
+      {
+        id = CONTENT;
+        outFile << id << "\n";
+        for(unsigned int py=0; py < curPart->getHeight(); py++)
+        {
+          for(unsigned int px = 0; px < curPart->getWidth(); px++)
+          {
+            outFile << curPart->_grid[py][px].tsd << "\n";
+            outFile << curPart->_grid[py][px].weight << "\n";
+          }
+        }
+      }
+      else //partition is not initialized
+      {
+        if(curPart->isEmpty()) //partition is not initialized but empty
+        {
+          id = EMPTY;
+          outFile << id << "\n";
+          outFile << curPart->_initWeight << "\n";
+        }
+        else
+        {
+          id = UNINITIALIZED;
+          outFile << id << "\n";
+        }
+      }
+    }
+  }
+  outFile.close();
+  if(outFile.is_open())
+    LOGMSG(DBG_DEBUG, " warning! File " << path << " is still open!\n");
+  return(true);
+}
 }
