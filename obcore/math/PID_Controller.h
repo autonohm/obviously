@@ -11,6 +11,7 @@
 #define __PIDCONTROLLER__
 
 #include "IntegratorSimpson.h"
+#include "obcore/base/Timer.h"
 
 /**
  * @namespace of obvious library
@@ -33,109 +34,120 @@ public:
    * Standard constructor with default values
    */
   PID_Controller(void);
-  /*---------------------------------------------------------------------------
-   * Functions to set
-   */
+
   /**
    * Function to set proportional value
    * @param[in]     p_value     proportional value
    */
-  void setP(const float& p_value)         {_p   = p_value; }
+  void setP(const double& p_value)         {_p   = p_value; }
+
   /**
    * Function to set integration value
    * @param[in]     i_value     integration value
    */
-  void setI(const float& i_value)         {_i   = i_value; }
+  void setI(const double& i_value)         {_i   = i_value; }
+
   /**
    * Function to set derivation value
    * @param[in]         d_value     derivation value
    */
-  void setD(const float& d_value)         {_d   = d_value; }
+  void setD(const double& d_value)         {_d   = d_value; }
+
   /**
    * Function to set up anti wind up border for integration controller
    * @param[in]         awu_value   anti wind up value
    */
-  void setAWU(const float& awu_value)     {_awu = awu_value; }
+  void setAWU(const double& awu_value)     {_awu = awu_value; }
+
   /**
    * Function to set up set value of controller
    * @param[in]     setValue    set value of controller
    */
-  void setSetValue(const float& setValue) {_setValue = setValue; }
+  void setSetValue(const double& setValue) {_setValue = setValue; }
+
   /**
    * Function to set up minimal output
    * @param[in]         minOutput   minimal output of controller
    */
-  void setMinValue(const float& minOutput){_minOutput = minOutput; }
+  void setMinValue(const double& minOutput){_minOutput = minOutput; }
+
   /**
    * Function to set up maximum output
    * @param[in]         maxOutput   maximal output of controller
    */
-  void setMaxValue(const float& maxOutput){_maxOutput = maxOutput; }
+  void setMaxValue(const double& maxOutput){_maxOutput = maxOutput; }
+
   /**
    * Function set up debug mode
    * @param[in]         debug       activate debug mode
    */
   void setDebug(const bool debug = true){_debug = debug; }
 
-  /*---------------------------------------------------------------------------
-   * Functions to get
-   */
   /**
    * Function to get p value
    * @return        p value of controller
    */
-  float getP()   const       { return _p; }
+  double getP()   const       { return _p; }
+
   /**
    * Function to get i value
    * @return        i value of controller
    */
-  float getI()   const       { return _i; }
+  double getI()   const       { return _i; }
+
   /**
    * Function to get d value
    * @return        d value of controller
    */
-  float getD()   const       { return _d; }
+  double getD()   const       { return _d; }
+
   /**
    * Function to get anti wind up value
    * @return        anti wind up border
    */
-  float getAWU() const       { return _awu; }
+  double getAWU() const       { return _awu; }
+
   /**
    * Function to get set value
    * @return        set value of controller
    */
-  float getSetValue()  const { return _setValue; }
+  double getSetValue()  const { return _setValue; }
+
   /**
    * Function to get minimal output of controller
    * @return        minimal border
    */
-  float getMinOutput() const { return _minOutput; }
+  double getMinOutput() const { return _minOutput; }
+
   /**
    * Function to get maximum output of controller
    * @return        maximum border
    */
-  float getMaxOutput() const { return _maxOutput; }
+  double getMaxOutput() const { return _maxOutput; }
+
   /**
    * Function to calculate the next output of the controller
    * @param[in]       isValue
    * @return output value of contoller
    */
-  float controll(const float& isValue);
+  double control(const double& isValue);
 
 private:
   IntegratorSimpson      _integrator;
-  float _p;               ///< proportional value of pid controller
-  float _i;               ///< integrational value of pid controller
-  float _d;               ///< derivation value of pid controller
-  float _awu;             ///< anti wind up value
+  double _p;               ///< proportional value of pid controller
+  double _i;               ///< integrational value of pid controller
+  double _d;               ///< derivation value of pid controller
+  double _awu;             ///< anti wind up value
 
-  float _maxOutput;       ///< maximum output of controller
-  float _minOutput;       ///< minimal output of controller
+  double _maxOutput;       ///< maximum output of controller
+  double _minOutput;       ///< minimal output of controller
 
-  float _setValue;        ///< current set value of controller
-  float _isValue;         ///< is value of controller
+  double _setValue;        ///< current set value of controller
+  double _isValue;         ///< is value of controller
 
   bool  _debug;           ///< TRUE for output of debug messages to terminal
+
+  Timer                 _timer;                //!< timer necessary to get delta t
 };
 
 } // end namespace obvious
