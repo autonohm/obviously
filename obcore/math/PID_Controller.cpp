@@ -49,13 +49,13 @@ double PID_Controller::control(const double& isValue)
 
   double d_ctrl_output = (error - oldError) / deltaT * _d;
 
-  _setValue = p_ctrl_output + i_ctrl_output + d_ctrl_output;
+  double ctrl_output = p_ctrl_output + i_ctrl_output + d_ctrl_output;
 
   // check limits
-  if (_setValue >= _maxOutput)
-    _setValue = _maxOutput;
-  if (_setValue <= _minOutput)
-    _setValue = _minOutput;
+  if (ctrl_output >= _maxOutput)
+    ctrl_output = _maxOutput;
+  if (ctrl_output <= _minOutput)
+    ctrl_output = _minOutput;
 
   if (_debug)
   {
@@ -63,9 +63,9 @@ double PID_Controller::control(const double& isValue)
     std::cout << "p value: " << p_ctrl_output << std::endl;
     std::cout << "i value: " << i_ctrl_output << std::endl;
     std::cout << "d value: " << d_ctrl_output << std::endl;
-    std::cout << "Output: " << _setValue      << std::endl;
+    std::cout << "Output: " << ctrl_output      << std::endl;
   }
-  return (_setValue);
+  return (ctrl_output);
 }
 
 

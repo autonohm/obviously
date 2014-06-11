@@ -449,7 +449,7 @@ void CamNano::setDebug(bool debug)
 void CamNano::setAutoIntegration(void)
 {
   _ctrl.setSetValue(300);
-  _intTime = _ctrl.controll(_meanAmp);
+  _intTime = _ctrl.control(_meanAmp);
   setIntegrationTime(_intTime);
   if (_debug)
     this->showParameters();
