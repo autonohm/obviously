@@ -70,6 +70,21 @@ public:
  unsigned int getZDimension();
 
  /**
+  * Get number of partitions in x-direction
+  */
+ int getPartitionsInX();
+
+ /**
+  * Get number of partitions in y-direction
+  */
+ int getPartitionsInY();
+
+ /**
+  * Get number of partitions in z-direction
+  */
+ int getPartitionsInZ();
+
+ /**
   * Get edge length of voxels
   */
  double getVoxelSize();
@@ -193,13 +208,14 @@ public:
   * Method to store the content of the grid in a file
   * @param filename
   */
- //void serialize(const char* filename);
+ void serialize(const char* filename);
 
  /**
   * Method to load values out of a file into the grid
   * @param filename
   */
- //void load(const char* filename);
+ static TsdSpace* load(const char* filename);
+
 private:
 
  void pushRecursion(Sensor* sensor, double pos[3], TsdSpaceComponent* comp, vector<TsdSpacePartition*> &partitionsToCheck);
@@ -246,6 +262,11 @@ private:
  int _partitionsInY;
 
  int _partitionsInZ;
+
+ EnumTsdSpaceLayout _layoutPartition;
+
+ EnumTsdSpaceLayout _layoutSpace;
+
 };
 
 }

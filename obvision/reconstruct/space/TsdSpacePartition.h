@@ -59,6 +59,10 @@ public:
 
   bool isEmpty();
 
+  double getInitWeight();
+
+  void setInitWeight(double weight);
+
   unsigned int getX();
 
   unsigned int getY();
@@ -84,6 +88,10 @@ public:
   virtual void increaseEmptiness();
 
   double interpolateTrilinear(int x, int y, int z, double dx, double dy, double dz);
+
+  void serialize(ofstream* f);
+
+  void load(ifstream* f);
 
 private:
 

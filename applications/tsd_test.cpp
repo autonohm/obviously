@@ -89,6 +89,11 @@ int main(void)
   Timer t;
   space.push(&sensor);
 
+  space.serialize("/tmp/test.cloud");
+
+  TsdSpace* space2 = TsdSpace::load("/tmp/test.cloud");
+  space2->serialize("/tmp/test2.cloud");
+
   /*unsigned char* buffer = new unsigned char[space.getXDimension()*space.getYDimension()*3];
   for(unsigned int i=0; i<space.getZDimension(); i++)
   {
@@ -108,7 +113,7 @@ int main(void)
   double* normals = new double[rows*cols*3];
   unsigned char* rgb = new unsigned char[rows*cols*3];
   RayCast3D raycaster;
-  raycaster.calcCoordsFromCurrentPose(&space, &sensor, coords, normals, rgb, &cnt);
+  raycaster.calcCoordsFromCurrentPose(space2, &sensor, coords, normals, rgb, &cnt);
 #else
   unsigned int cells = space.getXDimension()*space.getYDimension()*space.getZDimension();
   double* coords = new double[cells];
@@ -126,7 +131,7 @@ int main(void)
   Obvious3D viewer("TSD Cloud");
 
   viewer.showSensorPose(P);
-  viewer.addAxisAlignedCube(0, space.getMaxX(), 0, space.getMaxY(), 0, space.getMaxZ());
+  viewer.addAxisAlignedCube(0, space2->getMaxX(), 0, space2->getMaxY(), 0, space2->getMaxZ());
   viewer.showAxes(true);
   viewer.addCloud(&vcloud);
 #if SENSORRAYCAST

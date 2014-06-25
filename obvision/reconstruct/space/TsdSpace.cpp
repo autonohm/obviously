@@ -21,6 +21,9 @@ TsdSpace::TsdSpace(const double voxelSize, const EnumTsdSpaceLayout layoutPartit
   _voxelSize = voxelSize;
   _invVoxelSize = 1.0 / _voxelSize;
 
+  _layoutPartition = layoutPartition;
+  _layoutSpace = layoutSpace;
+
   // determine number of voxels in each dimension
   _cellsX = (unsigned int)pow(2.0,layoutSpace);
   _cellsY = _cellsX;
@@ -121,6 +124,21 @@ unsigned int TsdSpace::getYDimension()
 unsigned int TsdSpace::getZDimension()
 {
   return _cellsZ;
+}
+
+int TsdSpace::getPartitionsInX()
+{
+  return _partitionsInX;
+}
+
+int TsdSpace::getPartitionsInY()
+{
+  return _partitionsInX;
+}
+
+int TsdSpace::getPartitionsInZ()
+{
+  return _partitionsInX;
 }
 
 double TsdSpace::getVoxelSize()
@@ -817,43 +835,36 @@ bool TsdSpace::interpolateTrilinearRGB(double coord[3], unsigned char rgb[3])
   }
 
   return (true);
-}
+}*/
 
 void TsdSpace::serialize(const char* filename)
 {
   ofstream f;
   f.open(filename);
-  for(unsigned int z=0 ;    z<_cellsZ; z++)
+
+  f << _voxelSize << " " << (int)_layoutPartition << " " << (int)_layoutSpace << " " << _maxTruncation << endl;
+
+  for(int pz=0; pz<_partitionsInZ; pz++)
   {
-    for(unsigned int y=0;   y<_cellsY; y++)
+    for(int py=0; py<_partitionsInY; py++)
     {
-      for(unsigned int x=0; x<_cellsX; x++)
+      for(int px=0; px<_partitionsInX; px++)
       {
-        double tsd = _space[z][y][x].tsd;
-        if(!isnan(tsd))
-        {
-          f << z << " " << y << " " << x             << " "
-            << tsd << " " << _space[z][y][x].weight << " "
-            << (unsigned int)_space[z][y][x].rgb[0]  << " "
-            << (unsigned int)_space[z][y][x].rgb[1]  << " "
-            << (unsigned int)_space[z][y][x].rgb[2]  << endl;
-        }
+        f << _partitions[pz][py][px]->getInitWeight() << endl;
+        bool initialized = _partitions[pz][py][px]->isInitialized();
+        f << initialized << endl;
+        if(initialized) _partitions[pz][py][px]->serialize(&f);
       }
     }
   }
 
-  LOGMSG(DBG_WARN, "Saved file.");
+  LOGMSG(DBG_WARN, "Saved file: " << filename);
   f.close();
 }
 
-void TsdSpace::load(const char* filename)
+TsdSpace* TsdSpace::load(const char* filename)
 {
-  char line[256];
-  double weight, tsd;
-  unsigned char rgb[3];
-  unsigned int x, y, z;
   ifstream f;
-
   f.open(filename, ios_base::in);
 
   if(!f)
@@ -862,23 +873,39 @@ void TsdSpace::load(const char* filename)
     abort();
   }
 
-  while(f.getline(line, 256))
+  double voxelSize;
+  EnumTsdSpaceLayout layoutPartition;
+  EnumTsdSpaceLayout layoutSpace;
+  int lp, ls;
+  double maxTruncation;
+
+  f >> voxelSize >> lp >> ls >> maxTruncation;
+  layoutPartition = (EnumTsdSpaceLayout)lp;
+  layoutSpace = (EnumTsdSpaceLayout)ls;
+
+  TsdSpace* space = new TsdSpace(voxelSize, layoutPartition, layoutSpace);
+  space->setMaxTruncation(maxTruncation);
+  TsdSpacePartition**** partitions = space->getPartitions();
+
+  for(int pz=0; pz<space->getPartitionsInZ(); pz++)
   {
-    if(!f.eof())
+    for(int py=0; py<space->getPartitionsInY(); py++)
     {
-      f >> z >> y >> x >> tsd >> weight >> rgb[0] >> rgb[1] >> rgb[2];
-      TsdVoxel* cell = &_space[z][y][x];
-      cell->weight   = weight;
-      cell->tsd      = tsd;
-      cell->rgb[0]   = 255;
-      cell->rgb[1]   = 255;
-      cell->rgb[2]   = 255;
-//      cell->rgb[0]   = (unsigned char)rgb[0];
-//      cell->rgb[1]   = (unsigned char)rgb[1];
-//      cell->rgb[2]   = (unsigned char)rgb[2];
+      for(int px=0; px<space->getPartitionsInX(); px++)
+      {
+        double initWeight;
+        f >> initWeight;
+        partitions[pz][py][px]->setInitWeight(initWeight);
+        bool initialized;
+        f >> initialized;
+        if(initialized) partitions[pz][py][px]->load(&f);
+      }
     }
   }
+
   f.close();
-}*/
+
+  return space;
+}
 
 }

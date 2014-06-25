@@ -17,12 +17,12 @@ static int _initializedPartitions = 0;
 static int _distancesPushed = 0;
 
 TsdSpacePartition::TsdSpacePartition(const unsigned int x,
-                                     const unsigned int y,
-                                     const unsigned int z,
-                                     const unsigned int cellsX,
-                                     const unsigned int cellsY,
-                                     const unsigned int cellsZ,
-                                     const double cellSize) : TsdSpaceComponent(true)
+    const unsigned int y,
+    const unsigned int z,
+    const unsigned int cellsX,
+    const unsigned int cellsY,
+    const unsigned int cellsZ,
+    const double cellSize) : TsdSpaceComponent(true)
 {
   _x = x;
   _y = y;
@@ -191,6 +191,16 @@ bool TsdSpacePartition::isEmpty()
   return (_space==NULL && _initWeight > 0.0);
 }
 
+double TsdSpacePartition::getInitWeight()
+{
+  return _initWeight;
+}
+
+void TsdSpacePartition::setInitWeight(double weight)
+{
+  _initWeight = weight;
+}
+
 unsigned int TsdSpacePartition::getX()
 {
   return _x;
@@ -324,13 +334,71 @@ double TsdSpacePartition::interpolateTrilinear(int x, int y, int z, double dx, d
 {
   // Interpolate
   return _space[z][y][x].tsd * (1. - dx) * (1. - dy) * (1. - dz)
-        +  _space[z + 1][y + 0][x + 0].tsd * (1. - dx) * (1. - dy) * dz
-        +  _space[z + 0][y + 1][x + 0].tsd * (1. - dx) * dy * (1. - dz)
-        +  _space[z + 1][y + 1][x + 0].tsd * (1. - dx) * dy * dz
-        +  _space[z + 0][y + 0][x + 1].tsd * dx * (1. - dy) * (1. - dz)
-        +  _space[z + 1][y + 0][x + 1].tsd * dx * (1. - dy) * dz
-        +  _space[z + 0][y + 1][x + 1].tsd * dx * dy * (1. - dz)
-        +  _space[z + 1][y + 1][x + 1].tsd * dx * dy * dz;
+      +  _space[z + 1][y + 0][x + 0].tsd * (1. - dx) * (1. - dy) * dz
+      +  _space[z + 0][y + 1][x + 0].tsd * (1. - dx) * dy * (1. - dz)
+      +  _space[z + 1][y + 1][x + 0].tsd * (1. - dx) * dy * dz
+      +  _space[z + 0][y + 0][x + 1].tsd * dx * (1. - dy) * (1. - dz)
+      +  _space[z + 1][y + 0][x + 1].tsd * dx * (1. - dy) * dz
+      +  _space[z + 0][y + 1][x + 1].tsd * dx * dy * (1. - dz)
+      +  _space[z + 1][y + 1][x + 1].tsd * dx * dy * dz;
+}
+
+void TsdSpacePartition::serialize(ofstream* f)
+{
+
+  *f << _initializedPartitions << " " << _distancesPushed << endl;
+
+  unsigned int initializedCells = 0;
+
+  for(unsigned int z=0 ; z<_cellsZ+1; z++)
+  {
+    for(unsigned int y=0; y<_cellsY+1; y++)
+    {
+      for(unsigned int x=0; x<_cellsX+1; x++)
+      {
+        if(!isnan(_space[z][y][x].tsd))
+          initializedCells++;
+      }
+    }
+  }
+
+  *f << initializedCells << endl;
+
+  for(unsigned int z=0 ; z<_cellsZ+1; z++)
+  {
+    for(unsigned int y=0; y<_cellsY+1; y++)
+    {
+      for(unsigned int x=0; x<_cellsX+1; x++)
+      {
+        double tsd = _space[z][y][x].tsd;
+        if(!isnan(tsd))
+        {
+          *f << z << " " << y << " " << x << " " << tsd << " " << _space[z][y][x].weight << endl;
+        }
+      }
+    }
+  }
+}
+
+void TsdSpacePartition::load(ifstream* f)
+{
+  init();
+
+  unsigned int initializedCells;
+  unsigned int x, y, z;
+  double weight, tsd;
+
+  *f >> _initializedPartitions >> _distancesPushed;
+  *f >> initializedCells;
+
+  for(unsigned int i = 0; i<initializedCells; i++)
+  {
+    *f >> z >> y >> x >> tsd >> weight;
+    TsdVoxel* cell = &_space[z][y][x];
+    cell->tsd      = tsd;
+    cell->weight   = weight;
+  }
+
 }
 
 }
