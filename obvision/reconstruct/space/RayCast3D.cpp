@@ -10,6 +10,16 @@
 namespace obvious
 {
 
+// Beware: this will slow down the application
+#define PRINTSTATISTICS 0
+
+/**
+ *  Variables for statistics
+ */
+unsigned int _skipped = 0;
+
+unsigned int _traversed = 0;
+
 RayCast3D::RayCast3D()
 {
   _xmin   = NAN;
@@ -63,8 +73,10 @@ void RayCast3D::calcCoordsFromCurrentPose(TsdSpace* space, Sensor* sensor, doubl
     _zmax   = 0.0;
   }
 
+#if PRINTSTATISTICS
   _skipped = 0;
   _traversed = 0;
+#endif
 
   _idxMin = sensor->getMinimumRange() / space->getVoxelSize();
   _idxMax = sensor->getMaximumRange() / space->getVoxelSize();
@@ -127,7 +139,10 @@ void RayCast3D::calcCoordsFromCurrentPose(TsdSpace* space, Sensor* sensor, doubl
 
   LOGMSG(DBG_DEBUG, "Elapsed TSDF projection: " << t.getTime() << "ms");
   LOGMSG(DBG_DEBUG, "Raycasting finished! Found " << *size << " coordinates");
+
+#if PRINTSTATISTICS
   LOGMSG(DBG_DEBUG, "Traversed: " << _traversed << ", skipped: " << _skipped);
+#endif
 }
 
 void RayCast3D::calcCoordsFromCurrentPoseMask(TsdSpace* space, Sensor* sensor, double* coords, double* normals, unsigned char* rgb, bool* mask, unsigned int* size)
@@ -170,8 +185,11 @@ void RayCast3D::calcCoordsFromCurrentPoseMask(TsdSpace* space, Sensor* sensor, d
     _zmax   = 0.0;
   }
 
+#if PRINTSTATISTICS
   _skipped = 0;
   _traversed = 0;
+#endif
+
   _idxMin = sensor->getMinimumRange() / space->getVoxelSize();
   _idxMax = sensor->getMaximumRange() / space->getVoxelSize();
 
@@ -245,7 +263,10 @@ void RayCast3D::calcCoordsFromCurrentPoseMask(TsdSpace* space, Sensor* sensor, d
   *size = ctr;
   LOGMSG(DBG_DEBUG, "Elapsed TSDF projection: " << t.getTime() << "ms");
   LOGMSG(DBG_DEBUG, "Raycasting finished! Found " << ctr << " coordinates");
+
+#if PRINTSTATISTICS
   LOGMSG(DBG_DEBUG, "Traversed: " << _traversed << ", skipped: " << _skipped);
+#endif
 }
 
 /*bool RayCast3D::calcCoordsFromCurrentPose(TsdSpace* space, Sensor* sensor, double* coords, double* normals, unsigned char* rgb, const std::vector<TsdSpace*>& spaces,
@@ -391,7 +412,9 @@ bool RayCast3D::rayCastFromSensorPose(TsdSpace* space, double pos[3], double ray
   if (idxMin >= idxMax)
     return false;
 
+#if PRINTSTATISTICS
   int idxMinTmp = idxMin;
+#endif
 
   // Traverse partitions roughly to clip minimum index
   double partitionSize = space->getPartitionSize();
@@ -422,8 +445,13 @@ bool RayCast3D::rayCastFromSensorPose(TsdSpace* space, double pos[3], double ray
       idxMin++;
   }
 
+#if PRINTSTATISTICS
+#pragma omp critical
+{
   if((int)idxMin != idxMinTmp)
     _skipped += (idxMin-idxMinTmp);
+}
+#endif
 
   double tsd_prev;
 
@@ -462,7 +490,12 @@ bool RayCast3D::rayCastFromSensorPose(TsdSpace* space, double pos[3], double ray
     tsd_prev = tsd;
   }
 
+#if PRINTSTATISTICS
+#pragma omp critical
+{
   _traversed += i-idxMin;
+}
+#endif
 
   if(!found) return false;
 

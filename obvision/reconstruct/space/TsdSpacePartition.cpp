@@ -14,7 +14,6 @@ static Matrix* _partCoords = NULL;
 static Matrix* _cellCoordsHom = NULL;
 
 static int _initializedPartitions = 0;
-static int _distancesPushed = 0;
 
 TsdSpacePartition::TsdSpacePartition(const unsigned int x,
     const unsigned int y,
@@ -141,11 +140,6 @@ TsdSpacePartition::~TsdSpacePartition()
 int TsdSpacePartition::getInitializedPartitionSize()
 {
   return _initializedPartitions;
-}
-
-int TsdSpacePartition::getDistancesPushed()
-{
-  return _distancesPushed;
 }
 
 void TsdSpacePartition::reset()
@@ -292,8 +286,6 @@ void TsdSpacePartition::addTsd(const unsigned int x, const unsigned int y, const
       voxel->weight = min(voxel->weight, TSDSPACEMAXWEIGHT);
       voxel->tsd   = (voxel->tsd * (voxel->weight - 1.0) + tsd) / voxel->weight;
     }
-
-    _distancesPushed++;
   }
 }
 
@@ -345,9 +337,6 @@ double TsdSpacePartition::interpolateTrilinear(int x, int y, int z, double dx, d
 
 void TsdSpacePartition::serialize(ofstream* f)
 {
-
-  *f << _initializedPartitions << " " << _distancesPushed << endl;
-
   unsigned int initializedCells = 0;
 
   for(unsigned int z=0 ; z<_cellsZ+1; z++)
@@ -388,7 +377,6 @@ void TsdSpacePartition::load(ifstream* f)
   unsigned int x, y, z;
   double weight, tsd;
 
-  *f >> _initializedPartitions >> _distancesPushed;
   *f >> initializedCells;
 
   for(unsigned int i = 0; i<initializedCells; i++)
@@ -399,6 +387,7 @@ void TsdSpacePartition::load(ifstream* f)
     cell->weight   = weight;
   }
 
+  _initializedPartitions++;
 }
 
 }

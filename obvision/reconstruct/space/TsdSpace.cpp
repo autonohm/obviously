@@ -13,6 +13,13 @@
 namespace obvious
 {
 
+// Beware: this will slow down the application
+#define PRINTSTATISTICS 0
+
+#if PRINTSTATISTICS
+static int _distancesPushed = 0;
+#endif
+
 #define MAXWEIGHT 32.0
 #define RGB_MAX 255
 
@@ -320,6 +327,13 @@ void TsdSpace::push(Sensor* sensor)
               {
                 part->init();
                 part->addTsd((*partCoords)(c, 0), (*partCoords)(c, 1), (*partCoords)(c, 2), sd, _maxTruncation);
+
+#if PRINTSTATISTICS
+#pragma omp critical
+{
+                _distancesPushed++;
+}
+#endif
               }
             }
           }
@@ -332,7 +346,10 @@ void TsdSpace::push(Sensor* sensor)
 
   propagateBorders();
 
-  LOGMSG(DBG_DEBUG, "Distances pushed: " << TsdSpacePartition::getDistancesPushed());
+#if PRINTSTATISTICS
+  LOGMSG(DBG_DEBUG, "Distances pushed: " << _distancesPushed);
+#endif
+
   LOGMSG(DBG_DEBUG, "Elapsed push: " << timer.getTime() << "ms, Initialized partitions: " << TsdSpacePartition::getInitializedPartitionSize());
 }
 
@@ -398,6 +415,14 @@ void TsdSpace::pushTree(Sensor* sensor)
           {
             part->init();
             part->addTsd((*partCoords)(c, 0), (*partCoords)(c, 1), (*partCoords)(c, 2), sd, _maxTruncation);
+
+#if PRINTSTATISTICS
+#pragma omp critical
+{
+            _distancesPushed++;
+}
+#endif
+
           }
         }
       }
@@ -408,7 +433,10 @@ void TsdSpace::pushTree(Sensor* sensor)
 
   propagateBorders();
 
-  LOGMSG(DBG_DEBUG, "Distances pushed: " << TsdSpacePartition::getDistancesPushed());
+#if PRINTSTATISTICS
+  LOGMSG(DBG_DEBUG, "Distances pushed: " << _distancesPushed);
+#endif
+
   LOGMSG(DBG_DEBUG, "Elapsed push: " << timer.getTime() << "ms, Initialized partitions: " << TsdSpacePartition::getInitializedPartitionSize());
 }
 
