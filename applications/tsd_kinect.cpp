@@ -81,7 +81,7 @@ void _cbGenPointCloud(void)
   unsigned int maxSize = _space->getXDimension()*_space->getYDimension()*_space->getZDimension() / 6;
   double* cloud = new double[maxSize*3];
   double* normals = new double[maxSize*3];
-  //unsigned char* rgb=NULL;
+  unsigned char* rgb = new unsigned char[maxSize*3];
   unsigned int size;
 
   //RayCastAxisAligned3D rayCasterMap;
@@ -89,21 +89,21 @@ void _cbGenPointCloud(void)
 
   SensorPolar3D sensor(2162, deg2rad(0.125), deg2rad(-135.0), 1440, 6.0, 0.3);
   sensor.transform(&_Tinit);
-  _rayCaster->calcCoordsFromCurrentPose(_space, &sensor, cloud, normals, NULL, &size);
+  _rayCaster->calcCoordsFromCurrentPose(_space, &sensor, cloud, normals, rgb, &size);
 
 
   LOGMSG(DBG_DEBUG, "Cloud generated with " << size << " points";);
   _vModel->setCoords(cloud, size/3, 3, normals);
-  //_vModel->setColors(rgb, size/3, 3 );
+  _vModel->setColors(rgb, size/3, 3 );
   double P[16];
   _Tinit.getData(P);
   _vModel->transform(P);
 
   _viewer3D->update();
 
-  delete cloud;
-  delete normals;
-  //delete rgb;
+  delete [] cloud;
+  delete [] normals;
+  delete [] rgb;
 }
 
 /*
@@ -277,6 +277,7 @@ void _cbRegNewImage(void)
       dist[i] = abs3D(&coords[3*i]);
     _sensor->setRealMeasurementData(dist);
     _sensor->setRealMeasurementMask(_kinect->getMask());
+    _sensor->setRealMeasurementRGB(_kinect->getRGB());
     _space->push(_sensor);
     delete[] dist;
   }

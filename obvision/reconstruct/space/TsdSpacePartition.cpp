@@ -155,6 +155,13 @@ double& TsdSpacePartition::operator () (unsigned int z, unsigned int y, unsigned
   return _space[z][y][x].tsd;
 }
 
+void TsdSpacePartition::getRGB(unsigned int z, unsigned int y, unsigned int x, unsigned char rgb[3])
+{
+  rgb[0] = _space[z][y][x].rgb[0];
+  rgb[1] = _space[z][y][x].rgb[1];
+  rgb[2] = _space[z][y][x].rgb[2];
+}
+
 void TsdSpacePartition::init()
 {
   if(_space) return;
@@ -170,6 +177,9 @@ void TsdSpacePartition::init()
       {
         _space[iz][iy][ix].tsd    = NAN;
         _space[iz][iy][ix].weight = _initWeight;
+        _space[iz][iy][ix].rgb[0] = 255;
+        _space[iz][iy][ix].rgb[1] = 255;
+        _space[iz][iy][ix].rgb[2] = 255;
       }
     }
   }
@@ -247,7 +257,7 @@ unsigned int TsdSpacePartition::getSize()
   return _cellsX*_cellsY*_cellsZ;
 }
 
-void TsdSpacePartition::addTsd(const unsigned int x, const unsigned int y, const unsigned int z, const double sd, const double maxTruncation)
+void TsdSpacePartition::addTsd(const unsigned int x, const unsigned int y, const unsigned int z, const double sd, const double maxTruncation, const unsigned char rgb[3])
 {
   //if(sd >= -maxTruncation)
   {
@@ -280,11 +290,23 @@ void TsdSpacePartition::addTsd(const unsigned int x, const unsigned int y, const
     if(isnan(voxel->tsd))
     {
       voxel->tsd = tsd;
+      if(rgb)
+      {
+        voxel->rgb[0] = rgb[0];
+        voxel->rgb[1] = rgb[1];
+        voxel->rgb[2] = rgb[2];
+      }
     }
     else
     {
       voxel->weight = min(voxel->weight, TSDSPACEMAXWEIGHT);
       voxel->tsd   = (voxel->tsd * (voxel->weight - 1.0) + tsd) / voxel->weight;
+      if(rgb)
+      {
+        voxel->rgb[0] = (voxel->rgb[0] * (voxel->weight - 1.0) + rgb[0]) / voxel->weight;
+        voxel->rgb[1] = (voxel->rgb[1] * (voxel->weight - 1.0) + rgb[1]) / voxel->weight;
+        voxel->rgb[2] = (voxel->rgb[2] * (voxel->weight - 1.0) + rgb[2]) / voxel->weight;
+      }
     }
   }
 }

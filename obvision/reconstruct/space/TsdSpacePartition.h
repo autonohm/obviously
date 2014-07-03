@@ -17,7 +17,7 @@ struct TsdVoxel
 {
   double tsd;
   double weight;
-  //unsigned char rgb[3];
+  unsigned char rgb[3];
 };
 
 /**
@@ -53,6 +53,8 @@ public:
 
   double& operator () (unsigned int z, unsigned int y, unsigned int x);
 
+  void getRGB(unsigned int z, unsigned int y, unsigned int x, unsigned char rgb[3]);
+
   void init();
 
   bool isInitialized();
@@ -83,7 +85,7 @@ public:
 
   unsigned int getSize();
 
-  void addTsd(const unsigned int x, const unsigned int y, const unsigned int z, const double sd, const double maxTruncation);
+  void addTsd(const unsigned int x, const unsigned int y, const unsigned int z, const double sd, const double maxTruncation, const unsigned char rgb[3]);
 
   virtual void increaseEmptiness();
 

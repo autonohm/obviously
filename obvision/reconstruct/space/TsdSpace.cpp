@@ -272,7 +272,7 @@ void TsdSpace::push(Sensor* sensor)
 
   double* data = sensor->getRealMeasurementData();
   bool* mask = sensor->getRealMeasurementMask();
-  //unsigned char* rgb = sensor->getRealMeasurementRGB();
+  unsigned char* rgb = sensor->getRealMeasurementRGB();
 
   double tr[3];
   sensor->getPosition(tr);
@@ -320,13 +320,12 @@ void TsdSpace::push(Sensor* sensor)
               /*double weight = 1.0 - (10.0 - distance);
               weight = max(weight, 0.1);*/
 
-              // TODO: Implement color support
-              //unsigned char* color = NULL;
-              //if(rgb) color = &(rgb[3*index]);
+              unsigned char* color = NULL;
+              if(rgb) color = &(rgb[3*index]);
               if(sd >= -_maxTruncation)
               {
                 part->init();
-                part->addTsd((*partCoords)(c, 0), (*partCoords)(c, 1), (*partCoords)(c, 2), sd, _maxTruncation);
+                part->addTsd((*partCoords)(c, 0), (*partCoords)(c, 1), (*partCoords)(c, 2), sd, _maxTruncation, color);
 
 #if PRINTSTATISTICS
 #pragma omp critical
@@ -359,7 +358,7 @@ void TsdSpace::pushTree(Sensor* sensor)
 
   double* data = sensor->getRealMeasurementData();
   bool* mask = sensor->getRealMeasurementMask();
-  //unsigned char* rgb = sensor->getRealMeasurementRGB();
+  unsigned char* rgb = sensor->getRealMeasurementRGB();
 
   double tr[3];
   sensor->getPosition(tr);
@@ -408,13 +407,12 @@ void TsdSpace::pushTree(Sensor* sensor)
           /*double weight = 1.0 - (10.0 - distance);
           weight = max(weight, 0.1);*/
 
-          // TODO: Implement color support
-          //unsigned char* color = NULL;
-          //if(rgb) color = &(rgb[3*index]);
+          unsigned char* color = NULL;
+          if(rgb) color = &(rgb[3*index]);
           if(sd >= -_maxTruncation)
           {
             part->init();
-            part->addTsd((*partCoords)(c, 0), (*partCoords)(c, 1), (*partCoords)(c, 2), sd, _maxTruncation);
+            part->addTsd((*partCoords)(c, 0), (*partCoords)(c, 1), (*partCoords)(c, 2), sd, _maxTruncation, color);
 
 #if PRINTSTATISTICS
 #pragma omp critical
@@ -483,6 +481,9 @@ void TsdSpace::propagateBorders()
               {
                 partCur->_space[d][h][width].tsd = partRight->_space[d][h][0].tsd;
                 partCur->_space[d][h][width].weight = partRight->_space[d][h][0].weight;
+                partCur->_space[d][h][width].rgb[0] = partRight->_space[d][h][0].rgb[0];
+                partCur->_space[d][h][width].rgb[1] = partRight->_space[d][h][0].rgb[1];
+                partCur->_space[d][h][width].rgb[2] = partRight->_space[d][h][0].rgb[2];
               }
             }
           }
@@ -499,6 +500,9 @@ void TsdSpace::propagateBorders()
               {
                 partCur->_space[d][height][w].tsd = partUp->_space[d][0][w].tsd;
                 partCur->_space[d][height][w].weight = partUp->_space[d][0][w].weight;
+                partCur->_space[d][height][w].rgb[0] = partUp->_space[d][0][w].rgb[0];
+                partCur->_space[d][height][w].rgb[1] = partUp->_space[d][0][w].rgb[1];
+                partCur->_space[d][height][w].rgb[2] = partUp->_space[d][0][w].rgb[2];
               }
             }
           }
@@ -515,6 +519,9 @@ void TsdSpace::propagateBorders()
               {
                 partCur->_space[depth][h][w].tsd = partBack->_space[0][h][w].tsd;
                 partCur->_space[depth][h][w].weight = partBack->_space[0][h][w].weight;
+                partCur->_space[depth][h][w].rgb[0] = partBack->_space[0][h][w].rgb[0];
+                partCur->_space[depth][h][w].rgb[1] = partBack->_space[0][h][w].rgb[1];
+                partCur->_space[depth][h][w].rgb[2] = partBack->_space[0][h][w].rgb[2];
               }
             }
           }
@@ -529,6 +536,9 @@ void TsdSpace::propagateBorders()
             {
               partCur->_space[depth][h][width].tsd = partRightBack->_space[0][h][0].tsd;
               partCur->_space[depth][h][width].weight = partRightBack->_space[0][h][0].weight;
+              partCur->_space[depth][h][width].rgb[0] = partRightBack->_space[0][h][0].rgb[0];
+              partCur->_space[depth][h][width].rgb[1] = partRightBack->_space[0][h][0].rgb[1];
+              partCur->_space[depth][h][width].rgb[2] = partRightBack->_space[0][h][0].rgb[2];
             }
           }
         }
@@ -542,6 +552,9 @@ void TsdSpace::propagateBorders()
             {
               partCur->_space[d][height][width].tsd = partRightUp->_space[d][0][0].tsd;
               partCur->_space[d][height][width].weight = partRightUp->_space[d][0][0].weight;
+              partCur->_space[d][height][width].rgb[0] = partRightUp->_space[d][0][0].rgb[0];
+              partCur->_space[d][height][width].rgb[1] = partRightUp->_space[d][0][0].rgb[1];
+              partCur->_space[d][height][width].rgb[2] = partRightUp->_space[d][0][0].rgb[2];
             }
           }
         }
@@ -555,6 +568,9 @@ void TsdSpace::propagateBorders()
             {
               partCur->_space[depth][height][w].tsd = partBackUp->_space[0][0][w].tsd;
               partCur->_space[depth][height][w].weight = partBackUp->_space[0][0][w].weight;
+              partCur->_space[depth][height][w].rgb[0] = partBackUp->_space[0][0][w].rgb[0];
+              partCur->_space[depth][height][w].rgb[1] = partBackUp->_space[0][0][w].rgb[1];
+              partCur->_space[depth][height][w].rgb[2] = partBackUp->_space[0][0][w].rgb[2];
             }
           }
         }
@@ -565,6 +581,10 @@ void TsdSpace::propagateBorders()
           if(partBackRightUp->isInitialized())
           {
             partCur->_space[depth][height][width].tsd = partBackRightUp->_space[0][0][0].tsd;
+            partCur->_space[depth][height][width].weight = partBackRightUp->_space[0][0][0].weight;
+            partCur->_space[depth][height][width].rgb[0] = partBackRightUp->_space[0][0][0].rgb[0];
+            partCur->_space[depth][height][width].rgb[1] = partBackRightUp->_space[0][0][0].rgb[1];
+            partCur->_space[depth][height][width].rgb[2] = partBackRightUp->_space[0][0][0].rgb[2];
           }
         }
       }
@@ -743,65 +763,52 @@ EnumTsdSpaceInterpolate TsdSpace::getTsd(double coord[3], double* tsd)
   return INTERPOLATE_SUCCESS;
 }
 
-bool TsdSpace::interpolateTrilinearRGB(double coord[3], unsigned char rgb[3])
+EnumTsdSpaceInterpolate TsdSpace::interpolateTrilinearRGB(double coord[3], unsigned char rgb[3])
 {
-  LOGMSG(DBG_ERROR, "interpolateTrilinearRGB not implemented yet");
-  return false;
-}
+  double dx;
+  double dy;
+  double dz;
 
-/*bool TsdSpace::interpolateTrilinearRGB(double coord[3], unsigned char rgb[3])
-{
-  int x, y, z;
-  Point p;
-  if(!coord2Voxel(coord, &x, &y, &z, &p)) return false;
+  int xIdx;
+  int yIdx;
+  int zIdx;
+  if(!coord2Index(coord, &xIdx, &yIdx, &zIdx, &dx, &dy, &dz)) return INTERPOLATE_INVALIDINDEX;
 
-  double wX = (coord[0] - p.x) * _invVoxelSize;
-  double wY = (coord[1] - p.y) * _invVoxelSize;
-  double wZ = (coord[2] - p.z) * _invVoxelSize;
+  int px = _lutIndex2Partition[xIdx];
+  int py = _lutIndex2Partition[yIdx];
+  int pz = _lutIndex2Partition[zIdx];
+
+  TsdSpacePartition* part = _partitions[pz][py][px];
+  if(!part->isInitialized()) return INTERPOLATE_EMPTYPARTITION;
+
+  int x = _lutIndex2Cell[xIdx];
+  int y = _lutIndex2Cell[yIdx];
+  int z = _lutIndex2Cell[zIdx];
+
+  double wx = fabs((coord[0] - dx) * _invVoxelSize);
+  double wy = fabs((coord[1] - dy) * _invVoxelSize);
+  double wz = fabs((coord[2] - dz) * _invVoxelSize);
 
   unsigned char pRGB[8][3];
 
-  pRGB[0][0] = _space[z + 0][y + 0][x + 0].rgb[0];
-  pRGB[0][1] = _space[z + 0][y + 0][x + 0].rgb[1];
-  pRGB[0][2] = _space[z + 0][y + 0][x + 0].rgb[2];
-
-  pRGB[1][0] = _space[z + 1][y + 0][x + 0].rgb[0];
-  pRGB[1][1] = _space[z + 1][y + 0][x + 0].rgb[1];
-  pRGB[1][2] = _space[z + 1][y + 0][x + 0].rgb[2];
-
-  pRGB[2][0] = _space[z + 0][y - 1][x + 0].rgb[0];
-  pRGB[2][1] = _space[z + 0][y - 1][x + 0].rgb[1];
-  pRGB[2][2] = _space[z + 0][y - 1][x + 0].rgb[2];
-
-  pRGB[3][0] = _space[z + 1][y - 1][x + 0].rgb[0];
-  pRGB[3][1] = _space[z + 1][y - 1][x + 0].rgb[1];
-  pRGB[3][2] = _space[z + 1][y - 1][x + 0].rgb[2];
-
-  pRGB[4][0] = _space[z + 0][y - 0][x + 1].rgb[0];
-  pRGB[4][1] = _space[z + 0][y - 0][x + 1].rgb[1];
-  pRGB[4][2] = _space[z + 0][y - 0][x + 1].rgb[2];
-
-  pRGB[5][0] = _space[z + 1][y - 0][x + 1].rgb[0];
-  pRGB[5][1] = _space[z + 1][y - 0][x + 1].rgb[1];
-  pRGB[5][2] = _space[z + 1][y - 0][x + 1].rgb[2];
-
-  pRGB[6][0] = _space[z + 0][y - 1][x + 1].rgb[0];
-  pRGB[6][1] = _space[z + 0][y - 1][x + 1].rgb[1];
-  pRGB[6][2] = _space[z + 0][y - 1][x + 1].rgb[2];
-
-  pRGB[7][0] = _space[z + 1][y - 1][x + 1].rgb[0];
-  pRGB[7][1] = _space[z + 1][y - 1][x + 1].rgb[1];
-  pRGB[7][2] = _space[z + 1][y - 1][x + 1].rgb[2];
+  part->getRGB(z+0, y+0, x+0, pRGB[0]);
+  part->getRGB(z+1, y+0, x+0, pRGB[1]);
+  part->getRGB(z+0, y+1, x+0, pRGB[2]);
+  part->getRGB(z+1, y+1, x+0, pRGB[3]);
+  part->getRGB(z+0, y+0, x+1, pRGB[4]);
+  part->getRGB(z+1, y+0, x+1, pRGB[5]);
+  part->getRGB(z+0, y+1, x+1, pRGB[6]);
+  part->getRGB(z+1, y+1, x+1, pRGB[7]);
 
   double pw[8];
-  pw[0] = (1. - wX) * (1. - wY) * (1. - wZ);
-  pw[1] = (1. - wX) * (1. - wY) * wZ;
-  pw[2] = (1. - wX) * wY * (1. - wZ);
-  pw[3] = (1. - wX) * wY * wZ;
-  pw[4] = wX * (1. - wY) * (1. - wZ);
-  pw[5] = wX * (1. - wY) * wZ;
-  pw[6] = wX * wY * (1. - wZ);
-  pw[7] = wX * wY * wZ;
+  pw[0] = (1. - wx) * (1. - wy) * (1. - wz);
+  pw[1] = (1. - wx) * (1. - wy) * wz;
+  pw[2] = (1. - wx) * wy * (1. - wz);
+  pw[3] = (1. - wx) * wy * wz;
+  pw[4] = wx * (1. - wy) * (1. - wz);
+  pw[5] = wx * (1. - wy) * wz;
+  pw[6] = wx * wy * (1. - wz);
+  pw[7] = wx * wy * wz;
 
   memset(rgb,0,3);
   for(unsigned int i=0; i<8; i++)
@@ -811,8 +818,8 @@ bool TsdSpace::interpolateTrilinearRGB(double coord[3], unsigned char rgb[3])
     rgb[2] += pRGB[i][2] * pw[i];
   }
 
-  return true;
-}*/
+  return INTERPOLATE_SUCCESS;
+}
 
 /*bool TsdSpace::buildSliceImage(const unsigned int depthIndex, unsigned char* image)
 {

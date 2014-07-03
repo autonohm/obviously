@@ -192,7 +192,7 @@ public:
  /**
   *
   */
- bool interpolateTrilinearRGB(double coord[3], unsigned char rgb[3]);
+ EnumTsdSpaceInterpolate interpolateTrilinearRGB(double coord[3], unsigned char rgb[3]);
 
  /**
   *
