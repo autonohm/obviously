@@ -25,11 +25,11 @@ void RayCastAxisAligned3D::calcCoords(TsdSpace* space, double* coords, double* n
   TsdSpacePartition**** partitions = space->getPartitions();
 
 #pragma omp parallel for
-  for(unsigned int z=1; z<partitionsInZ-1; z++)
+  for(unsigned int z=0; z<partitionsInZ; z++)
   {
-    for(unsigned int y=1; y<partitionsInY-1; y++)
+    for(unsigned int y=0; y<partitionsInY; y++)
     {
-      for(unsigned int x=1; x<partitionsInX-1; x++)
+      for(unsigned int x=0; x<partitionsInX; x++)
       {
         TsdSpacePartition* p = partitions[z][y][x];
         if(p->isInitialized())
@@ -43,7 +43,7 @@ void RayCastAxisAligned3D::calcCoords(TsdSpace* space, double* coords, double* n
               {
                 double tsd_prev = (*p)(pz, py, 0);
                 double interp = 0.0;
-                for(unsigned int px=1; px<p->getWidth(); px++)
+                for(unsigned int px=1; px<p->getWidth()+1; px++)
                 {
                   double tsd = (*p)(pz, py, px);
                   // Check sign change
@@ -71,7 +71,7 @@ void RayCastAxisAligned3D::calcCoords(TsdSpace* space, double* coords, double* n
               {
                 double tsd_prev = (*p)(pz, 0, px);
                 double interp = 0.0;
-                for(unsigned int py=1; py<p->getHeight(); py++)
+                for(unsigned int py=1; py<p->getHeight()+1; py++)
                 {
                   double tsd = (*p)(pz, py, px);
                   // Check sign change
@@ -99,7 +99,7 @@ void RayCastAxisAligned3D::calcCoords(TsdSpace* space, double* coords, double* n
               {
                 double tsd_prev = (*p)(0, py, px);
                 double interp = 0.0;
-                for(unsigned int pz=1; pz<p->getDepth(); pz++)
+                for(unsigned int pz=1; pz<p->getDepth()+1; pz++)
                 {
                   double tsd = (*p)(pz, py, px);
                   // Check sign change
