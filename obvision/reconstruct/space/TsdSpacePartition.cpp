@@ -384,7 +384,7 @@ void TsdSpacePartition::serialize(ofstream* f)
         double tsd = _space[z][y][x].tsd;
         if(!isnan(tsd))
         {
-          *f << z << " " << y << " " << x << " " << tsd << " " << _space[z][y][x].weight << endl;
+          *f << z << " " << y << " " << x << " " << tsd << " " << _space[z][y][x].weight << " " << (int)_space[z][y][x].rgb[0] << " " << (int)_space[z][y][x].rgb[1] << " " << (int)_space[z][y][x].rgb[2] << endl;
         }
       }
     }
@@ -398,15 +398,21 @@ void TsdSpacePartition::load(ifstream* f)
   unsigned int initializedCells;
   unsigned int x, y, z;
   double weight, tsd;
+  unsigned int rgb0;
+  unsigned int rgb1;
+  unsigned int rgb2;
 
   *f >> initializedCells;
 
   for(unsigned int i = 0; i<initializedCells; i++)
   {
-    *f >> z >> y >> x >> tsd >> weight;
+    *f >> z >> y >> x >> tsd >> weight >> rgb0 >> rgb1 >> rgb2;
     TsdVoxel* cell = &_space[z][y][x];
     cell->tsd      = tsd;
     cell->weight   = weight;
+    cell->rgb[0]   = (unsigned char)rgb0;
+    cell->rgb[1]   = (unsigned char)rgb1;
+    cell->rgb[2]   = (unsigned char)rgb2;
   }
 
   _initializedPartitions++;

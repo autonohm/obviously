@@ -11,7 +11,7 @@ RayCastAxisAligned3D::~RayCastAxisAligned3D() {
 
 }
 
-void RayCastAxisAligned3D::calcCoords(TsdSpace* space, double* coords, double* normals, unsigned int* cnt)
+void RayCastAxisAligned3D::calcCoords(TsdSpace* space, double* coords, double* normals, unsigned char* rgb, unsigned int* cnt)
 {
   Timer t;
 
@@ -57,6 +57,8 @@ void RayCastAxisAligned3D::calcCoords(TsdSpace* space, double* coords, double* n
                     coords[(*cnt)+2] = pz*cellSize + (z * p->getDepth()) * cellSize;
                     if(normals)
                       space->interpolateNormal(&coords[*cnt], &(normals[*cnt]));
+                    if(rgb)
+                      space->interpolateTrilinearRGB(&coords[*cnt], &(rgb[*cnt]));
                     (*cnt)+=3;
 }
                   }
@@ -85,6 +87,8 @@ void RayCastAxisAligned3D::calcCoords(TsdSpace* space, double* coords, double* n
                     coords[(*cnt)+2] = pz*cellSize + (z * p->getDepth()) * cellSize;
                     if(normals)
                       space->interpolateNormal(&coords[*cnt], &(normals[*cnt]));
+                    if(rgb)
+                      space->interpolateTrilinearRGB(&coords[*cnt], &(rgb[*cnt]));
                     (*cnt)+=3;
 }
                   }
@@ -113,6 +117,8 @@ void RayCastAxisAligned3D::calcCoords(TsdSpace* space, double* coords, double* n
                     coords[(*cnt)+2] = pz*cellSize + (z * p->getDepth()) * cellSize + cellSize * (interp-1.0);
                     if(normals)
                       space->interpolateNormal(&coords[*cnt], &(normals[*cnt]));
+                    if(rgb)
+                      space->interpolateTrilinearRGB(&coords[*cnt], &(rgb[*cnt]));
                     (*cnt)+=3;
 }
                   }

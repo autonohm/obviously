@@ -11,7 +11,7 @@ public:
 
   virtual ~RayCastAxisAligned3D();
 
-  void calcCoords(TsdSpace* space, double* coords, double* normals, unsigned int* cnt);
+  void calcCoords(TsdSpace* space, double* coords, double* normals, unsigned char* rgb, unsigned int* cnt);
 
   void calcCoordsRoughly(TsdSpace* space, double* coords, double* normals, unsigned int* cnt);
 };
