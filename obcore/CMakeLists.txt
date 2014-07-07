@@ -9,13 +9,10 @@ PROJECT(OBCORE)
 SET(OBCORE_VERSION_MAJOR 0)
 SET(USE_EIGEN 0)
 
-#PKG_CHECK_MODULES(XML libxml++-2.6)
-
 INCLUDE_DIRECTORIES(../..
                     ..
                     .
                     /usr/include/
-                    ${XML_INCLUDE_DIRS}
                     /usr/include/eigen3
                     )
 

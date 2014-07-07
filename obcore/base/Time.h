@@ -62,12 +62,12 @@ public:
 
     /**
      * Gets the time in sec.
-     * @return sec untill 1970.
+     * @return sec since 1970.
      */
     double sec(void) const { return _time.tv_sec + _time.tv_usec * 1.0e-6; }
     /**
      * Gets the time in usec.
-     * @return usec untill 1970.
+     * @return usec since 1970.
      */
     double usec(void) const { return _time.tv_sec * 1.0e6 + _time.tv_usec; }
     /**
