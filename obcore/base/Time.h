@@ -3,7 +3,6 @@
  *
  *  Open Robotic Vision and Utilities Library
  *  Copyright (c) 2014 TH-Nuernberg - Christian Merkl
- *  Original authors: Stefan May, Christopher Loerken and Dirk Holz
  *  E-Mail: christian.merkl@th-nuernberg.de
  *
  *  All rights reserved.
@@ -35,52 +34,69 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef __TIMER_H__
-#define __TIMER_H__
+#ifndef __TIME_H__
+#define __TIME_H__
 
-#include "obcore/base/Time.h"
+#include <sys/time.h>
 
-namespace obvious
-{
+namespace obvious {
 
 /**
- * @class Timer
- * @brief This utility provides functions for precise timing measurements.
- * @author Christian Merkl, Stefan May, Christopher Loerken and Dirk Holz
+ * @class Time
+ * @brief A simple class to get the current time in sec and usec from the date 1970. You can easly calculate a
+ * duration time with the operator-.
+ * @author Christian Merkl
  */
-class Timer
+class Time
 {
 public:
     /**
-     * Default constructor. Timer doesn't start to run.
+     * Default constructor. Sets all members to 0.
      */
-    Timer(void) { }
+    Time(void) { _time.tv_sec = 0; _time.tv_usec = 0; }
+    /**
+     * Copy constructor
+     * @param time will be copied.
+     */
+    Time(const Time& time) : _time(time._time) { }
 
     /**
-     * Starts the internal timer.
+     * Gets the time in sec.
+     * @return sec untill 1970.
      */
-    void start(void);
-
+    double sec(void) const { return _time.tv_sec + _time.tv_usec * 1.0e-6; }
     /**
-     * Function resets the timer and returns the elapsed time.
-     * @return elapsed time in ms.µs since construction of timer or last reset call
+     * Gets the time in usec.
+     * @return usec untill 1970.
      */
-    void reset(void);
-
+    double usec(void) const { return _time.tv_sec * 1.0e6 + _time.tv_usec; }
     /**
-     * Retrieve the elapsed time (in ms.µs) since
-     * @return elapsed time in ms.µs since construction of timer or last reset call
+     * Gets the current time.
+     * @return the current time as Time object.
      */
-    double getTime(void);
-
+    static Time now(void);
     /**
-     * Return the elapsed time since the last reset.
-     * @return elapsed time in sec since the last reset.
+     * Assignment operator.
+     * @param time will be copied.
      */
-    double elapsed(void) const;
+    Time& operator=(const Time& time)
+    {
+        _time = time._time;
+        return *this;
+    }
+    /**
+     * Calculates the time difference between this and time object.
+     * @param time will be subtracted from this.
+     */
+    double operator-(const Time& time) const;
+    /**
+     * Adds the given sec to this object.
+     * @param sec will be added to this object.
+     */
+    Time& operator+=(const double sec);
 
 private:
-    Time _start;
+    timeval _time;
 };
 
 } // end namespace obvious

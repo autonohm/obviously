@@ -87,6 +87,8 @@ int main(int argc, char* argv[])
    if(retval!=CAMSUCCESS) return -1;
 
    Timer t;
+   t.start();
+
    while(retval==CAMSUCCESS && viewer.isAlive())
    {
       unsigned int bytes;
@@ -94,7 +96,7 @@ int main(int argc, char* argv[])
       if(retval==CAMSUCCESS)
       {
          viewer.draw(_img, _cam->getWidth(), _cam->getHeight(), 3, (_cam->getFormat()==V4L2_PIX_FMT_MJPEG), bytes);
-         cout << "Elapsed: " << t.reset() << " ms" << endl;
+         cout << "Elapsed: " << t.getTime() << " ms" << endl;
       }
 
    }

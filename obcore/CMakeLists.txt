@@ -9,7 +9,7 @@ PROJECT(OBCORE)
 SET(OBCORE_VERSION_MAJOR 0)
 SET(USE_EIGEN 0)
 
-PKG_CHECK_MODULES(XML libxml++-2.6)
+#PKG_CHECK_MODULES(XML libxml++-2.6)
 
 INCLUDE_DIRECTORIES(../..
                     ..
@@ -24,8 +24,9 @@ SET(LIBRARY     base/CartesianCloud.cpp
                 base/Timer.cpp
                 base/Logger.cpp
                 base/tools.cpp
+                base/Time.cpp
                 math/geometry.cpp
-                math/linalg/MatrixFactory.cpp 
+                math/linalg/MatrixFactory.cpp
                 math/PID_Controller.cpp
                 math/IntegratorSimpson.cpp
                 math/TransformationWatchdog.cpp
@@ -35,7 +36,7 @@ SET(LIBRARY     base/CartesianCloud.cpp
                 filter/NormalFilter.cpp
                 filter/BoundingBoxFilter.cpp
                 )
-              
+
 IF(USE_EIGEN)
   message("Using libeigen for obcore")
   add_definitions(-DEIGENUSED)
