@@ -7,6 +7,9 @@ project(math_test)
 include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR} $ENV{OBVIOUSLY_ROOT})
 link_directories($ENV{OBVIOUSLY_ROOT}/build/debug/obcore)
 
+find_package(Eigen REQUIRED)
+include_directories(${Eigen_INCLUDE_DIRS})
+
 # Add test cpp file
 #add_executable(runMatrixTest
 #    math/MatrixTest.cpp
@@ -17,7 +20,7 @@ add_executable(eigen-vs-gsl
                )
 
 # Link test executable against gtest & gtest_main
-#target_link_libraries(runMatrixTest gtest gtest_main obcore gsl gslcblas)
+# target_link_libraries(runMatrixTest gtest gtest_main obcore gsl gslcblas)
 
 target_link_libraries(eigen-vs-gsl
                       obcore
