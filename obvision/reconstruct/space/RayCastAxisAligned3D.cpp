@@ -1,5 +1,8 @@
 #include "RayCastAxisAligned3D.h"
 #include "obcore/base/Logger.h"
+#include "obcore/base/System.h"
+
+#include <string.h>
 
 namespace obvious {
 
@@ -15,16 +18,22 @@ void RayCastAxisAligned3D::calcCoords(TsdSpace* space, double* coords, double* n
 {
   Timer t;
 
-  unsigned int partitionsInX = space->getXDimension() / space->getPartitionSize();
-  unsigned int partitionsInY = space->getYDimension() / space->getPartitionSize();
-  unsigned int partitionsInZ = space->getZDimension() / space->getPartitionSize();
+  unsigned int partitionSize = space->getPartitionSize();
+  unsigned int partitionsInX = space->getXDimension() / partitionSize;
+  unsigned int partitionsInY = space->getYDimension() / partitionSize;
+  unsigned int partitionsInZ = space->getZDimension() / partitionSize;
   double cellSize = space->getVoxelSize();
 
   *cnt = 0;
 
   TsdSpacePartition**** partitions = space->getPartitions();
 
+  // buffer for registration of zero crossings: in each cell, only one zero crossing should be detected
+  bool*** zeroCrossing;
+  System<bool>::allocate(partitionSize, partitionSize, partitionSize, zeroCrossing);
+
 #pragma omp parallel for
+  // Leave out outmost partitions, since the triangulation of normals needs access to neighboring partitions
   for(unsigned int z=1; z<partitionsInZ-1; z++)
   {
     for(unsigned int y=1; y<partitionsInY-1; y++)
@@ -36,14 +45,17 @@ void RayCastAxisAligned3D::calcCoords(TsdSpace* space, double* coords, double* n
         {
           if(!(p->isEmpty()))
           {
-
+            // Traverse in x-direction
+            TsdSpacePartition* p_prev = partitions[z][y][x-1];
             for(unsigned int pz=0; pz<p->getDepth(); pz++)
             {
+              memset(zeroCrossing[pz][0], 0, (partitionSize)*(partitionSize)*sizeof(bool));
               for(unsigned int py=0; py<p->getHeight(); py++)
               {
-                double tsd_prev = (*p)(pz, py, 0);
+                double tsd_prev = NAN;
+                if(p_prev->isInitialized() && !(p_prev->isEmpty())) tsd_prev = (*p_prev)(pz, py, p_prev->getWidth()-1);
                 double interp = 0.0;
-                for(unsigned int px=1; px<p->getWidth()+1; px++)
+                for(unsigned int px=0; px<p->getWidth(); px++)
                 {
                   double tsd = (*p)(pz, py, px);
                   // Check sign change
@@ -60,6 +72,7 @@ void RayCastAxisAligned3D::calcCoords(TsdSpace* space, double* coords, double* n
                     if(rgb)
                       space->interpolateTrilinearRGB(&coords[*cnt], &(rgb[*cnt]));
                     (*cnt)+=3;
+                    zeroCrossing[pz][py][px] = true;
 }
                   }
                   tsd_prev = tsd;
@@ -67,17 +80,20 @@ void RayCastAxisAligned3D::calcCoords(TsdSpace* space, double* coords, double* n
               }
             }
 
+            // Traverse in y-direction
+            p_prev = partitions[z][y-1][x];
             for(unsigned int pz=0; pz<p->getDepth(); pz++)
             {
               for(unsigned int px=0; px<p->getWidth(); px++)
               {
-                double tsd_prev = (*p)(pz, 0, px);
+                double tsd_prev = NAN;
+                if(p_prev->isInitialized() && !(p_prev->isEmpty())) tsd_prev = (*p_prev)(pz, p_prev->getHeight()-1, px);
                 double interp = 0.0;
-                for(unsigned int py=1; py<p->getHeight()+1; py++)
+                for(unsigned int py=0; py<p->getHeight(); py++)
                 {
                   double tsd = (*p)(pz, py, px);
                   // Check sign change
-                  if(tsd_prev * tsd < 0)
+                  if((!zeroCrossing[pz][py][px]) && (tsd_prev * tsd < 0))
                   {
                     interp = tsd_prev / (tsd_prev - tsd);
 #pragma omp critical
@@ -90,6 +106,7 @@ void RayCastAxisAligned3D::calcCoords(TsdSpace* space, double* coords, double* n
                     if(rgb)
                       space->interpolateTrilinearRGB(&coords[*cnt], &(rgb[*cnt]));
                     (*cnt)+=3;
+                    zeroCrossing[pz][py][px] = true;
 }
                   }
                   tsd_prev = tsd;
@@ -97,17 +114,20 @@ void RayCastAxisAligned3D::calcCoords(TsdSpace* space, double* coords, double* n
               }
             }
 
+            // Traverse in z-direction
+            p_prev = partitions[z-1][y][x];
             for(unsigned int px=0; px<p->getWidth(); px++)
             {
               for(unsigned int py=0; py<p->getHeight(); py++)
               {
-                double tsd_prev = (*p)(0, py, px);
+                double tsd_prev = NAN;
+                if(p_prev->isInitialized() && !(p_prev->isEmpty())) tsd_prev = (*p_prev)(p->getDepth()-1, py, px);
                 double interp = 0.0;
-                for(unsigned int pz=1; pz<p->getDepth()+1; pz++)
+                for(unsigned int pz=0; pz<p->getDepth(); pz++)
                 {
                   double tsd = (*p)(pz, py, px);
                   // Check sign change
-                  if(tsd_prev * tsd < 0)
+                  if((!zeroCrossing[pz][py][px]) && (tsd_prev * tsd < 0))
                   {
                     interp = tsd_prev / (tsd_prev - tsd);
 #pragma omp critical
@@ -131,6 +151,9 @@ void RayCastAxisAligned3D::calcCoords(TsdSpace* space, double* coords, double* n
       }
     }
   }
+
+  System<bool>::deallocate(zeroCrossing);
+
   LOGMSG(DBG_DEBUG, "Elapsed TSDF projection: " << t.getTime() << "ms");
   LOGMSG(DBG_DEBUG, "Raycasting finished! Found " << *cnt << " coordinates");
 }
