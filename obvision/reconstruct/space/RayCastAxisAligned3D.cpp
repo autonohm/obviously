@@ -25,11 +25,11 @@ void RayCastAxisAligned3D::calcCoords(TsdSpace* space, double* coords, double* n
   TsdSpacePartition**** partitions = space->getPartitions();
 
 #pragma omp parallel for
-  for(unsigned int z=0; z<partitionsInZ; z++)
+  for(unsigned int z=1; z<partitionsInZ-1; z++)
   {
-    for(unsigned int y=0; y<partitionsInY; y++)
+    for(unsigned int y=1; y<partitionsInY-1; y++)
     {
-      for(unsigned int x=0; x<partitionsInX; x++)
+      for(unsigned int x=1; x<partitionsInX-1; x++)
       {
         TsdSpacePartition* p = partitions[z][y][x];
         if(p->isInitialized())
