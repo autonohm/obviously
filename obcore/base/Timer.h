@@ -1,6 +1,4 @@
 /*
- * Software License Agreement (BSD License)
- *
  *  Open Robotic Vision and Utilities Library
  *  Copyright (c) 2014 TH-Nuernberg - Christian Merkl
  *  Original authors: Stefan May, Christopher Loerken and Dirk Holz

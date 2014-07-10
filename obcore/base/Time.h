@@ -1,6 +1,4 @@
 /*
- * Software License Agreement (BSD License)
- *
  *  Open Robotic Vision and Utilities Library
  *  Copyright (c) 2014 TH-Nuernberg - Christian Merkl
  *  E-Mail: christian.merkl@th-nuernberg.de
@@ -37,7 +35,8 @@
 #ifndef __TIME_H__
 #define __TIME_H__
 
-#include <sys/time.h>
+#include <ostream>
+#include <stdint.h>
 
 namespace obvious {
 
@@ -53,24 +52,34 @@ public:
     /**
      * Default constructor. Sets all members to 0.
      */
-    Time(void) { _time.tv_sec = 0; _time.tv_usec = 0; }
+    Time(void) : _seconds(0), _mus(0) {  }
     /**
      * Copy constructor
      * @param time will be copied.
      */
-    Time(const Time& time) : _time(time._time) { }
+    Time(const Time& time) : _seconds(time._seconds), _mus(time._mus) { }
 
     /**
-     * Gets the time in sec.
-     * @return sec since 1970.
+     * Gets the hours of this day.
+     * @return hours of this day.
      */
-    double sec(void) const { return _time.tv_sec + _time.tv_usec * 1.0e-6; }
+    double hours(void) const;
     /**
-     * Gets the time in usec.
-     * @return usec since 1970.
+     * Gets the time in minutes of this day.
+     * @return minutes of this day.
      */
-    double usec(void) const { return _time.tv_sec * 1.0e6 + _time.tv_usec; }
+    double min(void) const;
     /**
+     * Gets the time in seconds of this day.
+     * @return seconds of this day.
+     */
+    double sec(void) const;
+    /**
+     * Gets the time in museconds of this day.
+     * @return mus of this day.
+     */
+    double mus(void) const;
+     /**
      * Gets the current time.
      * @return the current time as Time object.
      */
@@ -81,7 +90,8 @@ public:
      */
     Time& operator=(const Time& time)
     {
-        _time = time._time;
+        _seconds = time._seconds;
+        _mus = time._mus;
         return *this;
     }
     /**
@@ -95,9 +105,14 @@ public:
      */
     Time& operator+=(const double sec);
 
+    friend std::ostream& operator<<(std::ostream& out, const Time& time);
+
 private:
-    timeval _time;
+    uint32_t _seconds;
+    uint32_t _mus;
 };
+
+std::ostream& operator<<(std::ostream& out, const Time& time);
 
 } // end namespace obvious
 

@@ -24,6 +24,8 @@ add_executable(eigen-vs-gsl
 
 target_link_libraries(eigen-vs-gsl
                       obcore
+                      gsl
+                      gslcblas
                       )
 
 #add_test(
