@@ -54,7 +54,7 @@ int main(int argc, char** argv)
         mat = Eigen::Matrix<float, Eigen::Dynamic, 3, Eigen::ColMajor>::Random(DIM, 3);
 
         Eigen::Matrix3f trans(Eigen::Matrix3f::Random());
-        Eigen::Matrix<float, Eigen::Dynamic, 3, Eigen::RowMajor> result(DIM, 3);
+        Eigen::Matrix<float, Eigen::Dynamic, 3, Eigen::ColMajor> result(DIM, 3);
         timer.reset();
         result = mat * trans;
     }
@@ -69,7 +69,37 @@ int main(int argc, char** argv)
         mat = Eigen::Matrix<double, Eigen::Dynamic, 3, Eigen::ColMajor>::Random(DIM, 3);
 
         Eigen::Matrix3d trans(Eigen::Matrix3d::Random());
-        Eigen::Matrix<double, Eigen::Dynamic, 3, Eigen::RowMajor> result(DIM, 3);
+        Eigen::Matrix<double, Eigen::Dynamic, 3, Eigen::ColMajor> result(DIM, 3);
+        timer.reset();
+        result = mat * trans;
+    }
+
+    std::cout << "elapsed time = " << timer.elapsed() << std::endl << std::endl;
+
+
+    std::cout << "will test lib eigen with int and row major..." << std::endl;
+
+    {
+        Eigen::Matrix<int, Eigen::Dynamic, 3, Eigen::RowMajor> mat(DIM, 3);
+        mat = Eigen::Matrix<int, Eigen::Dynamic, 3, Eigen::ColMajor>::Random(DIM, 3);
+
+        Eigen::Matrix<int, 3, 3> trans(Eigen::Matrix<int, 3, 3>::Random(3, 3));
+        Eigen::Matrix<int, Eigen::Dynamic, 3, Eigen::RowMajor> result(DIM, 3);
+        timer.reset();
+        result = mat * trans;
+    }
+
+    std::cout << "elapsed time = " << timer.elapsed() << std::endl << std::endl;
+
+
+    std::cout << "will test lib eigen with int and col major..." << std::endl;
+
+    {
+        Eigen::Matrix<int, Eigen::Dynamic, 3, Eigen::ColMajor> mat(DIM, 3);
+        mat = Eigen::Matrix<int, Eigen::Dynamic, 3, Eigen::ColMajor>::Random(DIM, 3);
+
+        Eigen::Matrix<int, 3, 3> trans(Eigen::Matrix<int, 3, 3>::Random(3, 3));
+        Eigen::Matrix<int, Eigen::Dynamic, 3, Eigen::ColMajor> result(DIM, 3);
         timer.reset();
         result = mat * trans;
     }
