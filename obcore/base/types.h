@@ -19,37 +19,13 @@
 * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 *
 *********************************************************************************/
-#ifndef ___POINT_CLOUD_H___
-#define ___POINT_CLOUD_H___
-
-#include <cstdlib>
-#include <vector>
-#include <Eigen/StdVector>
-
-#include "obcore/base/Point.h"
+#ifndef ___TYPES_H___
+#define ___TYPES_H___
 
 namespace obvious {
 
-template <typename PointT>
-class PointCloud
-{
-public:
-    PointCloud(const std::size_t size = 0);
-
-    typedef std::vector<PointT, Eigen::aligned_allocator<PointT> > vector;
-    typedef typename vector::iterator iterator;
-    typedef typename vector::const_iterator const_iterator;
-
-    inline iterator begin(void) { return _points.begin(); }
-    inline const_iterator begin(void) const { return _points.begin(); }
-    inline PointT& operator[](const unsigned int index) { return _points[index]; }
-    inline const PointT& operator[](const unsigned int index) const { return _points[index]; }
-
-private:
-    vector _points;
-};
-
-template class PointCloud<Point>;
+/* set here the used data type for floating point operation. */
+typedef double obfloat;
 
 } // end namespace obvious
 

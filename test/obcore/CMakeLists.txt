@@ -19,6 +19,11 @@ add_executable(eigen-vs-gsl
                base/eigen-vs-gsl.cpp
                )
 
+add_executable(pointcloud
+               base/pointcloud.cpp
+               )
+
+
 # Link test executable against gtest & gtest_main
 # target_link_libraries(runMatrixTest gtest gtest_main obcore gsl gslcblas)
 

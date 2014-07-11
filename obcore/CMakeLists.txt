@@ -22,6 +22,7 @@ SET(LIBRARY     base/CartesianCloud.cpp
                 base/Logger.cpp
                 base/tools.cpp
                 base/Time.cpp
+                base/PointCloud.cpp
                 math/geometry.cpp
                 math/linalg/MatrixFactory.cpp
                 math/PID_Controller.cpp

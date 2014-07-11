@@ -139,4 +139,58 @@ int main(int argc, char** argv)
         gsl_matrix_float_free(trans);
         gsl_matrix_float_free(result);
     }
+
+
+    std::cout << "will test eigen mapping an external array..." << std::endl;
+
+    {
+        float* data = new float[DIM * 3];
+        Eigen::Map<Eigen::Matrix<float, Eigen::Dynamic, 3, Eigen::RowMajor> > mat(data, DIM, 3);
+        mat = Eigen::Matrix<float, Eigen::Dynamic, 3, Eigen::RowMajor>::Random(DIM, 3);
+        Eigen::Matrix3f trans(Eigen::Matrix3f::Random());
+        Eigen::Matrix<float, Eigen::Dynamic, 3, Eigen::RowMajor> result(DIM, 3);
+        timer.reset();
+        result = mat * trans;
+    }
+
+    std::cout << "elapsed time = " << timer.elapsed() << std::endl << std::endl;
+
+
+    std::cout << "will test eigen mapping an external array with stride..." << std::endl;
+
+    {
+        struct Coord {
+            float x;
+            float y;
+            float z;
+        };
+
+        struct Color {
+            unsigned char r;
+            unsigned char g;
+            unsigned char b;
+        };
+
+        struct Point {
+            Coord coord;
+            Color color;
+        };
+
+        union Memory {
+            Point point;
+            float data[4];
+        };
+
+        std::cout << "size of Memory = " << sizeof(Memory) << std::endl;
+
+        Memory* mem = new Memory[DIM];
+        Eigen::Map<Eigen::Matrix<float, Eigen::Dynamic, 3, Eigen::RowMajor>, 0, Eigen::InnerStride<1> > mat(mem[0].data, DIM, 3);
+        mat = Eigen::Matrix<float, Eigen::Dynamic, 3, Eigen::RowMajor>::Random(DIM, 3);
+        Eigen::Matrix3f trans(Eigen::Matrix3f::Random());
+        Eigen::Matrix<float, Eigen::Dynamic, 3, Eigen::RowMajor> result(DIM, 3);
+        timer.reset();
+        result = mat * trans;
+    }
+
+    std::cout << "elapsed time = " << timer.elapsed() << std::endl << std::endl;
 }
