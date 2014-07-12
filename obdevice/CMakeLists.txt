@@ -9,7 +9,9 @@ PROJECT(OBDEVICE)
 SET(OBDEVICE_VERSION_MAJOR 0)
 SET(OBDEVICE_VERSION_MINOR 1)
 
-PKG_CHECK_MODULES(XML libxml++-2.6)
+#PKG_CHECK_MODULES(XML libxml++-2.6)
+
+find_package(Eigen REQUIRED)
 
 # source list
 SET(SOURCES
@@ -18,6 +20,7 @@ SET(SOURCES
     UvcCam.cpp
     UvcVirtualCam.cpp
     ParentDevice3D.cpp
+    CloudFactory.cpp
 )
 
 # if does exists find libopenni2 directories and libs
@@ -45,6 +48,7 @@ INCLUDE_DIRECTORIES(/usr/include/openni
                     ../obcore
                     $ENV{OBVIOUSLY_ROOT}/../obviously_intern/thermo_cam/include
                     ${XML_INCLUDE_DIRS}
+                    ${Eigen_INCLUDE_DIRS}
                     )
 
 # check if necessary files for PMD are installed

@@ -35,18 +35,32 @@ class PointCloud
 {
 public:
     PointCloud(const std::size_t size = 0);
+    PointCloud(const PointCloud& cloud);
 
-    typedef std::vector<PointT, Eigen::aligned_allocator<PointT> > vector;
-    typedef typename vector::iterator iterator;
-    typedef typename vector::const_iterator const_iterator;
+    typedef std::vector<PointT, Eigen::aligned_allocator<PointT> > Container;
+    typedef typename Container::iterator iterator;
+    typedef typename Container::const_iterator const_iterator;
 
     inline iterator begin(void) { return _points.begin(); }
     inline const_iterator begin(void) const { return _points.begin(); }
+    inline iterator end(void) { return _points.end(); }
+    inline const_iterator end(void) const { return _points.end(); }
     inline PointT& operator[](const unsigned int index) { return _points[index]; }
     inline const PointT& operator[](const unsigned int index) const { return _points[index]; }
+    inline unsigned int width(void) const { return _width; }
+    inline unsigned int height(void) const { return _height; }
+    inline bool isOrganized(void) const { return _height != 1; }
+    inline void resize(const std::size_t size)
+    {
+        _width = size;
+        _height = 1;
+        _points.resize(size);
+    }
 
 private:
-    vector _points;
+    unsigned int _width;
+    unsigned int _height;
+    Container _points;
 };
 
 template class PointCloud<Point>;
