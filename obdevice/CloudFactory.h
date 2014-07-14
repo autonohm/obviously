@@ -25,6 +25,10 @@
 #include "obcore/base/PointCloud.h"
 
 #include <cstdlib>
+#include <string>
+#include <vector>
+#include <fstream>
+
 
 namespace obvious {
 
@@ -34,6 +38,11 @@ public:
 //    CloudFactory(void) { }
 
     static void generateRandomCloud(PointCloud<Point>& cloud, const std::size_t size);
+    static bool loadCloud(PointCloud<Point>& cloud, const std::string& file);
+
+private:
+    static void readLineAndSplit(std::ifstream& stream, std::vector<std::string>& tokens);
+    static bool dropLines(std::ifstream& stream, const unsigned int lines = 1);
 };
 
 } // end namespace obvious
