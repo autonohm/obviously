@@ -12,7 +12,8 @@ int main(int argc, char** argv)
     view.show();
 
     obvious::PointCloud<obvious::Point> cloud;
-    obvious::CloudFactory::generateRandomCloud(cloud, 1000);
+//    obvious::CloudFactory::generateRandomCloud(cloud, 1000);
+    obvious::CloudFactory::loadCloud(cloud, "/home/knueppl/git/libra3d/build/12:55:10.386.pcd");
     view.setCloud(cloud);
 
     return app.exec();

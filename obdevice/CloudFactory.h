@@ -35,10 +35,9 @@ namespace obvious {
 class CloudFactory
 {
 public:
-//    CloudFactory(void) { }
-
     static void generateRandomCloud(PointCloud<Point>& cloud, const std::size_t size);
     static bool loadCloud(PointCloud<Point>& cloud, const std::string& file);
+    static bool saveCloud(const PointCloud<Point>& cloud, const std::string& file);
 
 private:
     static void readLineAndSplit(std::ifstream& stream, std::vector<std::string>& tokens);

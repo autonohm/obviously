@@ -56,6 +56,12 @@ public:
         _height = 1;
         _points.resize(size);
     }
+    inline void resize(const unsigned int width, const unsigned int height)
+    {
+        _width = width;
+        _height = height;
+        _points.resize(width * height);
+    }
 
 private:
     unsigned int _width;

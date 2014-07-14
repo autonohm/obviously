@@ -7,8 +7,6 @@
 namespace obvious {
 
 #define MSG(x) (std::cout << "CloudFactory: " << (x) << std::endl)
-#define READ(x) (})
-
 
 void CloudFactory::generateRandomCloud(PointCloud<Point>& cloud, const std::size_t size)
 {
@@ -37,7 +35,7 @@ bool CloudFactory::loadCloud(PointCloud<Point>& cloud, const std::string& file)
     /* Remove unneed header lines. */
     if (!dropLines(stream, 2))
     {
-        MSG("Read point cloud failed.");
+         MSG("Read point cloud failed.");
         return false;
     }
 
@@ -52,7 +50,7 @@ bool CloudFactory::loadCloud(PointCloud<Point>& cloud, const std::string& file)
 
 
     /* Remove unneed header lines. */
-    if (!dropLines(stream, 2))
+    if (!dropLines(stream, 3))
     {
         MSG("Read point cloud failed.");
         return false;
@@ -68,7 +66,7 @@ bool CloudFactory::loadCloud(PointCloud<Point>& cloud, const std::string& file)
     const unsigned int width = std::atoi(fields[1].c_str());
 
     readLineAndSplit(stream, fields);
-    if (fields.size() != 2 || fileds[1] != "HEIGHT")
+    if (fields.size() != 2 || fields[0] != "HEIGHT")
     {
         MSG("height is corrupt. Read point cloud failed.");
         return false;
@@ -84,8 +82,19 @@ bool CloudFactory::loadCloud(PointCloud<Point>& cloud, const std::string& file)
     }
 
 
+    cloud.resize(width, height);
 
+    for (PointCloud<Point>::iterator point(cloud.begin()); point < cloud.end(); ++point)
+    {
+        readLineAndSplit(stream, fields);
 
+        if (fields.size() < 3)
+            break;
+
+        point->x = std::atof(fields[0].c_str());
+        point->y = std::atof(fields[1].c_str());
+        point->z = std::atof(fields[2].c_str());
+    }
 
     return true;
 }
@@ -108,7 +117,7 @@ void CloudFactory::readLineAndSplit(std::ifstream& stream, std::vector<std::stri
         tokens.push_back(token);
 }
 
-bool CloudFactory::dropLine(std::ifstream& stream, const unsigned int lines)
+bool CloudFactory::dropLines(std::ifstream& stream, const unsigned int lines)
 {
     std::string line;
 
@@ -122,6 +131,11 @@ bool CloudFactory::dropLine(std::ifstream& stream, const unsigned int lines)
     }
 
     return true;
+}
+
+bool CloudFactory::saveCloud(const PointCloud<Point>& cloud, const std::string& file)
+{
+
 }
 
 } // end namespace obvious
