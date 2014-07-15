@@ -64,6 +64,8 @@ public:
         _points.resize(width * height);
     }
 
+    void rotate(const obfloat roll, const obfloat pitch, const obfloat yaw);
+
 private:
     unsigned int _width;
     unsigned int _height;
