@@ -61,6 +61,7 @@ public:
 
 public slots:
     void setCloud(const PointCloud<Point>& cloud);
+    void setCloud(const PointCloud<PointRgb>& cloud);
 
 private:
     vtkSmartPointer<vtkRenderer> _renderer;

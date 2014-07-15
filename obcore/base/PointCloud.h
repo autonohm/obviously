@@ -35,6 +35,7 @@ class PointCloud
 {
 public:
     PointCloud(const std::size_t size = 0);
+    PointCloud(const unsigned int width, const unsigned int height);
     PointCloud(const PointCloud& cloud);
 
     typedef std::vector<PointT, Eigen::aligned_allocator<PointT> > Container;

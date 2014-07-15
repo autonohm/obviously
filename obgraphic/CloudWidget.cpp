@@ -104,6 +104,41 @@ void CloudWidget::setCloud(const PointCloud<Point>& cloud)
     this->update();
 }
 
+void CloudWidget::setCloud(const PointCloud<PointRgb>& cloud)
+{
+    vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New();
+    vtkSmartPointer<vtkUnsignedCharArray> colours = vtkSmartPointer<vtkUnsignedCharArray>::New();
+    colours->SetNumberOfComponents(3);
+
+
+    for (PointCloud<PointRgb>::const_iterator point(cloud.begin()); point < cloud.end(); ++point)
+    {
+        unsigned char temp[3] = { point->r, point->g, point->b };
+
+        points->InsertNextPoint(point->x, point->y, point->z);
+        colours->InsertNextTupleValue(temp);
+    }
+
+    vtkSmartPointer<vtkPolyData> polyData = vtkSmartPointer<vtkPolyData>::New();
+    polyData->SetPoints(points);
+    polyData->GetPointData()->SetNormals(NULL);
+    polyData->GetPointData()->SetScalars(colours);
+
+    vtkSmartPointer<vtkVertexGlyphFilter> glyphFilter =  vtkSmartPointer<vtkVertexGlyphFilter>::New();
+    glyphFilter->SetInputConnection(polyData->GetProducerPort());
+    glyphFilter->Update();
+
+    polyData->ShallowCopy(glyphFilter->GetOutput());
+    points->Modified();
+
+    vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+    mapper->SetInputConnection(polyData->GetProducerPort());
+
+    _actorCloud->SetMapper(mapper);
+
+    this->update();
+}
+
 /*
 void CloudWidget::setCloud(pcl::PointCloud<pcl::PointXYZRGBL>::ConstPtr cloud,
                            const std::vector<pcl::Vertices>& vertices)
