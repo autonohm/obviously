@@ -42,6 +42,7 @@ public:
     typedef typename Container::iterator iterator;
     typedef typename Container::const_iterator const_iterator;
 
+    inline std::size_t size(void) const { return _points.size(); }
     inline iterator begin(void) { return _points.begin(); }
     inline const_iterator begin(void) const { return _points.begin(); }
     inline iterator end(void) { return _points.end(); }

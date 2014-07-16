@@ -53,6 +53,8 @@ target_link_libraries(pointcloud
                       ${QT_LIBRARIES}
                       QVTK
                       ${VTK_LIBRARIES}
+                      gsl
+                      gslcblas
                       )
 
 #add_test(

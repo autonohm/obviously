@@ -3,6 +3,8 @@
 
 #include <Eigen/Geometry>
 
+#include <iostream>
+
 namespace obvious {
 
 /* Implementation for point type Point. */
@@ -76,6 +78,21 @@ PointCloud<PointRgb>::PointCloud(const unsigned int width, const unsigned int he
       _points(width * height)
 {
 
+}
+
+template <>
+void PointCloud<PointRgb>::rotate(const obfloat roll, const obfloat pitch, const obfloat yaw)
+{
+    const unsigned int s = sizeof(PointRgb) / sizeof(obfloat);
+
+    Eigen::Map<Eigen::Matrix<obfloat, Eigen::Dynamic, 3, Eigen::RowMajor>, Eigen::Aligned, Eigen::OuterStride<s> >
+        mat(reinterpret_cast<obfloat*>(&_points[0]), _points.size(), 3);
+    Eigen::Quaternion<obfloat> quat(Eigen::AngleAxis<obfloat>(roll, Eigen::Matrix<obfloat, 3, 1>::UnitX()) *
+                                    Eigen::AngleAxis<obfloat>(pitch, Eigen::Matrix<obfloat, 3, 1>::UnitY()) *
+                                    Eigen::AngleAxis<obfloat>(yaw, Eigen::Matrix<obfloat, 3, 1>::UnitZ()));
+    Eigen::Matrix<obfloat, 3, 3> rot(quat.matrix());
+
+    mat *= rot;
 }
 
 } // end namespace obvious
