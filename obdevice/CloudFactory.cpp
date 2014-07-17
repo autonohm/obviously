@@ -3,6 +3,7 @@
 #include <ctime>
 #include <iostream>
 #include <sstream>
+#include <clocale>
 
 namespace obvious {
 
@@ -40,6 +41,7 @@ void CloudFactory::generateRandomCloud(PointCloud<PointRgb>& cloud, const std::s
 
 bool CloudFactory::loadCloud(PointCloud<Point>& cloud, const std::string& file)
 {
+    std::setlocale(LC_NUMERIC, "C");
     std::ifstream stream;
     stream.open(file.c_str(), std::ios::in);
 
@@ -118,6 +120,7 @@ bool CloudFactory::loadCloud(PointCloud<Point>& cloud, const std::string& file)
 
 bool CloudFactory::loadCloud(PointCloud<PointRgb>& cloud, const std::string& file)
 {
+    std::setlocale(LC_NUMERIC, "C");
     std::ifstream stream;
     stream.open(file.c_str(), std::ios::in);
 
@@ -234,9 +237,9 @@ bool CloudFactory::dropLines(std::ifstream& stream, const unsigned int lines)
     return true;
 }
 
-bool CloudFactory::saveCloud(const PointCloud<Point>& cloud, const std::string& file)
-{
-    return true;
-}
+//bool CloudFactory::saveCloud(const PointCloud<Point>& cloud, const std::string& file)
+//{
+//    return true;
+//}
 
 } // end namespace obvious

@@ -39,7 +39,7 @@ public:
     static void generateRandomCloud(PointCloud<PointRgb>& cloud, const std::size_t size);
     static bool loadCloud(PointCloud<Point>& cloud, const std::string& file);
     static bool loadCloud(PointCloud<PointRgb>& cloud, const std::string& file);
-    static bool saveCloud(const PointCloud<Point>& cloud, const std::string& file);
+//    static bool saveCloud(const PointCloud<Point>& cloud, const std::string& file);
 
 private:
     static void readLineAndSplit(std::ifstream& stream, std::vector<std::string>& tokens);

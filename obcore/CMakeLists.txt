@@ -9,11 +9,12 @@ PROJECT(OBCORE)
 SET(OBCORE_VERSION_MAJOR 0)
 SET(USE_EIGEN 0)
 
+FIND_PACKAGE(Eigen REQUIRED)
+
 INCLUDE_DIRECTORIES(../..
                     ..
                     .
-                    /usr/include/
-                    /usr/include/eigen3
+                    ${Eigen_INCLUDE_DIRS}
                     )
 
 SET(LIBRARY     base/CartesianCloud.cpp
@@ -51,5 +52,5 @@ ELSE()
                          )
 ENDIF()
 
-add_library(obcore ${LIBRARY})
+ADD_LIBRARY(obcore ${LIBRARY})
 
