@@ -27,6 +27,7 @@ RayCastPolar2D::~RayCastPolar2D()
 void RayCastPolar2D::calcCoordsFromCurrentView(TsdGrid* grid, SensorPolar2D* sensor, double* coords, double* normals, unsigned int* cnt)
 {
   Timer t;
+  t.start();
   *cnt = 0;
 
   Matrix T = sensor->getTransformation();
@@ -102,13 +103,14 @@ void RayCastPolar2D::calcCoordsFromCurrentView(TsdGrid* grid, SensorPolar2D* sen
     delete[] n_tmp;     n_tmp = NULL;
 }
 
-  LOGMSG(DBG_DEBUG, "Elapsed TSDF projection: " << t.getTime() << "ms");
+  LOGMSG(DBG_DEBUG, "Elapsed TSDF projection: " << t.elapsed() << "s");
   LOGMSG(DBG_DEBUG, "Ray casting finished! Found " << *cnt << " coordinates");
 }
 
 void RayCastPolar2D::calcCoordsFromCurrentViewMask(TsdGrid* grid, SensorPolar2D* sensor, double* coords, double* normals, bool* mask)
 {
   Timer t;
+  t.start();
 
   Matrix T = sensor->getTransformation();
   T.invert();
@@ -174,7 +176,7 @@ void RayCastPolar2D::calcCoordsFromCurrentViewMask(TsdGrid* grid, SensorPolar2D*
   }
 }
 
-  LOGMSG(DBG_DEBUG, "Elapsed TSDF projection: " << t.getTime() << "ms");
+  LOGMSG(DBG_DEBUG, "Elapsed TSDF projection: " << t.elapsed() << "s");
   LOGMSG(DBG_DEBUG, "Ray casting finished!");
 }
 

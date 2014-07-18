@@ -154,7 +154,7 @@ void RayCastAxisAligned3D::calcCoords(TsdSpace* space, double* coords, double* n
 
   System<bool>::deallocate(zeroCrossing);
 
-  LOGMSG(DBG_DEBUG, "Elapsed TSDF projection: " << t.getTime() << "ms");
+  LOGMSG(DBG_DEBUG, "Elapsed TSDF projection: " << t.elapsed() << "ms");
   LOGMSG(DBG_DEBUG, "Raycasting finished! Found " << *cnt << " coordinates");
 }
 
@@ -215,7 +215,7 @@ void RayCastAxisAligned3D::calcCoordsRoughly(TsdSpace* space, double* coords, do
       }
     }
   }
-  LOGMSG(DBG_DEBUG, "Elapsed TSDF projection: " << t.getTime() << "ms");
+  LOGMSG(DBG_DEBUG, "Elapsed TSDF projection: " << t.elapsed() << "ms");
   LOGMSG(DBG_DEBUG, "Raycasting finished! Found " << *cnt << " coordinates");
 }
 

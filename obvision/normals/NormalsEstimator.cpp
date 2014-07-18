@@ -1,8 +1,10 @@
 #include "NormalsEstimator.h"
 #include <obcore/math/mathbase.h>
 #include <string.h>
+#include <cmath>
 #include <flann/flann.hpp>
 #include <ANN/ANN.h>
+
 
 namespace obvious
 {

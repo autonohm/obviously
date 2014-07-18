@@ -24,6 +24,7 @@ int main(int argc, char** argv)
     animationDelay = atoi(argv[1]);
 
   Timer timer;
+  timer.start();
 
   // Model coordinates
   obvious::Matrix* M = new obvious::Matrix(100, 2);
@@ -127,6 +128,6 @@ int main(int argc, char** argv)
   delete estimator;
   delete assigner;
 
-  cout << "elapsed: " << timer.getTime() << " ms" << endl;
+  cout << "elapsed: " << timer.elapsed() << " s" << endl;
   return 0;
 }

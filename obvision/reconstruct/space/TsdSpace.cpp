@@ -269,6 +269,7 @@ bool TsdSpace::isInsideSpace(Sensor* sensor)
 void TsdSpace::push(Sensor* sensor)
 {
   Timer timer;
+  timer.start();
 
   double* data = sensor->getRealMeasurementData();
   bool* mask = sensor->getRealMeasurementMask();
@@ -349,12 +350,13 @@ void TsdSpace::push(Sensor* sensor)
   LOGMSG(DBG_DEBUG, "Distances pushed: " << _distancesPushed);
 #endif
 
-  LOGMSG(DBG_DEBUG, "Elapsed push: " << timer.getTime() << "ms, Initialized partitions: " << TsdSpacePartition::getInitializedPartitionSize());
+  LOGMSG(DBG_DEBUG, "Elapsed push: " << timer.elapsed() << "s, Initialized partitions: " << TsdSpacePartition::getInitializedPartitionSize());
 }
 
 void TsdSpace::pushTree(Sensor* sensor)
 {
   Timer timer;
+  timer.start();
 
   double* data = sensor->getRealMeasurementData();
   bool* mask = sensor->getRealMeasurementMask();
@@ -435,7 +437,7 @@ void TsdSpace::pushTree(Sensor* sensor)
   LOGMSG(DBG_DEBUG, "Distances pushed: " << _distancesPushed);
 #endif
 
-  LOGMSG(DBG_DEBUG, "Elapsed push: " << timer.getTime() << "ms, Initialized partitions: " << TsdSpacePartition::getInitializedPartitionSize());
+  LOGMSG(DBG_DEBUG, "Elapsed push: " << timer.elapsed() << "s, Initialized partitions: " << TsdSpacePartition::getInitializedPartitionSize());
 }
 
 void TsdSpace::pushRecursion(Sensor* sensor, double pos[3], TsdSpaceComponent* comp, vector<TsdSpacePartition*> &partitionsToCheck)

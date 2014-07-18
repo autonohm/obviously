@@ -240,6 +240,7 @@ double TsdGrid::getMaxTruncation()
 void TsdGrid::push(SensorPolar2D* sensor)
 {
   Timer t;
+  t.start();
   double* data     = sensor->getRealMeasurementData();
   bool*   mask     = sensor->getRealMeasurementMask();
 
@@ -288,12 +289,13 @@ void TsdGrid::push(SensorPolar2D* sensor)
 
   propagateBorders();
 
-  LOGMSG(DBG_DEBUG, "Elapsed push: " << t.getTime() << "ms");
+  LOGMSG(DBG_DEBUG, "Elapsed push: " << t.elapsed() << "s");
 }
 
 void TsdGrid::pushTree(SensorPolar2D* sensor)
 {
   Timer t;
+  t.start();
   double* data     = sensor->getRealMeasurementData();
   bool*   mask     = sensor->getRealMeasurementMask();
 
@@ -346,7 +348,7 @@ void TsdGrid::pushTree(SensorPolar2D* sensor)
 
   propagateBorders();
 
-  LOGMSG(DBG_DEBUG, "Elapsed push: " << t.getTime() << "ms");
+  LOGMSG(DBG_DEBUG, "Elapsed push: " << t.elapsed() << "s");
 }
 
 void TsdGrid::pushRecursion(SensorPolar2D* sensor, double pos[2], TsdGridComponent* comp, vector<TsdGridPartition*> &partitionsToCheck)

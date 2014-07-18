@@ -1,17 +1,44 @@
 #include "Time.h"
 
+#ifdef WIN32
+#include <windows.h>
+#else
 #include <cmath>
 #include <sys/time.h>
+#endif
 
 namespace obvious {
+
+#ifdef WIN32
+LONG64 Time::_ticksPerSecond = 0;
+#endif
+
+Time::Time(void)
+{
+#ifdef WIN32
+    if(!_ticksPerSecond) QueryPerformanceFrequency((LARGE_INTEGER*)&_ticksPerSecond);
+#endif
+
+    _seconds = 0;
+    _mus = 0;
+}
 
 Time Time::now(void)
 {
     Time time;
+
+#ifdef WIN32
+    LARGE_INTEGER tick;
+    QueryPerformanceCounter(&tick);
+    tick.QuadPart = tick.QuadPart * 1000 / _ticksPerSecond;
+    time._seconds = tick.u.LowPart;
+    time._mus = tick.u.LowPart * 1e3 - time._seconds * 1e6;
+#else
     timeval clock;
     ::gettimeofday(&clock, 0);
     time._seconds = clock.tv_sec;
     time._mus = clock.tv_usec;
+#endif
 
     return time;
 }
@@ -34,6 +61,13 @@ double Time::sec(void) const
 double Time::mus(void) const
 {
     return static_cast<double>(_seconds) * 1.0e6 + static_cast<double>(_mus);
+}
+
+Time& Time::operator=(const Time& time)
+{
+    _seconds = time._seconds;
+    _mus = time._mus;
+    return *this;
 }
 
 double Time::operator-(const Time& time) const

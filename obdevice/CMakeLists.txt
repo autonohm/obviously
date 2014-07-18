@@ -44,7 +44,7 @@ INCLUDE_DIRECTORIES(/usr/include/openni
                     $ENV{OBVIOUSLY_ROOT}
                     ../obcore/math
                     ../obcore
-                    ${Eigen_INCLUDE_DIRS}
+                    ${EIGEN_INCLUDE_DIRS}
                     )
 
 # check if necessary files for PMD are installed

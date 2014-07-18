@@ -14,7 +14,7 @@ FIND_PACKAGE(Eigen REQUIRED)
 INCLUDE_DIRECTORIES(../..
                     ..
                     .
-                    ${Eigen_INCLUDE_DIRS}
+                    ${EIGEN_INCLUDE_DIRS}
                     )
 
 SET(LIBRARY     base/CartesianCloud.cpp

@@ -40,7 +40,7 @@ ENDIF()
 LINK_LIBRARIES(${VTK_LIBRARIES})
 
 INCLUDE_DIRECTORIES(..
-                    ${Eigen_INCLUDE_DIRS}
+                    ${EIGEN_INCLUDE_DIRS}
                     )
 
 add_library(obgraphic

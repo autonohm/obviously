@@ -86,7 +86,7 @@ protected:
   bool*            _mask;
   unsigned char*  _rgb;
 
-  Timer            _time;          ///< timer for estimation of frame rate
+  Timer            _timer;        ///< timer for estimation of frame rate
   float           _frameRate;     ///< frame rate of grabbing
 
   bool            _record;
