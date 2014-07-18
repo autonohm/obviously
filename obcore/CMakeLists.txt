@@ -9,14 +9,12 @@ PROJECT(OBCORE)
 SET(OBCORE_VERSION_MAJOR 0)
 SET(USE_EIGEN 0)
 
-PKG_CHECK_MODULES(XML libxml++-2.6)
+FIND_PACKAGE(Eigen REQUIRED)
 
 INCLUDE_DIRECTORIES(../..
                     ..
                     .
-                    /usr/include/
-                    ${XML_INCLUDE_DIRS}
-                    /usr/include/eigen3
+                    ${Eigen_INCLUDE_DIRS}
                     )
 
 SET(LIBRARY     base/CartesianCloud.cpp
@@ -24,8 +22,10 @@ SET(LIBRARY     base/CartesianCloud.cpp
                 base/Timer.cpp
                 base/Logger.cpp
                 base/tools.cpp
+                base/Time.cpp
+                base/PointCloud.cpp
                 math/geometry.cpp
-                math/linalg/MatrixFactory.cpp 
+                math/linalg/MatrixFactory.cpp
                 math/PID_Controller.cpp
                 math/IntegratorSimpson.cpp
                 math/TransformationWatchdog.cpp
@@ -35,7 +35,7 @@ SET(LIBRARY     base/CartesianCloud.cpp
                 filter/NormalFilter.cpp
                 filter/BoundingBoxFilter.cpp
                 )
-              
+
 IF(USE_EIGEN)
   message("Using libeigen for obcore")
   add_definitions(-DEIGENUSED)
@@ -52,5 +52,5 @@ ELSE()
                          )
 ENDIF()
 
-add_library(obcore ${LIBRARY})
+ADD_LIBRARY(obcore ${LIBRARY})
 

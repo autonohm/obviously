@@ -1,7 +1,6 @@
 /*
  *  Open Robotic Vision and Utilities Library
  *  Copyright (c) 2014 TH-Nuernberg - Christian Merkl
- *  Original authors: Stefan May, Christopher Loerken and Dirk Holz
  *  E-Mail: christian.merkl@th-nuernberg.de
  *
  *  All rights reserved.
@@ -33,53 +32,87 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef __TIMER_H__
-#define __TIMER_H__
+#ifndef __TIME_H__
+#define __TIME_H__
 
-#include "obcore/base/Time.h"
+#include <ostream>
+#include <stdint.h>
 
-namespace obvious
-{
+namespace obvious {
 
 /**
- * @class Timer
- * @brief This utility provides functions for precise timing measurements.
- * @author Christian Merkl, Stefan May, Christopher Loerken and Dirk Holz
+ * @class Time
+ * @brief A simple class to get the current time in sec and usec from the date 1970. You can easly calculate a
+ * duration time with the operator-.
+ * @author Christian Merkl
  */
-class Timer
+class Time
 {
 public:
     /**
-     * Default constructor. Timer doesn't start to run.
+     * Default constructor. Sets all members to 0.
      */
-    Timer(void) { }
+    Time(void) : _seconds(0), _mus(0) {  }
+    /**
+     * Copy constructor
+     * @param time will be copied.
+     */
+    Time(const Time& time) : _seconds(time._seconds), _mus(time._mus) { }
 
     /**
-     * Starts the internal timer.
+     * Gets the hours of this day.
+     * @return hours of this day.
      */
-    void start(void);
-
+    double hours(void) const;
     /**
-     * Function resets the timer and returns the elapsed time.
-     * @return elapsed time in ms.µs since construction of timer or last reset call
+     * Gets the time in minutes of this day.
+     * @return minutes of this day.
      */
-    void reset(void);
-
+    double min(void) const;
     /**
-     * Retrieve the elapsed time (in ms.µs) since
-     * @return elapsed time in ms.µs since construction of timer or last reset call
+     * Gets the time in seconds of this day.
+     * @return seconds of this day.
      */
-    double getTime(void);
-
+    double sec(void) const;
     /**
-     * Return the elapsed time since the last reset.
-     * @return elapsed time in sec since the last reset.
+     * Gets the time in museconds of this day.
+     * @return mus of this day.
      */
-    double elapsed(void) const;
+    double mus(void) const;
+     /**
+     * Gets the current time.
+     * @return the current time as Time object.
+     */
+    static Time now(void);
+    /**
+     * Assignment operator.
+     * @param time will be copied.
+     */
+    Time& operator=(const Time& time)
+    {
+        _seconds = time._seconds;
+        _mus = time._mus;
+        return *this;
+    }
+    /**
+     * Calculates the time difference between this and time object.
+     * @param time will be subtracted from this.
+     */
+    double operator-(const Time& time) const;
+    /**
+     * Adds the given sec to this object.
+     * @param sec will be added to this object.
+     */
+    Time& operator+=(const double sec);
+
+    friend std::ostream& operator<<(std::ostream& out, const Time& time);
 
 private:
-    Time _start;
+    uint32_t _seconds;
+    uint32_t _mus;
 };
+
+std::ostream& operator<<(std::ostream& out, const Time& time);
 
 } // end namespace obvious
 

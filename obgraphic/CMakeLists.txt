@@ -9,15 +9,40 @@ SET(OBCORE_VERSION_MAJOR 0)
 SET(OBCORE_VERSION_MINOR 1)
 
 FIND_PACKAGE(VTK REQUIRED)
+FIND_PACKAGE(Eigen REQUIRED)
+FIND_PACKAGE(Qt4)
+
 INCLUDE(${VTK_USE_FILE})
+
+SET(SOURCE
+    Obvious2D.cpp
+    Obvious2DMap.cpp
+    Obvious3D.cpp
+    VtkCloud.cpp
+    )
+
+# Qt part
+IF(QT_FOUND)
+  INCLUDE(${QT_USE_FILE})
+  ADD_DEFINITIONS(${QT_DEFINITIONS})
+
+  QT4_WRAP_CPP(MOC
+               CloudWidget.h
+               )
+
+  SET(SOURCE
+      ${SOURCE}
+      CloudWidget.cpp
+      ${MOC}
+      )
+ENDIF()
 
 LINK_LIBRARIES(${VTK_LIBRARIES})
 
-INCLUDE_DIRECTORIES(..)
+INCLUDE_DIRECTORIES(..
+                    ${Eigen_INCLUDE_DIRS}
+                    )
 
 add_library(obgraphic
-	Obvious2D.cpp
-	Obvious2DMap.cpp
-	Obvious3D.cpp
-	VtkCloud.cpp
-	)
+            ${SOURCE}
+            )
