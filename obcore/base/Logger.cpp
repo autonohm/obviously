@@ -159,7 +159,7 @@ void Logger::print(const unsigned int verbosityLevel,
 		logmsg << "DEBUG ";
 		break;
 	}
-	logmsg << "[" << file << ":" << line << "] @ " <<	_t.getTime()/1000.0 <<	"s :" << message << std::endl;
+	logmsg << "[" << file << ":" << line << "] @ " << _t.elapsed() << "s :" << message << std::endl;
 
 	if ((_configuration&file_on) && (verbosityLevel <= _fileVerbosityLevel))
 	{

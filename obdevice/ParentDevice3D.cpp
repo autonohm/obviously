@@ -22,6 +22,8 @@ ParentDevice3D::ParentDevice3D(unsigned int cols, unsigned int rows)
   _mask      = new bool[_rows*_cols];
   _z         = new double[_rows*_cols];
   _rgb       = new unsigned char[_rows*_cols*3];
+
+  _timer.start();
 }
 
 
@@ -38,11 +40,7 @@ ParentDevice3D::~ParentDevice3D()
  */
 void ParentDevice3D::estimateFrameRate(void)
 {
-  static long double oldTime;
-  long double newTime = _time.getTime();
-
-  _frameRate = 1 / (newTime - oldTime) * 1000;
-  oldTime = newTime;
+    _frameRate = 1.0f / _timer.reset();
 }
 
 void ParentDevice3D::startRecording(char* filename)

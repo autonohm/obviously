@@ -14,6 +14,7 @@ RayCastAxisAligned3D::~RayCastAxisAligned3D() {
 void RayCastAxisAligned3D::calcCoords(TsdSpace* space, double* coords, double* normals, unsigned char* rgb, unsigned int* cnt)
 {
   Timer t;
+  t.start();
 
   unsigned int partitionsInX = space->getXDimension() / space->getPartitionSize();
   unsigned int partitionsInY = space->getYDimension() / space->getPartitionSize();
@@ -131,13 +132,14 @@ void RayCastAxisAligned3D::calcCoords(TsdSpace* space, double* coords, double* n
       }
     }
   }
-  LOGMSG(DBG_DEBUG, "Elapsed TSDF projection: " << t.getTime() << "ms");
+  LOGMSG(DBG_DEBUG, "Elapsed TSDF projection: " << t.elapsed() << "s");
   LOGMSG(DBG_DEBUG, "Raycasting finished! Found " << *cnt << " coordinates");
 }
 
 void RayCastAxisAligned3D::calcCoordsRoughly(TsdSpace* space, double* coords, double* normals, unsigned int* cnt)
 {
   Timer t;
+  t.start();
 
   unsigned int partitionsInX = space->getXDimension() / space->getPartitionSize();
   unsigned int partitionsInY = space->getYDimension() / space->getPartitionSize();
@@ -192,7 +194,7 @@ void RayCastAxisAligned3D::calcCoordsRoughly(TsdSpace* space, double* coords, do
       }
     }
   }
-  LOGMSG(DBG_DEBUG, "Elapsed TSDF projection: " << t.getTime() << "ms");
+  LOGMSG(DBG_DEBUG, "Elapsed TSDF projection: " << t.elapsed() << "s");
   LOGMSG(DBG_DEBUG, "Raycasting finished! Found " << *cnt << " coordinates");
 }
 

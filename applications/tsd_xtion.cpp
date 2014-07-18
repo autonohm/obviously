@@ -110,6 +110,7 @@ void _cbGenPointCloud(void)
 void _cbRegNewImage(void)
 {
   obvious::Timer t;
+  obvious::Timer tComplete;
 
   unsigned int cols = _xtion.width();
   unsigned int rows = _xtion.height();
@@ -135,7 +136,8 @@ void _cbRegNewImage(void)
     return;
   }
 
-  double timeIcpStart = t.getTime();
+  t.start();
+  tComplete.start();
 
   // Transform model in world coordinate system in order to display it
   _vModel->setCoords(coords, size / 3, 3, normals);
@@ -145,12 +147,12 @@ void _cbRegNewImage(void)
 
   _icp->reset();
   _icp->setModel(coords, normals, _vModel->getSize(), 0.1);
-  cout << "Set Model: " << t.getTime() - timeIcpStart << "ms" << endl;
+  cout << "Set Model: " << t.reset() << " s" << endl;
 
   // Acquire scene image
   //for(unsigned int i=0; i<5; i++)
   _xtion.grab();
-  cout << "Grab: " << t.getTime() - timeIcpStart << "ms" << endl;
+  cout << "Grab: " << t.reset() << " s" << endl;
 
   vector<float> coordsScene     = _xtion.coords();
   bool* maskScene         = new bool[cols*rows];//_xtion.getMask();
@@ -173,7 +175,7 @@ void _cbRegNewImage(void)
     }
   }
   cout << idx << endl;
-  cout << "Filter: " << t.getTime() - timeIcpStart << "ms" << endl;
+  cout << "Filter: " << t.reset() << " s" << endl;
 
   if(idx==0)
   {
@@ -186,7 +188,7 @@ void _cbRegNewImage(void)
   //_vScene->setCoords(coords, idx, 3, normals);
 
   _icp->setScene(coords, NULL, idx, 0.04);
-  cout << "Set Scene: " << t.getTime() - timeIcpStart << "ms" << endl;
+  cout << "Set Scene: " << t.reset() << " s" << endl;
 
   // Perform ICP registration
   double rms = 0;
@@ -194,7 +196,7 @@ void _cbRegNewImage(void)
   unsigned int iterations = 0;
 
   EnumIcpState state = _icp->iterate(&rms, &pairs, &iterations);
-  LOGMSG(DBG_DEBUG, "Elapsed ICP: " << t.getTime()-timeIcpStart << "ms, state " << state << ", pairs: " << pairs << ", rms: " << rms);
+  LOGMSG(DBG_DEBUG, "Elapsed ICP: " << t.reset() << "ms, state " << state << ", pairs: " << pairs << ", rms: " << rms);
 
   if(((state == ICP_SUCCESS) && (rms < 0.1)) || ((state == ICP_MAXITERATIONS) && (rms < 0.1)))
   {
@@ -230,7 +232,7 @@ void _cbRegNewImage(void)
   delete[] maskScene;
   delete[] dist;
 
-  LOGMSG(DBG_ERROR, ": time elapsed = " << t.getTime() << " ms");
+  LOGMSG(DBG_ERROR, ": time elapsed = " << tComplete.elapsed() << " s");
 }
 
 void _cbReset(void)

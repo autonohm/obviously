@@ -39,6 +39,7 @@ RayCast3D::~RayCast3D()
 void RayCast3D::calcCoordsFromCurrentPose(TsdSpace* space, Sensor* sensor, double* coords, double* normals, unsigned char* rgb, unsigned int* size)
 {
   Timer t;
+  t.start();
   *size = 0;
 
   Matrix Tinv = sensor->getTransformation();
@@ -137,7 +138,7 @@ void RayCast3D::calcCoordsFromCurrentPose(TsdSpace* space, Sensor* sensor, doubl
     delete[] color_tmp; color_tmp = NULL;
   }
 
-  LOGMSG(DBG_DEBUG, "Elapsed TSDF projection: " << t.getTime() << "ms");
+  LOGMSG(DBG_DEBUG, "Elapsed TSDF projection: " << t.elapsed() << "ms");
   LOGMSG(DBG_DEBUG, "Raycasting finished! Found " << *size << " coordinates");
 
 #if PRINTSTATISTICS
@@ -148,6 +149,7 @@ void RayCast3D::calcCoordsFromCurrentPose(TsdSpace* space, Sensor* sensor, doubl
 void RayCast3D::calcCoordsFromCurrentPoseMask(TsdSpace* space, Sensor* sensor, double* coords, double* normals, unsigned char* rgb, bool* mask, unsigned int* size)
 {
   Timer t;
+  t.start();
 
   Matrix Tinv = sensor->getTransformation();
   Tinv.invert();
@@ -261,7 +263,7 @@ void RayCast3D::calcCoordsFromCurrentPoseMask(TsdSpace* space, Sensor* sensor, d
   }
 
   *size = ctr;
-  LOGMSG(DBG_DEBUG, "Elapsed TSDF projection: " << t.getTime() << "ms");
+  LOGMSG(DBG_DEBUG, "Elapsed TSDF projection: " << t.elapsed() << "ms");
   LOGMSG(DBG_DEBUG, "Raycasting finished! Found " << ctr << " coordinates");
 
 #if PRINTSTATISTICS

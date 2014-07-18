@@ -21,7 +21,7 @@ PID_Controller::PID_Controller(void)
   _isValue   = 0;
   _debug     = false;
 
-  _timer.reset();
+  _timer.start();
 }
 
 double PID_Controller::control(const double& isValue)
@@ -29,10 +29,7 @@ double PID_Controller::control(const double& isValue)
   static double oldError = 0.0;
 
   // determine deltaT in seconds
-  double static lastTime = _timer.getTime();
-  const double time      = _timer.getTime();
-  const double deltaT    = (time - lastTime) / 1000.0;
-  lastTime               =  time;
+  const double deltaT = _timer.reset();
 
   _isValue = isValue;
 

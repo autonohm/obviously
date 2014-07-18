@@ -7,21 +7,16 @@ void Timer::start(void)
     _start = Time::now();
 }
 
-void Timer::reset(void)
+double Timer::reset(void)
 {
+    Time old(_start);
     _start = Time::now();
+    return _start - old;
 }
 
 double Timer::elapsed(void) const
 {
     return Time::now() - _start;
-}
-
-double Timer::getTime(void)
-{
-    const double elapsed = this->elapsed();
-    this->reset();
-    return elapsed;
 }
 
 } // end namespace obvious

@@ -52,7 +52,7 @@ public:
     /**
      * Default constructor. Sets all members to 0.
      */
-    Time(void) : _seconds(0), _mus(0) {  }
+    Time(void);
     /**
      * Copy constructor
      * @param time will be copied.
@@ -88,12 +88,7 @@ public:
      * Assignment operator.
      * @param time will be copied.
      */
-    Time& operator=(const Time& time)
-    {
-        _seconds = time._seconds;
-        _mus = time._mus;
-        return *this;
-    }
+    Time& operator=(const Time& time);
     /**
      * Calculates the time difference between this and time object.
      * @param time will be subtracted from this.
@@ -110,6 +105,10 @@ public:
 private:
     uint32_t _seconds;
     uint32_t _mus;
+
+#ifdef WIN32
+    static LONG64 _ticksPerSecond;
+#endif
 };
 
 std::ostream& operator<<(std::ostream& out, const Time& time);

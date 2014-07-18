@@ -110,8 +110,9 @@ void iterateCallback()
 
   _icp->reset();
   Timer timer;
+  timer.start();
   EnumIcpState state  = _icp->iterate(&rms, &pairs, &iterations);
-  cout << "ICP state: " << state << ", elapsed (" << iterations << " iterations): "  << timer.getTime() << " ms , rms = " << rms << ", # of pairs: " << pairs << endl;
+  cout << "ICP state: " << state << ", elapsed (" << iterations << " iterations): "  << timer.elapsed() << " s , rms = " << rms << ", # of pairs: " << pairs << endl;
 
   obvious::Matrix T           = _icp->getFinalTransformation();
   double Tdata[16];
@@ -126,8 +127,9 @@ void stepCallback()
   unsigned int pairs;
 
   Timer timer;
+  timer.start();
   EnumIcpState state  = _icp->step(&rms, &pairs);
-  cout << "ICP state: " << state << ", elapsed (step): " << timer.getTime() << " ms , rms = " << rms << ", # of pairs: " << pairs << endl;
+  cout << "ICP state: " << state << ", elapsed (step): " << timer.elapsed() << " s , rms = " << rms << ", # of pairs: " << pairs << endl;
 
   obvious::Matrix T           = _icp->getLastTransformation();
   double Tdata[16];
