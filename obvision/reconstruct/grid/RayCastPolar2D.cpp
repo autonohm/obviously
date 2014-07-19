@@ -36,6 +36,9 @@ void RayCastPolar2D::calcCoordsFromCurrentView(TsdGrid* grid, SensorPolar2D* sen
   Matrix* R = sensor->getNormalizedRayMap(grid->getCellSize());
   unsigned int count = sensor->getRealMeasurementSize();
 
+  double tr[2];
+  sensor->getPosition(tr);
+
   if(grid->isInsideGrid(sensor))
   {
     _xmin   = -10e9;
@@ -77,7 +80,7 @@ void RayCastPolar2D::calcCoordsFromCurrentView(TsdGrid* grid, SensorPolar2D* sen
     double ray[2];
     ray[0] = (*R)(0, beam);
     ray[1] = (*R)(1, beam);
-    if (rayCastFromCurrentView(grid, sensor, ray, c, n))
+    if (rayCastFromCurrentView(grid, tr, ray, c, n))
     {
       M(0,0)  = c[0];
       M(1,0)  = c[1];
@@ -117,6 +120,9 @@ void RayCastPolar2D::calcCoordsFromCurrentViewMask(TsdGrid* grid, SensorPolar2D*
 
   Matrix* R = sensor->getNormalizedRayMap(grid->getCellSize());
 
+  double tr[2];
+  sensor->getPosition(tr);
+
   if(grid->isInsideGrid(sensor))
   {
     _xmin   = -10e9;
@@ -155,7 +161,7 @@ void RayCastPolar2D::calcCoordsFromCurrentViewMask(TsdGrid* grid, SensorPolar2D*
     double ray[2];
     ray[0] = (*R)(0, beam);
     ray[1] = (*R)(1, beam);
-    if (rayCastFromCurrentView(grid, sensor, ray, c, n))
+    if (rayCastFromCurrentView(grid, tr, ray, c, n))
     {
       M(0,0)            = c[0];
       M(1,0)            = c[1];
@@ -180,14 +186,11 @@ void RayCastPolar2D::calcCoordsFromCurrentViewMask(TsdGrid* grid, SensorPolar2D*
   LOGMSG(DBG_DEBUG, "Ray casting finished!");
 }
 
-bool RayCastPolar2D::rayCastFromCurrentView(TsdGrid* grid, SensorPolar2D* sensor, double ray[2], double coordinates[2], double normal[2])
+bool RayCastPolar2D::rayCastFromCurrentView(TsdGrid* grid, double tr[2], double ray[2], double coordinates[2], double normal[2])
 {
   int xDim = grid->getCellsX();
   int yDim = grid->getCellsY();
   double cellSize = grid->getCellSize();
-
-  double tr[2];
-  sensor->getPosition(tr);
 
   double position[2];
 

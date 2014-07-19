@@ -247,9 +247,10 @@ void TsdGrid::push(SensorPolar2D* sensor)
   double tr[2];
   sensor->getPosition(tr);
 
+  unsigned int partSize = (_partitions[0][0])->getSize();
+
 #pragma omp parallel
   {
-    unsigned int partSize = (_partitions[0][0])->getSize();
     int* idx = new int[partSize];
 #pragma omp for schedule(dynamic)
     for(unsigned int i=0; i<(unsigned int)(_partitionsInX*_partitionsInY); i++)

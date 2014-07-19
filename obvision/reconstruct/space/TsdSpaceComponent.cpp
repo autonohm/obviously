@@ -95,7 +95,6 @@ bool TsdSpaceComponent::isInRange(double pos[3], Sensor* sensor, double maxTrunc
     // We might oversee some voxels, if validIndices < 8, but this should be negligible
     // Verify whether any measurement within the projection range is close enough for pushing data
     bool isVisible = false;
-    bool isEmpty = true;
     if(x_min<0) x_min = 0;
     if(y_min<0) y_min = 0;
     for(int y=y_min; y<=y_max; y++)
@@ -113,6 +112,7 @@ bool TsdSpaceComponent::isInRange(double pos[3], Sensor* sensor, double maxTrunc
 
     if(!isVisible) return false;
 
+    bool isEmpty = true;
     for(int y=y_min; y<=y_max; y++)
     {
       for(int x=x_min; x<=x_max; x++)
