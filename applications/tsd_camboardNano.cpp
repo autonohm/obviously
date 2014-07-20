@@ -284,7 +284,7 @@ void _cbRegNewImage(void)
   // Extract model from TSDF space
   _rayCaster->calcCoordsFromCurrentPose(_space, _sensor, coords, normals, rgb, &size);
 
-  protocol << t.getTime() << "; ";
+  protocol << t.elapsed() << "; ";
   if(size==0)
   {
     LOGMSG(DBG_ERROR, "Not enough points after raycasting");
@@ -294,7 +294,7 @@ void _cbRegNewImage(void)
     return;
   }
 
-  double timeIcpStart = t.getTime();
+  double timeIcpStart = t.elapsed();
 
   // Filter model to ensure proper normal vectors
   _vModel->setCoords(coords, size / 3, 3, normals);
@@ -352,8 +352,8 @@ void _cbRegNewImage(void)
   unsigned int iterations = 0;
 
   EnumIcpState state = _icp->iterate(&rms, &pairs, &iterations);
-  LOGMSG(DBG_DEBUG, "Elapsed ICP: " << t.getTime()-timeIcpStart << "ms, state " << state << ", pairs: " << pairs << ", rms: " << rms);
-  protocol << t.getTime()-timeIcpStart << "; ";
+  LOGMSG(DBG_DEBUG, "Elapsed ICP: " << t.elapsed()-timeIcpStart << "ms, state " << state << ", pairs: " << pairs << ", rms: " << rms);
+  protocol << t.elapsed()-timeIcpStart << "; ";
 
   if(((state == ICP_SUCCESS) && (rms < 0.1)) || ((state == ICP_MAXITERATIONS) && (rms < 0.1)))
   {
@@ -372,9 +372,9 @@ void _cbRegNewImage(void)
     // check if transformation is big enough to push
     if(_TFwatchdog.checkWatchdog(Tmp))
     {
-    	double startPush = t.getTime();
+    	double startPush = t.elapsed();
     	pushToSpace();
-    	protocol << t.getTime() - startPush << "; ";
+    	protocol << t.elapsed() - startPush << "; ";
     }
     else
     {
@@ -391,9 +391,9 @@ void _cbRegNewImage(void)
   delete[] normals;
   delete[] rgb;
 
-  LOGMSG(DBG_ERROR, ": time elapsed = " << t.getTime() << " ms");
-  protocol << t.getTime() << "; " << std::endl;
-  LOGMSG(DBG_DEBUG, ": frame rate = " << 1/t.getTime()*1000 << " FPS");
+  LOGMSG(DBG_ERROR, ": time elapsed = " << t.elapsed() << " ms");
+  protocol << t.elapsed() << "; " << std::endl;
+  LOGMSG(DBG_DEBUG, ": frame rate = " << 1/t.elapsed()*1000 << " FPS");
 }
 
 void _cbReset(void)
