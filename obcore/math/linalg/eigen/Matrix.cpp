@@ -243,6 +243,12 @@ void Matrix::transform(Matrix T)
     addToColumn(2, T(2, dim));
 }
 
+void Matrix::print() const
+{
+  cout << _M;
+  cout << endl;
+}
+
 void Matrix::print()
 {
   cout << _M;

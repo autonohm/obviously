@@ -18,7 +18,7 @@ namespace obvious
 
 /**
  * @class Matrix
- * @brief Matrix abstraction layer of GSL
+ * @brief Matrix abstraction layer of Eigen
  * @author Stefan May
  */
 class Matrix
@@ -237,6 +237,7 @@ public:
 	/**
 	 * Print matrix to output stream
 	 */
+	void print() const;
 	void print();
 
   static Matrix multiply(const Matrix &M1, const Matrix &M2, bool transposeArg1, bool transposeArg2);
