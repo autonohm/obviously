@@ -57,18 +57,18 @@ public:
 
 private:
 
-  bool rayCastFromSensorPose(TsdSpace* space, double pos[3], double ray[3], double coordinates[3], double normal[3], unsigned char rgb[3], double* depth);
+  bool rayCastFromSensorPose(TsdSpace* space, obfloat pos[3], obfloat ray[3], obfloat coordinates[3], obfloat normal[3], unsigned char rgb[3], obfloat* depth);
 
-  double _xmin;
-  double _ymin;
-  double _zmin;
+  obfloat _xmin;
+  obfloat _ymin;
+  obfloat _zmin;
 
-  double _xmax;
-  double _ymax;
-  double _zmax;
+  obfloat _xmax;
+  obfloat _ymax;
+  obfloat _zmax;
 
-  double _idxMin;
-  double _idxMax;
+  obfloat _idxMin;
+  obfloat _idxMax;
 };
 
 }

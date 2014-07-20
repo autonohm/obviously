@@ -14,7 +14,7 @@ RayCastAxisAligned3D::~RayCastAxisAligned3D() {
 
 }
 
-void RayCastAxisAligned3D::calcCoords(TsdSpace* space, double* coords, double* normals, unsigned char* rgb, unsigned int* cnt)
+void RayCastAxisAligned3D::calcCoords(TsdSpace* space, obfloat* coords, obfloat* normals, unsigned char* rgb, unsigned int* cnt)
 {
   Timer t;
 
@@ -22,7 +22,7 @@ void RayCastAxisAligned3D::calcCoords(TsdSpace* space, double* coords, double* n
   unsigned int partitionsInX = space->getXDimension() / partitionSize;
   unsigned int partitionsInY = space->getYDimension() / partitionSize;
   unsigned int partitionsInZ = space->getZDimension() / partitionSize;
-  double cellSize = space->getVoxelSize();
+  obfloat cellSize = space->getVoxelSize();
 
   *cnt = 0;
 
@@ -52,12 +52,12 @@ void RayCastAxisAligned3D::calcCoords(TsdSpace* space, double* coords, double* n
               memset(zeroCrossing[pz][0], 0, (partitionSize)*(partitionSize)*sizeof(bool));
               for(unsigned int py=0; py<p->getHeight(); py++)
               {
-                double tsd_prev = NAN;
+                obfloat tsd_prev = NAN;
                 if(p_prev->isInitialized() && !(p_prev->isEmpty())) tsd_prev = (*p_prev)(pz, py, p_prev->getWidth()-1);
-                double interp = 0.0;
+                obfloat interp = 0.0;
                 for(unsigned int px=0; px<p->getWidth(); px++)
                 {
-                  double tsd = (*p)(pz, py, px);
+                  obfloat tsd = (*p)(pz, py, px);
                   // Check sign change
                   if(tsd_prev * tsd < 0)
                   {
@@ -86,12 +86,12 @@ void RayCastAxisAligned3D::calcCoords(TsdSpace* space, double* coords, double* n
             {
               for(unsigned int px=0; px<p->getWidth(); px++)
               {
-                double tsd_prev = NAN;
+                obfloat tsd_prev = NAN;
                 if(p_prev->isInitialized() && !(p_prev->isEmpty())) tsd_prev = (*p_prev)(pz, p_prev->getHeight()-1, px);
-                double interp = 0.0;
+                obfloat interp = 0.0;
                 for(unsigned int py=0; py<p->getHeight(); py++)
                 {
-                  double tsd = (*p)(pz, py, px);
+                  obfloat tsd = (*p)(pz, py, px);
                   // Check sign change
                   if((!zeroCrossing[pz][py][px]) && (tsd_prev * tsd < 0))
                   {
@@ -120,12 +120,12 @@ void RayCastAxisAligned3D::calcCoords(TsdSpace* space, double* coords, double* n
             {
               for(unsigned int py=0; py<p->getHeight(); py++)
               {
-                double tsd_prev = NAN;
+                obfloat tsd_prev = NAN;
                 if(p_prev->isInitialized() && !(p_prev->isEmpty())) tsd_prev = (*p_prev)(p->getDepth()-1, py, px);
-                double interp = 0.0;
+                obfloat interp = 0.0;
                 for(unsigned int pz=0; pz<p->getDepth(); pz++)
                 {
-                  double tsd = (*p)(pz, py, px);
+                  obfloat tsd = (*p)(pz, py, px);
                   // Check sign change
                   if((!zeroCrossing[pz][py][px]) && (tsd_prev * tsd < 0))
                   {
@@ -158,21 +158,21 @@ void RayCastAxisAligned3D::calcCoords(TsdSpace* space, double* coords, double* n
   LOGMSG(DBG_DEBUG, "Raycasting finished! Found " << *cnt << " coordinates");
 }
 
-void RayCastAxisAligned3D::calcCoordsRoughly(TsdSpace* space, double* coords, double* normals, unsigned int* cnt)
+void RayCastAxisAligned3D::calcCoordsRoughly(TsdSpace* space, obfloat* coords, obfloat* normals, unsigned int* cnt)
 {
   Timer t;
 
   unsigned int partitionsInX = space->getXDimension() / space->getPartitionSize();
   unsigned int partitionsInY = space->getYDimension() / space->getPartitionSize();
   unsigned int partitionsInZ = space->getZDimension() / space->getPartitionSize();
-  double cellSize = space->getVoxelSize();
+  obfloat cellSize = space->getVoxelSize();
 
   *cnt = 0;
 
   TsdSpacePartition**** partitions = space->getPartitions();
   Matrix* C = TsdSpacePartition::getCellCoordsHom();
 
-  double thresh = cellSize / space->getMaxTruncation();
+  obfloat thresh = cellSize / space->getMaxTruncation();
 
 #pragma omp parallel for
   for(unsigned int z=1; z<partitionsInZ-1; z++)
@@ -184,7 +184,7 @@ void RayCastAxisAligned3D::calcCoordsRoughly(TsdSpace* space, double* coords, do
         TsdSpacePartition* p = partitions[z][y][x];
         if(p->isInitialized())
         {
-          double offset[3];
+          obfloat offset[3];
           p->getCellCoordsOffset(offset);
 
           unsigned int i = 0;
@@ -194,7 +194,7 @@ void RayCastAxisAligned3D::calcCoordsRoughly(TsdSpace* space, double* coords, do
             {
               for(unsigned int px=0; px<p->getWidth(); px++, i++)
               {
-                double tsd = (*p)(pz, py, px);
+                obfloat tsd = (*p)(pz, py, px);
                 // Check sign change
                 if(tsd < thresh && tsd>0)
                 {

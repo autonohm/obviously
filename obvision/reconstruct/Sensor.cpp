@@ -104,7 +104,7 @@ void Sensor::resetTransformation()
   _T->setIdentity();
 }
 
-void Sensor::getPosition(double* tr)
+void Sensor::getPosition(obfloat* tr)
 {
   for(unsigned int i=0; i<_dim; i++)
     tr[i] = (*_T)(i, _dim);

@@ -21,31 +21,31 @@ public:
 
   virtual ~TsdGridComponent();
 
-  double getComponentSize();
+  obfloat getComponentSize();
 
-  double* getCentroid();
+  obfloat* getCentroid();
 
-  double getCircumradius();
+  obfloat getCircumradius();
 
   Matrix* getEdgeCoordsHom();
 
   bool isLeaf();
 
-  bool isInRange(double pos[2], Sensor* sensor, double maxTruncation);
+  bool isInRange(obfloat pos[2], Sensor* sensor, obfloat maxTruncation);
 
   virtual void increaseEmptiness() = 0;
 
 protected:
 
-  double _componentSize;
+  obfloat _componentSize;
 
   bool _isLeaf;
 
-  double _centroid[2];
+  obfloat _centroid[2];
 
   Matrix* _edgeCoordsHom;
 
-  double _circumradius;
+  obfloat _circumradius;
 
 };
 

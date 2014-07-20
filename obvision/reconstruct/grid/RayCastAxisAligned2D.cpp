@@ -10,7 +10,7 @@ RayCastAxisAligned2D::~RayCastAxisAligned2D() {
 
 }
 
-void RayCastAxisAligned2D::calcCoords(TsdGrid* grid, double* coords, double* normals, unsigned int* cnt, char* occupiedGrid)
+void RayCastAxisAligned2D::calcCoords(TsdGrid* grid, obfloat* coords, obfloat* normals, unsigned int* cnt, char* occupiedGrid)
 {
   unsigned int partitionsInX = grid->getCellsX() / grid->getPartitionSize();
   unsigned int partitionsInY = partitionsInX;

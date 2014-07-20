@@ -339,7 +339,7 @@ int main(void)
 
   // Initial transformation of sensor
   // ------------------------------------------------------------------
-  double tr[3];
+  obfloat tr[3];
   _space->getCentroid(tr);
   tr[2] = 0.0;
   double tf[16]={1,  0, 0, tr[0],

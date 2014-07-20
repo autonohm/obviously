@@ -28,7 +28,7 @@ public:
 
 private:
 
-  bool rayCastFromCurrentView(TsdGrid* grid, double tr[2], double ray[2], double coordinates[2], double normal[2]);
+  bool rayCastFromCurrentView(TsdGrid* grid, obfloat tr[2], obfloat ray[2], obfloat coordinates[2], obfloat normal[2]);
 
   void calcRayFromCurrentView(const unsigned int beam, double dirVec[2]);
 
@@ -38,8 +38,8 @@ private:
   double _xmax;
   double _ymax;
 
-  double _idxMin;
-  double _idxMax;
+  obfloat _idxMin;
+  obfloat _idxMax;
 };
 
 }

@@ -15,17 +15,17 @@ TsdSpaceComponent::~TsdSpaceComponent()
 
 }
 
-double TsdSpaceComponent::getComponentSize()
+obfloat TsdSpaceComponent::getComponentSize()
 {
   return _componentSize;
 }
 
-double* TsdSpaceComponent::getCentroid()
+obfloat* TsdSpaceComponent::getCentroid()
 {
   return _centroid;
 }
 
-double TsdSpaceComponent::getCircumradius()
+obfloat TsdSpaceComponent::getCircumradius()
 {
   return _circumradius;
 }
@@ -40,19 +40,19 @@ bool TsdSpaceComponent::isLeaf()
   return _isLeaf;
 }
 
-bool TsdSpaceComponent::isInRange(double pos[3], Sensor* sensor, double maxTruncation)
+bool TsdSpaceComponent::isInRange(obfloat pos[3], Sensor* sensor, obfloat maxTruncation)
 {
   // Centroid-to-sensor distance
-  double distance = euklideanDistance<double>(pos, _centroid, 3);
+  obfloat distance = euklideanDistance<obfloat>(pos, _centroid, 3);
 
   // closest possible distance of any voxel in partition
-  double minDist = distance - _circumradius - maxTruncation;
+  obfloat minDist = distance - _circumradius - maxTruncation;
 
   // check if partition is out of range
   if(minDist > sensor->getMaximumRange()) return false;
 
   // farthest possible distance of any voxel in partition
-  double maxDist = distance + _circumradius + maxTruncation;
+  obfloat maxDist = distance + _circumradius + maxTruncation;
 
   // check if partition is too close
   if(maxDist < sensor->getMinimumRange()) return false;

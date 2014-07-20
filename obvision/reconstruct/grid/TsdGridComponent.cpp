@@ -15,17 +15,17 @@ TsdGridComponent::~TsdGridComponent()
 
 }
 
-double TsdGridComponent::getComponentSize()
+obfloat TsdGridComponent::getComponentSize()
 {
   return _componentSize;
 }
 
-double* TsdGridComponent::getCentroid()
+obfloat* TsdGridComponent::getCentroid()
 {
   return _centroid;
 }
 
-double TsdGridComponent::getCircumradius()
+obfloat TsdGridComponent::getCircumradius()
 {
   return _circumradius;
 }
@@ -40,10 +40,10 @@ bool TsdGridComponent::isLeaf()
   return _isLeaf;
 }
 
-bool TsdGridComponent::isInRange(double pos[2], Sensor* sensor, double maxTruncation)
+bool TsdGridComponent::isInRange(obfloat pos[2], Sensor* sensor, obfloat maxTruncation)
 {
   // Centroid-to-sensor distance
-  double distance = euklideanDistance<double>(pos, _centroid, 2);
+  obfloat distance = euklideanDistance<obfloat>(pos, _centroid, 2);
 
   // closest possible distance of any voxel in partition
   double minDist = distance - _circumradius - maxTruncation;

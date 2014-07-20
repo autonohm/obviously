@@ -20,7 +20,11 @@ namespace obvious
 static int _distancesPushed = 0;
 #endif
 
+#if _OBVIOUS_DOUBLE_PRECISION_
 #define MAXWEIGHT 32.0
+#else
+#define MAXWEIGHT 32.f
+#endif
 #define RGB_MAX 255
 
 TsdSpace::TsdSpace(const double voxelSize, const EnumTsdSpaceLayout layoutPartition, const EnumTsdSpaceLayout layoutSpace)
@@ -41,7 +45,7 @@ TsdSpace::TsdSpace(const double voxelSize, const EnumTsdSpaceLayout layoutPartit
   if(dimPartition > _cellsX)
   {
     LOGMSG(DBG_ERROR, "Insufficient partition size : " << dimPartition << "x" << dimPartition << "x" << dimPartition << " in "
-                                                       << _cellsX << "x" << _cellsY << "x" << _cellsZ << " space");
+        << _cellsX << "x" << _cellsY << "x" << _cellsZ << " space");
     return;
   }
 
@@ -63,11 +67,11 @@ TsdSpace::TsdSpace(const double voxelSize, const EnumTsdSpaceLayout layoutPartit
   LOGMSG(DBG_DEBUG, "Creating TsdVoxel Space...");
 
   _minX = 0.0;
-  _maxX = ((double)_cellsX + 0.5) * _voxelSize;
+  _maxX = ((obfloat)_cellsX + 0.5) * _voxelSize;
   _minY = 0.0;
-  _maxY = ((double)_cellsY + 0.5) * _voxelSize;
+  _maxY = ((obfloat)_cellsY + 0.5) * _voxelSize;
   _minZ = 0.0;
-  _maxZ = ((double)_cellsZ + 0.5) * _voxelSize;
+  _maxZ = ((obfloat)_cellsZ + 0.5) * _voxelSize;
 
   LOGMSG(DBG_DEBUG, "Allocating " << _partitionsInX << "x" << _partitionsInY << "x" << _partitionsInZ << " partitions");
   LOGMSG(DBG_DEBUG, "Spanning area: " << _maxX << " " << _maxY << " " << _maxZ << endl;)
@@ -148,7 +152,7 @@ int TsdSpace::getPartitionsInZ()
   return _partitionsInX;
 }
 
-double TsdSpace::getVoxelSize()
+obfloat TsdSpace::getVoxelSize()
 {
   return _voxelSize;
 }
@@ -158,44 +162,44 @@ unsigned int TsdSpace::getPartitionSize()
   return _partitions[0][0][0]->getWidth();
 }
 
-double TsdSpace::getMinX()
+obfloat TsdSpace::getMinX()
 {
   return _minX;
 }
 
-double TsdSpace::getMaxX()
+obfloat TsdSpace::getMaxX()
 {
   return _maxX;
 }
 
-double TsdSpace::getMinY()
+obfloat TsdSpace::getMinY()
 {
   return _minY;
 }
 
-double TsdSpace::getMaxY()
+obfloat TsdSpace::getMaxY()
 {
   return _maxY;
 }
 
-double TsdSpace::getMinZ()
+obfloat TsdSpace::getMinZ()
 {
   return _minZ;
 }
 
-double TsdSpace::getMaxZ()
+obfloat TsdSpace::getMaxZ()
 {
   return _maxZ;
 }
 
-void TsdSpace::getCentroid(double centroid[3])
+void TsdSpace::getCentroid(obfloat centroid[3])
 {
   centroid[0] = (_minX + _maxX) / 2.0;
   centroid[1] = (_minY + _maxY) / 2.0;
   centroid[2] = (_minZ + _maxZ) / 2.0;
 }
 
-void TsdSpace::setMaxTruncation(double val)
+void TsdSpace::setMaxTruncation(obfloat val)
 {
   if(val < 2.0 * _voxelSize)
   {
@@ -216,7 +220,7 @@ TsdSpacePartition**** TsdSpace::getPartitions()
   return _partitions;
 }
 
-bool TsdSpace::isPartitionInitialized(double coord[3])
+bool TsdSpace::isPartitionInitialized(obfloat coord[3])
 {
   /*int x = (int)(coord[0] * _invVoxelSize);
   int y = (int)(coord[1] * _invVoxelSize);
@@ -229,14 +233,14 @@ bool TsdSpace::isPartitionInitialized(double coord[3])
   return _partitions[pz][py][px]->isInitialized();*/
 
   // Get cell indices
-  double dxIdx = floor(coord[0] * _invVoxelSize);
-  double dyIdx = floor(coord[1] * _invVoxelSize);
-  double dzIdx = floor(coord[2] * _invVoxelSize);
+  obfloat dxIdx = floor(coord[0] * _invVoxelSize);
+  obfloat dyIdx = floor(coord[1] * _invVoxelSize);
+  obfloat dzIdx = floor(coord[2] * _invVoxelSize);
 
   // Get center point of current cell
-  double dx = (dxIdx + 0.5) * _voxelSize;
-  double dy = (dyIdx + 0.5) * _voxelSize;
-  double dz = (dzIdx + 0.5) * _voxelSize;
+  obfloat dx = (dxIdx + 0.5) * _voxelSize;
+  obfloat dy = (dyIdx + 0.5) * _voxelSize;
+  obfloat dz = (dzIdx + 0.5) * _voxelSize;
 
   int x = (int)dxIdx;
   int y = (int)dyIdx;
@@ -261,7 +265,7 @@ bool TsdSpace::isPartitionInitialized(double coord[3])
 
 bool TsdSpace::isInsideSpace(Sensor* sensor)
 {
-  double coord[3];
+  obfloat coord[3];
   sensor->getPosition(coord);
   return (coord[0]>_minX && coord[0]<_maxX && coord[1]>_minY && coord[1]<_maxY && coord[2]>_minZ && coord[2]<_maxZ);
 }
@@ -275,7 +279,7 @@ void TsdSpace::push(Sensor* sensor)
   bool* mask = sensor->getRealMeasurementMask();
   unsigned char* rgb = sensor->getRealMeasurementRGB();
 
-  double tr[3];
+  obfloat tr[3];
   sensor->getPosition(tr);
 
   Matrix* partCoords = TsdSpacePartition::getPartitionCoords();
@@ -283,65 +287,65 @@ void TsdSpace::push(Sensor* sensor)
 
 #pragma omp parallel
   {
-  unsigned int partSize = (_partitions[0][0][0])->getSize();
-  int* idx = new int[partSize];
+    unsigned int partSize = (_partitions[0][0][0])->getSize();
+    int* idx = new int[partSize];
 #pragma omp for schedule(dynamic)
-  for(int pz=0; pz<_partitionsInZ; pz++)
-  {
-    for(int py=0; py<_partitionsInY; py++)
+    for(int pz=0; pz<_partitionsInZ; pz++)
     {
-      for(int px=0; px<_partitionsInX; px++)
+      for(int py=0; py<_partitionsInY; py++)
       {
-        TsdSpacePartition* part = _partitions[pz][py][px];
-        if(!part->isInRange(tr, sensor, _maxTruncation)) continue;
-
-        double t[3];
-        part->getCellCoordsOffset(t);
-        Matrix T = MatrixFactory::TranslationMatrix44(t[0], t[1], t[2]);
-        sensor->backProject(cellCoordsHom, idx, &T);
-
-        for(unsigned int c=0; c<partSize; c++)
+        for(int px=0; px<_partitionsInX; px++)
         {
-          // Measurement index
-          int index = idx[c];
+          TsdSpacePartition* part = _partitions[pz][py][px];
+          if(!part->isInRange(tr, sensor, _maxTruncation)) continue;
 
-          if(index>=0)
+          obfloat t[3];
+          part->getCellCoordsOffset(t);
+          Matrix T = MatrixFactory::TranslationMatrix44(t[0], t[1], t[2]);
+          sensor->backProject(cellCoordsHom, idx, &T);
+
+          for(unsigned int c=0; c<partSize; c++)
           {
-            if(mask[index])
-            {
-              // calculate distance of current cell to sensor
-              double crd[3];
-              crd[0] = (*cellCoordsHom)(c,0) + t[0];
-              crd[1] = (*cellCoordsHom)(c,1) + t[1];
-              crd[2] = (*cellCoordsHom)(c,2) + t[2];
-              double distance = euklideanDistance<double>(tr, crd, 3);
-              double sd = data[index] - distance;
+            // Measurement index
+            int index = idx[c];
 
-              // Test with distance-related weighting
-              /*double weight = 1.0 - (10.0 - distance);
+            if(index>=0)
+            {
+              if(mask[index])
+              {
+                // calculate distance of current cell to sensor
+                obfloat crd[3];
+                crd[0] = (*cellCoordsHom)(c,0) + t[0];
+                crd[1] = (*cellCoordsHom)(c,1) + t[1];
+                crd[2] = (*cellCoordsHom)(c,2) + t[2];
+                obfloat distance = euklideanDistance<obfloat>(tr, crd, 3);
+                obfloat sd = data[index] - distance;
+
+                // Test with distance-related weighting
+                /*double weight = 1.0 - (10.0 - distance);
               weight = max(weight, 0.1);*/
 
-              unsigned char* color = NULL;
-              if(rgb) color = &(rgb[3*index]);
-              if(sd >= -_maxTruncation)
-              {
-                part->init();
-                part->addTsd((*partCoords)(c, 0), (*partCoords)(c, 1), (*partCoords)(c, 2), sd, _maxTruncation, color);
+                unsigned char* color = NULL;
+                if(rgb) color = &(rgb[3*index]);
+                if(sd >= -_maxTruncation)
+                {
+                  part->init();
+                  part->addTsd((*partCoords)(c, 0), (*partCoords)(c, 1), (*partCoords)(c, 2), sd, _maxTruncation, color);
 
 #if PRINTSTATISTICS
 #pragma omp critical
-{
-                _distancesPushed++;
-}
+                  {
+                    _distancesPushed++;
+                  }
 #endif
+                }
               }
             }
           }
         }
       }
     }
-  }
-  delete [] idx;
+    delete [] idx;
   }
 
   propagateBorders();
@@ -362,7 +366,7 @@ void TsdSpace::pushTree(Sensor* sensor)
   bool* mask = sensor->getRealMeasurementMask();
   unsigned char* rgb = sensor->getRealMeasurementRGB();
 
-  double tr[3];
+  obfloat tr[3];
   sensor->getPosition(tr);
 
   TsdSpaceComponent* comp = _tree;
@@ -376,59 +380,59 @@ void TsdSpace::pushTree(Sensor* sensor)
 
 #pragma omp parallel
   {
-  unsigned int partSize = (_partitions[0][0][0])->getSize();
-  int* idx = new int[partSize];
+    unsigned int partSize = (_partitions[0][0][0])->getSize();
+    int* idx = new int[partSize];
 #pragma omp for schedule(dynamic)
-  for(unsigned int i=0; i<partitionsToCheck.size(); i++)
-  {
-    TsdSpacePartition* part = partitionsToCheck[i];
-
-    double t[3];
-    part->getCellCoordsOffset(t);
-    Matrix T = MatrixFactory::TranslationMatrix44(t[0], t[1], t[2]);
-    sensor->backProject(cellCoordsHom, idx, &T);
-
-    for(unsigned int c=0; c<partSize; c++)
+    for(unsigned int i=0; i<partitionsToCheck.size(); i++)
     {
-      // Measurement index
-      int index = idx[c];
+      TsdSpacePartition* part = partitionsToCheck[i];
 
-      if(index>=0)
+      obfloat t[3];
+      part->getCellCoordsOffset(t);
+      Matrix T = MatrixFactory::TranslationMatrix44(t[0], t[1], t[2]);
+      sensor->backProject(cellCoordsHom, idx, &T);
+
+      for(unsigned int c=0; c<partSize; c++)
       {
-        if(mask[index])
-        {
-          // calculate distance of current cell to sensor
-          double crd[3];
-          crd[0] = (*cellCoordsHom)(c,0) + t[0];
-          crd[1] = (*cellCoordsHom)(c,1) + t[1];
-          crd[2] = (*cellCoordsHom)(c,2) + t[2];
-          double distance = euklideanDistance<double>(tr, crd, 3);
-          double sd = data[index] - distance;
+        // Measurement index
+        int index = idx[c];
 
-          // Test with distance-related weighting
-          /*double weight = 1.0 - (10.0 - distance);
+        if(index>=0)
+        {
+          if(mask[index])
+          {
+            // calculate distance of current cell to sensor
+            obfloat crd[3];
+            crd[0] = (*cellCoordsHom)(c,0) + t[0];
+            crd[1] = (*cellCoordsHom)(c,1) + t[1];
+            crd[2] = (*cellCoordsHom)(c,2) + t[2];
+            obfloat distance = euklideanDistance<obfloat>(tr, crd, 3);
+            obfloat sd = data[index] - distance;
+
+            // Test with distance-related weighting
+            /*double weight = 1.0 - (10.0 - distance);
           weight = max(weight, 0.1);*/
 
-          unsigned char* color = NULL;
-          if(rgb) color = &(rgb[3*index]);
-          if(sd >= -_maxTruncation)
-          {
-            part->init();
-            part->addTsd((*partCoords)(c, 0), (*partCoords)(c, 1), (*partCoords)(c, 2), sd, _maxTruncation, color);
+            unsigned char* color = NULL;
+            if(rgb) color = &(rgb[3*index]);
+            if(sd >= -_maxTruncation)
+            {
+              part->init();
+              part->addTsd((*partCoords)(c, 0), (*partCoords)(c, 1), (*partCoords)(c, 2), sd, _maxTruncation, color);
 
 #if PRINTSTATISTICS
 #pragma omp critical
-{
-            _distancesPushed++;
-}
+              {
+                _distancesPushed++;
+              }
 #endif
 
+            }
           }
         }
       }
     }
-  }
-  delete [] idx;
+    delete [] idx;
   }
 
   propagateBorders();
@@ -440,12 +444,12 @@ void TsdSpace::pushTree(Sensor* sensor)
   LOGMSG(DBG_DEBUG, "Elapsed push: " << timer.elapsed() << "s, Initialized partitions: " << TsdSpacePartition::getInitializedPartitionSize());
 }
 
-void TsdSpace::pushRecursion(Sensor* sensor, double pos[3], TsdSpaceComponent* comp, vector<TsdSpacePartition*> &partitionsToCheck)
+void TsdSpace::pushRecursion(Sensor* sensor, obfloat pos[3], TsdSpaceComponent* comp, vector<TsdSpacePartition*> &partitionsToCheck)
 {
   if(comp->isInRange(pos, sensor, _maxTruncation))
   {
     if(comp->isLeaf())
-        partitionsToCheck.push_back((TsdSpacePartition*)comp);
+      partitionsToCheck.push_back((TsdSpacePartition*)comp);
     else
     {
       vector<TsdSpaceComponent*> children = ((TsdSpaceBranch*)comp)->getChildren();
@@ -594,11 +598,11 @@ void TsdSpace::propagateBorders()
   }
 }
 
-bool TsdSpace::interpolateNormal(const double* coord, double* normal)
+bool TsdSpace::interpolateNormal(const obfloat* coord, obfloat* normal)
 {
-  double neighbor[3];
-  double depthVarInc = 0;
-  double depthVarDec = 0;
+  obfloat neighbor[3];
+  obfloat depthVarInc = 0;
+  obfloat depthVarDec = 0;
 
   //interpolate around Voxel in x+1 direction
   neighbor[0] = coord[0] + _voxelSize;
@@ -651,17 +655,17 @@ bool TsdSpace::interpolateNormal(const double* coord, double* normal)
   //z-coordinate of normal vector
   normal[2] = depthVarInc - depthVarDec;
 
-  norm3<double>(normal);
+  norm3<obfloat>(normal);
 
   return true;
 }
 
-bool TsdSpace::coord2Index(double coord[3], int* x, int* y, int* z, double* dx, double* dy, double* dz)
+bool TsdSpace::coord2Index(obfloat coord[3], int* x, int* y, int* z, obfloat* dx, obfloat* dy, obfloat* dz)
 {
   // Get cell indices
-  double dxIdx = floor(coord[0] * _invVoxelSize);
-  double dyIdx = floor(coord[1] * _invVoxelSize);
-  double dzIdx = floor(coord[2] * _invVoxelSize);
+  obfloat dxIdx = floor(coord[0] * _invVoxelSize);
+  obfloat dyIdx = floor(coord[1] * _invVoxelSize);
+  obfloat dzIdx = floor(coord[2] * _invVoxelSize);
 
   // Get center point of current cell
   *dx = (dxIdx + 0.5) * _voxelSize;
@@ -703,11 +707,11 @@ bool TsdSpace::coord2Index(double coord[3], int* x, int* y, int* z, double* dx, 
   return true;
 }
 
-EnumTsdSpaceInterpolate TsdSpace::interpolateTrilinear(double coord[3], double* tsd)
+EnumTsdSpaceInterpolate TsdSpace::interpolateTrilinear(obfloat coord[3], obfloat* tsd)
 {
-  double dx;
-  double dy;
-  double dz;
+  obfloat dx;
+  obfloat dy;
+  obfloat dz;
 
   int xIdx;
   int yIdx;
@@ -725,9 +729,9 @@ EnumTsdSpaceInterpolate TsdSpace::interpolateTrilinear(double coord[3], double* 
   int y = _lutIndex2Cell[yIdx];
   int z = _lutIndex2Cell[zIdx];
 
-  double wx = fabs((coord[0] - dx) * _invVoxelSize);
-  double wy = fabs((coord[1] - dy) * _invVoxelSize);
-  double wz = fabs((coord[2] - dz) * _invVoxelSize);
+  obfloat wx = fabs((coord[0] - dx) * _invVoxelSize);
+  obfloat wy = fabs((coord[1] - dy) * _invVoxelSize);
+  obfloat wz = fabs((coord[2] - dz) * _invVoxelSize);
 
   *tsd = part->interpolateTrilinear(x, y, z, wx, wy, wz);
 
@@ -736,11 +740,11 @@ EnumTsdSpaceInterpolate TsdSpace::interpolateTrilinear(double coord[3], double* 
   return INTERPOLATE_SUCCESS;
 }
 
-EnumTsdSpaceInterpolate TsdSpace::getTsd(double coord[3], double* tsd)
+EnumTsdSpaceInterpolate TsdSpace::getTsd(obfloat coord[3], obfloat* tsd)
 {
-  double dx;
-  double dy;
-  double dz;
+  obfloat dx;
+  obfloat dy;
+  obfloat dz;
 
   int xIdx;
   int yIdx;
@@ -765,11 +769,11 @@ EnumTsdSpaceInterpolate TsdSpace::getTsd(double coord[3], double* tsd)
   return INTERPOLATE_SUCCESS;
 }
 
-EnumTsdSpaceInterpolate TsdSpace::interpolateTrilinearRGB(double coord[3], unsigned char rgb[3])
+EnumTsdSpaceInterpolate TsdSpace::interpolateTrilinearRGB(obfloat coord[3], unsigned char rgb[3])
 {
-  double dx;
-  double dy;
-  double dz;
+  obfloat dx;
+  obfloat dy;
+  obfloat dz;
 
   int xIdx;
   int yIdx;

@@ -16,7 +16,7 @@ TsdGridPartition::TsdGridPartition(const unsigned int x,
     const unsigned int y,
     const unsigned int cellsX,
     const unsigned int cellsY,
-    const double cellSize) : TsdGridComponent(true)
+    const obfloat cellSize) : TsdGridComponent(true)
 {
   _initialized = false;
 
@@ -27,7 +27,7 @@ TsdGridPartition::TsdGridPartition(const unsigned int x,
   _cellCoordsHom = NULL;
 
   _cellSize = cellSize;
-  _componentSize = cellSize * (double)cellsX;
+  _componentSize = cellSize * (obfloat)cellsX;
 
   _initWeight = 0.0;
 
@@ -65,8 +65,8 @@ TsdGridPartition::TsdGridPartition(const unsigned int x,
   _centroid[0] = ((*_edgeCoordsHom)(0, 0) + (*_edgeCoordsHom)(1, 0) + (*_edgeCoordsHom)(2, 0) + (*_edgeCoordsHom)(3, 0)) / 4.0;
   _centroid[1] = ((*_edgeCoordsHom)(0, 1) + (*_edgeCoordsHom)(1, 1) + (*_edgeCoordsHom)(2, 1) + (*_edgeCoordsHom)(3, 1)) / 4.0;
 
-  double dx = ((*_edgeCoordsHom)(3, 0)-(*_edgeCoordsHom)(0, 0));
-  double dy = ((*_edgeCoordsHom)(3, 1)-(*_edgeCoordsHom)(0, 1));
+  obfloat dx = ((*_edgeCoordsHom)(3, 0)-(*_edgeCoordsHom)(0, 0));
+  obfloat dy = ((*_edgeCoordsHom)(3, 1)-(*_edgeCoordsHom)(0, 1));
   _circumradius = sqrt(dx*dx + dy*dy) / 2.0;
 
   _cellsX = cellsX;
@@ -85,7 +85,7 @@ TsdGridPartition::~TsdGridPartition()
   }
 }
 
-double& TsdGridPartition::operator () (unsigned int y, unsigned int x)
+obfloat& TsdGridPartition::operator () (unsigned int y, unsigned int x)
 {
   return _grid[y][x].tsd;
 }
@@ -178,23 +178,23 @@ unsigned int TsdGridPartition::getSize()
   return _cellsX*_cellsY;
 }
 
-void TsdGridPartition::addTsd(const unsigned int x, const unsigned int y, const double sdf, const double maxTruncation)
+void TsdGridPartition::addTsd(const unsigned int x, const unsigned int y, const obfloat sdf, const obfloat maxTruncation)
 {
   if(sdf >= -maxTruncation)
   {
     TsdCell* cell = &_grid[y][x];
 
-    double tsdf = min(sdf / maxTruncation, 1.0);
+    obfloat tsdf = min(sdf / maxTruncation, TSDINC);
 
     if(isnan(cell->tsd))
     {
       cell->tsd = tsdf;
-      cell->weight += 1.0;
+      cell->weight += TSDINC;
     }
     else
     {
-      cell->weight = min(cell->weight+1.0, TSDGRIDMAXWEIGHT);
-      cell->tsd   = (cell->tsd * (cell->weight - 1.0) + tsdf) / cell->weight;
+      cell->weight = min(cell->weight+TSDINC, TSDGRIDMAXWEIGHT);
+      cell->tsd   = (cell->tsd * (cell->weight - TSDINC) + tsdf) / cell->weight;
     }
   }
 }
@@ -229,7 +229,7 @@ void TsdGridPartition::increaseEmptiness()
   }
 }
 
-double TsdGridPartition::interpolateBilinear(int x, int y, double dx, double dy)
+obfloat TsdGridPartition::interpolateBilinear(int x, int y, obfloat dx, obfloat dy)
 {
   // Interpolate
   return _grid[y][x].tsd         * (1. - dy) * (1. - dx)

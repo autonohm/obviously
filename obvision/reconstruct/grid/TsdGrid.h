@@ -50,7 +50,7 @@ enum EnumTsdGridPartitionIdentifier{ UNINITIALIZED = 0,
    * @param[in] layoutPartition Partition layout, i.e., cells in partition
    * @param[in] layoutGrid Grid layout, i.e., partitions in grid
    */
-  TsdGrid(const double cellSize, const EnumTsdGridLayout layoutPartition, const EnumTsdGridLayout layoutGrid);
+  TsdGrid(const obfloat cellSize, const EnumTsdGridLayout layoutPartition, const EnumTsdGridLayout layoutGrid);
 
   /**
    * Constructor
@@ -71,7 +71,7 @@ enum EnumTsdGridPartitionIdentifier{ UNINITIALIZED = 0,
    * @param x x coordinate
    * @return truncated signed distance
    */
-  double& operator () (unsigned int y, unsigned int x);
+  obfloat& operator () (unsigned int y, unsigned int x);
 
   /**
    * Get number of cells in x-dimension
@@ -89,19 +89,19 @@ enum EnumTsdGridPartitionIdentifier{ UNINITIALIZED = 0,
    * Get size of cell in meters
    * @return size
    */
-  double getCellSize();
+  obfloat getCellSize();
 
   /**
    * Get minimum for x-coordinate
    * @return x-coordinate
    */
-  double getMinX();
+  obfloat getMinX();
 
   /**
    * Get maximum for x-coordinate
    * @return x-coordinate
    */
-  double getMaxX();
+  obfloat getMaxX();
 
   /**
    * Get centroid of grid
@@ -113,13 +113,13 @@ enum EnumTsdGridPartitionIdentifier{ UNINITIALIZED = 0,
    * Get minimum for y-coordinate
    * @return y-coordinate
    */
-  double getMinY();
+  obfloat getMinY();
 
   /**
    * Get maximum for y-coordinate
    * @return y-coordinate
    */
-  double getMaxY();
+  obfloat getMaxY();
 
   /**
    * Get number of cells along edge
@@ -160,14 +160,14 @@ enum EnumTsdGridPartitionIdentifier{ UNINITIALIZED = 0,
    * @param[out] coordinates
    * @param[out] normal vector
    */
-  bool interpolateNormal(const double coord[2], double normal[2]);
+  bool interpolateNormal(const obfloat coord[2], obfloat normal[2]);
 
   /**
    * interpolate bilinear
    * @param coordinates pointer to coordinates of intersection
    * @param[out] tsdf interpolated TSD value
    */
-  EnumTsdGridInterpolate interpolateBilinear(double coord[2], double* tsd);
+  EnumTsdGridInterpolate interpolateBilinear(obfloat coord[2], obfloat* tsd);
 
   /**
    * Convert arbitrary coordinate to grid coordinates
@@ -177,7 +177,7 @@ enum EnumTsdGridPartitionIdentifier{ UNINITIALIZED = 0,
    * @param[out] dx x-coordinate of cell-center in metric space
    * @param[out] dy y-coordinate of cell-center in metric space
    */
-  bool coord2Cell(double coord[2], int* p, int* x, int* y, double* dx, double* dy);
+  bool coord2Cell(obfloat coord[2], int* p, int* x, int* y, obfloat* dx, obfloat* dy);
 
   /**
    * Get pointer to internal partition space
@@ -202,7 +202,7 @@ enum EnumTsdGridPartitionIdentifier{ UNINITIALIZED = 0,
 
   void init(const double cellSize, const EnumTsdGridLayout layoutPartition, const EnumTsdGridLayout layoutGrid);
 
-  void pushRecursion(SensorPolar2D* sensor, double pos[2], TsdGridComponent* comp, vector<TsdGridPartition*> &partitionsToCheck);
+  void pushRecursion(SensorPolar2D* sensor, obfloat pos[2], TsdGridComponent* comp, vector<TsdGridPartition*> &partitionsToCheck);
 
   void propagateBorders();
 
@@ -214,19 +214,19 @@ enum EnumTsdGridPartitionIdentifier{ UNINITIALIZED = 0,
 
   int _sizeOfGrid;
 
-  double _cellSize;
+  obfloat _cellSize;
 
-  double _invCellSize;
+  obfloat _invCellSize;
 
-  double _maxTruncation;
+  obfloat _maxTruncation;
 
-  double _minX;
+  obfloat _minX;
 
-  double _maxX;
+  obfloat _maxX;
 
-  double _minY;
+  obfloat _minY;
 
-  double _maxY;
+  obfloat _maxY;
 
   TsdGridPartition*** _partitions;
 

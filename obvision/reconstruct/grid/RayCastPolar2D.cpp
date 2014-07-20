@@ -36,7 +36,7 @@ void RayCastPolar2D::calcCoordsFromCurrentView(TsdGrid* grid, SensorPolar2D* sen
   Matrix* R = sensor->getNormalizedRayMap(grid->getCellSize());
   unsigned int count = sensor->getRealMeasurementSize();
 
-  double tr[2];
+  obfloat tr[2];
   sensor->getPosition(tr);
 
   if(grid->isInsideGrid(sensor))
@@ -64,8 +64,8 @@ void RayCastPolar2D::calcCoordsFromCurrentView(TsdGrid* grid, SensorPolar2D* sen
 
 #pragma omp parallel
 {
-  double c[2];
-  double n[2];
+    obfloat c[2];
+  obfloat n[2];
   Matrix M(3,1);
   Matrix N(3,1);
   M(2,0) = 1.0;
@@ -77,7 +77,7 @@ void RayCastPolar2D::calcCoordsFromCurrentView(TsdGrid* grid, SensorPolar2D* sen
 #pragma omp for schedule(dynamic)
   for (unsigned int beam = 0; beam < count; beam++)
   {
-    double ray[2];
+    obfloat ray[2];
     ray[0] = (*R)(0, beam);
     ray[1] = (*R)(1, beam);
     if (rayCastFromCurrentView(grid, tr, ray, c, n))
@@ -120,7 +120,7 @@ void RayCastPolar2D::calcCoordsFromCurrentViewMask(TsdGrid* grid, SensorPolar2D*
 
   Matrix* R = sensor->getNormalizedRayMap(grid->getCellSize());
 
-  double tr[2];
+  obfloat tr[2];
   sensor->getPosition(tr);
 
   if(grid->isInsideGrid(sensor))
@@ -148,8 +148,8 @@ void RayCastPolar2D::calcCoordsFromCurrentViewMask(TsdGrid* grid, SensorPolar2D*
 
 #pragma omp parallel
 {
-  double c[2];
-  double n[2];
+  obfloat c[2];
+  obfloat n[2];
   Matrix M(3,1);
   Matrix N(3,1);
   M(2,0) = 1.0;
@@ -158,7 +158,7 @@ void RayCastPolar2D::calcCoordsFromCurrentViewMask(TsdGrid* grid, SensorPolar2D*
 #pragma omp for schedule (dynamic)
   for (unsigned int beam = 0; beam < sensor->getRealMeasurementSize(); beam++)
   {
-    double ray[2];
+    obfloat ray[2];
     ray[0] = (*R)(0, beam);
     ray[1] = (*R)(1, beam);
     if (rayCastFromCurrentView(grid, tr, ray, c, n))
@@ -186,29 +186,29 @@ void RayCastPolar2D::calcCoordsFromCurrentViewMask(TsdGrid* grid, SensorPolar2D*
   LOGMSG(DBG_DEBUG, "Ray casting finished!");
 }
 
-bool RayCastPolar2D::rayCastFromCurrentView(TsdGrid* grid, double tr[2], double ray[2], double coordinates[2], double normal[2])
+bool RayCastPolar2D::rayCastFromCurrentView(TsdGrid* grid, obfloat tr[2], obfloat ray[2], obfloat coordinates[2], obfloat normal[2])
 {
   int xDim = grid->getCellsX();
   int yDim = grid->getCellsY();
   double cellSize = grid->getCellSize();
 
-  double position[2];
+  obfloat position[2];
 
   // Interpolation weight
-  double interp;
+  obfloat interp;
 
-  double xmin   = _xmin;
-  double ymin   = _ymin;
-  if(fabs(ray[0])>10e-6) xmin = ((double)(ray[0] > 0.0 ? 0 : (xDim-1)*cellSize) - tr[0]) / ray[0];
-  if(fabs(ray[1])>10e-6) ymin = ((double)(ray[1] > 0.0 ? 0 : (yDim-1)*cellSize) - tr[1]) / ray[1];
-  double idxMin = max(xmin, ymin);
-  idxMin        = max(idxMin, 0.0);
+  obfloat xmin   = _xmin;
+  obfloat ymin   = _ymin;
+  if(fabs(ray[0])>10e-6) xmin = ((obfloat)(ray[0] > 0.0 ? 0 : (xDim-1)*cellSize) - tr[0]) / ray[0];
+  if(fabs(ray[1])>10e-6) ymin = ((obfloat)(ray[1] > 0.0 ? 0 : (yDim-1)*cellSize) - tr[1]) / ray[1];
+  obfloat idxMin = max(xmin, ymin);
+  idxMin        = max(idxMin, TSDZERO);
 
-  double xmax   = _xmax;
-  double ymax   = _ymax;
-  if(fabs(ray[0])>10e-6) xmax = ((double)(ray[0] > 0.0 ? (xDim-1)*cellSize : 0) - tr[0]) / ray[0];
-  if(fabs(ray[1])>10e-6) ymax = ((double)(ray[1] > 0.0 ? (yDim-1)*cellSize : 0) - tr[1]) / ray[1];
-  double idxMax = min(xmax, ymax);
+  obfloat xmax   = _xmax;
+  obfloat ymax   = _ymax;
+  if(fabs(ray[0])>10e-6) xmax = ((obfloat)(ray[0] > 0.0 ? (xDim-1)*cellSize : 0) - tr[0]) / ray[0];
+  if(fabs(ray[1])>10e-6) ymax = ((obfloat)(ray[1] > 0.0 ? (yDim-1)*cellSize : 0) - tr[1]) / ray[1];
+  obfloat idxMax = min(xmax, ymax);
 
   idxMin = max(idxMin, _idxMin);
   idxMax = min(idxMax, _idxMax);
@@ -216,10 +216,10 @@ bool RayCastPolar2D::rayCastFromCurrentView(TsdGrid* grid, double tr[2], double 
   if (idxMin >= idxMax) return false;
 
   // Traverse partitions roughly to clip minimum index
-  double partitionSize = grid->getPartitionSize();
-  for(double i=idxMin; i<idxMax; i+=partitionSize)
+  obfloat partitionSize = grid->getPartitionSize();
+  for(obfloat i=idxMin; i<idxMax; i+=partitionSize)
   {
-    double tsd_tmp;
+    obfloat tsd_tmp;
     position[0] = tr[0] + i * ray[0];
     position[1] = tr[1] + i * ray[1];
     EnumTsdGridInterpolate retval = grid->interpolateBilinear(position, &tsd_tmp);
@@ -229,19 +229,19 @@ bool RayCastPolar2D::rayCastFromCurrentView(TsdGrid* grid, double tr[2], double 
       idxMin = i;
   }
 
-  double tsd_prev;
+  obfloat tsd_prev;
   position[0] = tr[0] + idxMin * ray[0];
   position[1] = tr[1] + idxMin * ray[1];
   if(grid->interpolateBilinear(position, &tsd_prev)!=INTERPOLATE_SUCCESS)
     tsd_prev = NAN;
 
   bool found = false;
-  for(double i=idxMin; i<=idxMax; i+=1.0)
+  for(obfloat i=idxMin; i<=idxMax; i+=1.0)
   {
     position[0] += ray[0];
     position[1] += ray[1];
 
-    double tsd;
+    obfloat tsd;
     if (grid->interpolateBilinear(position, &tsd)!=INTERPOLATE_SUCCESS)
     {
       tsd_prev = tsd;

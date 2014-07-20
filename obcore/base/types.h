@@ -25,7 +25,13 @@
 namespace obvious {
 
 /* set here the used data type for floating point operation. */
+#define _OBVIOUS_DOUBLE_PRECISION_ 1
+
+#if _OBVIOUS_DOUBLE_PRECISION_
 typedef double obfloat;
+#else
+typedef float obfloat;
+#endif
 
 } // end namespace obvious
 

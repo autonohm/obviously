@@ -57,7 +57,7 @@ TsdSpaceBranch::TsdSpaceBranch(TsdSpaceComponent**** leafs, int x, int y, int z,
   // Calculate mean of centroids
   for(unsigned int i=0; i<_children.size(); i++)
   {
-    double* c= _children[i]->getCentroid();
+    obfloat* c= _children[i]->getCentroid();
     _centroid[0] += c[0];
     _centroid[1] += c[1];
     _centroid[2] += c[2];
@@ -112,7 +112,7 @@ void TsdSpaceBranch::print()
 
   level++;
 
-  double* c = getCentroid();
+  obfloat* c = getCentroid();
   cout << "(" << c[0] << " " << c[1] << ")" << endl;
 
   if(_children[0]->isLeaf())
@@ -122,7 +122,7 @@ void TsdSpaceBranch::print()
 
     for(int i=0; i<8; i++)
     {
-      double* c        = _children[i]->getCentroid();
+      obfloat* c        = _children[i]->getCentroid();
       cout << "(" << c[0] << " " << c[1] << ") ";
     }
     cout << endl;

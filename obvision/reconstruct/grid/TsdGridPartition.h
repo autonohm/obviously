@@ -15,8 +15,8 @@ namespace obvious
  */
 struct TsdCell
 {
-  double tsd;
-  double weight;
+  obfloat tsd;
+  obfloat weight;
 };
 
 /**
@@ -39,11 +39,11 @@ public:
    * @param[in] dimY Number of cells in y-dimension
    * @param[in] cellSize Size of cell in meters
    */
-  TsdGridPartition(const unsigned int x, const unsigned int y, const unsigned int dimX, const unsigned int dimY, const double cellSize);
+  TsdGridPartition(const unsigned int x, const unsigned int y, const unsigned int dimX, const unsigned int dimY, const obfloat cellSize);
 
   ~TsdGridPartition();
 
-  double& operator () (unsigned int y, unsigned int x);
+  obfloat& operator () (unsigned int y, unsigned int x);
 
   void init();
 
@@ -65,17 +65,17 @@ public:
 
   unsigned int getSize();
 
-  void addTsd(const unsigned int x, const unsigned int y, const double sdf, const double maxTruncation);
+  void addTsd(const unsigned int x, const unsigned int y, const obfloat sdf, const obfloat maxTruncation);
 
   virtual void increaseEmptiness();
 
-  double interpolateBilinear(int x, int y, double dx, double dy);
+  obfloat interpolateBilinear(int x, int y, obfloat dx, obfloat dy);
 
 private:
 
   TsdCell** _grid;
 
-  double _cellSize;
+  obfloat _cellSize;
 
   Matrix* _cellCoordsHom;
 
@@ -87,7 +87,7 @@ private:
 
   unsigned int _y;
 
-  double _initWeight;
+  obfloat _initWeight;
 
   bool _initialized;
 };

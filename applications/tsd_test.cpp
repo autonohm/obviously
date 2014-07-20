@@ -17,12 +17,12 @@ int main(void)
 {
   LOGMSG_CONF("tsd_test.log", Logger::file_off|Logger::screen_on, DBG_DEBUG, DBG_DEBUG);
 
-  double voxelSize = 0.01;
+  obfloat voxelSize = 0.01;
   TsdSpace space(voxelSize, LAYOUT_8x8x8, LAYOUT_512x512x512);
   space.setMaxTruncation(3.0*voxelSize);
 
   // translation of sensor
-  double tr[3];
+  obfloat tr[3];
   space.getCentroid(tr);
   tr[2] = 0.001;
 

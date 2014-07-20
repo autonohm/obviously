@@ -21,7 +21,7 @@ TsdSpacePartition::TsdSpacePartition(const unsigned int x,
     const unsigned int cellsX,
     const unsigned int cellsY,
     const unsigned int cellsZ,
-    const double cellSize) : TsdSpaceComponent(true)
+    const obfloat cellSize) : TsdSpaceComponent(true)
 {
   _x = x;
   _y = y;
@@ -30,7 +30,7 @@ TsdSpacePartition::TsdSpacePartition(const unsigned int x,
   _space = NULL;
 
   _cellSize = cellSize;
-  _componentSize = cellSize * (double)cellsX;
+  _componentSize = cellSize * (obfloat)cellsX;
 
   _initWeight = 0.0;
 
@@ -79,9 +79,9 @@ TsdSpacePartition::TsdSpacePartition(const unsigned int x,
   _centroid[1] = ((*_edgeCoordsHom)(7, 1)+(*_edgeCoordsHom)(0, 1)) / 2.0;
   _centroid[2] = ((*_edgeCoordsHom)(7, 2)+(*_edgeCoordsHom)(0, 2)) / 2.0;
 
-  double dx = ((*_edgeCoordsHom)(7, 0)-(*_edgeCoordsHom)(0, 0));
-  double dy = ((*_edgeCoordsHom)(7, 1)-(*_edgeCoordsHom)(0, 1));
-  double dz = ((*_edgeCoordsHom)(7, 2)-(*_edgeCoordsHom)(0, 2));
+  obfloat dx = ((*_edgeCoordsHom)(7, 0)-(*_edgeCoordsHom)(0, 0));
+  obfloat dy = ((*_edgeCoordsHom)(7, 1)-(*_edgeCoordsHom)(0, 1));
+  obfloat dz = ((*_edgeCoordsHom)(7, 2)-(*_edgeCoordsHom)(0, 2));
   _circumradius = sqrt(dx*dx + dy*dy + dz*dz) / 2.0;
 
   _cellsX = cellsX;
@@ -106,9 +106,9 @@ TsdSpacePartition::TsdSpacePartition(const unsigned int x,
     }
   }
 
-  _cellCoordsOffset[0] = ((double)_x) * _cellSize;
-  _cellCoordsOffset[1] = ((double)_y) * _cellSize;
-  _cellCoordsOffset[2] = ((double)_z) * _cellSize;
+  _cellCoordsOffset[0] = ((obfloat)_x) * _cellSize;
+  _cellCoordsOffset[1] = ((obfloat)_y) * _cellSize;
+  _cellCoordsOffset[2] = ((obfloat)_z) * _cellSize;
 
   if(!_cellCoordsHom)
   {
@@ -150,7 +150,7 @@ void TsdSpacePartition::reset()
   }
 }
 
-double& TsdSpacePartition::operator () (unsigned int z, unsigned int y, unsigned int x)
+obfloat& TsdSpacePartition::operator () (unsigned int z, unsigned int y, unsigned int x)
 {
   return _space[z][y][x].tsd;
 }
@@ -195,12 +195,12 @@ bool TsdSpacePartition::isEmpty()
   return (_space==NULL && _initWeight > 0.0);
 }
 
-double TsdSpacePartition::getInitWeight()
+obfloat TsdSpacePartition::getInitWeight()
 {
   return _initWeight;
 }
 
-void TsdSpacePartition::setInitWeight(double weight)
+void TsdSpacePartition::setInitWeight(obfloat weight)
 {
   _initWeight = weight;
 }
@@ -225,7 +225,7 @@ Matrix* TsdSpacePartition::getCellCoordsHom()
   return _cellCoordsHom;
 }
 
-void TsdSpacePartition::getCellCoordsOffset(double offset[3])
+void TsdSpacePartition::getCellCoordsOffset(obfloat offset[3])
 {
   offset[0] = _cellCoordsOffset[0];
   offset[1] = _cellCoordsOffset[1];
@@ -257,15 +257,13 @@ unsigned int TsdSpacePartition::getSize()
   return _cellsX*_cellsY*_cellsZ;
 }
 
-void TsdSpacePartition::addTsd(const unsigned int x, const unsigned int y, const unsigned int z, const double sd, const double maxTruncation, const unsigned char rgb[3])
+void TsdSpacePartition::addTsd(const unsigned int x, const unsigned int y, const unsigned int z, const obfloat sd, const obfloat maxTruncation, const unsigned char rgb[3])
 {
   //if(sd >= -maxTruncation)
   {
     TsdVoxel* voxel = &_space[z][y][x];
 
-    double tsd = sd;
-    tsd /= maxTruncation;
-    tsd = min(tsd, 1.0);
+    obfloat tsd = min(sd / maxTruncation, TSDINC);
 
     /** The following lines were proposed by
      *  E. Bylow, J. Sturm, C. Kerl, F. Kahl, and D. Cremers.
@@ -275,17 +273,17 @@ void TsdSpacePartition::addTsd(const unsigned int x, const unsigned int y, const
      *  SM: Improvements in tracking need to be verified, for the moment this is commented due to runtime improvements
      */
     /*
-    double w = 1.0;
-    const double eps = -_maxTruncation/4.0;
+    obfloat w = 1.0;
+    const obfloat eps = -_maxTruncation/4.0;
     if(sd <= eps)
     {
-      const double span = -_maxTruncation - eps;
-      const double sigma = 3.0/(span*span);
+      const obfloat span = -_maxTruncation - eps;
+      const obfloat sigma = 3.0/(span*span);
       w = exp(-sigma*(sd-eps)*(sd-eps));
     }
     voxel->weight += w;*/
 
-    voxel->weight += 1.0;
+    voxel->weight += TSDINC;
 
     if(isnan(voxel->tsd))
     {
@@ -300,12 +298,12 @@ void TsdSpacePartition::addTsd(const unsigned int x, const unsigned int y, const
     else
     {
       voxel->weight = min(voxel->weight, TSDSPACEMAXWEIGHT);
-      voxel->tsd   = (voxel->tsd * (voxel->weight - 1.0) + tsd) / voxel->weight;
+      voxel->tsd   = (voxel->tsd * (voxel->weight - TSDINC) + tsd) / voxel->weight;
       if(rgb)
       {
-        voxel->rgb[0] = (voxel->rgb[0] * (voxel->weight - 1.0) + rgb[0]) / voxel->weight;
-        voxel->rgb[1] = (voxel->rgb[1] * (voxel->weight - 1.0) + rgb[1]) / voxel->weight;
-        voxel->rgb[2] = (voxel->rgb[2] * (voxel->weight - 1.0) + rgb[2]) / voxel->weight;
+        voxel->rgb[0] = (voxel->rgb[0] * (voxel->weight - TSDINC) + rgb[0]) / voxel->weight;
+        voxel->rgb[1] = (voxel->rgb[1] * (voxel->weight - TSDINC) + rgb[1]) / voxel->weight;
+        voxel->rgb[2] = (voxel->rgb[2] * (voxel->weight - TSDINC) + rgb[2]) / voxel->weight;
       }
     }
   }
@@ -344,7 +342,7 @@ void TsdSpacePartition::increaseEmptiness()
   }
 }
 
-double TsdSpacePartition::interpolateTrilinear(int x, int y, int z, double dx, double dy, double dz)
+obfloat TsdSpacePartition::interpolateTrilinear(int x, int y, int z, obfloat dx, obfloat dy, obfloat dz)
 {
   // Interpolate
   return _space[z][y][x].tsd * (1. - dx) * (1. - dy) * (1. - dz)
@@ -381,7 +379,7 @@ void TsdSpacePartition::serialize(ofstream* f)
     {
       for(unsigned int x=0; x<_cellsX+1; x++)
       {
-        double tsd = _space[z][y][x].tsd;
+        obfloat tsd = _space[z][y][x].tsd;
         if(!isnan(tsd))
         {
           *f << z << " " << y << " " << x << " " << tsd << " " << _space[z][y][x].weight << " " << (int)_space[z][y][x].rgb[0] << " " << (int)_space[z][y][x].rgb[1] << " " << (int)_space[z][y][x].rgb[2] << endl;
@@ -397,7 +395,7 @@ void TsdSpacePartition::load(ifstream* f)
 
   unsigned int initializedCells;
   unsigned int x, y, z;
-  double weight, tsd;
+  obfloat weight, tsd;
   unsigned int rgb0;
   unsigned int rgb1;
   unsigned int rgb2;

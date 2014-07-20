@@ -14,7 +14,7 @@ namespace obvious
 
 #define MAXWEIGHT 32.0
 
-TsdGrid::TsdGrid(const double cellSize, const EnumTsdGridLayout layoutPartition, const EnumTsdGridLayout layoutGrid)
+TsdGrid::TsdGrid(const obfloat cellSize, const EnumTsdGridLayout layoutPartition, const EnumTsdGridLayout layoutGrid)
 {
   this->init(cellSize, layoutPartition, layoutGrid);
 }
@@ -127,9 +127,9 @@ void TsdGrid::init(const double cellSize, const EnumTsdGridLayout layoutPartitio
 		            << " = " << ((double)_cellsX)*cellSize << "x" << ((double)_cellsY)*cellSize << " sqm");
 
   _minX = 0.0;
-  _maxX = ((double)_cellsX + 0.5) * _cellSize;
+  _maxX = ((obfloat)_cellsX + 0.5) * _cellSize;
   _minY = 0.0;
-  _maxY = ((double)_cellsY + 0.5) * _cellSize;
+  _maxY = ((obfloat)_cellsY + 0.5) * _cellSize;
 
   LOGMSG(DBG_DEBUG, "Allocating " << _partitionsInX << "x" << _partitionsInY << " partitions");
   System<TsdGridPartition*>::allocate(_partitionsInY, _partitionsInX, _partitions);
@@ -162,7 +162,7 @@ TsdGrid::~TsdGrid(void)
   System<TsdGridPartition*>::deallocate(_partitions);
 }
 
-double& TsdGrid::operator () (unsigned int y, unsigned int x)
+obfloat& TsdGrid::operator () (unsigned int y, unsigned int x)
 {
   // Partition index
   unsigned int py = y / _dimPartition;
@@ -185,27 +185,27 @@ unsigned int TsdGrid::getCellsY()
   return _cellsY;
 }
 
-double TsdGrid::getCellSize()
+obfloat TsdGrid::getCellSize()
 {
   return _cellSize;
 }
 
-double TsdGrid::getMinX()
+obfloat TsdGrid::getMinX()
 {
   return _minX;
 }
 
-double TsdGrid::getMaxX()
+obfloat TsdGrid::getMaxX()
 {
   return _maxX;
 }
 
-double TsdGrid::getMinY()
+obfloat TsdGrid::getMinY()
 {
   return _minY;
 }
 
-double TsdGrid::getMaxY()
+obfloat TsdGrid::getMaxY()
 {
   return _maxY;
 }
@@ -244,7 +244,7 @@ void TsdGrid::push(SensorPolar2D* sensor)
   double* data     = sensor->getRealMeasurementData();
   bool*   mask     = sensor->getRealMeasurementMask();
 
-  double tr[2];
+  obfloat tr[2];
   sensor->getPosition(tr);
 
   unsigned int partSize = (_partitions[0][0])->getSize();
@@ -296,7 +296,7 @@ void TsdGrid::pushTree(SensorPolar2D* sensor)
   double* data     = sensor->getRealMeasurementData();
   bool*   mask     = sensor->getRealMeasurementMask();
 
-  double tr[2];
+  obfloat tr[2];
   sensor->getPosition(tr);
 
   TsdGridComponent* comp = _tree;
@@ -329,7 +329,7 @@ void TsdGrid::pushTree(SensorPolar2D* sensor)
           if(mask[index])
           {
             // calculate signed distance, i.e. measurement minus distance of current cell to sensor
-            double sd = data[index] - sqrt( ((*cellCoordsHom)(c,0)-tr[0]) * ((*cellCoordsHom)(c,0)-tr[0]) + ((*cellCoordsHom)(c,1)-tr[1]) * ((*cellCoordsHom)(c,1)-tr[1]));
+            obfloat sd = data[index] - sqrt( ((*cellCoordsHom)(c,0)-tr[0]) * ((*cellCoordsHom)(c,0)-tr[0]) + ((*cellCoordsHom)(c,1)-tr[1]) * ((*cellCoordsHom)(c,1)-tr[1]));
 
             part->addTsd((*partCoords)(c, 0), (*partCoords)(c, 1), sd, _maxTruncation);
 
@@ -345,7 +345,7 @@ void TsdGrid::pushTree(SensorPolar2D* sensor)
   LOGMSG(DBG_DEBUG, "Elapsed pushTree: " << t.elapsed() << "s");
 }
 
-void TsdGrid::pushRecursion(SensorPolar2D* sensor, double pos[2], TsdGridComponent* comp, vector<TsdGridPartition*> &partitionsToCheck)
+void TsdGrid::pushRecursion(SensorPolar2D* sensor, obfloat pos[2], TsdGridComponent* comp, vector<TsdGridPartition*> &partitionsToCheck)
 {
   if(comp->isInRange(pos, sensor, _maxTruncation))
   {
@@ -421,22 +421,22 @@ void TsdGrid::grid2ColorImage(unsigned char* image, unsigned int width, unsigned
 {
   unsigned char rgb[3];
 
-  double stepW = getMaxX() / (double)width;
-  double stepH = getMaxY() / (double)height;
+  obfloat stepW = getMaxX() / (obfloat)width;
+  obfloat stepH = getMaxY() / (obfloat)height;
 
-  double py = 0.0;
+  obfloat py = 0.0;
   unsigned int i = 0;
   for(unsigned int h=0; h<height; h++)
   {
-    double px = 0.0;
+    obfloat px = 0.0;
     for(unsigned int w=0; w<width; w++, i++)
     {
-      double coord[2];
+      obfloat coord[2];
       coord[0] = px;
       coord[1] = py;
       int p, x, y;
-      double dx, dy;
-      double tsd = NAN;
+      obfloat dx, dy;
+      obfloat tsd = NAN;
       bool isEmpty = false;
 
       if(coord2Cell(coord, &p, &x, &y, &dx, &dy))
@@ -486,13 +486,13 @@ void TsdGrid::grid2ColorImage(unsigned char* image, unsigned int width, unsigned
 
 void TsdGrid::getData(std::vector<double>& data)
 {
-  double coordVar[2] = {0.0};
+  obfloat coordVar[2] = {0.0};
   int p = 0;
   int x = 0;
   int y = 0;
-  double dx = 0.0;
-  double dy = 0.0;
-  double tsd = 0.0;
+  obfloat dx = 0.0;
+  obfloat dy = 0.0;
+  obfloat tsd = 0.0;
   for(coordVar[1] = 0.0; coordVar[1] < _maxY; coordVar[1] += _cellSize)
   {
     for(coordVar[0] = 0.0; coordVar[0] < _maxX; coordVar[0] += _cellSize)
@@ -511,11 +511,11 @@ void TsdGrid::getData(std::vector<double>& data)
   }
 }
 
-bool TsdGrid::interpolateNormal(const double* coord, double* normal)
+bool TsdGrid::interpolateNormal(const obfloat* coord, obfloat* normal)
 {
-  double neighbor[3];
-  double depthInc = 0;
-  double depthDec = 0;
+  obfloat neighbor[3];
+  obfloat depthInc = 0;
+  obfloat depthDec = 0;
 
   neighbor[0] = coord[0] + _cellSize;
   neighbor[1] = coord[1];
@@ -537,18 +537,18 @@ bool TsdGrid::interpolateNormal(const double* coord, double* normal)
 
   normal[1] = depthInc - depthDec;
 
-  norm2<double>(normal);
+  norm2<obfloat>(normal);
 
   return true;
 }
 
-EnumTsdGridInterpolate TsdGrid::interpolateBilinear(double coord[2], double* tsd)
+EnumTsdGridInterpolate TsdGrid::interpolateBilinear(obfloat coord[2], obfloat* tsd)
 {
   int p;
   int x;
   int y;
-  double dx;
-  double dy;
+  obfloat dx;
+  obfloat dy;
 
   if(!coord2Cell(coord, &p, &x, &y, &dx, &dy)) return INTERPOLATE_INVALIDINDEX;
   if(!_partitions[0][p]->isInitialized()) return INTERPOLATE_EMPTYPARTITION;
@@ -564,18 +564,18 @@ EnumTsdGridInterpolate TsdGrid::interpolateBilinear(double coord[2], double* tsd
   return INTERPOLATE_SUCCESS;
 }
 
-bool TsdGrid::coord2Cell(double coord[2], int* p, int* x, int* y, double* dx, double* dy)
+bool TsdGrid::coord2Cell(obfloat coord[2], int* p, int* x, int* y, obfloat* dx, obfloat* dy)
 {
   // Get cell indices
-  double dCoordX = coord[0] * _invCellSize;
-  double dCoordY = coord[1] * _invCellSize;
+  obfloat dCoordX = coord[0] * _invCellSize;
+  obfloat dCoordY = coord[1] * _invCellSize;
 
   int xIdx = floor(dCoordX);
   int yIdx = floor(dCoordY);
 
   // Get center point of current cell
-  *dx = (double(xIdx) + 0.5) * _cellSize;
-  *dy = (double(yIdx) + 0.5) * _cellSize;
+  *dx = (obfloat(xIdx) + 0.5) * _cellSize;
+  *dy = (obfloat(yIdx) + 0.5) * _cellSize;
 
   // Ensure that query point has 4 neighbors for bilinear interpolation
   if (coord[0] < *dx)
@@ -607,7 +607,7 @@ TsdGridPartition*** TsdGrid::getPartitions()
 
 bool TsdGrid::isInsideGrid(Sensor* sensor)
 {
-  double coord[2];
+  obfloat coord[2];
   sensor->getPosition(coord);
   return (coord[0]>_minX && coord[0]<_maxX && coord[1]>_minY && coord[1]<_maxY);
 }

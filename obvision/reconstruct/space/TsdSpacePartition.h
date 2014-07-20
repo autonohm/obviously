@@ -15,8 +15,8 @@ namespace obvious
 */
 struct TsdVoxel
 {
-  double tsd;
-  double weight;
+  obfloat tsd;
+  obfloat weight;
   unsigned char rgb[3];
 };
 
@@ -41,7 +41,7 @@ public:
    * @param[in] dimZ Number of cells in z-dimension
    * @param[in] cellSize Size of cell in meters
    */
-  TsdSpacePartition(const unsigned int x, const unsigned int y, const unsigned int z, const unsigned int dimX, const unsigned int dimY, const unsigned int dimZ, const double cellSize);
+  TsdSpacePartition(const unsigned int x, const unsigned int y, const unsigned int z, const unsigned int dimX, const unsigned int dimY, const unsigned int dimZ, const obfloat cellSize);
 
   ~TsdSpacePartition();
 
@@ -51,7 +51,7 @@ public:
 
   void reset();
 
-  double& operator () (unsigned int z, unsigned int y, unsigned int x);
+  obfloat& operator () (unsigned int z, unsigned int y, unsigned int x);
 
   void getRGB(unsigned int z, unsigned int y, unsigned int x, unsigned char rgb[3]);
 
@@ -61,9 +61,9 @@ public:
 
   bool isEmpty();
 
-  double getInitWeight();
+  obfloat getInitWeight();
 
-  void setInitWeight(double weight);
+  void setInitWeight(obfloat weight);
 
   unsigned int getX();
 
@@ -73,7 +73,7 @@ public:
 
   static Matrix* getCellCoordsHom();
 
-  void getCellCoordsOffset(double offset[3]);
+  void getCellCoordsOffset(obfloat offset[3]);
 
   static Matrix* getPartitionCoords();
 
@@ -85,11 +85,11 @@ public:
 
   unsigned int getSize();
 
-  void addTsd(const unsigned int x, const unsigned int y, const unsigned int z, const double sd, const double maxTruncation, const unsigned char rgb[3]);
+  void addTsd(const unsigned int x, const unsigned int y, const unsigned int z, const obfloat sd, const obfloat maxTruncation, const unsigned char rgb[3]);
 
   virtual void increaseEmptiness();
 
-  double interpolateTrilinear(int x, int y, int z, double dx, double dy, double dz);
+  obfloat interpolateTrilinear(int x, int y, int z, obfloat dx, obfloat dy, obfloat dz);
 
   void serialize(ofstream* f);
 
@@ -99,9 +99,9 @@ private:
 
   TsdVoxel*** _space;
 
-  double _cellSize;
+  obfloat _cellSize;
 
-  double _cellCoordsOffset[3];
+  obfloat _cellCoordsOffset[3];
 
   unsigned int _cellsX;
 
@@ -115,7 +115,7 @@ private:
 
   unsigned int _z;
 
-  double _initWeight;
+  obfloat _initWeight;
 };
 
 }

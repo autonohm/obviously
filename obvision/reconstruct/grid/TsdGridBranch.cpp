@@ -39,10 +39,10 @@ TsdGridBranch::TsdGridBranch(TsdGridComponent*** leafs, int x, int y, int level)
   _children.push_back(branchDownRight);
 
   // Calculate mean of centroids
-  double* c        = branch->getCentroid();
-  double* cR       = branchRight->getCentroid();
-  double* cD       = branchDown->getCentroid();
-  double* cDR      = branchDownRight->getCentroid();
+  obfloat* c        = branch->getCentroid();
+  obfloat* cR       = branchRight->getCentroid();
+  obfloat* cD       = branchDown->getCentroid();
+  obfloat* cDR      = branchDownRight->getCentroid();
 
   _centroid[0]     = (c[0] + cR[0] + cD[0] + cDR[0]) / 4.0;
   _centroid[1]     = (c[1] + cR[1] + cD[1] + cDR[1]) / 4.0;
@@ -100,7 +100,7 @@ void TsdGridBranch::print()
 
   level++;
 
-  double* c = getCentroid();
+  obfloat* c = getCentroid();
   cout << "(" << c[0] << " " << c[1] << ")" << endl;
 
   if(_children[0]->isLeaf())
@@ -110,7 +110,7 @@ void TsdGridBranch::print()
 
     for(int i=0; i<4; i++)
     {
-      double* c        = _children[i]->getCentroid();
+      obfloat* c        = _children[i]->getCentroid();
       cout << "(" << c[0] << " " << c[1] << ") ";
     }
     cout << endl;

@@ -45,7 +45,7 @@ void RayCast3D::calcCoordsFromCurrentPose(TsdSpace* space, Sensor* sensor, doubl
   Matrix Tinv = sensor->getTransformation();
   Tinv.invert();
 
-  double tr[3];
+  obfloat tr[3];
   sensor->getPosition(tr);
 
   Matrix* R = sensor->getNormalizedRayMap(space->getVoxelSize());
@@ -85,9 +85,9 @@ void RayCast3D::calcCoordsFromCurrentPose(TsdSpace* space, Sensor* sensor, doubl
 
 #pragma omp parallel
   {
-    double depth = 0.0;
-    double c[3];
-    double n[3];
+    obfloat depth = 0.0;
+    obfloat c[3];
+    obfloat n[3];
     unsigned char color[3]   = {255, 255, 255};
     double* c_tmp            = new double[count*3];
     double* n_tmp            = new double[count*3];
@@ -101,7 +101,7 @@ void RayCast3D::calcCoordsFromCurrentPose(TsdSpace* space, Sensor* sensor, doubl
 #pragma omp for schedule(dynamic)
     for(unsigned int i=0; i<count; i++)
     {
-      double ray[3];
+      obfloat ray[3];
       ray[0] = (*R)(0, i);
       ray[1] = (*R)(1, i);
       ray[2] = (*R)(2, i);
@@ -154,7 +154,7 @@ void RayCast3D::calcCoordsFromCurrentPoseMask(TsdSpace* space, Sensor* sensor, d
   Matrix Tinv = sensor->getTransformation();
   Tinv.invert();
 
-  double tr[3];
+  obfloat tr[3];
   sensor->getPosition(tr);
   unsigned int ctr = 0;
 
@@ -197,9 +197,9 @@ void RayCast3D::calcCoordsFromCurrentPoseMask(TsdSpace* space, Sensor* sensor, d
 
 #pragma omp parallel
   {
-    double depth = 0.0;
-    double c[3];
-    double n[3];
+    obfloat depth = 0.0;
+    obfloat c[3];
+    obfloat n[3];
     unsigned char color[3]   = {255, 255, 255};
     double* c_tmp            = new double[width*height*3];
     double* n_tmp            = new double[width*height*3];
@@ -214,7 +214,7 @@ void RayCast3D::calcCoordsFromCurrentPoseMask(TsdSpace* space, Sensor* sensor, d
 #pragma omp for schedule(dynamic)
     for (unsigned int i=0; i<count; i++)
     {
-      double ray[3];
+      obfloat ray[3];
       ray[0] = (*R)(0, i);
       ray[1] = (*R)(1, i);
       ray[2] = (*R)(2, i);
@@ -343,27 +343,27 @@ void RayCast3D::calcCoordsFromCurrentPoseMask(TsdSpace* space, Sensor* sensor, d
   return(true);
 }*/
 
-bool RayCast3D::rayCastFromSensorPose(TsdSpace* space, double pos[3], double ray[3], double coordinates[3], double normal[3], unsigned char rgb[3], double* depth)
+bool RayCast3D::rayCastFromSensorPose(TsdSpace* space, obfloat pos[3], obfloat ray[3], obfloat coordinates[3], obfloat normal[3], unsigned char rgb[3], obfloat* depth)
 {
-  double position[3];
+  obfloat position[3];
 
   int xDim = space->getXDimension();
-  double voxelSize = space->getVoxelSize();
+  obfloat voxelSize = space->getVoxelSize();
 
   // Interpolation weight
-  double interp;
+  obfloat interp;
 
-  double xmin   = _xmin;
-  double ymin   = _ymin;
-  double zmin   = _zmin;
+  obfloat xmin   = _xmin;
+  obfloat ymin   = _ymin;
+  obfloat zmin   = _zmin;
 
-  double xmax   = _xmax;
-  double ymax   = _ymax;
-  double zmax   = _zmax;
+  obfloat xmax   = _xmax;
+  obfloat ymax   = _ymax;
+  obfloat zmax   = _zmax;
 
   // Leave out outmost cells in order to prevent access to invalid neighbors
-  double minSpaceCoord = 1.5*voxelSize;
-  double maxSpaceCoord = (((double)xDim)-1.5)*voxelSize;
+  obfloat minSpaceCoord = 1.5*voxelSize;
+  obfloat maxSpaceCoord = (((obfloat)xDim)-1.5)*voxelSize;
 
   // Calculate minimum number of steps to reach bounds in each dimension
   if(ray[0]>10e-6)
@@ -400,11 +400,11 @@ bool RayCast3D::rayCastFromSensorPose(TsdSpace* space, double pos[3], double ray
   }
 
   // At least the entry bounds of each dimension needs to be crossed
-  double idxMin = max(max(xmin, ymin), zmin);
+  obfloat idxMin = max(max(xmin, ymin), zmin);
   idxMin = ceil(idxMin);
 
   // No exit bound must be crossed
-  double idxMax = min(min(xmax, ymax), zmax);
+  obfloat idxMax = min(min(xmax, ymax), zmax);
   idxMax = floor(idxMax);
 
   // clip steps to sensor modalities, i.e., the working range
@@ -419,8 +419,8 @@ bool RayCast3D::rayCastFromSensorPose(TsdSpace* space, double pos[3], double ray
 #endif
 
   // Traverse partitions roughly to clip minimum index
-  double partitionSize = space->getPartitionSize();
-  for(double i=idxMin; i<idxMax; i+=partitionSize)
+  obfloat partitionSize = space->getPartitionSize();
+  for(obfloat i=idxMin; i<idxMax; i+=partitionSize)
   {
     position[0] = pos[0] + i * ray[0];
     position[1] = pos[1] + i * ray[1];
@@ -439,7 +439,7 @@ bool RayCast3D::rayCastFromSensorPose(TsdSpace* space, double pos[3], double ray
     position[0] = pos[0] + i * ray[0];
     position[1] = pos[1] + i * ray[1];
     position[2] = pos[2] + i * ray[2];
-    double tsd;
+    obfloat tsd;
     EnumTsdSpaceInterpolate retval = space->getTsd(position, &tsd);
     if(retval==INTERPOLATE_SUCCESS && fabs(tsd)<1.0)
       break;
@@ -455,7 +455,7 @@ bool RayCast3D::rayCastFromSensorPose(TsdSpace* space, double pos[3], double ray
 }
 #endif
 
-  double tsd_prev;
+obfloat tsd_prev;
 
   if(space->interpolateTrilinear(position, &tsd_prev)!=INTERPOLATE_SUCCESS)
     tsd_prev = NAN;
@@ -466,7 +466,7 @@ bool RayCast3D::rayCastFromSensorPose(TsdSpace* space, double pos[3], double ray
 
   for(i=idxMin; i<idxMax; i+=1.0)
   {
-    double tsd;
+    obfloat tsd;
     EnumTsdSpaceInterpolate retval = space->interpolateTrilinear(position, &tsd);
     if (retval!=INTERPOLATE_SUCCESS)
     {

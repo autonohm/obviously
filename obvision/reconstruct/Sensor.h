@@ -94,7 +94,7 @@ public:
    * Accessor to sensor translation
    * @param[out] tr translation vector
    */
-  virtual void getPosition(double* tr);
+  virtual void getPosition(obfloat* tr);
 
   /**
    * Get size of measurement vector
