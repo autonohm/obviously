@@ -49,7 +49,7 @@ Matrix IcpMultiInitIterator::iterate(Icp* icp)
   unsigned int pairs;
   unsigned int iterations;
 
-  unsigned int cnt = 0;
+  //unsigned int cnt = 0;
 
   for(vector<Matrix>::iterator it=_Tinit.begin(); it!=_Tinit.end(); it++)
   {

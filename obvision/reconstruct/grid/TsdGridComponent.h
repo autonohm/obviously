@@ -1,6 +1,7 @@
 #ifndef TSDGRIDCOMPONENT_H
 #define TSDGRIDCOMPONENT_H
 
+#include "obcore/base/types.h"
 #include "obcore/math/linalg/linalg.h"
 #include "obvision/reconstruct/reconstruct_defs.h"
 #include "obvision/reconstruct/Sensor.h"

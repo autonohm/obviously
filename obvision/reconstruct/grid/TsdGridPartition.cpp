@@ -184,19 +184,16 @@ void TsdGridPartition::addTsd(const unsigned int x, const unsigned int y, const 
   {
     TsdCell* cell = &_grid[y][x];
 
-    double tsdf = sdf;
-    tsdf /= maxTruncation;
-    tsdf = min(tsdf, 1.0);
-
-    cell->weight += 1.0;
+    double tsdf = min(sdf / maxTruncation, 1.0);
 
     if(isnan(cell->tsd))
     {
       cell->tsd = tsdf;
+      cell->weight += 1.0;
     }
     else
     {
-      cell->weight = min(cell->weight, TSDGRIDMAXWEIGHT);
+      cell->weight = min(cell->weight+1.0, TSDGRIDMAXWEIGHT);
       cell->tsd   = (cell->tsd * (cell->weight - 1.0) + tsdf) / cell->weight;
     }
   }
@@ -211,15 +208,15 @@ void TsdGridPartition::increaseEmptiness()
       for(unsigned int x=0; x<=_cellsX; x++)
       {
         TsdCell* cell = &_grid[y][x];
-        cell->weight += 1.0;
 
         if(isnan(cell->tsd))
         {
+          cell->weight += 1.0;
           cell->tsd = 1.0;
         }
         else
         {
-          cell->weight = min(cell->weight, TSDGRIDMAXWEIGHT);
+          cell->weight = min(cell->weight+1, TSDGRIDMAXWEIGHT);
           cell->tsd    = (cell->tsd * (cell->weight - 1.0) + 1.0) / cell->weight;
         }
       }
@@ -235,10 +232,10 @@ void TsdGridPartition::increaseEmptiness()
 double TsdGridPartition::interpolateBilinear(int x, int y, double dx, double dy)
 {
   // Interpolate
-  return   _grid[y][x].tsd * (1. - dy) * (1. - dx)
-      + _grid[y + 1][x + 0].tsd *       dy  * (1. - dx)
-      + _grid[y + 0][x + 1].tsd * (1. - dy) *       dx
-      + _grid[y + 1][x + 1].tsd *       dy  *       dx;
+  return _grid[y][x].tsd         * (1. - dy) * (1. - dx)
+       + _grid[y + 1][x + 0].tsd *       dy  * (1. - dx)
+       + _grid[y + 0][x + 1].tsd * (1. - dy) *       dx
+       + _grid[y + 1][x + 1].tsd *       dy  *       dx;
 }
 
 }

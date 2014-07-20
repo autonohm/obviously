@@ -81,7 +81,7 @@ int main(void)
   double* normals = new double[beams*2];
 
   sensor.transform(&T);
-  grid->pushTree(&sensor);
+  grid->push(&sensor);
 
   //rayCaster.calcCoordsFromCurrentViewMask(grid, &sensor, coords, normals, mask);
   unsigned int cnt = 0;

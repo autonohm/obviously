@@ -112,7 +112,7 @@ void TsdGrid::init(const double cellSize, const EnumTsdGridLayout layoutPartitio
   if(_dimPartition > _cellsX)
   {
     LOGMSG(DBG_ERROR, "Insufficient partition size : " << _dimPartition << "x" << _dimPartition << " in "
-        << _cellsX << "x" << _cellsY << " grid");
+                      << _cellsX << "x" << _cellsY << " grid");
     return;
   }
 
@@ -123,8 +123,8 @@ void TsdGrid::init(const double cellSize, const EnumTsdGridLayout layoutPartitio
 
   _maxTruncation = 2.0*cellSize;
 
-  LOGMSG(DBG_DEBUG, "Grid dimensions: " << _cellsX << "x" << _cellsY << " cells" <<
-      " = " << ((double)_cellsX)*cellSize << "x" << ((double)_cellsY)*cellSize << " sqm");
+  LOGMSG(DBG_DEBUG, "Grid dimensions: " << _cellsX << "x" << _cellsY << " cells"
+		            << " = " << ((double)_cellsX)*cellSize << "x" << ((double)_cellsY)*cellSize << " sqm");
 
   _minX = 0.0;
   _maxX = ((double)_cellsX + 0.5) * _cellSize;
@@ -273,12 +273,8 @@ void TsdGrid::push(SensorPolar2D* sensor)
         {
           if(mask[index])
           {
-            // calculate distance of current cell to sensor
-            double crd[2];
-            crd[0] = (*cellCoordsHom)(c,0);
-            crd[1] = (*cellCoordsHom)(c,1);
-            double distance = euklideanDistance<double>(tr, crd, 2);
-            double sd = data[index] - distance;
+            // calculate signed distance, i.e. measurement minus distance of current cell to sensor
+            double sd = data[index] - sqrt( ((*cellCoordsHom)(c,0)-tr[0]) * ((*cellCoordsHom)(c,0)-tr[0]) + ((*cellCoordsHom)(c,1)-tr[1]) * ((*cellCoordsHom)(c,1)-tr[1]));
 
             part->addTsd((*partCoords)(c, 0), (*partCoords)(c, 1), sd, _maxTruncation);
           }
@@ -332,14 +328,11 @@ void TsdGrid::pushTree(SensorPolar2D* sensor)
         {
           if(mask[index])
           {
-            // calculate distance of current cell to sensor
-            double crd[2];
-            crd[0] = (*cellCoordsHom)(c,0);
-            crd[1] = (*cellCoordsHom)(c,1);
-            double distance = euklideanDistance<double>(tr, crd, 2);
-            double sdf = data[index] - distance;
+            // calculate signed distance, i.e. measurement minus distance of current cell to sensor
+            double sd = data[index] - sqrt( ((*cellCoordsHom)(c,0)-tr[0]) * ((*cellCoordsHom)(c,0)-tr[0]) + ((*cellCoordsHom)(c,1)-tr[1]) * ((*cellCoordsHom)(c,1)-tr[1]));
 
-            part->addTsd((*partCoords)(c, 0), (*partCoords)(c, 1), sdf, _maxTruncation);
+            part->addTsd((*partCoords)(c, 0), (*partCoords)(c, 1), sd, _maxTruncation);
+
           }
         }
       }
@@ -349,7 +342,7 @@ void TsdGrid::pushTree(SensorPolar2D* sensor)
 
   propagateBorders();
 
-  LOGMSG(DBG_DEBUG, "Elapsed push: " << t.elapsed() << "s");
+  LOGMSG(DBG_DEBUG, "Elapsed pushTree: " << t.elapsed() << "s");
 }
 
 void TsdGrid::pushRecursion(SensorPolar2D* sensor, double pos[2], TsdGridComponent* comp, vector<TsdGridPartition*> &partitionsToCheck)
