@@ -55,7 +55,7 @@ Matrix IcpMultiInitIterator::iterate(Icp* icp)
   {
     icp->reset();
     icp->iterate(&rms, &pairs, &iterations, &(*it));
-    bool retval = assignBetterSolution(rmsBest, pairsBest, iterationsBest, TBest, rms, pairs, iterations, icp->getFinalTransformation());
+    assignBetterSolution(rmsBest, pairsBest, iterationsBest, TBest, rms, pairs, iterations, icp->getFinalTransformation());
 
     /*char folder[32];
     sprintf(folder, "trace_%d_%d", cnt++, retval);
@@ -67,7 +67,7 @@ Matrix IcpMultiInitIterator::iterate(Icp* icp)
     // Apply matching with last transformation
     icp->reset();
     icp->iterate(&rms, &pairs, &iterations);
-    bool retval = assignBetterSolution(rmsBest, pairsBest, iterationsBest, TBest, rms, pairs, iterations, *_Tlast);
+    assignBetterSolution(rmsBest, pairsBest, iterationsBest, TBest, rms, pairs, iterations, *_Tlast);
 
     /*char folder[32];
     sprintf(folder, "trace_%d_%d", cnt++, retval);

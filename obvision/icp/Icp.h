@@ -134,7 +134,7 @@ public:
 
   /**
    * Set maximum number of iteration steps
-   * @param nIterations maximum number of iteration steps
+   * @param iterations maximum number of iteration steps
    */
   void setMaxIterations(unsigned int iterations);
 
