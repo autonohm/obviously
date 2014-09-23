@@ -197,6 +197,12 @@ namespace obvious {
   }
 
   template <class T>
+  static inline T dot2(const T* u, const T* v)
+  {
+    return u[0]*v[0] + u[1]*v[1];
+  }
+
+  template <class T>
   static inline T dot3(const T* u, const T* v)
   {
     return u[0]*v[0] + u[1]*v[1] + u[2]*v[2];

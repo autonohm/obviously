@@ -32,7 +32,7 @@ int main(int argc, char** argv)
 
   Ndt* ndt = new Ndt(-1, 1, -1, 1);
   ndt->setModel(M);
-  //ndt->setScene(&S);
+  ndt->setScene(&S);
 
   double rms;
   unsigned int it;

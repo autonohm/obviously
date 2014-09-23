@@ -33,6 +33,8 @@ struct NdtCell
   vector<double*> coords;
   double* centroid;
   Matrix* cov;
+  Matrix* cov_inv;
+  bool isOccupied(){ return (coords.size()>=5); };
 };
 
 /**
@@ -69,11 +71,10 @@ public:
 
   /**
    * Copy scene to internal buffer
-   * @param coords scene coordinates, as tuples or triples
-   * @param size number of points, i.e. coordinate triples
+   * @param coords scene coordinates
    * @param probability probability of coordinates of being sampled (range [0.0 1.0])
    */
-  void setScene(double* coords, const unsigned int size, double probability=1.0);
+  void setScene(Matrix* coords, double probability=1.0);
 
   /**
    * Reset state of NDT algorithm
@@ -184,6 +185,10 @@ private:
    * dimension of space
    */
   int _dim;
+
+  double _d1;
+
+  double _d2;
 
 };
 

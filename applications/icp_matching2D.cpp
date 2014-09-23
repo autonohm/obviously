@@ -87,6 +87,7 @@ int main(int argc, char** argv)
   double rms;
   unsigned int pairs;
   unsigned int it;
+  for(int i=0; i<1000; i++)
   icp->iterate(&rms, &pairs, &it);
   obvious::Matrix F = icp->getFinalTransformation();
   F.invert();

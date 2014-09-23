@@ -23,7 +23,8 @@ Ndt::Ndt(int minX, int maxX, int minY, int maxY)
     for(int x=0; x<_maxX-_minX; x++)
     {
       _model[y][x].centroid = new double[2];
-      _model[y][x].cov = new Matrix(2, 2);
+      _model[y][x].cov      = new Matrix(2, 2);
+      _model[y][x].cov_inv  = new Matrix(2, 2);
     }
   }
 
@@ -38,6 +39,10 @@ Ndt::Ndt(int minX, int maxX, int minY, int maxY)
   _Tlast               = new Matrix(4, 4);
   _Tfinal4x4->setIdentity();
   _Tlast->setIdentity();
+
+  // magic numbers taken from ROS implementation
+  _d1 = 1.0;
+  _d2 = 0.05;
 
   this->reset();
 }
@@ -106,10 +111,12 @@ void Ndt::setModel(Matrix* coords, double probability)
     for(int x=0; x<_maxX-_minX; x++)
     {
       NdtCell cell = _model[y][x];
+      if(!cell.isOccupied()) continue;
+
       vector<double*> v = cell.coords;
       double sumX = 0.0;
       double sumY = 0.0;
-      for(int i=0; i<v.size(); i++)
+      for(unsigned int i=0; i<v.size(); i++)
       {
         cout << x << " " << y << " " << v[i][0] << " " << v[i][1] << endl;
         sumX += v[i][0];
@@ -124,7 +131,7 @@ void Ndt::setModel(Matrix* coords, double probability)
       (*cov)(0,1) = 0.0;
       (*cov)(1,0) = 0.0;
       (*cov)(1,1) = 0.0;
-      for(int i=0; i<v.size(); i++)
+      for(unsigned int i=0; i<v.size(); i++)
       {
         double c[2];
         c[0] = v[i][0] - cell.centroid[0];
@@ -138,32 +145,34 @@ void Ndt::setModel(Matrix* coords, double probability)
       (*cov)(0,1) /= v.size();
       (*cov)(1,0) /= v.size();
       (*cov)(1,1) /= v.size();
+      *(cell.cov_inv) = cov->getInverse();
       cov->print();
+      cell.cov_inv->print();
     }
   }
 
   delete [] mask;
 }
 
-void Ndt::setScene(double* coords, const unsigned int size, double probability)
+void Ndt::setScene(Matrix* coords, double probability)
 {
-  if(size==0)
-  {
-    cout << "Scene of size 0 passed ... ignoring" << endl;
+  if(coords->getCols()!=(size_t)_dim) {
+    cout << "WARNING: Scene is not of correct dimensionality " << _dim << endl;
     return;
   }
 
-  _sizeScene = size;
+  unsigned int sizeSource = coords->getRows();
+  _sizeScene = sizeSource;
   bool* mask = createSubsamplingMask(&_sizeScene, probability);
 
   checkMemory(_sizeScene, _dim, _sizeSceneBuf, _scene);
   unsigned int idx = 0;
-  for(unsigned int i=0; i<size; i++)
+  for(unsigned int i=0; i<sizeSource; i++)
   {
     if(mask[i])
     {
       for(unsigned int j=0; j<(unsigned int)_dim; j++)
-        _scene[idx][j] = coords[_dim*i+j];
+        _scene[idx][j] = (*coords)(i,j);
       idx++;
     }
   }
@@ -242,6 +251,43 @@ EnumNdtState Ndt::iterate(double* rms, unsigned int* iterations, Matrix* Tinit)
   EnumNdtState eRetval = NDT_PROCESSING;
   unsigned int iter = 0;
   //double rms_prev = 10e12;
+
+  for(unsigned int i=0; i<_maxIterations; i++)
+  {
+    double score = 0;
+
+    for(unsigned int j=0; j<_sizeScene; j++)
+    {
+      // project scene point to cell
+      int x = floor(_sceneTmp[j][0]) - _minX;
+      int y = floor(_sceneTmp[j][1]) - _minY;
+      if(x>=0 && x<=_maxX && y>=0 && y<=_maxY)
+      {
+        NdtCell cell = _model[y][x];
+        // coord zero mean
+        Vector c_zm(2);
+        c_zm(0) = _sceneTmp[j][0] - cell.centroid[0];
+        c_zm(1) = _sceneTmp[j][1] - cell.centroid[1];
+
+        Matrix *cov_inv = cell.cov_inv;
+        Vector tmp = Matrix::multiply(*cov_inv, c_zm, false);
+        tmp.print();
+
+        // likelihood
+        double l = c_zm(0) * tmp(0) + c_zm(1) * tmp(1);
+
+        //score += -_d1*exp(-_d2*l/2.0);
+        double px = exp(-l/2.0);
+        score -= px;
+
+
+
+      }
+    }
+
+    applyTransformation(_sceneTmp, _sizeScene, _dim, _Tlast);
+    iter++;
+  }
 
   *iterations = iter;
 
