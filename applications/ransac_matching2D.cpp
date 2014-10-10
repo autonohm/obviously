@@ -34,14 +34,20 @@ int main(int argc, char** argv)
 
 
   obvious::Matrix T = MatrixFactory::TransformationMatrix33(deg2rad(29.0), 0.4, 0.35);
+
   obvious::Matrix S = M->createTransform(T);
+
+  cout << "Applied transformation:" << endl;
+  T.print();
+
+  cout << "Search for inverse:" << endl;
+  T.invert();
+  T.print();
 
   RansacMatching matcher;
 
   Matrix F = matcher.match(M, &S);
 
-  cout << "Applied transformation:" << endl;
-  T.print();
   F.invert();
   cout << endl << "Estimated transformation:" << endl;
   F.print();
