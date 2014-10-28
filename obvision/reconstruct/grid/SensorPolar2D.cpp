@@ -8,7 +8,7 @@
 namespace obvious
 {
 
-SensorPolar2D::SensorPolar2D(unsigned int size, double angularRes, double phiMin, double maxRange, double minRange) : Sensor(2, maxRange, minRange)
+SensorPolar2D::SensorPolar2D(unsigned int size, double angularRes, double phiMin, double maxRange, double minRange, double lowReflectivityRange) : Sensor(2, maxRange, minRange, lowReflectivityRange)
 {
   _size = size;
   _data = new double[_size];

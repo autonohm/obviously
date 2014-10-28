@@ -255,6 +255,11 @@ bool RayCastPolar2D::rayCastFromCurrentView(TsdGrid* grid, obfloat tr[2], obfloa
       found = true;
       break;
     }
+    else if(tsd_prev < 0 && tsd > 0)
+    {
+      found = false;
+      break;
+    }
 
     tsd_prev = tsd;
   }

@@ -21,8 +21,11 @@ public:
   /**
    * Standard constructor
    * @param[in] dim dimensionality of representation
+   * @param[in] maxRange maximum range
+   * @param[in] minRange minimum range, i.e. a dead zone
+   * @param[in] lowReflectivityRange range for objects with low remission
    */
-  Sensor(unsigned int dim, double maxRange, double minRange);
+  Sensor(unsigned int dim, double maxRange, double minRange, double lowReflectivityRange);
 
   /**
    * Destructor
@@ -52,6 +55,12 @@ public:
    * @return minimum range
    */
   virtual double getMinimumRange();
+
+  /**
+   * Get range of sensor when objects of low reflectivity are present
+   * @return maximum range
+   */
+  virtual double getLowReflectivityRange();
 
   /**
    * Access matrix of measurement rays with parameterizable normalization
@@ -180,6 +189,8 @@ protected:
 
   double _minRange;
 
+  double _lowReflectivityRange;
+
   unsigned int _size;
 
   double* _data;
@@ -201,6 +212,7 @@ protected:
 
   // Ray matrix in sensor coordinate frame
   Matrix* _raysLocal;
+
 };
 
 }

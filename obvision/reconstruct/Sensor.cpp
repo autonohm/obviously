@@ -8,11 +8,12 @@
 namespace obvious
 {
 
-Sensor::Sensor(unsigned int dim, double maxRange, double minRange)
+Sensor::Sensor(unsigned int dim, double maxRange, double minRange, double lowReflectivityRange)
 {
   _dim = dim;
   _maxRange = maxRange;
   _minRange = minRange;
+  _lowReflectivityRange = lowReflectivityRange;
 
   _rgb = NULL;
   _accuracy = NULL;
@@ -87,6 +88,10 @@ double Sensor::getMinimumRange()
   return _minRange;
 }
 
+double Sensor::getLowReflectivityRange()
+{
+  return _lowReflectivityRange;
+}
 
 Matrix Sensor::getTransformation()
 {
@@ -147,7 +152,7 @@ unsigned int Sensor::dataToCartesianVector(double* &coords)
   unsigned int cnt = 0;
   for(unsigned int i=0; i<_size; i++)
   {
-    if(_mask[i])
+    if(!isinf(_data[i]))
     {
       for(unsigned int j=0; j<_dim; j++)
       {

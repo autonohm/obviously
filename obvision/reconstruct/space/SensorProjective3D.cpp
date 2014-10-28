@@ -6,12 +6,12 @@
 namespace obvious
 {
 
-SensorProjective3D::SensorProjective3D(unsigned int cols, unsigned int rows, double PData[12], double maxRange, double minRange) : Sensor(3, maxRange, minRange)
+SensorProjective3D::SensorProjective3D(unsigned int cols, unsigned int rows, double PData[12], double maxRange, double minRange, double lowReflectivityRange) : Sensor(3, maxRange, minRange, lowReflectivityRange)
 {
   init(cols, rows, PData);
 }
 
-SensorProjective3D::SensorProjective3D(SensorProjective3D* sensor) : Sensor(3, sensor->getMaximumRange(), sensor->getMinimumRange())
+SensorProjective3D::SensorProjective3D(SensorProjective3D* sensor) : Sensor(3, sensor->getMaximumRange(), sensor->getMinimumRange(), sensor->getLowReflectivityRange())
 {
   double PData[12];
   sensor->_P->getData(PData);

@@ -10,7 +10,7 @@
 namespace obvious
 {
 
-SensorPolar3D::SensorPolar3D(unsigned int beams, double thetaRes, double thetaMin, unsigned int planes, double maxRange, double minRange) : Sensor(3, maxRange, minRange)
+SensorPolar3D::SensorPolar3D(unsigned int beams, double thetaRes, double thetaMin, unsigned int planes, double maxRange, double minRange, double lowReflectivityRange) : Sensor(3, maxRange, minRange, lowReflectivityRange)
 {
   // Rotation about scanning plane
   _thetaRes = thetaRes;

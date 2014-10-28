@@ -23,7 +23,7 @@ public:
    * @param[in] maxRange maximum range
    * @param[in] minRange minimum range
    */
-  SensorProjective3D(unsigned int cols, unsigned int rows, double PData[12], double maxRange=INFINITY, double minRange=0.0);
+  SensorProjective3D(unsigned int cols, unsigned int rows, double PData[12], double maxRange=INFINITY, double minRange=0.0, double lowReflectivityRange=INFINITY);
 
   /**
    * Copy constructor

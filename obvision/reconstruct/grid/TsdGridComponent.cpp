@@ -46,16 +46,16 @@ bool TsdGridComponent::isInRange(obfloat pos[2], Sensor* sensor, obfloat maxTrun
   obfloat distance = euklideanDistance<obfloat>(pos, _centroid, 2);
 
   // closest possible distance of any voxel in partition
-  double minDist = distance - _circumradius - maxTruncation;
+  double closestVoxelDist = distance - _circumradius - maxTruncation;
 
   // check if partition is out of range
-  if(minDist > sensor->getMaximumRange()) return false;
+  if(closestVoxelDist > sensor->getMaximumRange()) return false;
 
   // farthest possible distance of any voxel in partition
-  double maxDist = distance + _circumradius + maxTruncation;
+  double farthestVoxelDist = distance + _circumradius + maxTruncation;
 
   // check if partition is too close
-  if(maxDist < sensor->getMinimumRange()) return false;
+  if(farthestVoxelDist < sensor->getMinimumRange()) return false;
 
   if(_isLeaf)
   {
@@ -78,15 +78,21 @@ bool TsdGridComponent::isInRange(obfloat pos[2], Sensor* sensor, obfloat maxTrun
     bool isVisible = false;
     for(int j=minIdx; j<=maxIdx; j++)
     {
-      if(mask[j])
-        isVisible = isVisible || (data[j] > minDist);
+      //if(mask[j])
+        isVisible = isVisible || (data[j] > closestVoxelDist);
     }
 
     if(!isVisible) return false;
 
     bool isEmpty = true;
     for(int j=minIdx; j<=maxIdx; j++)
-      isEmpty = isEmpty && (data[j] > maxDist) && mask[j];
+    {
+      isEmpty = isEmpty && (data[j] > farthestVoxelDist) && mask[j];
+      if(isinf(data[j]))
+        isEmpty = isEmpty && (distance < sensor->getLowReflectivityRange());
+      else
+        isEmpty = isEmpty && (data[j] < farthestVoxelDist);
+    }
 
     if(isEmpty)
     {

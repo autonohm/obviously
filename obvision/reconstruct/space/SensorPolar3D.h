@@ -22,7 +22,7 @@ public:
    * @param[in] thetaMin minimum angle from which beams are counted positive counter-clockwisely (rad)
    * @param[in] planes scanning planes per half revolution
    */
-  SensorPolar3D(unsigned int beams, double thetaRes, double thetaMin, unsigned int planes=360, double maxRange=INFINITY, double minRange=0.0);
+  SensorPolar3D(unsigned int beams, double thetaRes, double thetaMin, unsigned int planes=360, double maxRange=INFINITY, double minRange=0.0, double lowReflectivityRange=INFINITY);
 
   /**
    * Destructor

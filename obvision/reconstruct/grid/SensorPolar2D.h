@@ -23,7 +23,7 @@ public:
    * @param[in] maxRange maximum range
    * @param[in] minRange minimum range
    */
-  SensorPolar2D(unsigned int beams, double angularRes, double phiMin, double maxRange=INFINITY, double minRange=0.0);
+  SensorPolar2D(unsigned int beams, double angularRes, double phiMin, double maxRange=INFINITY, double minRange=0.0, double lowReflectivityRange=INFINITY);
 
   /**
    * Destructor
