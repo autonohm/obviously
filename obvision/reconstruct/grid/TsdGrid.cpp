@@ -242,7 +242,7 @@ void TsdGrid::push(SensorPolar2D* sensor)
   Timer t;
   t.start();
   double* data     = sensor->getRealMeasurementData();
-
+  bool* mask       = sensor->getRealMeasurementMask();
   obfloat tr[2];
   sensor->getPosition(tr);
 
@@ -262,6 +262,7 @@ void TsdGrid::push(SensorPolar2D* sensor)
       Matrix* partCoords = part->getPartitionCoords();
       Matrix* cellCoordsHom = part->getCellCoordsHom();
       sensor->backProject(cellCoordsHom, idx);
+      double lowReflectivityRange = sensor->getLowReflectivityRange();
 
       for(unsigned int c=0; c<partSize; c++)
       {
@@ -270,18 +271,21 @@ void TsdGrid::push(SensorPolar2D* sensor)
 
         if(index>=0)
         {
-          if(!isinf(data[index]))
+          if(mask[index])
           {
-            // calculate signed distance, i.e. measurement minus distance of current cell to sensor
-            double sd = data[index] - sqrt( ((*cellCoordsHom)(c,0)-tr[0]) * ((*cellCoordsHom)(c,0)-tr[0]) + ((*cellCoordsHom)(c,1)-tr[1]) * ((*cellCoordsHom)(c,1)-tr[1]));
+            if(!isinf(data[index]))
+            {
+              // calculate signed distance, i.e. measurement minus distance of current cell to sensor
+              double sd = data[index] - sqrt( ((*cellCoordsHom)(c,0)-tr[0]) * ((*cellCoordsHom)(c,0)-tr[0]) + ((*cellCoordsHom)(c,1)-tr[1]) * ((*cellCoordsHom)(c,1)-tr[1]));
 
-            part->addTsd((*partCoords)(c, 0), (*partCoords)(c, 1), sd, _maxTruncation);
-          }
-          else
-          {
-            double dist = sqrt( ((*cellCoordsHom)(c,0)-tr[0]) * ((*cellCoordsHom)(c,0)-tr[0]) + ((*cellCoordsHom)(c,1)-tr[1]) * ((*cellCoordsHom)(c,1)-tr[1]));
-            if(dist<sensor->getLowReflectivityRange())
-              part->addTsd((*partCoords)(c, 0), (*partCoords)(c, 1), _maxTruncation, _maxTruncation);
+              part->addTsd((*partCoords)(c, 0), (*partCoords)(c, 1), sd, _maxTruncation);
+            }
+            else
+            {
+              double dist = sqrt( ((*cellCoordsHom)(c,0)-tr[0]) * ((*cellCoordsHom)(c,0)-tr[0]) + ((*cellCoordsHom)(c,1)-tr[1]) * ((*cellCoordsHom)(c,1)-tr[1]));
+              if(dist<lowReflectivityRange)
+                part->addTsd((*partCoords)(c, 0), (*partCoords)(c, 1), _maxTruncation, _maxTruncation);
+            }
           }
         }
       }

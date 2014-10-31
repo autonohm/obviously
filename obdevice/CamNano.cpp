@@ -221,7 +221,7 @@ bool CamNano::grab()
     idx[6] = i+_rows  ;       // down
     idx[7] = i+_rows+3;       // down right
 
-    // caluclate indices of neighbours
+    // calculate indices of neighbors
     for(unsigned int j=0 ; j<8 ; j++) {
       if(idx[j]>=0 && idx[j] <=(int)(_rows*_cols*3))
         memcpy(&n[3*j],      &(_coords[idx[j]]), 3*sizeof(double));
@@ -229,7 +229,7 @@ bool CamNano::grab()
 
     double dist      = abs3D(&_coords[i]);
     double alpha_max = 0.0;
-    // check for eigth neighbours
+    // check for eight neighbors
     for(unsigned int j=0 ; j<8 ; j++)
     {
       double n2[3];
@@ -263,7 +263,7 @@ bool CamNano::grab()
   if (_useBilinearFilter)
   	this->filterBilinear(_mask, _z);
 
-  // auto intregration time for tof
+  // auto integration time for tof
   if (_autoIntegrat)
     this->setAutoIntegration();
   return(true);

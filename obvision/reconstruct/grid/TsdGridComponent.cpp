@@ -78,8 +78,7 @@ bool TsdGridComponent::isInRange(obfloat pos[2], Sensor* sensor, obfloat maxTrun
     bool isVisible = false;
     for(int j=minIdx; j<=maxIdx; j++)
     {
-      //if(mask[j])
-        isVisible = isVisible || (data[j] > closestVoxelDist);
+        isVisible = isVisible || ((data[j] > closestVoxelDist) && mask[j]);
     }
 
     if(!isVisible) return false;
@@ -87,11 +86,11 @@ bool TsdGridComponent::isInRange(obfloat pos[2], Sensor* sensor, obfloat maxTrun
     bool isEmpty = true;
     for(int j=minIdx; j<=maxIdx; j++)
     {
-      isEmpty = isEmpty && (data[j] > farthestVoxelDist) && mask[j];
+      //isEmpty = isEmpty && (data[j] > farthestVoxelDist) && mask[j];
       if(isinf(data[j]))
         isEmpty = isEmpty && (distance < sensor->getLowReflectivityRange());
       else
-        isEmpty = isEmpty && (data[j] < farthestVoxelDist);
+        isEmpty = isEmpty && (data[j] > farthestVoxelDist) && mask[j];
     }
 
     if(isEmpty)
