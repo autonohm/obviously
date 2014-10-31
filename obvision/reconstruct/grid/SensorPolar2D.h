@@ -36,7 +36,7 @@ public:
   void resetMask();
 
   /**
-   * Mask measurements with obtuse angles to neighbors
+   * Mask measurements with acute angles to neighbors
    * @param[in] thresh threshold in rad (meaningful values < 1/36*M_PI)
    */
   void maskDepthDiscontinuity(double thresh);
