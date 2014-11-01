@@ -52,6 +52,44 @@ SensorPolar2D::~SensorPolar2D()
   delete _raysLocal;
 }
 
+void SensorPolar2D::resetMask()
+{
+  for(int i=0; i<_size; i++)
+    _mask[i] = true;
+}
+
+void SensorPolar2D::maskDepthDiscontinuity(double thresh)
+{
+  int radius = 1;
+  double cosphi = cos(_angularRes);
+  double sinphi = sin(_angularRes);
+  for(int i=radius; i<_size-radius; i++)
+  {
+    double betamin = M_PI;
+    double a = _data[i];
+    if(isinf(a)) continue;
+    for(int j=-radius; j<=radius; j++)
+    {
+      double b = _data[i+j];
+      if(isinf(b)) continue;
+      // law of cosines
+      double c = sqrt(a*a+b*b-2*a*b*cosphi);
+
+      if(a>b)
+      {
+        // law of sines
+        double beta  = asin(b/c*sinphi);
+
+        if(beta<betamin)
+          betamin = beta;
+      }
+    }
+
+    if(betamin<thresh)
+      _mask[i] = false;
+  }
+}
+
 int SensorPolar2D::backProject(double data[2])
 {
   Matrix xh(3, 1);
