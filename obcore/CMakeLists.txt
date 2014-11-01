@@ -6,7 +6,7 @@ include(FindPkgConfig)
 ############################
 
 PROJECT(OBCORE)
-SET(OBCORE_VERSION_MAJOR 0)
+
 SET(USE_EIGEN 0)
 
 FIND_PACKAGE(Eigen REQUIRED)
@@ -54,3 +54,8 @@ ENDIF()
 
 ADD_LIBRARY(obcore ${LIBRARY})
 
+####################
+##### Packaging ####
+####################
+INSTALL(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}" DESTINATION ${OBVIOUSLY_INC_DIR} FILES_MATCHING PATTERN "*.h")
+INSTALL(TARGETS obcore ARCHIVE DESTINATION ${OBVIOUSLY_LIB_DIR})

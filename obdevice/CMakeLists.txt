@@ -64,3 +64,9 @@ ENDIF()
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__OBVIOUSLY__ -Wno-unknown-pragmas -Wno-reorder")
 
 ADD_LIBRARY(obdevice ${SOURCES})
+
+####################
+##### Packaging ####
+####################
+INSTALL(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}" DESTINATION ${OBVIOUSLY_INC_DIR} FILES_MATCHING PATTERN "*.h")
+INSTALL(TARGETS obdevice ARCHIVE DESTINATION ${OBVIOUSLY_LIB_DIR})

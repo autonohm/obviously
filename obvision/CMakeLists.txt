@@ -55,3 +55,9 @@ add_library(obvision
 	reconstruct/space/RayCastAxisAligned3D.cpp
 	#reconstruct/space/RayCastBackProjection3D.cpp
 	)
+
+####################
+##### Packaging ####
+####################
+INSTALL(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}" DESTINATION ${OBVIOUSLY_INC_DIR} FILES_MATCHING PATTERN "*.h")
+INSTALL(TARGETS obvision ARCHIVE DESTINATION ${OBVIOUSLY_LIB_DIR})
