@@ -54,6 +54,9 @@ add_library(obvision
 	reconstruct/space/RayCast3D.cpp
 	reconstruct/space/RayCastAxisAligned3D.cpp
 	#reconstruct/space/RayCastBackProjection3D.cpp
+	planning/Obstacle.cpp
+	planning/AStar.cpp
+	planning/AStarNode.cpp
 	)
 
 ####################
