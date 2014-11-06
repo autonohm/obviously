@@ -270,17 +270,7 @@ void AStarMap::serialize(std::string path)
 AStarMap AStarMap::create(char* data, double cellSize, unsigned int width, unsigned int height)
 {
   AStarMap map(cellSize, width, height);
-  int** buffer = map._map;
-
-  memset(*buffer, 0, height*width*sizeof(**buffer));
-
-  for(unsigned int y = 0; y < height; y++)
-  {
-    for(unsigned int x = 0; x < width; x++)
-    {
-      buffer[y][x] = data[y * width + x];
-    }
-  }
+  memcpy(*(map._map), data, width*height*sizeof(*data));
 
   return map;
 }
