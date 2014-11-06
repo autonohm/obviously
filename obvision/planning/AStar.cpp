@@ -55,8 +55,8 @@ std::vector<unsigned int> AStar::pathFind(AStarMap* map, const unsigned int & xS
   {
     for(x=0;x<width;x++)
     {
-      closedNodesMap[y][x]=0;
-      openNodesMap[y][x]=0;
+      closedNodesMap[y][x] = 0;
+      openNodesMap[y][x]   = 0;
     }
   }
 

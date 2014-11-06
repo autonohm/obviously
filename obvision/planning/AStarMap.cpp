@@ -31,9 +31,25 @@ AStarMap::AStarMap(double cellSize, unsigned int cellsX, unsigned int cellsY)
       _closedNodesMap[y][x] = 0;
       _openNodesMap[y][x]   = 0;
       _map[y][x]            = 1;
-      _mapWork[y][x]        = 1;
     }
   }
+}
+
+AStarMap::AStarMap(AStarMap &map)
+{
+  _cellsX = map._cellsX;
+  _cellsY = map._cellsY;
+  _cellSize = map._cellSize;
+
+  obvious::System<int>::allocate(_cellsY, _cellsX, _map);
+  obvious::System<int>::allocate(_cellsY, _cellsX, _mapWork);
+  obvious::System<int>::allocate(_cellsY, _cellsX, _closedNodesMap);
+  obvious::System<int>::allocate(_cellsY, _cellsX, _openNodesMap);
+  obvious::System<int>::allocate(_cellsY, _cellsX, _dirMap);
+
+  memcpy(*_closedNodesMap, *(map._closedNodesMap), _cellsX*_cellsY*sizeof(**_closedNodesMap));
+  memcpy(*_openNodesMap, *(map._openNodesMap), _cellsX*_cellsY*sizeof(**_openNodesMap));
+  memcpy(*_map, *(map._map), _cellsX*_cellsY*sizeof(**_map));
 }
 
 AStarMap::~AStarMap()

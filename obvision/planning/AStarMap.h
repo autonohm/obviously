@@ -31,6 +31,12 @@ public:
   AStarMap(double cellSize, unsigned int cellsX, unsigned int cellsY);
 
   /**
+   * Copy constructor
+   * @param map map to be copied
+   */
+  AStarMap(AStarMap &map);
+
+  /**
    * Destructor
    */
   ~AStarMap();
