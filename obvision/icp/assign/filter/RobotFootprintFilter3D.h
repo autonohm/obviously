@@ -5,8 +5,8 @@
  *      Author: chris
  */
 
-#ifndef RobotFootprintFilter3D_H
-#define RobotFootprintFilter3D_H_
+#ifndef ROBOTFOOTPRINTFILTER3D_H_
+#define ROBOTFOOTPRINTFILTER3D_H_
 
 #include "obvision/icp/assign/filter/IPreAssignmentFilter.h"
 #include "obcore/math/mathbase.h"
