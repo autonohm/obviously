@@ -50,5 +50,7 @@ add_library(obgraphic
 ####################
 ##### Packaging ####
 ####################
+IF(CMAKE_BUILD_TYPE MATCHES Release)
 INSTALL(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}" DESTINATION ${OBVIOUSLY_INC_DIR} FILES_MATCHING PATTERN "*.h")
 INSTALL(TARGETS obgraphic ARCHIVE DESTINATION ${OBVIOUSLY_LIB_DIR})
+ENDIF()

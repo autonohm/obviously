@@ -56,11 +56,14 @@ add_library(obvision
 	#reconstruct/space/RayCastBackProjection3D.cpp
 	planning/Obstacle.cpp
 	planning/AStar.cpp
+	planning/AStarMap.cpp
 	planning/AStarNode.cpp
 	)
 
 ####################
 ##### Packaging ####
 ####################
+IF(CMAKE_BUILD_TYPE MATCHES Release)
 INSTALL(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}" DESTINATION ${OBVIOUSLY_INC_DIR} FILES_MATCHING PATTERN "*.h")
 INSTALL(TARGETS obvision ARCHIVE DESTINATION ${OBVIOUSLY_LIB_DIR})
+ENDIF()
