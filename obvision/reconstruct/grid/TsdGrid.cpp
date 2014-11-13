@@ -112,7 +112,7 @@ void TsdGrid::init(const double cellSize, const EnumTsdGridLayout layoutPartitio
   if(_dimPartition > _cellsX)
   {
     LOGMSG(DBG_ERROR, "Insufficient partition size : " << _dimPartition << "x" << _dimPartition << " in "
-                      << _cellsX << "x" << _cellsY << " grid");
+        << _cellsX << "x" << _cellsY << " grid");
     return;
   }
 
@@ -124,7 +124,7 @@ void TsdGrid::init(const double cellSize, const EnumTsdGridLayout layoutPartitio
   _maxTruncation = 2.0*cellSize;
 
   LOGMSG(DBG_DEBUG, "Grid dimensions: " << _cellsX << "x" << _cellsY << " cells"
-		            << " = " << ((double)_cellsX)*cellSize << "x" << ((double)_cellsY)*cellSize << " sqm");
+      << " = " << ((double)_cellsX)*cellSize << "x" << ((double)_cellsY)*cellSize << " sqm");
 
   _minX = 0.0;
   _maxX = ((obfloat)_cellsX + 0.5) * _cellSize;
@@ -685,4 +685,36 @@ bool TsdGrid::storeGrid(const std::string& path)
     LOGMSG(DBG_DEBUG, " warning! File " << path << " is still open!\n");
   return(true);
 }
+
+bool TsdGrid::freeFootprint(const obfloat centerCoords[2], const obfloat width, const obfloat height)
+{
+  unsigned int minX = static_cast<unsigned int>((centerCoords[0] - width  / 2.0) / _cellSize + 0.5);
+  unsigned int maxX = static_cast<unsigned int>((centerCoords[0] + width  / 2.0) / _cellSize + 0.5);
+  unsigned int minY = static_cast<unsigned int>((centerCoords[1] - height / 2.0) / _cellSize + 0.5);
+  unsigned int maxY = static_cast<unsigned int>((centerCoords[1] + height / 2.0) / _cellSize + 0.5);
+
+  //check whether indices are in bounds
+  if((minX > static_cast<unsigned int>(_cellsX)) || (maxX > static_cast<unsigned int>(_cellsX)) || (minY > static_cast<unsigned int>(_cellsY)) ||
+      (maxY > static_cast<unsigned int>(_cellsY)))
+  {
+    LOGMSG(DBG_ERROR, " Error indices out of bounds\n");
+    return false;
+  }
+  unsigned int dimPartition = static_cast<unsigned int>(_dimPartition);
+  for(unsigned int rows = minY; rows < maxY; rows++)
+  {
+    for(unsigned int cols = minX; cols < maxX; cols++)
+    {
+      unsigned int py = rows / dimPartition;
+      unsigned int px = cols / dimPartition;
+      if(!_partitions[py][px]->isInitialized())   //partition uninitialized -> initialize
+        _partitions[py][px]->init();
+      unsigned int cy = rows % dimPartition;
+      unsigned int cx = cols % dimPartition;
+      (*_partitions[py][px])(cy, cx) = 0.5;   //todo: magic number?! what is tsd empty..?
+    }
+  }
+  return true;
+}
+
 }
