@@ -199,11 +199,11 @@ enum EnumTsdGridPartitionIdentifier{ UNINITIALIZED = 0,
   bool storeGrid(const std::string& path);
 
   /**
-   * Experimental "Hack" method to set the grid in a certain area as empty
+   * Method to set the grid in a certain area as empty
    * @param centerCoords footprint center
    * @param width width of footprint
    * @param height height of footprint
-   * @return true in case of success
+   * @return true in case of success (valid coordinates)
    */
   bool freeFootprint(const obfloat centerCoords[2], const obfloat width, const obfloat height);
 
