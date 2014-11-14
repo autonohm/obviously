@@ -4,6 +4,7 @@
 
 #include <libudev.h>
 #include <linux/videodev2.h>
+#include <string>
 
 #define DHT_SIZE 420
 
@@ -142,6 +143,23 @@ unsigned int UvcCam::getChannels()
       return 3;
 }
 
+EnumCameraPixelFormat UvcCam::getFormats()
+{
+   int ret;
+   struct v4l2_fmtdesc desc;
+   CLEAR(desc);
+   desc.index = 0;
+   desc.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+   while ((ret = ioctl(_nDeviceHandle, VIDIOC_ENUM_FMT, &desc)) == 0)
+   {
+      desc.index++;
+      if(!strcmp(string("MJPEG").c_str(), (char*)desc.description)){
+         return CAMMJPEG;
+      }
+   }
+   return CAMYUYV;
+}
+
 EnumCameraError UvcCam::connect()
 {
 
@@ -211,6 +229,7 @@ EnumCameraError UvcCam::setFormat(unsigned int width, unsigned int height, unsig
    fmt.fmt.pix.pixelformat = format;
    fmt.fmt.pix.field       = V4L2_FIELD_ANY;
    int retval = ioctl(_nDeviceHandle, VIDIOC_S_FMT, &fmt);
+
    if (retval < 0)
    {
       LOGMSG(DBG_DEBUG, "Unable to set format.");
@@ -263,7 +282,7 @@ EnumCameraError UvcCam::startStreaming()
    {
       CLEAR(_buf);
       _buf.index = i;
-      _buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+      _buf.type  = V4L2_BUF_TYPE_VIDEO_CAPTURE;
       _buf.memory = V4L2_MEMORY_MMAP;
       if (ioctl(_nDeviceHandle, VIDIOC_QBUF, &_buf) < 0)
       {
@@ -313,7 +332,7 @@ EnumCameraError UvcCam::grab(unsigned char* image, unsigned int* bytes)
    }
 
    CLEAR(_buf);
-   _buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+   _buf.type   = V4L2_BUF_TYPE_VIDEO_CAPTURE;
    _buf.memory = V4L2_MEMORY_MMAP;
 
    if (ioctl(_nDeviceHandle, VIDIOC_DQBUF, &_buf) < 0)
@@ -352,13 +371,15 @@ EnumCameraError UvcCam::grab(unsigned char* image, unsigned int* bytes)
 EnumCameraError UvcCam::printAvailableFormats()
 {
 
-   EnumCameraError retval = connect();
+   EnumCameraError retval = this->connect();
    if(retval!=CAMSUCCESS) return retval;
 
    int ret;
 
    struct v4l2_fmtdesc desc;
-   CLEAR(desc);
+
+   memset(&desc, 0, sizeof(desc));
+//   CLEAR(desc);
    desc.index = 0;
    desc.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
    while ((ret = ioctl(_nDeviceHandle, VIDIOC_ENUM_FMT, &desc)) == 0)
@@ -366,10 +387,10 @@ EnumCameraError UvcCam::printAvailableFormats()
       desc.index++;
       printf("pixelformat = '%c%c%c%c', description = '%s'\n",
             desc.pixelformat & 0xFF,
-            (desc.pixelformat >> 8) & 0xFF,
+            (desc.pixelformat >> 8)  & 0xFF,
             (desc.pixelformat >> 16) & 0xFF,
             (desc.pixelformat >> 24) & 0xFF,
-            desc.description);
+             desc.description);
    }
 
    struct v4l2_format fmt;

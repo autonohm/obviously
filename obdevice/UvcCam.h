@@ -27,6 +27,7 @@ namespace obvious
 
 enum EnumCameraError { CAMSUCCESS, CAMGRABBING, CAMERRORINIT, CAMFAILURE };
 enum EnumCameraColorMode { CAMRGB, CAMGRAYSCALE };
+enum EnumCameraPixelFormat {CAMMJPEG, CAMYUYV};
 
 /**
  * @class UvcCam
@@ -89,6 +90,12 @@ public:
    * @return channels (rgb=3, grayscale=1)
    */
   unsigned int getChannels();
+
+  /**
+   * Function to return available formats
+   * @return   formats (0=MJPEG, 1=YUVY)
+   */
+  EnumCameraPixelFormat getFormats();
 
   /**
    * Grab images from device in non-blocking mode.

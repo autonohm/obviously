@@ -4,6 +4,9 @@
 #include "obcore/base/Timer.h"
 #include "obdevice/UvcCam.h"
 #include "obgraphic/Obvious2D.h"
+#include "obcore/base/Logger.h"
+
+
 
 using namespace std;
 using namespace obvious;
@@ -28,6 +31,7 @@ void toggleMJPEG()
    _cam->startStreaming();
 }
 
+
 void saveHighResImage()
 {
    unsigned int width = 2304;
@@ -50,8 +54,12 @@ void saveHighResImage()
 
 int main(int argc, char* argv[])
 {
+   // configure log messages
+   LOGMSG_CONF("uvccam_stream.log", Logger::file_on|Logger::screen_on, DBG_DEBUG, DBG_ERROR);
+
+
    // Default parameters
-   char* dev           = (char*)"/dev/video0";
+   char* dev                = (char*)"/dev/video0";
    unsigned int width       = 640;
    unsigned int height      = 360;
 
@@ -67,14 +75,21 @@ int main(int argc, char* argv[])
       height          = atoi(argv[3]);
    }
 
+   // connect to camera
    _cam = new UvcCam(dev, width, height);
-
    EnumCameraError retval = _cam->connect();
    if(retval!=CAMSUCCESS) return -1;
 
-   retval = _cam->setFormat(width, height, V4L2_PIX_FMT_MJPEG);
+
+   // check for pixel format
+   if(_cam->getFormats()==CAMMJPEG)
+      retval = _cam->setFormat(width, height, V4L2_PIX_FMT_MJPEG);            // use mjpeg
+   else
+      retval = _cam->setFormat(width, height, V4L2_PIX_FMT_YUYV);             // user raw camera data
+
    if(retval!=CAMSUCCESS) return -1;
 
+   // init viewer and viewer callback
    Obvious2D viewer(1280, 720, "UVC streaming example");
    viewer.registerKeyboardCallback(' ', toggleMJPEG);
    viewer.registerKeyboardCallback('s', saveHighResImage);
