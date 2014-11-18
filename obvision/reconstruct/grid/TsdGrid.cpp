@@ -694,8 +694,8 @@ bool TsdGrid::freeFootprint(const obfloat centerCoords[2], const obfloat width, 
   unsigned int maxY = static_cast<unsigned int>((centerCoords[1] + height / 2.0) / _cellSize + 0.5);
 
   //check whether indices are in bounds
-  if((minX > static_cast<unsigned int>(_cellsX)) || (maxX > static_cast<unsigned int>(_cellsX)) || (minY > static_cast<unsigned int>(_cellsY)) ||
-      (maxY > static_cast<unsigned int>(_cellsY)))
+  if((minX > static_cast<unsigned int>(_cellsX)) || (maxX > static_cast<unsigned int>(_cellsX)) ||
+     (minY > static_cast<unsigned int>(_cellsY)) || (maxY > static_cast<unsigned int>(_cellsY)))
   {
     LOGMSG(DBG_ERROR, " Error indices out of bounds\n");
     return false;
@@ -711,7 +711,7 @@ bool TsdGrid::freeFootprint(const obfloat centerCoords[2], const obfloat width, 
         _partitions[py][px]->init();
       unsigned int cy = rows % dimPartition;
       unsigned int cx = cols % dimPartition;
-      (*_partitions[py][px])(cy, cx) = 0.5;   //todo: magic number?! what is tsd empty..?
+      (*_partitions[py][px])(cy, cx) = TSDINC;
     }
   }
   return true;
