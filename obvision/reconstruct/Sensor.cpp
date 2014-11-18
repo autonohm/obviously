@@ -152,7 +152,7 @@ unsigned int Sensor::dataToCartesianVector(double* &coords)
   unsigned int cnt = 0;
   for(unsigned int i=0; i<_size; i++)
   {
-    if(!isinf(_data[i]))
+    if(!isinf(_data[i]) && _mask[i])
     {
       for(unsigned int j=0; j<_dim; j++)
       {
