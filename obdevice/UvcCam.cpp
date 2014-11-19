@@ -44,6 +44,8 @@ UvcCam::UvcCam(const char *dev, unsigned int width, unsigned int height)
    _LutBu         = (int *) malloc(256 * sizeof(int));
    _nb_buffers    = NB_BUFFERS;
    _mem           = NULL;
+   _format        = V4L2_PIX_FMT_YUYV;
+
    for (int i = 0; i < 256; i++)
    {
       _LutRv[i] = (i - 128) * CoefRv / 1000;
@@ -287,6 +289,56 @@ EnumCameraError UvcCam::setPowerLineFrequency(const unsigned int& frq)
    }
 
    return CAMSUCCESS;
+}
+
+EnumCameraError UvcCam::setGain(const unsigned int& value)
+{
+   if(this->v4l2SetControl(_nDeviceHandle, V4L2_CID_GAIN, value))
+      return CAMSUCCESS;
+
+   return CAMERRORINIT;
+}
+
+EnumCameraError UvcCam::setContrast(const unsigned int& value)
+{
+   if(this->v4l2SetControl(_nDeviceHandle, V4L2_CID_CONTRAST, value))
+      return CAMSUCCESS;
+
+   return CAMERRORINIT;
+}
+
+EnumCameraError UvcCam::setSaturation(const unsigned int& value)
+{
+   if(this->v4l2SetControl(_nDeviceHandle, V4L2_CID_SATURATION, value))
+      return CAMSUCCESS;
+
+   return CAMERRORINIT;
+}
+
+EnumCameraError UvcCam::setSharpness(const unsigned int& sharpness)
+{
+   if(this->v4l2SetControl(_nDeviceHandle, V4L2_CID_SHARPNESS, sharpness))
+      return CAMSUCCESS;
+
+   return CAMERRORINIT;
+}
+
+
+EnumCameraError UvcCam::setFlipHorizontal(bool flip)
+{
+   if(this->v4l2SetControl(_nDeviceHandle, V4L2_CID_HFLIP, (int)flip))
+      return CAMSUCCESS;
+   else
+      return CAMERRORINIT;
+}
+
+
+EnumCameraError UvcCam::setFlipVertical(bool flip)
+{
+   if(this->v4l2SetControl(_nDeviceHandle, V4L2_CID_VFLIP, (int)flip))
+      return CAMSUCCESS;
+   else
+      return CAMERRORINIT;
 }
 
 
@@ -561,20 +613,16 @@ int UvcCam::isv4l2Control(int nHandle, int control, struct v4l2_queryctrl *query
 {
    int err = 0;
    queryctrl->id = control;
-   if ((err = ioctl(nHandle, VIDIOC_QUERYCTRL, queryctrl)) < 0)
-   {
+   if ((err = ioctl(nHandle, VIDIOC_QUERYCTRL, queryctrl)) < 0) {
       LOGMSG(DBG_DEBUG, "ioctl querycontrol error: " << errno);
    }
-   else if (queryctrl->flags & V4L2_CTRL_FLAG_DISABLED)
-   {
+   else if (queryctrl->flags & V4L2_CTRL_FLAG_DISABLED) {
       LOGMSG(DBG_DEBUG, "control " << (char *) queryctrl->name << " disabled");
    }
-   else if (queryctrl->flags & V4L2_CTRL_TYPE_BOOLEAN)
-   {
+   else if (queryctrl->flags & V4L2_CTRL_TYPE_BOOLEAN) {
       return 1;
    }
-   else if (queryctrl->type & V4L2_CTRL_TYPE_INTEGER)
-   {
+   else if (queryctrl->type & V4L2_CTRL_TYPE_INTEGER) {
       return 0;
    }
    else

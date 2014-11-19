@@ -163,6 +163,14 @@ public:
    */
   EnumCameraError setPowerLineFrequency(const unsigned int& frq=50);
 
+  EnumCameraError setGain(const unsigned int& value);
+
+  EnumCameraError setContrast(const unsigned int& value);
+
+  EnumCameraError setSaturation(const unsigned int& value);
+
+  EnumCameraError setSharpness(const unsigned int& sharpness);
+
   /**
    * Function to flip image horizontal. Default is true.
    * @param flip
