@@ -93,7 +93,7 @@ int main(int argc, char* argv[])
    viewer.registerKeyboardCallback('s', saveHighResImage);
    _img = new unsigned char[width*height*3];
 
-   retval = _cam->setFramerate(1,60);
+   retval = _cam->setFramerate(1,15);
    if(retval!=CAMSUCCESS) return -1;
 
    retval = _cam->startStreaming();
