@@ -25,20 +25,28 @@ namespace obvious
 #define LIMITVALUE(x)  ((x)>0xffffff?0xff: ((x)<=0xffff?0:((x)>>16)))
 #define NB_BUFFERS 2
 
+/**
+ * @enum EnumCameraError
+ */
 enum EnumCameraError { CAMSUCCESS, CAMGRABBING, CAMERRORINIT, CAMFAILURE };
+/**
+ * @enum EnumCameraColorMode
+ */
 enum EnumCameraColorMode { CAMRGB, CAMGRAYSCALE };
+/**
+ * @enum EnumCameraPixelFormat
+ */
 enum EnumCameraPixelFormat {CAMMJPEG, CAMYUYV};
 
 /**
  * @class UvcCam
  * @brief Class encapsulates local camera device handling with uvc chipset
- * @author Stefan May
+ * @author Stefan May and Christian Pfitzner
  **/
 class UvcCam
 {
 
 public:
-
   /**
    * Standard constructor
    * Call UvcCam::connect() subsequently for connecting and initializing the device.
@@ -117,10 +125,25 @@ public:
 
   void resetControls();
 
+  /**
+   * Function to start streaming
+   * @return
+   */
   EnumCameraError startStreaming();
 
+  /**
+   * Function to stop streaming
+   * @return
+   */
   EnumCameraError stopStreaming();
 
+  /**
+   * Function to set format
+   * @param width       width of image
+   * @param height      height of image
+   * @param format      pixel format
+   * @return
+   */
   EnumCameraError setFormat(unsigned int width, unsigned int height, unsigned int format = V4L2_PIX_FMT_YUYV);
 
   /**
@@ -135,6 +158,32 @@ public:
    */
   EnumCameraError setFramerate(unsigned int numerator, unsigned int denominator);
 
+  /**
+   * Function to enable power line frequency compensation
+   */
+  EnumCameraError setPowerLineFrequency(const unsigned int& frq=50);
+
+  EnumCameraError setGain(const unsigned int& value);
+
+  EnumCameraError setContrast(const unsigned int& value);
+
+  EnumCameraError setSaturation(const unsigned int& value);
+
+  EnumCameraError setSharpness(const unsigned int& sharpness);
+
+  /**
+   * Function to flip image horizontal. Default is true.
+   * @param flip
+   * @return
+   */
+  EnumCameraError setFlipHorizontal(bool flip=true);
+
+  /**
+   * Function to flip image vertical. Default is true.
+   * @param flip
+   * @return
+   */
+  EnumCameraError setFlipVertical(bool flip=true);
 private:
 
   EnumCameraError mapMemory();
@@ -168,6 +217,9 @@ private:
   int v4l2SetControl(int nHandle, int control, int value);
 
   int v4l2ResetControl(int nHandle, int control);
+
+//  bool set_v4l2_control(int id, int value);
+
 
   /**
    * Handle to video device

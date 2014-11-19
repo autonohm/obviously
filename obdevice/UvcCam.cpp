@@ -44,6 +44,8 @@ UvcCam::UvcCam(const char *dev, unsigned int width, unsigned int height)
    _LutBu         = (int *) malloc(256 * sizeof(int));
    _nb_buffers    = NB_BUFFERS;
    _mem           = NULL;
+   _format        = V4L2_PIX_FMT_YUYV;
+
    for (int i = 0; i < 256; i++)
    {
       _LutRv[i] = (i - 128) * CoefRv / 1000;
@@ -213,9 +215,8 @@ void UvcCam::resetControls()
 
 EnumCameraError UvcCam::setFormat(unsigned int width, unsigned int height, unsigned int format)
 {
-   if (_nDeviceHandle == -1)
-   {
-      cout << "UvcCam::setResolution: Trying to set resolution of not initialized camera device." << endl;
+   if (_nDeviceHandle < 0) {
+      LOGMSG(DBG_DEBUG, " Trying to set resolution of not initialized camera device.");
       return CAMERRORINIT;
    }
 
@@ -248,8 +249,7 @@ EnumCameraError UvcCam::setFormat(unsigned int width, unsigned int height, unsig
 
 EnumCameraError UvcCam::setFramerate(unsigned int numerator, unsigned int denominator)
 {
-   if (_nDeviceHandle == -1)
-   {
+   if (_nDeviceHandle<0) {
       LOGMSG(DBG_DEBUG, "Trying to set framerate of not initialized camera device.");
       return CAMERRORINIT;
    }
@@ -258,6 +258,7 @@ EnumCameraError UvcCam::setFramerate(unsigned int numerator, unsigned int denomi
    setfps.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
    setfps.parm.capture.timeperframe.numerator   = numerator;
    setfps.parm.capture.timeperframe.denominator = denominator;
+
    if (ioctl(_nDeviceHandle, VIDIOC_S_PARM, &setfps) < 0)
    {
       LOGMSG(DBG_DEBUG, "Unable to set fps");
@@ -265,6 +266,81 @@ EnumCameraError UvcCam::setFramerate(unsigned int numerator, unsigned int denomi
    }
    return CAMSUCCESS;
 }
+
+EnumCameraError UvcCam::setPowerLineFrequency(const unsigned int& frq)
+{
+   if (_nDeviceHandle < 0) {
+      LOGMSG(DBG_DEBUG, "Trying to set power line frequency from not initialized camera device.");
+      return CAMERRORINIT;
+   }
+
+   struct v4l2_control control;
+   memset(&control, 0, sizeof(control));
+   control.id = V4L2_CID_POWER_LINE_FREQUENCY;
+
+   if(frq==50)      control.value = V4L2_CID_POWER_LINE_FREQUENCY_50HZ;
+   else if(frq==60) control.value = V4L2_CID_POWER_LINE_FREQUENCY_60HZ;
+   else if(frq==0)  control.value = V4L2_CID_POWER_LINE_FREQUENCY_DISABLED;
+   else             return CAMERRORINIT;
+
+   if( ioctl(_nDeviceHandle, VIDIOC_S_CTRL, &control) < 0)    {
+      LOGMSG(DBG_DEBUG, "Error setting Power line frequency");
+      return CAMERRORINIT;
+   }
+
+   return CAMSUCCESS;
+}
+
+EnumCameraError UvcCam::setGain(const unsigned int& value)
+{
+   if(this->v4l2SetControl(_nDeviceHandle, V4L2_CID_GAIN, value))
+      return CAMSUCCESS;
+
+   return CAMERRORINIT;
+}
+
+EnumCameraError UvcCam::setContrast(const unsigned int& value)
+{
+   if(this->v4l2SetControl(_nDeviceHandle, V4L2_CID_CONTRAST, value))
+      return CAMSUCCESS;
+
+   return CAMERRORINIT;
+}
+
+EnumCameraError UvcCam::setSaturation(const unsigned int& value)
+{
+   if(this->v4l2SetControl(_nDeviceHandle, V4L2_CID_SATURATION, value))
+      return CAMSUCCESS;
+
+   return CAMERRORINIT;
+}
+
+EnumCameraError UvcCam::setSharpness(const unsigned int& sharpness)
+{
+   if(this->v4l2SetControl(_nDeviceHandle, V4L2_CID_SHARPNESS, sharpness))
+      return CAMSUCCESS;
+
+   return CAMERRORINIT;
+}
+
+
+EnumCameraError UvcCam::setFlipHorizontal(bool flip)
+{
+   if(this->v4l2SetControl(_nDeviceHandle, V4L2_CID_HFLIP, (int)flip))
+      return CAMSUCCESS;
+   else
+      return CAMERRORINIT;
+}
+
+
+EnumCameraError UvcCam::setFlipVertical(bool flip)
+{
+   if(this->v4l2SetControl(_nDeviceHandle, V4L2_CID_VFLIP, (int)flip))
+      return CAMSUCCESS;
+   else
+      return CAMERRORINIT;
+}
+
 
 EnumCameraError UvcCam::startStreaming()
 {
@@ -537,20 +613,16 @@ int UvcCam::isv4l2Control(int nHandle, int control, struct v4l2_queryctrl *query
 {
    int err = 0;
    queryctrl->id = control;
-   if ((err = ioctl(nHandle, VIDIOC_QUERYCTRL, queryctrl)) < 0)
-   {
+   if ((err = ioctl(nHandle, VIDIOC_QUERYCTRL, queryctrl)) < 0) {
       LOGMSG(DBG_DEBUG, "ioctl querycontrol error: " << errno);
    }
-   else if (queryctrl->flags & V4L2_CTRL_FLAG_DISABLED)
-   {
+   else if (queryctrl->flags & V4L2_CTRL_FLAG_DISABLED) {
       LOGMSG(DBG_DEBUG, "control " << (char *) queryctrl->name << " disabled");
    }
-   else if (queryctrl->flags & V4L2_CTRL_TYPE_BOOLEAN)
-   {
+   else if (queryctrl->flags & V4L2_CTRL_TYPE_BOOLEAN) {
       return 1;
    }
-   else if (queryctrl->type & V4L2_CTRL_TYPE_INTEGER)
-   {
+   else if (queryctrl->type & V4L2_CTRL_TYPE_INTEGER) {
       return 0;
    }
    else
@@ -596,6 +668,8 @@ int UvcCam::v4l2SetControl(int nHandle, int control, int value)
    }
    return 0;
 }
+
+
 
 int UvcCam::v4l2ResetControl(int nHandle, int control)
 {
