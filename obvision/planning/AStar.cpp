@@ -45,7 +45,7 @@ std::vector<unsigned int> AStar::pathFind(AStarMap* map, const unsigned int & xS
 
   unsigned int height  = map->getHeight();
   unsigned int width   = map->getWidth();
-  int** buffer         = map->_map;
+  char** buffer         = map->_map;
   int** closedNodesMap = map->_closedNodesMap;
   int** openNodesMap   = map->_openNodesMap;
   int** dirMap         = map->_dirMap;
@@ -131,8 +131,7 @@ std::vector<unsigned int> AStar::pathFind(AStarMap* map, const unsigned int & xS
           dirMap[ydy][xdx]=(i+4)%8;
 
           // replace the node by emptying one pq to the other one except the node to be replaced will be ignored and the new node will be pushed in instead
-          while(!(pq[pqi].top().getxPos()==xdx &&
-              pq[pqi].top().getyPos()==ydy))
+          while(!(pq[pqi].top().getxPos()==xdx && pq[pqi].top().getyPos()==ydy))
           {
             pq[1-pqi].push(pq[pqi].top());
             pq[pqi].pop();

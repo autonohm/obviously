@@ -120,9 +120,9 @@ public:
 
 private:
 
-  int** _map;
+  char** _map;
 
-  int** _mapWork;
+  char** _mapWork;
 
   int** _closedNodesMap;
 

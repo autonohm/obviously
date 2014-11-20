@@ -18,8 +18,8 @@ AStarMap::AStarMap(double cellSize, unsigned int cellsX, unsigned int cellsY)
   _cellsY    = cellsY;
   _cellSize  = cellSize;
 
-  obvious::System<int>::allocate(_cellsY, _cellsX, _map);
-  obvious::System<int>::allocate(_cellsY, _cellsX, _mapWork);
+  obvious::System<char>::allocate(_cellsY, _cellsX, _map);
+  obvious::System<char>::allocate(_cellsY, _cellsX, _mapWork);
   obvious::System<int>::allocate(_cellsY, _cellsX, _closedNodesMap);
   obvious::System<int>::allocate(_cellsY, _cellsX, _openNodesMap);
   obvious::System<int>::allocate(_cellsY, _cellsX, _dirMap);
@@ -41,8 +41,8 @@ AStarMap::AStarMap(AStarMap &map)
   _cellsY = map._cellsY;
   _cellSize = map._cellSize;
 
-  obvious::System<int>::allocate(_cellsY, _cellsX, _map);
-  obvious::System<int>::allocate(_cellsY, _cellsX, _mapWork);
+  obvious::System<char>::allocate(_cellsY, _cellsX, _map);
+  obvious::System<char>::allocate(_cellsY, _cellsX, _mapWork);
   obvious::System<int>::allocate(_cellsY, _cellsX, _closedNodesMap);
   obvious::System<int>::allocate(_cellsY, _cellsX, _openNodesMap);
   obvious::System<int>::allocate(_cellsY, _cellsX, _dirMap);
@@ -54,8 +54,8 @@ AStarMap::AStarMap(AStarMap &map)
 
 AStarMap::~AStarMap()
 {
-  obvious::System<int>::deallocate(_map);
-  obvious::System<int>::deallocate(_mapWork);
+  obvious::System<char>::deallocate(_map);
+  obvious::System<char>::deallocate(_mapWork);
   obvious::System<int>::deallocate(_closedNodesMap);
   obvious::System<int>::deallocate(_openNodesMap);
   obvious::System<int>::deallocate(_dirMap);
@@ -246,7 +246,7 @@ AStarMap* AStarMap::load(std::string path)
     file >> resolution >> width >> height;
 
     AStarMap* map = new AStarMap(resolution, width, height);
-    int** buffer = map->_map;
+    char** buffer = map->_map;
 
     int i = 0;
     while(getline (file, line))
