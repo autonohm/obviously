@@ -54,6 +54,12 @@ public:
   unsigned int getHeight();
 
   /**
+   * Get size of cell
+   * @return cell size in meters
+   */
+  double getCellSize();
+
+  /**
    * Add obstacle to map
    * @param obstacle obstacle container with coordinates
    */
@@ -71,29 +77,35 @@ public:
    */
   void inflate(double robotRadius);
 
+  void deinflate();
+
   /**
    * Convert map to raw image
    * @param buffer raw image as RGB triples
    */
   void convertToImage(unsigned char* buffer);
 
+  void translateIndexToCoord(unsigned int xIdx, unsigned int yIdx, double* x, double* y);
+
+  void translateCoordToIndex(double x, double y, unsigned int* xIdx, unsigned int* yIdx);
+
   /**
    * Translate a given path to map indices
    * @param path path in AStar format
-   * @param xStart x-coordinate of starting position
-   * @param yStart y-coordinate of starting position
+   * @param xStart x-coordinate of starting position in meters
+   * @param yStart y-coordinate of starting position in meters
    * @return path in map indices
    */
-  std::vector<unsigned int> translatePathToMapIndices(std::vector<unsigned int> path, unsigned int xStart, unsigned int yStart);
+  std::vector<unsigned int> translatePathToMapIndices(std::vector<unsigned int> path, double xStart, double yStart);
 
   /**
    * Translate a given path to metric coordinates (unit [m])
    * @param path path in AStar format
-   * @param xStart x-coordinate of starting position
-   * @param yStart y-coordinate of starting position
+   * @param xStart x-coordinate of starting position in meters
+   * @param yStart y-coordinate of starting position in meters
    * @return path in metric coordinates
    */
-  std::vector<AStarCoord> translatePathToCoords(std::vector<unsigned int> path, unsigned int xStart, unsigned int yStart);
+  std::vector<AStarCoord> translatePathToCoords(std::vector<unsigned int> path, double xStart, double yStart);
 
   /**
    * Load map from file

@@ -37,36 +37,47 @@ int main(int argc, char* argv[])
 
   map->serialize("/tmp/map.txt");
 
-  int xStart = 495;
-  int yStart = 633;
-  int xTarget = 626;
-  int yTarget = 502;
+  int xStart = 650;//495;
+  int yStart = 400;//633;
+  int xTarget = 300;//626;
+  int yTarget = 450;//502;
+  double xs, ys, xt, yt;
+  map->translateIndexToCoord(xStart, yStart, &xs, &ys);
+  map->translateIndexToCoord(xTarget, yTarget, &xt, &yt);
   timer.reset();
-  vector<unsigned int> path = AStar::pathFind(map, xStart, yStart, xTarget, yTarget);
+  vector<unsigned int> path = AStar::pathFind(map, xs, ys, xt, yt);
   cout << "elapsed for planning: " << timer.reset() << " ms" << endl;
+
+  int cont_route = 0;
 
   cout << "Path in AStar representation:" << endl;
   for(vector<unsigned int>::iterator it=path.begin(); it!=path.end(); ++it)
-    cout << *it;
-  cout << endl << endl;
-
-  vector<AStarCoord> coords = map->translatePathToCoords(path, xStart, yStart);
-  cout << "Path in coordinates:" << endl;
-  for(vector<AStarCoord>::iterator it=coords.begin(); it!=coords.end(); ++it)
-    cout << (*it).x << " " << (*it).y << endl;
-  cout << endl;
-
-  vector<unsigned int> mapIdx = map->translatePathToMapIndices(path, xStart, yStart);
-
-  for(vector<unsigned int>::iterator it=mapIdx.begin(); it!=mapIdx.end(); ++it)
   {
-    buffer[3*(*it)] = 0;
-    buffer[3*(*it)+1] = 0;
-    buffer[3*(*it)+2] = 0;
+	  cout << *it;
+	  cont_route++;
   }
 
-  obvious::serializePPM("/tmp/path.ppm", buffer, width, height, false);
+	  cout << endl << endl;
 
+	  vector<AStarCoord> coords = map->translatePathToCoords(path, xs, ys);
+	  cout << "Path in coordinates:" << endl;
+	  for(vector<AStarCoord>::iterator it=coords.begin(); it!=coords.end(); ++it)
+		  cout << (*it).x << " " << (*it).y << endl;
+	  cout << endl;
+
+	  vector<unsigned int> mapIdx = map->translatePathToMapIndices(path, xs, ys);
+
+	  for(vector<unsigned int>::iterator it=mapIdx.begin(); it!=mapIdx.end(); ++it)
+	  {
+		  buffer[3*(*it)] = 0;
+		  buffer[3*(*it)+1] = 0;
+		  buffer[3*(*it)+2] = 0;
+	  }
+
+	  obvious::serializePPM("/tmp/path.ppm", buffer, width, height, false);
+
+  if (cont_route < 3)
+	  cout << "imposible to find a route" << endl;
   delete map;
   delete [] buffer;
 }

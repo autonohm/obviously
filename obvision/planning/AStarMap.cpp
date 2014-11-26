@@ -71,6 +71,11 @@ unsigned int AStarMap::getHeight()
   return _cellsY;
 }
 
+double AStarMap::getCellSize()
+{
+  return _cellSize;
+}
+
 void AStarMap::addObstacle(Obstacle obstacle)
 {
   vector<double> xcoords;
@@ -78,7 +83,7 @@ void AStarMap::addObstacle(Obstacle obstacle)
   obstacle.getCoords(xcoords, ycoords);
   for (unsigned i =0; i < xcoords.size(); i++)
   {
-    _map[int(ycoords[i]/_cellSize+0.5)][int(xcoords[i]/_cellSize+0.5)]++;
+    _map[int(ycoords[i]/_cellSize+0.5)+_cellsY/2][int(xcoords[i]/_cellSize+0.5)+_cellsX/2]=50;
   }
 }
 
@@ -89,7 +94,7 @@ void AStarMap::removeObstacle(Obstacle obstacle)
   obstacle.getCoords(xcoords, ycoords);
   for (unsigned i =0; i < xcoords.size(); i++)
   {
-    _map[int(ycoords[i]/_cellSize+0.5)][int(xcoords[i]/_cellSize+0.5)]--;
+    _map[int(ycoords[i]/_cellSize+0.5)+_cellsY/2][int(xcoords[i]/_cellSize+0.5)+_cellsX/2]--;
   }
 }
 
@@ -121,6 +126,11 @@ void AStarMap::inflate(double robotRadius)
   }
 }
 
+void AStarMap::deinflate()
+{
+  memcpy(*_map, *_mapWork, _cellsY*_cellsX*sizeof(**_map));
+}
+
 void AStarMap::convertToImage(unsigned char* buffer)
 {
   for(unsigned int y=0;y<_cellsY;y++)
@@ -134,6 +144,12 @@ void AStarMap::convertToImage(unsigned char* buffer)
         buffer[idx + 1] = 255;
         buffer[idx + 2] = 0;
       }
+      else if(_map[y][x] == 50)
+      {
+        buffer[idx + 0] = 0;
+        buffer[idx + 1] = 0;
+        buffer[idx + 2] = 255;
+      }
       else
       {
         buffer[idx + 0] = 255;
@@ -144,12 +160,29 @@ void AStarMap::convertToImage(unsigned char* buffer)
   }
 }
 
-std::vector<unsigned int> AStarMap::translatePathToMapIndices(std::vector<unsigned int> path, unsigned int xStart, unsigned int yStart)
+void AStarMap::translateIndexToCoord(unsigned int xIdx, unsigned int yIdx, double* x, double* y)
 {
-  std::vector<unsigned int> pixel;
-  pixel.push_back(xStart);
+  *x = ((double)(xIdx - _cellsX/2))*_cellSize;
+  *y = ((double)(yIdx - _cellsY/2))*_cellSize;
+}
 
-  unsigned int currentPos = yStart*_cellsX + xStart;
+void AStarMap::translateCoordToIndex(double x, double y, unsigned int* xIdx, unsigned int* yIdx)
+{
+  *xIdx = (x/_cellSize) + _cellsX/2;
+  *yIdx = (y/_cellSize) + _cellsY/2;
+}
+
+std::vector<unsigned int> AStarMap::translatePathToMapIndices(std::vector<unsigned int> path, double xStart, double yStart)
+{
+  unsigned int xIdx;
+  unsigned int yIdx;
+
+  translateCoordToIndex(xStart, yStart, &xIdx, &yIdx);
+
+  std::vector<unsigned int> pixel;
+  pixel.push_back(xIdx);
+
+  unsigned int currentPos = yIdx*_cellsX + xIdx;
   for(vector<unsigned int>::iterator it=path.begin(); it!=path.end(); ++it)
   {
     switch(*it)
@@ -184,13 +217,12 @@ std::vector<unsigned int> AStarMap::translatePathToMapIndices(std::vector<unsign
   return pixel;
 }
 
-std::vector<AStarCoord> AStarMap::translatePathToCoords(std::vector<unsigned int> path, unsigned int xStart, unsigned int yStart)
+std::vector<AStarCoord> AStarMap::translatePathToCoords(std::vector<unsigned int> path, double xStart, double yStart)
 {
   std::vector<AStarCoord> coords;
-
   AStarCoord pos;
-  pos.x = xStart*_cellSize + _cellSize/2.0;
-  pos.y = yStart*_cellSize + _cellSize/2.0;
+  pos.x = xStart;
+  pos.y = yStart;
   coords.push_back(pos);
 
   for(vector<unsigned int>::iterator it=path.begin(); it!=path.end(); ++it)
