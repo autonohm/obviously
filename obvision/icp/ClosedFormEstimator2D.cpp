@@ -59,12 +59,12 @@ void ClosedFormEstimator2D::setPairs(std::vector<StrCartesianIndexPair>* pairs)
     _cs[1] += pointScene[1];
     _rms += distSqr2D(pointModel, pointScene);
   }
-  double dSize = (double) size;
-  _rms /= dSize;
-  _cm[0] /= dSize;
-  _cm[1] /= dSize;
-  _cs[0] /= dSize;
-  _cs[1] /= dSize;
+  double dSizeInv = 1.0 / (double) size;
+  _rms *= dSizeInv;
+  _cm[0] *= dSizeInv;
+  _cm[1] *= dSizeInv;
+  _cs[0] *= dSizeInv;
+  _cs[1] *= dSizeInv;
 }
 
 double ClosedFormEstimator2D::getRMS()

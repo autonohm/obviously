@@ -72,12 +72,23 @@ public:
   void removeObstacle(Obstacle obstacle);
 
   /**
+   * Check whether similar obstacle is already added to the map
+   * @param obstacle query obstacle
+   * @return similarity obstacle
+   */
+  Obstacle* checkObstacleIntersection(Obstacle obstacle);
+
+  /**
    * Inflate map
    * @param robotRadius radius of robot, i.e., inflation radius of obstacles (unit [m])
    */
   void inflate(double robotRadius);
 
-  void deinflate();
+  /**
+   * Get map with obstacles as occupied cells
+   * @return map
+   */
+  char** getMapWithObstacles();
 
   /**
    * Convert map to raw image
@@ -85,27 +96,35 @@ public:
    */
   void convertToImage(unsigned char* buffer);
 
-  void translateIndexToCoord(unsigned int xIdx, unsigned int yIdx, double* x, double* y);
+  /**
+   * translate indices to coordinates
+   * @param idx image index (col, row)
+   * @param coords metric coordinates
+   */
+  void translateIndexToCoord(unsigned int idx[2], AStarCoord* coords);
 
-  void translateCoordToIndex(double x, double y, unsigned int* xIdx, unsigned int* yIdx);
+  /**
+   * translate coordinates to indices
+   * @param coords metric coordinates
+   * @param idx image index (col, row)
+   */
+  void translateCoordToIndex(AStarCoord coords, unsigned int idx[2]);
 
   /**
    * Translate a given path to map indices
    * @param path path in AStar format
-   * @param xStart x-coordinate of starting position in meters
-   * @param yStart y-coordinate of starting position in meters
+   * @param coordStart coordinates of starting position in meters
    * @return path in map indices
    */
-  std::vector<unsigned int> translatePathToMapIndices(std::vector<unsigned int> path, double xStart, double yStart);
+  std::vector<unsigned int> translatePathToMapIndices(std::vector<unsigned int> path, AStarCoord coordStart);
 
   /**
    * Translate a given path to metric coordinates (unit [m])
    * @param path path in AStar format
-   * @param xStart x-coordinate of starting position in meters
-   * @param yStart y-coordinate of starting position in meters
+   * @param coordStart coordinates of starting position in meters
    * @return path in metric coordinates
    */
-  std::vector<AStarCoord> translatePathToCoords(std::vector<unsigned int> path, double xStart, double yStart);
+  std::vector<AStarCoord> translatePathToCoords(std::vector<unsigned int> path, AStarCoord coordStart);
 
   /**
    * Load map from file
@@ -134,7 +153,11 @@ private:
 
   char** _map;
 
+  char** _mapObstacle;
+
   char** _mapWork;
+
+  bool _mapIsDirty;
 
   int** _closedNodesMap;
 
@@ -148,6 +171,7 @@ private:
 
   unsigned int _cellsY;
 
+  std::list<Obstacle> _obstacles;
 };
 
 } /* namespace obvious */

@@ -2,7 +2,7 @@
  * AStarNode.h
  *
  *  Created on: 03.11.2014
- *      Author: mayst
+ *      Author: Jon Martin and Stefan May
  */
 
 #ifndef ASTARNODE_H_

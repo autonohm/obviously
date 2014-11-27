@@ -19,6 +19,7 @@ AStarMap::AStarMap(double cellSize, unsigned int cellsX, unsigned int cellsY)
   _cellSize  = cellSize;
 
   obvious::System<char>::allocate(_cellsY, _cellsX, _map);
+  obvious::System<char>::allocate(_cellsY, _cellsX, _mapObstacle);
   obvious::System<char>::allocate(_cellsY, _cellsX, _mapWork);
   obvious::System<int>::allocate(_cellsY, _cellsX, _closedNodesMap);
   obvious::System<int>::allocate(_cellsY, _cellsX, _openNodesMap);
@@ -30,18 +31,21 @@ AStarMap::AStarMap(double cellSize, unsigned int cellsX, unsigned int cellsY)
     {
       _closedNodesMap[y][x] = 0;
       _openNodesMap[y][x]   = 0;
-      _map[y][x]            = 1;
+      _map[y][x]        = 1;
     }
   }
+
+  _mapIsDirty = true;
 }
 
 AStarMap::AStarMap(AStarMap &map)
 {
-  _cellsX = map._cellsX;
-  _cellsY = map._cellsY;
+  _cellsX   = map._cellsX;
+  _cellsY   = map._cellsY;
   _cellSize = map._cellSize;
 
   obvious::System<char>::allocate(_cellsY, _cellsX, _map);
+  obvious::System<char>::allocate(_cellsY, _cellsX, _mapObstacle);
   obvious::System<char>::allocate(_cellsY, _cellsX, _mapWork);
   obvious::System<int>::allocate(_cellsY, _cellsX, _closedNodesMap);
   obvious::System<int>::allocate(_cellsY, _cellsX, _openNodesMap);
@@ -50,11 +54,15 @@ AStarMap::AStarMap(AStarMap &map)
   memcpy(*_closedNodesMap, *(map._closedNodesMap), _cellsX*_cellsY*sizeof(**_closedNodesMap));
   memcpy(*_openNodesMap, *(map._openNodesMap), _cellsX*_cellsY*sizeof(**_openNodesMap));
   memcpy(*_map, *(map._map), _cellsX*_cellsY*sizeof(**_map));
+  memcpy(*_mapObstacle, *(map._mapObstacle), _cellsX*_cellsY*sizeof(**_mapObstacle));
+
+  _mapIsDirty = map._mapIsDirty;
 }
 
 AStarMap::~AStarMap()
 {
   obvious::System<char>::deallocate(_map);
+  obvious::System<char>::deallocate(_mapObstacle);
   obvious::System<char>::deallocate(_mapWork);
   obvious::System<int>::deallocate(_closedNodesMap);
   obvious::System<int>::deallocate(_openNodesMap);
@@ -78,24 +86,28 @@ double AStarMap::getCellSize()
 
 void AStarMap::addObstacle(Obstacle obstacle)
 {
-  vector<double> xcoords;
-  vector<double> ycoords;
-  obstacle.getCoords(xcoords, ycoords);
-  for (unsigned i =0; i < xcoords.size(); i++)
-  {
-    _map[int(ycoords[i]/_cellSize+0.5)+_cellsY/2][int(xcoords[i]/_cellSize+0.5)+_cellsX/2]=50;
-  }
+  _obstacles.push_back(obstacle);
+  _mapIsDirty = true;
 }
 
 void AStarMap::removeObstacle(Obstacle obstacle)
 {
-  vector<double> xcoords;
-  vector<double> ycoords;
-  obstacle.getCoords(xcoords, ycoords);
-  for (unsigned i =0; i < xcoords.size(); i++)
+  for(list<Obstacle>::iterator it=_obstacles.begin(); it!=_obstacles.end(); ++it)
   {
-    _map[int(ycoords[i]/_cellSize+0.5)+_cellsY/2][int(xcoords[i]/_cellSize+0.5)+_cellsX/2]--;
+    if((*it).getID()==obstacle.getID())
+      _obstacles.erase(it);
   }
+  _mapIsDirty = true;
+}
+
+Obstacle* AStarMap::checkObstacleIntersection(Obstacle obstacle)
+{
+  for(list<Obstacle>::iterator it=_obstacles.begin(); it!=_obstacles.end(); ++it)
+  {
+    Obstacle* o = &(*it);
+    if(o->intersects(&obstacle)) return o;
+  }
+  return NULL;
 }
 
 void AStarMap::inflate(double robotRadius)
@@ -117,18 +129,40 @@ void AStarMap::inflate(double robotRadius)
             for(unsigned int u = x - radius; u < x + radius; u++)
             {
               if(u < _cellsX)
-                _map[v][u]++;
+                _map[v][u]=1;
             }
           }
         }
       }
     }
   }
+  _mapIsDirty = true;
 }
 
-void AStarMap::deinflate()
+char** AStarMap::getMapWithObstacles()
 {
-  memcpy(*_map, *_mapWork, _cellsY*_cellsX*sizeof(**_map));
+  if(_mapIsDirty)
+  {
+    memcpy(*_mapObstacle, *_map, _cellsX*_cellsY*sizeof(**_map));
+    for(list<Obstacle>::iterator it=_obstacles.begin(); it!=_obstacles.end(); ++it)
+    {
+      ObstacleBounds* bounds = it->getBounds();
+      int xmin = int(bounds->xmin/_cellSize+0.5)+_cellsX/2;
+      int xmax = int(bounds->xmax/_cellSize+0.5)+_cellsX/2;
+      int ymin = int(bounds->ymin/_cellSize+0.5)+_cellsY/2;
+      int ymax = int(bounds->ymax/_cellSize+0.5)+_cellsY/2;
+
+      for(int y=ymin; y<ymax; y++)
+      {
+        for(int x=xmin; x<xmax; x++)
+        {
+          _mapObstacle[y][x] = 1;
+        }
+      }
+    }
+    _mapIsDirty = false;
+  }
+  return _mapObstacle;
 }
 
 void AStarMap::convertToImage(unsigned char* buffer)
@@ -158,31 +192,51 @@ void AStarMap::convertToImage(unsigned char* buffer)
       }
     }
   }
+
+  for(list<Obstacle>::iterator it=_obstacles.begin(); it!=_obstacles.end(); ++it)
+  {
+    Obstacle* o = &(*it);
+    ObstacleBounds* bounds = o->getBounds();
+    int xmin = int(bounds->xmin/_cellSize+0.5)+_cellsX/2;
+    int xmax = int(bounds->xmax/_cellSize+0.5)+_cellsX/2;
+    int ymin = int(bounds->ymin/_cellSize+0.5)+_cellsY/2;
+    int ymax = int(bounds->ymax/_cellSize+0.5)+_cellsY/2;
+
+    for(int y=ymin; y<ymax; y++)
+    {
+      for(int x=xmin; x<xmax; x++)
+      {
+        unsigned int idx = 3 * (y * _cellsX + x);
+        buffer[idx + 0] = 0;
+        buffer[idx + 1] = 0;
+        buffer[idx + 2] = 255;
+      }
+    }
+  }
 }
 
-void AStarMap::translateIndexToCoord(unsigned int xIdx, unsigned int yIdx, double* x, double* y)
+void AStarMap::translateIndexToCoord(unsigned int idx[2], AStarCoord* coord)
 {
-  *x = ((double)(xIdx - _cellsX/2))*_cellSize;
-  *y = ((double)(yIdx - _cellsY/2))*_cellSize;
+  coord->x = ((double)(((int)idx[0]) - ((int)_cellsX/2)))*_cellSize;
+  coord->y = ((double)(((int)idx[1]) - ((int)_cellsY/2)))*_cellSize;
 }
 
-void AStarMap::translateCoordToIndex(double x, double y, unsigned int* xIdx, unsigned int* yIdx)
+void AStarMap::translateCoordToIndex(AStarCoord coord, unsigned int idx[2])
 {
-  *xIdx = (x/_cellSize) + _cellsX/2;
-  *yIdx = (y/_cellSize) + _cellsY/2;
+  idx[0] = (coord.x/_cellSize) + _cellsX/2;
+  idx[1] = (coord.y/_cellSize) + _cellsY/2;
 }
 
-std::vector<unsigned int> AStarMap::translatePathToMapIndices(std::vector<unsigned int> path, double xStart, double yStart)
+std::vector<unsigned int> AStarMap::translatePathToMapIndices(std::vector<unsigned int> path, AStarCoord coordStart)
 {
-  unsigned int xIdx;
-  unsigned int yIdx;
+  unsigned int idx[2];
 
-  translateCoordToIndex(xStart, yStart, &xIdx, &yIdx);
+  translateCoordToIndex(coordStart, idx);
 
   std::vector<unsigned int> pixel;
-  pixel.push_back(xIdx);
+  pixel.push_back(idx[0]);
 
-  unsigned int currentPos = yIdx*_cellsX + xIdx;
+  unsigned int currentPos = idx[1]*_cellsX + idx[0];
   for(vector<unsigned int>::iterator it=path.begin(); it!=path.end(); ++it)
   {
     switch(*it)
@@ -217,12 +271,12 @@ std::vector<unsigned int> AStarMap::translatePathToMapIndices(std::vector<unsign
   return pixel;
 }
 
-std::vector<AStarCoord> AStarMap::translatePathToCoords(std::vector<unsigned int> path, double xStart, double yStart)
+std::vector<AStarCoord> AStarMap::translatePathToCoords(std::vector<unsigned int> path, AStarCoord coordStart)
 {
   std::vector<AStarCoord> coords;
   AStarCoord pos;
-  pos.x = xStart;
-  pos.y = yStart;
+  pos.x = coordStart.x;
+  pos.y = coordStart.y;
   coords.push_back(pos);
 
   for(vector<unsigned int>::iterator it=path.begin(); it!=path.end(); ++it)
@@ -294,6 +348,14 @@ AStarMap* AStarMap::load(std::string path)
   return NULL;
 }
 
+AStarMap AStarMap::create(char* data, double cellSize, unsigned int width, unsigned int height)
+{
+  AStarMap map(cellSize, width, height);
+  memcpy(*(map._map), data, width*height*sizeof(**(map._map)));
+
+  return map;
+}
+
 void AStarMap::serialize(std::string path)
 {
   string line;
@@ -314,13 +376,4 @@ void AStarMap::serialize(std::string path)
   else
     cout << "Opening of output file " << path << " failed!" << endl;
 }
-
-AStarMap AStarMap::create(char* data, double cellSize, unsigned int width, unsigned int height)
-{
-  AStarMap map(cellSize, width, height);
-  memcpy(*(map._map), data, width*height*sizeof(*data));
-
-  return map;
-}
-
 } /* namespace obvious */

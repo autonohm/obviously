@@ -29,6 +29,14 @@ int main(int argc, char* argv[])
   map->convertToImage(buffer);
   obvious::serializePPM("/tmp/map.ppm", buffer, width, height, false);
 
+  ObstacleBounds bounds;
+  bounds.xmin = 1.15;
+  bounds.xmax = 1.75;
+  bounds.ymin = -2.1;
+  bounds.ymax = -1.5;
+  Obstacle obstacle(bounds);
+  obstacle.inflate(robotRadius);
+  map->addObstacle(obstacle);
   timer.reset();
   map->inflate(robotRadius);
   cout << "elapsed for inflation: " << timer.reset() << " ms" << endl;
@@ -37,15 +45,18 @@ int main(int argc, char* argv[])
 
   map->serialize("/tmp/map.txt");
 
-  int xStart = 650;//495;
-  int yStart = 400;//633;
-  int xTarget = 300;//626;
-  int yTarget = 450;//502;
-  double xs, ys, xt, yt;
-  map->translateIndexToCoord(xStart, yStart, &xs, &ys);
-  map->translateIndexToCoord(xTarget, yTarget, &xt, &yt);
+  unsigned int idxStart[2];
+  unsigned int idxTarget[2];
+  idxStart[0]  = 486;
+  idxStart[1]  = 334;
+  idxTarget[0] = 646;
+  idxTarget[1] = 594;
+  AStarCoord coordStart;
+  AStarCoord coordTarget;
+  map->translateIndexToCoord(idxStart, &coordStart);
+  map->translateIndexToCoord(idxTarget, &coordTarget);
   timer.reset();
-  vector<unsigned int> path = AStar::pathFind(map, xs, ys, xt, yt);
+  vector<unsigned int> path = AStar::pathFind(map, coordStart, coordTarget);
   cout << "elapsed for planning: " << timer.reset() << " ms" << endl;
 
   int cont_route = 0;
@@ -59,13 +70,13 @@ int main(int argc, char* argv[])
 
   cout << endl << endl;
 
-  vector<AStarCoord> coords = map->translatePathToCoords(path, xs, ys);
+  vector<AStarCoord> coords = map->translatePathToCoords(path, coordStart);
   cout << "Path in coordinates:" << endl;
   for(vector<AStarCoord>::iterator it=coords.begin(); it!=coords.end(); ++it)
     cout << (*it).x << " " << (*it).y << endl;
   cout << endl;
 
-  vector<unsigned int> mapIdx = map->translatePathToMapIndices(path, xs, ys);
+  vector<unsigned int> mapIdx = map->translatePathToMapIndices(path, coordStart);
 
   for(vector<unsigned int>::iterator it=mapIdx.begin(); it!=mapIdx.end(); ++it)
   {

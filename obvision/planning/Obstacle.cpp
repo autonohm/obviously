@@ -6,20 +6,95 @@
  */
 
 #include "Obstacle.h"
+#include <iostream>
+
+using namespace std;
 
 namespace obvious
 {
 
+static unsigned int _obstacleId = 0;
+
 Obstacle::Obstacle(std::vector<double> xcoords, std::vector<double> ycoords)
 {
-  _xcoords = xcoords;
-  _ycoords = ycoords;
+  if(xcoords.size()!=ycoords.size())
+  {
+    cout << __PRETTY_FUNCTION__ << " -- ERROR: coordinate vectors of different size." << endl;
+    return;
+  }
+
+  _bounds.xmin =  1e12;
+  _bounds.xmax = -1e12;
+  _bounds.ymin =  1e12;
+  _bounds.ymax = -1e12;
+
+  vector<double>::iterator itx=xcoords.begin();
+  for(vector<double>::iterator ity=ycoords.begin(); ity!=ycoords.end(); ++ity, ++itx)
+  {
+    if(*itx<_bounds.xmin) _bounds.xmin = *itx;
+    if(*itx>_bounds.xmax) _bounds.xmax = *itx;
+    if(*ity<_bounds.ymin) _bounds.ymin = *ity;
+    if(*ity>_bounds.ymax) _bounds.ymax = *ity;
+  }
+
+  _id = _obstacleId;
+  _obstacleId++;
 }
 
-void Obstacle::getCoords(std::vector<double> &xcoords, std::vector<double> &ycoords)
+Obstacle::Obstacle(ObstacleBounds bounds)
 {
-  xcoords = _xcoords;
-  ycoords = _ycoords;
+  _id = _obstacleId;
+  _obstacleId++;
+  _bounds.xmin           = bounds.xmin;
+  _bounds.xmax           = bounds.xmax;
+  _bounds.ymin           = bounds.ymin;
+  _bounds.ymax           = bounds.ymax;
+}
+
+Obstacle::Obstacle(Obstacle* o)
+{
+  _id                    = o->getID();
+  ObstacleBounds* bounds = o->getBounds();
+  _bounds.xmin           = bounds->xmin;
+  _bounds.xmax           = bounds->xmax;
+  _bounds.ymin           = bounds->ymin;
+  _bounds.ymax           = bounds->ymax;
+}
+
+unsigned int Obstacle::getID()
+{
+  return _id;
+}
+
+ObstacleBounds* Obstacle::getBounds()
+{
+  return &_bounds;
+}
+
+bool Obstacle::intersects(Obstacle* o)
+{
+  ObstacleBounds* bounds = o->getBounds();
+  return (_bounds.xmin < bounds->xmax && _bounds.xmax > bounds->xmin && _bounds.ymin < bounds->ymax && _bounds.ymax > bounds->xmin);
+}
+
+void Obstacle::inflate(double radius)
+{
+  _bounds.xmin -= radius;
+  _bounds.xmax += radius;
+  _bounds.ymin -= radius;
+  _bounds.ymax += radius;
+}
+
+void Obstacle::merge(std::vector<double> xcoords, std::vector<double> ycoords)
+{
+  vector<double>::iterator itx=xcoords.begin();
+  for(vector<double>::iterator ity=ycoords.begin(); ity!=ycoords.end(); ++ity, ++itx)
+  {
+    if(*itx<_bounds.xmin) _bounds.xmin = *itx;
+    if(*itx>_bounds.xmax) _bounds.xmax = *itx;
+    if(*ity<_bounds.ymin) _bounds.ymin = *ity;
+    if(*ity>_bounds.ymax) _bounds.ymax = *ity;
+  }
 }
 
 } /* namespace obvious */

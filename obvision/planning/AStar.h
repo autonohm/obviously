@@ -2,7 +2,7 @@
  * AStar.h
  *
  *  Created on: 03.11.2014
- *      Author: mayst
+ *      Author: Jon Martin and Stefan May
  */
 
 #ifndef ASTAR_H_
@@ -22,9 +22,23 @@ class AStar
 
 public:
 
-  static std::vector<unsigned int> pathFind(AStarMap* map, const unsigned int & xStart, const unsigned int & yStart, const unsigned int & xFinish, const unsigned int & yFinish);
+  /**
+   * Plan path giving start and target indices
+   * @param map map
+   * @param idxStart indices of starting point
+   * @param idxTarget indices of target
+   * @return path
+   */
+  static std::vector<unsigned int> pathFind(AStarMap* map, const unsigned int idxStart[2], const unsigned int idxTarget[2]);
 
-  static std::vector<unsigned int> pathFind(AStarMap* map, const double & xStart, const double & yStart, const double & xFinish, const double & yFinish);
+  /**
+   * Plan path giving start and target coordinates
+   * @param map map
+   * @param coordStart coordinates of starting point
+   * @param coordTarget coordinates of target
+   * @return path
+   */
+  static std::vector<unsigned int> pathFind(AStarMap* map, const AStarCoord coordStart, const AStarCoord coordTarget);
 
 private:
 
