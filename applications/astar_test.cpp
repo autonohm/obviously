@@ -53,31 +53,31 @@ int main(int argc, char* argv[])
   cout << "Path in AStar representation:" << endl;
   for(vector<unsigned int>::iterator it=path.begin(); it!=path.end(); ++it)
   {
-	  cout << *it;
-	  cont_route++;
+    cout << *it;
+    cont_route++;
   }
 
-	  cout << endl << endl;
+  cout << endl << endl;
 
-	  vector<AStarCoord> coords = map->translatePathToCoords(path, xs, ys);
-	  cout << "Path in coordinates:" << endl;
-	  for(vector<AStarCoord>::iterator it=coords.begin(); it!=coords.end(); ++it)
-		  cout << (*it).x << " " << (*it).y << endl;
-	  cout << endl;
+  vector<AStarCoord> coords = map->translatePathToCoords(path, xs, ys);
+  cout << "Path in coordinates:" << endl;
+  for(vector<AStarCoord>::iterator it=coords.begin(); it!=coords.end(); ++it)
+    cout << (*it).x << " " << (*it).y << endl;
+  cout << endl;
 
-	  vector<unsigned int> mapIdx = map->translatePathToMapIndices(path, xs, ys);
+  vector<unsigned int> mapIdx = map->translatePathToMapIndices(path, xs, ys);
 
-	  for(vector<unsigned int>::iterator it=mapIdx.begin(); it!=mapIdx.end(); ++it)
-	  {
-		  buffer[3*(*it)] = 0;
-		  buffer[3*(*it)+1] = 0;
-		  buffer[3*(*it)+2] = 0;
-	  }
+  for(vector<unsigned int>::iterator it=mapIdx.begin(); it!=mapIdx.end(); ++it)
+  {
+    buffer[3*(*it)] = 0;
+    buffer[3*(*it)+1] = 0;
+    buffer[3*(*it)+2] = 0;
+  }
 
-	  obvious::serializePPM("/tmp/path.ppm", buffer, width, height, false);
+  obvious::serializePPM("/tmp/path.ppm", buffer, width, height, false);
 
   if (cont_route < 3)
-	  cout << "imposible to find a route" << endl;
+    cout << "imposible to find a route" << endl;
   delete map;
   delete [] buffer;
 }
