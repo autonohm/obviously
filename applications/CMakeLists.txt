@@ -15,7 +15,7 @@ PKG_CHECK_MODULES(XML libxml++-2.6)
 
 INCLUDE_DIRECTORIES(/usr/include/openni2
                     /usr/include/ni
-		    /usr/include/openni
+		                /usr/include/openni
                     $ENV{OBVIOUSLY_ROOT}
                     /usr/local/include/
                     /usr/include/qt4/

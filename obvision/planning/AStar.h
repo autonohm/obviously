@@ -24,6 +24,8 @@ public:
 
   static std::vector<unsigned int> pathFind(AStarMap* map, const unsigned int & xStart, const unsigned int & yStart, const unsigned int & xFinish, const unsigned int & yFinish);
 
+  static std::vector<unsigned int> pathFind(AStarMap* map, const double & xStart, const double & yStart, const double & xFinish, const double & yFinish);
+
 private:
 
 };

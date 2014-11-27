@@ -20,6 +20,16 @@ bool operator<(const AStarNode & a, const AStarNode & b)
   return a.getPriority() > b.getPriority();
 }
 
+std::vector<unsigned int> AStar::pathFind(AStarMap* map, const double & xStart, const double & yStart, const double & xFinish, const double & yFinish)
+{
+	unsigned int xs = (unsigned int)((xStart / (double)map->getCellSize()) + map->getWidth()/2);
+	unsigned int ys = (unsigned int)((yStart / (double)map->getCellSize()) + map->getHeight()/2);
+	unsigned int xf = (unsigned int)((xFinish / (double)map->getCellSize()) + map->getWidth()/2);
+	unsigned int yf = (unsigned int)((yFinish / (double)map->getCellSize()) + map->getHeight()/2);
+
+	return pathFind(map, xs, ys, xf, yf);
+}
+
 std::vector<unsigned int> AStar::pathFind(AStarMap* map, const unsigned int & xStart, const unsigned int & yStart, const unsigned int & xFinish, const unsigned int & yFinish)
 {
   static priority_queue<AStarNode> pq[2]; // list of open (not-yet-tried) MapNodes
