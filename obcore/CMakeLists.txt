@@ -24,7 +24,7 @@ SET(LIBRARY     base/CartesianCloud.cpp
                 base/tools.cpp
                 base/Time.cpp
                 base/PointCloud.cpp
-                statemachine/Context.cpp
+                statemachine/StateMachine.cpp
                 statemachine/states/StatePing.cpp
                 statemachine/states/StatePong.cpp
                 math/geometry.cpp

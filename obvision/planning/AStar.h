@@ -25,11 +25,11 @@ public:
   /**
    * Plan path giving start and target indices
    * @param map map
-   * @param idxStart indices of starting point
-   * @param idxTarget indices of target
+   * @param start pixel coordinates of starting point
+   * @param target pixel coordinates of target
    * @return path
    */
-  static std::vector<unsigned int> pathFind(AStarMap* map, const unsigned int idxStart[2], const unsigned int idxTarget[2]);
+  static std::vector<unsigned int> pathFind(AStarMap* map, const AStarPixel start, const AStarPixel target);
 
   /**
    * Plan path giving start and target coordinates

@@ -84,19 +84,28 @@ double AStarMap::getCellSize()
   return _cellSize;
 }
 
-void AStarMap::addObstacle(Obstacle obstacle)
+void AStarMap::addObstacle(Obstacle &obstacle)
 {
-  _obstacles.push_back(obstacle);
+  Obstacle o(obstacle);
+  _obstacles.push_back(o);
   _mapIsDirty = true;
 }
 
-void AStarMap::removeObstacle(Obstacle obstacle)
+void AStarMap::removeObstacle(Obstacle* obstacle)
 {
   for(list<Obstacle>::iterator it=_obstacles.begin(); it!=_obstacles.end(); ++it)
   {
-    if((*it).getID()==obstacle.getID())
-      _obstacles.erase(it);
+    if((*it).getID()==obstacle->getID())
+    {
+      it = _obstacles.erase(it);
+      _mapIsDirty = true;
+    }
   }
+}
+
+void AStarMap::removeAllObstacles()
+{
+  _obstacles.clear();
   _mapIsDirty = true;
 }
 
@@ -215,28 +224,28 @@ void AStarMap::convertToImage(unsigned char* buffer)
   }
 }
 
-void AStarMap::translateIndexToCoord(unsigned int idx[2], AStarCoord* coord)
+void AStarMap::translatePixelToCoord(AStarPixel pixel, AStarCoord* coord)
 {
-  coord->x = ((double)(((int)idx[0]) - ((int)_cellsX/2)))*_cellSize;
-  coord->y = ((double)(((int)idx[1]) - ((int)_cellsY/2)))*_cellSize;
+  coord->x = ((double)(((int)pixel.x) - ((int)_cellsX/2)))*_cellSize;
+  coord->y = ((double)(((int)pixel.y) - ((int)_cellsY/2)))*_cellSize;
 }
 
-void AStarMap::translateCoordToIndex(AStarCoord coord, unsigned int idx[2])
+void AStarMap::translateCoordToPixel(AStarCoord coord, AStarPixel* pixel)
 {
-  idx[0] = (coord.x/_cellSize) + _cellsX/2;
-  idx[1] = (coord.y/_cellSize) + _cellsY/2;
+  (*pixel).x = (coord.x/_cellSize) + _cellsX/2;
+  (*pixel).y = (coord.y/_cellSize) + _cellsY/2;
 }
 
 std::vector<unsigned int> AStarMap::translatePathToMapIndices(std::vector<unsigned int> path, AStarCoord coordStart)
 {
-  unsigned int idx[2];
+  AStarPixel pixel;
 
-  translateCoordToIndex(coordStart, idx);
+  translateCoordToPixel(coordStart, &pixel);
 
-  std::vector<unsigned int> pixel;
-  pixel.push_back(idx[0]);
+  std::vector<unsigned int> index;
+  unsigned int currentPos = pixel.y*_cellsX + pixel.x;
 
-  unsigned int currentPos = idx[1]*_cellsX + idx[0];
+  index.push_back(currentPos);
   for(vector<unsigned int>::iterator it=path.begin(); it!=path.end(); ++it)
   {
     switch(*it)
@@ -266,9 +275,9 @@ std::vector<unsigned int> AStarMap::translatePathToMapIndices(std::vector<unsign
       currentPos-=(_cellsX-1);
       break;
     }
-    pixel.push_back(currentPos);
+    index.push_back(currentPos);
   }
-  return pixel;
+  return index;
 }
 
 std::vector<AStarCoord> AStarMap::translatePathToCoords(std::vector<unsigned int> path, AStarCoord coordStart)

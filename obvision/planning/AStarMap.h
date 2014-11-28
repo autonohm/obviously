@@ -15,6 +15,12 @@ struct AStarCoord
   double y;
 };
 
+struct AStarPixel
+{
+  unsigned int x;
+  unsigned int y;
+};
+
 class AStarMap
 {
 
@@ -63,13 +69,18 @@ public:
    * Add obstacle to map
    * @param obstacle obstacle container with coordinates
    */
-  void addObstacle(Obstacle obstacle);
+  void addObstacle(Obstacle &obstacle);
 
   /**
    * Remove obstacle from map
    * @param obstacle obstacle container with coordinates
    */
-  void removeObstacle(Obstacle obstacle);
+  void removeObstacle(Obstacle* obstacle);
+
+  /**
+   * Remove all previously added obstacles
+   */
+  void removeAllObstacles();
 
   /**
    * Check whether similar obstacle is already added to the map
@@ -98,17 +109,17 @@ public:
 
   /**
    * translate indices to coordinates
-   * @param idx image index (col, row)
+   * @param pixel image index (col, row)
    * @param coords metric coordinates
    */
-  void translateIndexToCoord(unsigned int idx[2], AStarCoord* coords);
+  void translatePixelToCoord(AStarPixel pixel, AStarCoord* coords);
 
   /**
    * translate coordinates to indices
    * @param coords metric coordinates
-   * @param idx image index (col, row)
+   * @param pixel image index (col, row)
    */
-  void translateCoordToIndex(AStarCoord coords, unsigned int idx[2]);
+  void translateCoordToPixel(AStarCoord coords, AStarPixel* pixel);
 
   /**
    * Translate a given path to map indices

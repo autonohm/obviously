@@ -45,16 +45,16 @@ int main(int argc, char* argv[])
 
   map->serialize("/tmp/map.txt");
 
-  unsigned int idxStart[2];
-  unsigned int idxTarget[2];
-  idxStart[0]  = 486;
-  idxStart[1]  = 334;
-  idxTarget[0] = 646;
-  idxTarget[1] = 594;
+  AStarPixel start;
+  AStarPixel target;
+  start.x  = 486;
+  start.y  = 334;
+  target.x = 646;
+  target.y = 594;
   AStarCoord coordStart;
   AStarCoord coordTarget;
-  map->translateIndexToCoord(idxStart, &coordStart);
-  map->translateIndexToCoord(idxTarget, &coordTarget);
+  map->translatePixelToCoord(start, &coordStart);
+  map->translatePixelToCoord(target, &coordTarget);
   timer.reset();
   vector<unsigned int> path = AStar::pathFind(map, coordStart, coordTarget);
   cout << "elapsed for planning: " << timer.reset() << " ms" << endl;
@@ -67,7 +67,6 @@ int main(int argc, char* argv[])
     cout << *it;
     cont_route++;
   }
-
   cout << endl << endl;
 
   vector<AStarCoord> coords = map->translatePathToCoords(path, coordStart);

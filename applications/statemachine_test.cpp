@@ -1,20 +1,20 @@
 #include <unistd.h>
 
-#include "obcore/statemachine/Context.h"
+#include "obcore/statemachine/StateMachine.h"
 #include "obcore/statemachine/states/StatePing.h"
 
 using namespace obvious;
 
 int main(int argc, char* argv[])
 {
-  Context* context = Context::getInstance();
+  StateMachine* machine = StateMachine::getInstance();
 
-  context->setState(new StatePing());
+  machine->setState(new StatePing());
 
   while(true)
   {
     usleep(100000);
-    context->process();
+    machine->process();
   }
   return 0;
 }

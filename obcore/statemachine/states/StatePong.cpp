@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include <iostream>
 
-#include "obcore/statemachine/Context.h"
+#include "obcore/statemachine/StateMachine.h"
 #include "StatePong.h"
 #include "StatePing.h"
 
@@ -30,7 +30,7 @@ void StatePong::process(void)
   std::cout << "Pong" << std::endl;
   if(rand()%100<30)
   {
-    obvious::Context::getInstance()->setState(new StatePing());
+    obvious::StateMachine::getInstance()->setState(new StatePing());
     delete this;
   }
 }
