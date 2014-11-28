@@ -64,7 +64,7 @@ void RayCastPolar2D::calcCoordsFromCurrentView(TsdGrid* grid, SensorPolar2D* sen
 
 #pragma omp parallel
 {
-    obfloat c[2];
+  obfloat c[2];
   obfloat n[2];
   Matrix M(3,1);
   Matrix N(3,1);

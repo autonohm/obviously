@@ -24,6 +24,9 @@ SET(LIBRARY     base/CartesianCloud.cpp
                 base/tools.cpp
                 base/Time.cpp
                 base/PointCloud.cpp
+                statemachine/Context.cpp
+                statemachine/states/StatePing.cpp
+                statemachine/states/StatePong.cpp
                 math/geometry.cpp
                 math/linalg/MatrixFactory.cpp
                 math/PID_Controller.cpp
