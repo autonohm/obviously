@@ -1,10 +1,3 @@
-/*
- * StatePing.h
- *
- *  Created on: 29.09.2014
- *      Author: mayst
- */
-
 #ifndef STATEPING_H_
 #define STATEPING_H_
 
@@ -12,16 +5,29 @@
 
 namespace obvious {
 
-
+/**
+ * @class StatePing
+ * @brief Example state, transition to pong state
+ * @author Stefan May
+ */
 class StatePing: public IState
 {
 public:
 
-   StatePing(void);
+  /**
+   * Constructor
+   */
+  StatePing(void);
 
-   virtual ~StatePing(void);
+  /**
+   * Destructor
+   */
+  virtual ~StatePing(void);
 
-   void process(void);
+  /**
+   * Process method (step-wise, never block this method)
+   */
+  void process(void);
 
 private:
 

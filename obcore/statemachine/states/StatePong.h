@@ -1,10 +1,3 @@
-/*
- * StatePong.h
- *
- *  Created on: 29.09.2014
- *      Author: mayst
- */
-
 #ifndef STATEPONG_H_
 #define STATEPONG_H_
 
@@ -13,13 +6,28 @@
 namespace obvious
 {
 
+/**
+ * @class StatePong
+ * @brief Example state, transition to ping state
+ * @author Stefan May
+ */
 class StatePong: public IState
 {
 public:
+
+  /**
+   * Constructor
+   */
   StatePong(void);
 
+  /**
+   * Destructor
+   */
   virtual ~StatePong(void);
 
+  /**
+   * Process method (step-wise, never block this method)
+   */
   void process(void);
 
 private:

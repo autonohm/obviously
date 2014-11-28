@@ -25,10 +25,10 @@ namespace obvious
 class StateMachine
 {
 public:
-   /**
-    * Function to get instance for singleton pattern
-    * @return
-    */
+  /**
+   * Access singleton instance
+   * @return instance
+   */
   static StateMachine* getInstance(void);
 
   /**
@@ -65,7 +65,7 @@ private:
    */
   StateMachine(StateMachine &c);
 
-  IState*     _currentState;
+  IState* _currentState;
 
 };
 

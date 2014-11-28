@@ -21,7 +21,9 @@ namespace obvious
  */
 class IState
 {
+
 public:
+
   /**
    * Default destructor
    */
@@ -31,6 +33,7 @@ public:
    * Processing
    */
   virtual void process(void) = 0;
+
 };
 
 } /* namespace obvious */
