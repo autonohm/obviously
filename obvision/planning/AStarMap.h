@@ -158,7 +158,7 @@ public:
    * @param height height of map
    * @return map
    */
-  static AStarMap create(char* data, double cellSize, unsigned int width, unsigned int height);
+  static AStarMap* create(char* data, double cellSize, unsigned int width, unsigned int height);
 
 private:
 
