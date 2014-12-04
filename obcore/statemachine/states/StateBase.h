@@ -7,7 +7,7 @@
 namespace obvious
 {
 
-class StateMachine;
+class Agent;
 
 /**
  * @class   StateBase
@@ -19,7 +19,7 @@ class StateBase
 
 public:
 
-  StateBase(StateMachine* machine);
+  StateBase(Agent* agent);
 
   /**
    * Default destructor
@@ -33,7 +33,7 @@ public:
 
 protected:
 
-  StateMachine* _machine;
+  Agent* _agent;
 
 };
 

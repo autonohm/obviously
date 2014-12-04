@@ -3,9 +3,9 @@
 namespace obvious
 {
 
-StateBase::StateBase(StateMachine* machine)
+StateBase::StateBase(Agent* agent)
 {
-  _machine = machine;
+  _agent = agent;
 }
 
 

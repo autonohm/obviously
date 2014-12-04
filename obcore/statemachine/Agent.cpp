@@ -13,11 +13,27 @@ Agent::Agent(double x, double y)
   _x = x;
   _y = y;
   _ID = _AgentID++;
+  _machine = new StateMachine();
 }
 
 Agent::~Agent()
 {
+  delete _machine;
+}
 
+void Agent::process()
+{
+  _machine->process();
+}
+
+StateMachine* Agent::getStateMachine()
+{
+  return _machine;
+}
+
+void Agent::setState(StateBase* state)
+{
+  _machine->setState(state);
 }
 
 void Agent::setPosition(double x, double y)

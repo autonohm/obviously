@@ -17,7 +17,7 @@ public:
   /**
    * Constructor
    */
-  StatePing(StateMachine* machine);
+  StatePing(Agent* agent);
 
   /**
    * Destructor

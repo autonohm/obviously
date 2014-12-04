@@ -1,14 +1,14 @@
 #include <stdlib.h>
 #include <iostream>
 
-#include "obcore/statemachine/StateMachine.h"
+#include "obcore/statemachine/Agent.h"
 #include "StatePong.h"
 #include "StatePing.h"
 
 namespace obvious
 {
 
-StatePong::StatePong(StateMachine* machine) : StateBase(machine)
+StatePong::StatePong(Agent* agent) : StateBase(agent)
 {
 
 }
@@ -23,7 +23,7 @@ void StatePong::process(void)
   std::cout << "Pong" << std::endl;
   if(rand()%100<30)
   {
-    _machine->setState(new StatePing(_machine));
+    _agent->setState(new StatePing(_agent));
     delete this;
   }
 }

@@ -2,7 +2,6 @@
 #define STATEMACHINE_H_
 
 #include "obcore/statemachine/states/StateBase.h"
-#include "obcore/statemachine/Agent.h"
 
 /**
  * @namespace obvious
@@ -23,7 +22,7 @@ public:
   /**
    * Constructor
    */
-  StateMachine(Agent* agent);
+  StateMachine();
 
   /**
    * Copy constructor
@@ -49,12 +48,6 @@ public:
   StateBase* getState() const;
 
   /**
-   * Access agent
-   * @return model
-   */
-  Agent* getAgent() const;
-
-  /**
    * Function for processing
    */
   void process(void);
@@ -62,8 +55,6 @@ public:
 private:
 
   StateBase* _currentState;
-
-  Agent* _agent;
 
 };
 

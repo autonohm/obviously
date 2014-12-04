@@ -1,6 +1,8 @@
 #ifndef AGENT_H_
 #define AGENT_H_
 
+#include "obcore/statemachine/StateMachine.h"
+
 /**
  * @namespace  obvious
  */
@@ -17,18 +19,65 @@ class Agent
 
 public:
 
+  /**
+   *
+   * @param x
+   * @param y
+   */
   Agent(double x, double y);
 
-  virtual ~Agent(void);
+  /**
+   *
+   */
+  virtual ~Agent();
 
+  /**
+   *
+   */
+  void process();
+
+  /**
+   *
+   * @return
+   */
+  StateMachine* getStateMachine();
+
+  /**
+   *
+   * @param state
+   */
+  void setState(StateBase* state);
+
+  /**
+   *
+   * @param x
+   * @param y
+   */
   void setPosition(double x, double y);
 
+  /**
+   *
+   * @param x
+   * @param y
+   */
   void getPosition(double &x, double &y);
 
+  /**
+   *
+   * @param theta
+   */
   void setOrientation(double theta);
 
+  /**
+   *
+   * @return
+   */
   double getOrientation();
 
+  /**
+   *
+   * @return
+   */
   unsigned int getID();
 
 private:
@@ -40,6 +89,8 @@ private:
   double _theta;
 
   unsigned int _ID;
+
+  StateMachine* _machine;
 
 };
 
