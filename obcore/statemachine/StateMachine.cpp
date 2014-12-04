@@ -1,10 +1,3 @@
-/*
- * StateMachine.cpp
- *
- *  Created on: 29.09.2014
- *      Author: mayst
- */
-
 #include "StateMachine.h"
 #include <cstddef>
 
@@ -13,36 +6,36 @@ namespace obvious
 
 static StateMachine* _machine;
 
-StateMachine::StateMachine(void)
+StateMachine::StateMachine(Agent* agent)
 {
   _currentState = NULL;
+  _agent = agent;
 }
 
 StateMachine::StateMachine(StateMachine& c)
 {
-  _currentState = NULL;
+  _currentState = c.getState();
+  _agent = c.getAgent();
 }
 
-StateMachine* StateMachine::getInstance(void)
-{
-  if(_machine==NULL) _machine = new StateMachine();
-
-  return _machine;
-}
-
-StateMachine::~StateMachine(void)
+StateMachine::~StateMachine()
 {
   if(_machine) delete _machine;
 }
 
-IState* StateMachine::getState(void) const
+void StateMachine::setState(StateBase* state)
+{
+  _currentState = state;
+}
+
+StateBase* StateMachine::getState(void) const
 {
    return _currentState;
 }
 
-void StateMachine::setState(IState* state)
+Agent* StateMachine::getAgent() const
 {
-  _currentState = state;
+  return _agent;
 }
 
 void StateMachine::process(void)

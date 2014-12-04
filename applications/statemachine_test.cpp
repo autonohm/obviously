@@ -7,14 +7,19 @@ using namespace obvious;
 
 int main(int argc, char* argv[])
 {
-  StateMachine* machine = StateMachine::getInstance();
+  Agent* agent = new Agent(0, 0);
+  StateMachine* machine = new StateMachine(agent);
 
-  machine->setState(new StatePing());
+  machine->setState(new StatePing(machine));
 
   while(true)
   {
     usleep(100000);
     machine->process();
   }
+
+  delete machine;
+  delete agent;
+
   return 0;
 }

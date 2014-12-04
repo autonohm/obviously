@@ -1,12 +1,5 @@
-/*
- * IState.h
- *
- *  Created on: 29.09.2014
- *      Author: mayst
- */
-
-#ifndef ISTATE_H_
-#define ISTATE_H_
+#ifndef STATEBASE_H_
+#define STATEBASE_H_
 
 /**
  * @namespace  obvious
@@ -14,28 +7,36 @@
 namespace obvious
 {
 
+class StateMachine;
+
 /**
- * @class   IState
+ * @class   StateBase
  * @author  Stefan May
  * @date    23.10.2014
  */
-class IState
+class StateBase
 {
 
 public:
 
+  StateBase(StateMachine* machine);
+
   /**
    * Default destructor
    */
-  virtual ~IState(void){};
+  virtual ~StateBase(void){};
 
   /**
    * Processing
    */
   virtual void process(void) = 0;
 
+protected:
+
+  StateMachine* _machine;
+
 };
 
 } /* namespace obvious */
 
-#endif /* ISTATE_H_ */
+#endif /* STATEBASE_H_ */

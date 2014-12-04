@@ -1,10 +1,3 @@
-/*
- * StatePong.cpp
- *
- *  Created on: 29.09.2014
- *      Author: mayst
- */
-
 #include <stdlib.h>
 #include <iostream>
 
@@ -15,7 +8,7 @@
 namespace obvious
 {
 
-StatePong::StatePong(void)
+StatePong::StatePong(StateMachine* machine) : StateBase(machine)
 {
 
 }
@@ -30,7 +23,7 @@ void StatePong::process(void)
   std::cout << "Pong" << std::endl;
   if(rand()%100<30)
   {
-    obvious::StateMachine::getInstance()->setState(new StatePing());
+    _machine->setState(new StatePing(_machine));
     delete this;
   }
 }

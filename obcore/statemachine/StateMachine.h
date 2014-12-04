@@ -1,14 +1,8 @@
-/*
- * StateMachine.h
- *
- *  Created on: 29.09.2014
- *      Author: mayst
- */
-
 #ifndef STATEMACHINE_H_
 #define STATEMACHINE_H_
 
-#include "obcore/statemachine/IState.h"
+#include "obcore/statemachine/states/StateBase.h"
+#include "obcore/statemachine/Agent.h"
 
 /**
  * @namespace obvious
@@ -25,28 +19,40 @@ namespace obvious
 class StateMachine
 {
 public:
+
   /**
-   * Access singleton instance
-   * @return instance
+   * Constructor
    */
-  static StateMachine* getInstance(void);
+  StateMachine(Agent* agent);
+
+  /**
+   * Copy constructor
+   * @param machine state machine
+   */
+  StateMachine(StateMachine &machine);
 
   /**
    * Default destructor
    */
-  virtual ~StateMachine(void);
+  virtual ~StateMachine();
 
   /**
    * Function to set state
    * @param state
    */
-  void setState(IState* state);
+  void setState(StateBase* state);
 
   /**
    * Function to get current state
    * @return
    */
-  IState* getState(void) const;
+  StateBase* getState() const;
+
+  /**
+   * Access agent
+   * @return model
+   */
+  Agent* getAgent() const;
 
   /**
    * Function for processing
@@ -54,18 +60,10 @@ public:
   void process(void);
 
 private:
-  /**
-   * Private constructor for singleton pattern
-   */
-  StateMachine(void);
 
-  /**
-   * Private copy constructor for singleton pattern
-   * @param c
-   */
-  StateMachine(StateMachine &c);
+  StateBase* _currentState;
 
-  IState* _currentState;
+  Agent* _agent;
 
 };
 
