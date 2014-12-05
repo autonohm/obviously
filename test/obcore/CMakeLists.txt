@@ -7,6 +7,7 @@ enable_testing()
 include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR} $ENV{OBVIOUSLY_ROOT})
 link_directories($ENV{OBVIOUSLY_ROOT}/build/release/obcore
                  $ENV{OBVIOUSLY_ROOT}/build/release/obdevice
+                 $ENV{OBVIOUSLY_ROOT}/build/release/obgraphic
                  )
 
 # experimental
@@ -28,36 +29,47 @@ add_executable(runMatrixTest
     math/MatrixTest.cpp
 )
 
-add_executable(eigen-vs-gsl
-               base/eigen-vs-gsl.cpp
-               )
+add_executable(runQuaternionTest
+    math/QuaternionTest.cpp
+)
 
-add_executable(pointcloud
-               base/pointcloud.cpp
-               )
+#add_executable(eigen-vs-gsl
+#               base/eigen-vs-gsl.cpp
+#               )
+
+#add_executable(pointcloud
+#               base/pointcloud.cpp
+#               )
 
 
 # Link test executable against gtest & gtest_main
-# target_link_libraries(runMatrixTest gtest gtest_main obcore gsl gslcblas)
+target_link_libraries(runMatrixTest gtest gtest_main obcore gsl gslcblas)
 
-target_link_libraries(eigen-vs-gsl
-                      obcore
-                      gsl
-                      gslcblas
-                      )
+target_link_libraries(runQuaternionTest gtest gtest_main obcore gsl gslcblas)
 
-target_link_libraries(pointcloud
-                      obcore
-                      obdevice
-                      obgraphic
-                      ${QT_LIBRARIES}
-                      QVTK
-                      ${VTK_LIBRARIES}
-                      gsl
-                      gslcblas
-                      )
+#target_link_libraries(eigen-vs-gsl
+#                      obcore
+#                      gsl
+#                      gslcblas
+#                      )
+
+#target_link_libraries(pointcloud
+#                      obcore
+#                      obdevice
+#                      obgraphic
+#                      ${QT_LIBRARIES}
+#                      QVTK
+#                      ${VTK_LIBRARIES}
+#                      gsl
+#                      gslcblas
+#                      )
 
 add_test(
     NAME runMatrixTest
     COMMAND runMatrixTest
+)
+
+add_test(
+    NAME runQuaternionTest
+    COMMAND runQuaternionTest
 )

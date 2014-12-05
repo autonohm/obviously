@@ -31,6 +31,7 @@ SET(LIBRARY     base/CartesianCloud.cpp
                 statemachine/states/StatePong.cpp
                 math/geometry.cpp
                 math/linalg/MatrixFactory.cpp
+                math/Quaternion.cpp
                 math/PID_Controller.cpp
                 math/IntegratorSimpson.cpp
                 math/TransformationWatchdog.cpp
