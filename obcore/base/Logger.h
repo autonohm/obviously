@@ -24,7 +24,11 @@ const int DBG_DEBUG	= 2;
 #include <pthread.h>
 #endif
 
+#include <string.h>
+
 #include "Timer.h"
+
+#define __LOGGERFILE__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 
 /**
  * \brief Macro to configure the logger.
@@ -49,7 +53,7 @@ const int DBG_DEBUG	= 2;
 #define LOGMSG(priority, msg) { \
 	std::ostringstream __debug_stream__; \
 	__debug_stream__ << msg; \
-	obvious::Logger::getInstance().print(priority, __FILE__, __LINE__, \
+	obvious::Logger::getInstance().print(priority, __LOGGERFILE__, __LINE__, \
 			__debug_stream__.str()); \
 	}
 

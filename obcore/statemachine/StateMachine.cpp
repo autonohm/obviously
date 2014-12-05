@@ -1,5 +1,8 @@
 #include "StateMachine.h"
+
 #include <cstddef>
+#include <unistd.h>
+#include "obcore/base/Logger.h"
 
 namespace obvious
 {
@@ -34,6 +37,11 @@ StateBase* StateMachine::getState(void) const
 void StateMachine::process(void)
 {
   if(_currentState) _currentState->process();
+  else
+  {
+    LOGMSG(DBG_ERROR, "No state selected");
+    usleep(1000000);
+  }
 }
 
 } /* namespace obvious */

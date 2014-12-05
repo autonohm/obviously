@@ -46,7 +46,7 @@ void Logger::unlock(){}
  */
 Logger::Logger(): _configured(false)
 {
-
+  _t.reset();
 }
 
 /**
