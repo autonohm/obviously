@@ -70,19 +70,19 @@ void Agent::setPosition(Point pos)
   _pos = pos;
 }
 
-void Agent::getPosition(double &x, double &y, double &z)
+void Agent::getPosition(double& x, double& y, double& z)
 {
   x = _pos.x;
   y = _pos.y;
   z = _pos.z;
 }
 
-void Agent::getPosition(Point &pos)
+void Agent::getPosition(Point& pos)
 {
   pos = _pos;
 }
 
-void Agent::getPosition(Point2D &pos)
+void Agent::getPosition(Point2D& pos)
 {
   pos.x = _pos.x;
   pos.y = _pos.y;
@@ -103,6 +103,31 @@ void Agent::getOrientation(double orientation[3])
 unsigned int Agent::getID()
 {
   return _ID;
+}
+
+void Agent::setPath(std::vector<obvious::Point2D> path)
+{
+  _path = path;
+}
+
+void Agent::getPath(std::vector<obvious::Point2D>& path)
+{
+  path = _path;
+}
+
+//void Agent::setTarget(std::vector<obvious::Point2D> target)
+//{
+//  push.back(target);
+//}
+//
+//void Agent::getTargets(std::vector<obvious::Point2D>& targets)
+//{
+//  targets = _targets;
+//}
+
+void Agent::clearPath()
+{
+  _path.clear();
 }
 
 } // end namespace
