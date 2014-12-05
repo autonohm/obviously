@@ -4,6 +4,7 @@
 #include "obcore/statemachine/StateMachine.h"
 #include "obcore/base/Point.h"
 
+#include <vector>
 /**
  * @namespace  obvious
  */
@@ -79,13 +80,13 @@ public:
    * Access current position
    * @param pos position (x, y, z)
    */
-  void getPosition(Point &pos);
+  void getPosition(Point& pos);
 
   /**
    * Access current position
    * @param pos position (x, y)
    */
-  void getPosition(Point2D &pos);
+  void getPosition(Point2D& pos);
 
   /**
    * Access current position
@@ -93,7 +94,7 @@ public:
    * @param y y-coordinate
    * @param z z-coordinate
    */
-  void getPosition(double &x, double &y, double &z);
+  void getPosition(double& x, double& y, double& z);
 
 
   /**
@@ -114,9 +115,42 @@ public:
    */
   unsigned int getID();
 
+  /**
+   * Set path
+   * @param path
+   */
+  void setPath(std::vector<obvious::Point2D> path);
+
+  /**
+   * Get path
+   * @param path
+   */
+  void getPath(std::vector<obvious::Point2D>& path);
+
+  /**
+   * Clear currently assigned path
+   */
+  void clearPath();
+
+  /**
+   * Set target
+   * @param path
+   */
+//  void setTarget(std::vector<obvious::Point2D> target);
+//
+//  /**
+//   * Get targets
+//   * @param path
+//   */
+//  void getTargets(std::vector<obvious::Point2D>& targets);
+
 private:
 
   Point _pos;
+
+  std::vector<obvious::Point2D> _path;
+
+  std::vector<obvious::Point2D> _targets;
 
   double _orientation[3];
 
