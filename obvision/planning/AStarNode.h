@@ -33,25 +33,25 @@ public:
    *
    * @return
    */
-  int getxPos(void) const;
+  int getxPos() const;
 
   /**
    *
    * @return
    */
-  int getyPos(void) const;
+  int getyPos() const;
 
   /**
    *
    * @return
    */
-  int getLevel(void) const;
+  int getLevel() const;
 
   /**
    *
    * @return
    */
-  int getPriority(void) const;
+  int getPriority() const;
 
   /**
    *

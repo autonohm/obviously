@@ -28,11 +28,23 @@
 
 namespace obvious {
 
+struct Pixel
+{
+    unsigned int u;
+    unsigned int v;
+};
+
 struct Point
 {
     obfloat x;
     obfloat y;
     obfloat z;
+};
+
+struct Point2D
+{
+    obfloat x;
+    obfloat y;
 };
 
 struct PointRgb : public Point

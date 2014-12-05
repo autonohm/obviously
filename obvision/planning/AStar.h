@@ -29,7 +29,7 @@ public:
    * @param target pixel coordinates of target
    * @return path
    */
-  static std::vector<unsigned int> pathFind(AStarMap* map, const AStarPixel start, const AStarPixel target);
+  static std::vector<unsigned int> pathFind(AStarMap* map, const Pixel start, const Pixel target);
 
   /**
    * Plan path giving start and target coordinates
@@ -38,7 +38,7 @@ public:
    * @param coordTarget coordinates of target
    * @return path
    */
-  static std::vector<unsigned int> pathFind(AStarMap* map, const AStarCoord coordStart, const AStarCoord coordTarget);
+  static std::vector<unsigned int> pathFind(AStarMap* map, const Point2D coordStart, const Point2D coordTarget);
 
 private:
 

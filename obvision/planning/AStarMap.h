@@ -5,21 +5,10 @@
 #include <list>
 
 #include "obvision/planning/Obstacle.h"
+#include "obcore/base/Point.h"
 
 namespace obvious
 {
-
-struct AStarCoord
-{
-  double x;
-  double y;
-};
-
-struct AStarPixel
-{
-  unsigned int x;
-  unsigned int y;
-};
 
 class AStarMap
 {
@@ -34,7 +23,7 @@ public:
    * @param cellsX number of cells in horizontal direction
    * @param cellsY number of cells in vertical direction
    */
-  AStarMap(double cellSize, unsigned int cellsX, unsigned int cellsY);
+  AStarMap(obfloat cellSize, unsigned int cellsX, unsigned int cellsY);
 
   /**
    * Copy constructor
@@ -63,7 +52,7 @@ public:
    * Get size of cell
    * @return cell size in meters
    */
-  double getCellSize();
+  obfloat getCellSize();
 
   /**
    * Add obstacle to map
@@ -93,7 +82,7 @@ public:
    * Inflate map
    * @param robotRadius radius of robot, i.e., inflation radius of obstacles (unit [m])
    */
-  void inflate(double robotRadius);
+  void inflate(obfloat robotRadius);
 
   /**
    * Get map with obstacles as occupied cells
@@ -112,14 +101,14 @@ public:
    * @param pixel image index (col, row)
    * @param coords metric coordinates
    */
-  void translatePixelToCoord(AStarPixel pixel, AStarCoord* coords);
+  void translatePixelToCoord(Pixel pixel, Point2D* coords);
 
   /**
    * translate coordinates to indices
    * @param coords metric coordinates
    * @param pixel image index (col, row)
    */
-  void translateCoordToPixel(AStarCoord coords, AStarPixel* pixel);
+  void translateCoordToPixel(Point2D coords, Pixel* pixel);
 
   /**
    * Translate a given path to map indices
@@ -127,7 +116,7 @@ public:
    * @param coordStart coordinates of starting position in meters
    * @return path in map indices
    */
-  std::vector<unsigned int> translatePathToMapIndices(std::vector<unsigned int> path, AStarCoord coordStart);
+  std::vector<unsigned int> translatePathToMapIndices(std::vector<unsigned int> path, Point2D coordStart);
 
   /**
    * Translate a given path to metric coordinates (unit [m])
@@ -135,7 +124,7 @@ public:
    * @param coordStart coordinates of starting position in meters
    * @return path in metric coordinates
    */
-  std::vector<AStarCoord> translatePathToCoords(std::vector<unsigned int> path, AStarCoord coordStart);
+  std::vector<Point2D> translatePathToCoords(std::vector<unsigned int> path, Point2D coordStart);
 
   /**
    * Load map from file
@@ -158,7 +147,7 @@ public:
    * @param height height of map
    * @return map
    */
-  static AStarMap* create(char* data, double cellSize, unsigned int width, unsigned int height);
+  static AStarMap* create(char* data, obfloat cellSize, unsigned int width, unsigned int height);
 
 private:
 
@@ -176,7 +165,7 @@ private:
 
   int** _dirMap;
 
-  double _cellSize;
+  obfloat _cellSize;
 
   unsigned int _cellsX;
 

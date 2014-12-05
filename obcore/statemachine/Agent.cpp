@@ -1,4 +1,5 @@
 #include "Agent.h"
+#include "string.h"
 
 /**
  * @namespace  obvious
@@ -8,10 +9,24 @@ namespace obvious
 
 static unsigned int _AgentID = 0;
 
-Agent::Agent(double x, double y)
+Agent::Agent(Point pos)
 {
-  _x = x;
-  _y = y;
+  _pos = pos;
+  _orientation[0] = 0;
+  _orientation[1] = 0;
+  _orientation[2] = 0;
+  _ID = _AgentID++;
+  _machine = new StateMachine();
+}
+
+Agent::Agent(Point2D pos)
+{
+  _pos.x = pos.x;
+  _pos.y = pos.y;
+  _pos.z = 0;
+  _orientation[0] = 0;
+  _orientation[1] = 0;
+  _orientation[2] = 0;
   _ID = _AgentID++;
   _machine = new StateMachine();
 }
@@ -36,26 +51,53 @@ void Agent::setState(StateBase* state)
   _machine->setState(state);
 }
 
-void Agent::setPosition(double x, double y)
+void Agent::setPosition(double x, double y, double z)
 {
-  _x = x;
-  _y = y;
+  _pos.x = x;
+  _pos.y = y;
+  _pos.z = z;
 }
 
-void Agent::getPosition(double &x, double &y)
+void Agent::setPosition(Point2D pos)
 {
-  x = _x;
-  y = _y;
+  _pos.x = pos.x;
+  _pos.y = pos.y;
+  _pos.z = 0;
 }
 
-void Agent::setOrientation(double theta)
+void Agent::setPosition(Point pos)
 {
-  _theta = theta;
+  _pos = pos;
 }
 
-double Agent::getOrientation()
+void Agent::getPosition(double &x, double &y, double &z)
 {
-  return _theta;
+  x = _pos.x;
+  y = _pos.y;
+  z = _pos.z;
+}
+
+void Agent::getPosition(Point &pos)
+{
+  pos = _pos;
+}
+
+void Agent::getPosition(Point2D &pos)
+{
+  pos.x = _pos.x;
+  pos.y = _pos.y;
+}
+
+void Agent::setOrientation2D(double phi)
+{
+  _orientation[0] = 0.0;
+  _orientation[1] = 0.0;
+  _orientation[2] = phi;
+}
+
+void Agent::getOrientation(double orientation[3])
+{
+  memcpy(orientation, _orientation, 3*sizeof(*_orientation));
 }
 
 unsigned int Agent::getID()

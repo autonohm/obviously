@@ -15,7 +15,7 @@ namespace obvious
 
 static unsigned int _obstacleId = 0;
 
-Obstacle::Obstacle(std::vector<double> xcoords, std::vector<double> ycoords)
+Obstacle::Obstacle(std::vector<obfloat> xcoords, std::vector<obfloat> ycoords)
 {
   if(xcoords.size()!=ycoords.size())
   {
@@ -28,8 +28,8 @@ Obstacle::Obstacle(std::vector<double> xcoords, std::vector<double> ycoords)
   _bounds.ymin =  1e12;
   _bounds.ymax = -1e12;
 
-  vector<double>::iterator itx=xcoords.begin();
-  for(vector<double>::iterator ity=ycoords.begin(); ity!=ycoords.end(); ++ity, ++itx)
+  vector<obfloat>::iterator itx=xcoords.begin();
+  for(vector<obfloat>::iterator ity=ycoords.begin(); ity!=ycoords.end(); ++ity, ++itx)
   {
     if(*itx<_bounds.xmin) _bounds.xmin = *itx;
     if(*itx>_bounds.xmax) _bounds.xmax = *itx;
@@ -77,7 +77,7 @@ bool Obstacle::intersects(Obstacle* o)
   return (_bounds.xmin < bounds->xmax && _bounds.xmax > bounds->xmin && _bounds.ymin < bounds->ymax && _bounds.ymax > bounds->xmin);
 }
 
-void Obstacle::inflate(double radius)
+void Obstacle::inflate(obfloat radius)
 {
   _bounds.xmin -= radius;
   _bounds.xmax += radius;
@@ -85,10 +85,10 @@ void Obstacle::inflate(double radius)
   _bounds.ymax += radius;
 }
 
-void Obstacle::merge(std::vector<double> xcoords, std::vector<double> ycoords)
+void Obstacle::merge(std::vector<obfloat> xcoords, std::vector<obfloat> ycoords)
 {
-  vector<double>::iterator itx=xcoords.begin();
-  for(vector<double>::iterator ity=ycoords.begin(); ity!=ycoords.end(); ++ity, ++itx)
+  vector<obfloat>::iterator itx=xcoords.begin();
+  for(vector<obfloat>::iterator ity=ycoords.begin(); ity!=ycoords.end(); ++ity, ++itx)
   {
     if(*itx<_bounds.xmin) _bounds.xmin = *itx;
     if(*itx>_bounds.xmax) _bounds.xmax = *itx;

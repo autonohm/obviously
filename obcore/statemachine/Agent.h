@@ -2,6 +2,7 @@
 #define AGENT_H_
 
 #include "obcore/statemachine/StateMachine.h"
+#include "obcore/base/Point.h"
 
 /**
  * @namespace  obvious
@@ -11,6 +12,7 @@ namespace obvious
 
 /**
  * @class   Agent
+ * @brief   Generic class for mobile agents (robots) with state machine
  * @author  Stefan May
  * @date    23.10.2014
  */
@@ -20,73 +22,103 @@ class Agent
 public:
 
   /**
-   *
-   * @param x
-   * @param y
+   * Constructor
+   * @param pos 3D position, orientation is set to (0, 0, 0)
    */
-  Agent(double x, double y);
+  Agent(Point pos);
 
   /**
-   *
+   * Constructor
+   * @param pos 2D position, orientation is set to (0, 0, 0)
+   */
+  Agent(Point2D pos);
+
+  /**
+   * Destructor
    */
   virtual ~Agent();
 
   /**
-   *
+   * Main processing method
    */
   void process();
 
   /**
-   *
-   * @return
+   * Access agent's state machine
+   * @return state machine
    */
   StateMachine* getStateMachine();
 
   /**
-   *
-   * @param state
+   * Set state
+   * @param state new state
    */
   void setState(StateBase* state);
 
   /**
-   *
-   * @param x
-   * @param y
+   * Set position
+   * @param pos position (x, y, z)
    */
-  void setPosition(double x, double y);
+  void setPosition(Point pos);
 
   /**
-   *
-   * @param x
-   * @param y
+   * Set position
+   * @param pos position (x, y, 0)
    */
-  void getPosition(double &x, double &y);
+  void setPosition(Point2D pos);
 
   /**
-   *
-   * @param theta
+   * Set position
+   * @param x x-coordinate
+   * @param y y-coordinate
+   * @param z z-coordinate
    */
-  void setOrientation(double theta);
+  void setPosition(double x, double y, double z);
 
   /**
-   *
-   * @return
+   * Access current position
+   * @param pos position (x, y, z)
    */
-  double getOrientation();
+  void getPosition(Point &pos);
 
   /**
-   *
-   * @return
+   * Access current position
+   * @param pos position (x, y)
+   */
+  void getPosition(Point2D &pos);
+
+  /**
+   * Access current position
+   * @param x x-coordinate
+   * @param y y-coordinate
+   * @param z z-coordinate
+   */
+  void getPosition(double &x, double &y, double &z);
+
+
+  /**
+   * Set orientation of robot around z-axis (psi and theta will be set to 0)
+   * @param phi
+   */
+  void setOrientation2D(double phi);
+
+  /**
+   * Access orientation vector
+   * @return orientation orientation vector (x, y, z)
+   */
+  void getOrientation(double orientation[3]);
+
+  /**
+   * Get unique ID of agent, each instance is assigned a sequential ID
+   * @return ID
    */
   unsigned int getID();
 
 private:
 
-  double _x;
+  Point _pos;
 
-  double _y;
-
-  double _theta;
+  double _orientation[3];
 
   unsigned int _ID;
 

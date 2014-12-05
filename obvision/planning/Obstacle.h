@@ -9,16 +9,17 @@
 #define OBSTACLE_H_
 
 #include <vector>
+#include "obcore/base/types.h"
 
 namespace obvious
 {
 
 struct ObstacleBounds
 {
-  double xmin;
-  double xmax;
-  double ymin;
-  double ymax;
+  obfloat xmin;
+  obfloat xmax;
+  obfloat ymin;
+  obfloat ymax;
 };
 
 class Obstacle
@@ -30,7 +31,7 @@ public:
    * @param xcoords x-coordinates of obstacle-related points
    * @param ycoords y-coordinates of obstacle-related points
    */
-  Obstacle(std::vector<double> xcoords, std::vector<double> ycoords);
+  Obstacle(std::vector<obfloat> xcoords, std::vector<obfloat> ycoords);
 
   /**
    * Constructor
@@ -60,7 +61,7 @@ public:
    * Inflate obstacle
    * @param radius used for obstacle inflation
    */
-  void inflate(double radius);
+  void inflate(obfloat radius);
 
   /**
    * Check if two obstacles intersect with each other
@@ -74,7 +75,7 @@ public:
    * @param xcoords x-coordinates of obstacle
    * @param ycoords y-coordinates of obstacle
    */
-  void merge(std::vector<double> xcoords, std::vector<double> ycoords);
+  void merge(std::vector<obfloat> xcoords, std::vector<obfloat> ycoords);
 
 private:
 

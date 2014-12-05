@@ -45,14 +45,14 @@ int main(int argc, char* argv[])
 
   map->serialize("/tmp/map.txt");
 
-  AStarPixel start;
-  AStarPixel target;
-  start.x  = 486;
-  start.y  = 334;
-  target.x = 646;
-  target.y = 594;
-  AStarCoord coordStart;
-  AStarCoord coordTarget;
+  Pixel start;
+  Pixel target;
+  start.u  = 486;
+  start.v  = 334;
+  target.u = 646;
+  target.v = 594;
+  Point2D coordStart;
+  Point2D coordTarget;
   map->translatePixelToCoord(start, &coordStart);
   map->translatePixelToCoord(target, &coordTarget);
   timer.reset();
@@ -69,9 +69,9 @@ int main(int argc, char* argv[])
   }
   cout << endl << endl;
 
-  vector<AStarCoord> coords = map->translatePathToCoords(path, coordStart);
+  vector<Point2D> coords = map->translatePathToCoords(path, coordStart);
   cout << "Path in coordinates:" << endl;
-  for(vector<AStarCoord>::iterator it=coords.begin(); it!=coords.end(); ++it)
+  for(vector<Point2D>::iterator it=coords.begin(); it!=coords.end(); ++it)
     cout << (*it).x << " " << (*it).y << endl;
   cout << endl;
 

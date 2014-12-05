@@ -20,19 +20,19 @@ bool operator<(const AStarNode & a, const AStarNode & b)
   return a.getPriority() > b.getPriority();
 }
 
-std::vector<unsigned int> AStar::pathFind(AStarMap* map, const AStarCoord coordStart, const AStarCoord coordTarget)
+std::vector<unsigned int> AStar::pathFind(AStarMap* map, const Point2D coordStart, const Point2D coordTarget)
 {
-  AStarPixel start;
-  AStarPixel target;
-	start.x = (unsigned int)((coordStart.x / (double)map->getCellSize()) + map->getWidth()/2  + 0.5);
-	start.y = (unsigned int)((coordStart.y / (double)map->getCellSize()) + map->getHeight()/2 + 0.5);
-	target.x = (unsigned int)((coordTarget.x / (double)map->getCellSize()) + map->getWidth()/2 + 0.5);
-	target.y = (unsigned int)((coordTarget.y / (double)map->getCellSize()) + map->getHeight()/2 + 0.5);
+  Pixel start;
+  Pixel target;
+	start.u = (unsigned int)((coordStart.x / (obfloat)map->getCellSize()) + map->getWidth()/2  + 0.5);
+	start.v = (unsigned int)((coordStart.y / (obfloat)map->getCellSize()) + map->getHeight()/2 + 0.5);
+	target.u = (unsigned int)((coordTarget.x / (obfloat)map->getCellSize()) + map->getWidth()/2 + 0.5);
+	target.v = (unsigned int)((coordTarget.y / (obfloat)map->getCellSize()) + map->getHeight()/2 + 0.5);
 
 	return pathFind(map, start, target);
 }
 
-std::vector<unsigned int> AStar::pathFind(AStarMap* map, const AStarPixel start, const AStarPixel target)
+std::vector<unsigned int> AStar::pathFind(AStarMap* map, const Pixel start, const Pixel target)
 {
   static priority_queue<AStarNode> pq[2]; // list of open (not-yet-tried) MapNodes
   static int pqi; // pq index
@@ -73,11 +73,11 @@ std::vector<unsigned int> AStar::pathFind(AStarMap* map, const AStarPixel start,
   }
 
   // create the start Node and push into list of open Nodes
-  n0=new AStarNode(start.x, start.y, 0, 0);
-  n0->updatePriority(target.x, target.y);
+  n0=new AStarNode(start.u, start.v, 0, 0);
+  n0->updatePriority(target.u, target.v);
   pq[pqi].push(*n0);
 
-  openNodesMap[start.y][start.x]=n0->getPriority(); // mark it on the open Nodes map
+  openNodesMap[start.v][start.u]=n0->getPriority(); // mark it on the open Nodes map
 
   // A* search
   while(!pq[pqi].empty())
@@ -93,12 +93,12 @@ std::vector<unsigned int> AStar::pathFind(AStarMap* map, const AStarPixel start,
     closedNodesMap[y][x]=1;
 
     // quit searching when the goal state is reached if((*n0).estimate(xFinish, yFinish) == 0)
-    if(x==target.x && y==target.y)
+    if(x==target.u && y==target.v)
     {
       // generate the path from finish to start by following the directions
       //string path="";
       std::vector<unsigned int> path;
-      while(!(x==start.x && y==start.y))
+      while(!(x==start.u && y==start.v))
       {
         j=dirMap[y][x];
         path.push_back((j+4)%8);
@@ -125,7 +125,7 @@ std::vector<unsigned int> AStar::pathFind(AStarMap* map, const AStarPixel start,
         // generate a child Node
         m0=new AStarNode( xdx, ydy, n0->getLevel(), n0->getPriority());
         m0->nextLevel(i);
-        m0->updatePriority(target.x, target.y);
+        m0->updatePriority(target.u, target.v);
 
         // if it is not in the open list then add into that
         if(openNodesMap[ydy][xdx]==0)

@@ -12,7 +12,7 @@ using namespace std;
 namespace obvious
 {
 
-AStarMap::AStarMap(double cellSize, unsigned int cellsX, unsigned int cellsY)
+AStarMap::AStarMap(obfloat cellSize, unsigned int cellsX, unsigned int cellsY)
 {
   _cellsX    = cellsX;
   _cellsY    = cellsY;
@@ -79,7 +79,7 @@ unsigned int AStarMap::getHeight()
   return _cellsY;
 }
 
-double AStarMap::getCellSize()
+obfloat AStarMap::getCellSize()
 {
   return _cellSize;
 }
@@ -119,7 +119,7 @@ Obstacle* AStarMap::checkObstacleIntersection(Obstacle obstacle)
   return NULL;
 }
 
-void AStarMap::inflate(double robotRadius)
+void AStarMap::inflate(obfloat robotRadius)
 {
   memcpy(*_mapWork, *_map, _cellsY*_cellsX*sizeof(**_map));
 
@@ -224,26 +224,26 @@ void AStarMap::convertToImage(unsigned char* buffer)
   }
 }
 
-void AStarMap::translatePixelToCoord(AStarPixel pixel, AStarCoord* coord)
+void AStarMap::translatePixelToCoord(Pixel pixel, Point2D* coord)
 {
-  coord->x = ((double)(((int)pixel.x) - ((int)_cellsX/2)))*_cellSize;
-  coord->y = ((double)(((int)pixel.y) - ((int)_cellsY/2)))*_cellSize;
+  coord->x = ((obfloat)(((int)pixel.u) - ((int)_cellsX/2)))*_cellSize;
+  coord->y = ((obfloat)(((int)pixel.v) - ((int)_cellsY/2)))*_cellSize;
 }
 
-void AStarMap::translateCoordToPixel(AStarCoord coord, AStarPixel* pixel)
+void AStarMap::translateCoordToPixel(Point2D coord, Pixel* pixel)
 {
-  (*pixel).x = (coord.x/_cellSize) + _cellsX/2;
-  (*pixel).y = (coord.y/_cellSize) + _cellsY/2;
+  (*pixel).u = (coord.x/_cellSize) + _cellsX/2;
+  (*pixel).v = (coord.y/_cellSize) + _cellsY/2;
 }
 
-std::vector<unsigned int> AStarMap::translatePathToMapIndices(std::vector<unsigned int> path, AStarCoord coordStart)
+std::vector<unsigned int> AStarMap::translatePathToMapIndices(std::vector<unsigned int> path, Point2D coordStart)
 {
-  AStarPixel pixel;
+  Pixel pixel;
 
   translateCoordToPixel(coordStart, &pixel);
 
   std::vector<unsigned int> index;
-  unsigned int currentPos = pixel.y*_cellsX + pixel.x;
+  unsigned int currentPos = pixel.v*_cellsX + pixel.u;
 
   index.push_back(currentPos);
   for(vector<unsigned int>::iterator it=path.begin(); it!=path.end(); ++it)
@@ -280,10 +280,10 @@ std::vector<unsigned int> AStarMap::translatePathToMapIndices(std::vector<unsign
   return index;
 }
 
-std::vector<AStarCoord> AStarMap::translatePathToCoords(std::vector<unsigned int> path, AStarCoord coordStart)
+std::vector<Point2D> AStarMap::translatePathToCoords(std::vector<unsigned int> path, Point2D coordStart)
 {
-  std::vector<AStarCoord> coords;
-  AStarCoord pos;
+  std::vector<Point2D> coords;
+  Point2D pos;
   pos.x = coordStart.x;
   pos.y = coordStart.y;
   coords.push_back(pos);
@@ -337,7 +337,7 @@ AStarMap* AStarMap::load(std::string path)
   if (file.is_open())
   {
     unsigned int width, height;
-    double resolution;
+    obfloat resolution;
     file >> resolution >> width >> height;
 
     AStarMap* map = new AStarMap(resolution, width, height);
@@ -357,7 +357,7 @@ AStarMap* AStarMap::load(std::string path)
   return NULL;
 }
 
-AStarMap* AStarMap::create(char* data, double cellSize, unsigned int width, unsigned int height)
+AStarMap* AStarMap::create(char* data, obfloat cellSize, unsigned int width, unsigned int height)
 {
   AStarMap* map = new AStarMap(cellSize, width, height);
   memcpy(*(map->_map), data, width*height*sizeof(**(map->_map)));

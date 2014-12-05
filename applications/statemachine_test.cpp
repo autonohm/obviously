@@ -7,7 +7,11 @@ using namespace obvious;
 
 int main(int argc, char* argv[])
 {
-  Agent* agent = new Agent(0, 0);
+  Point2D pos;
+  pos.x = 0;
+  pos.y = 0;
+
+  Agent* agent = new Agent(pos);
 
   agent->setState(new StatePing(agent));
 
