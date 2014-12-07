@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <unistd.h>
+
 #include "obcore/base/Logger.h"
 
 namespace obvious

@@ -17,6 +17,8 @@ namespace obvious
  */
 class StateMachine
 {
+  friend class Agent;
+
 public:
 
   /**
@@ -36,12 +38,6 @@ public:
   virtual ~StateMachine();
 
   /**
-   * Function to set state
-   * @param state
-   */
-  void setState(StateBase* state);
-
-  /**
    * Function to get current state
    * @return
    */
@@ -53,6 +49,12 @@ public:
   void process(void);
 
 private:
+
+  /**
+   * Function to set state
+   * @param state
+   */
+  void setState(StateBase* state);
 
   StateBase* _currentState;
 

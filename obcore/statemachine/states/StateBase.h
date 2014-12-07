@@ -19,17 +19,26 @@ class StateBase
 
 public:
 
-  StateBase(Agent* agent);
+  /**
+   * Constructor
+   */
+  StateBase();
 
   /**
    * Default destructor
    */
-  virtual ~StateBase(void){};
+  virtual ~StateBase(){};
+
+  /**
+   * Set agent (needs to be set before call of process method)
+   * @param agent agent instance
+   */
+  void setAgent(Agent* agent);
 
   /**
    * Processing
    */
-  virtual void process(void) = 0;
+  virtual void process() = 0;
 
 protected:
 

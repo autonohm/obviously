@@ -13,7 +13,7 @@ int main(int argc, char* argv[])
 
   Agent* agent = new Agent(pos);
 
-  agent->setState(new StatePing(agent));
+  agent->setState(new StatePing());
 
   while(true)
   {

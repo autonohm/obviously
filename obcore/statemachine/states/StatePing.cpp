@@ -8,22 +8,22 @@
 namespace obvious
 {
 
-StatePing::StatePing(Agent* agent) : StateBase(agent)
+StatePing::StatePing()
 {
 
 }
 
-StatePing::~StatePing(void)
+StatePing::~StatePing()
 {
 
 }
 
-void StatePing::process(void)
+void StatePing::process()
 {
   std::cout << "Ping" << std::endl;
   if(rand()%100<30)
   {
-    _agent->setState(new StatePong(_agent));
+    _agent->setState(new StatePong());
     delete this;
   }
 }

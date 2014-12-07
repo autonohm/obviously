@@ -17,17 +17,17 @@ public:
   /**
    * Constructor
    */
-  StatePing(Agent* agent);
+  StatePing();
 
   /**
    * Destructor
    */
-  virtual ~StatePing(void);
+  virtual ~StatePing();
 
   /**
    * Process method (step-wise, never block this method)
    */
-  void process(void);
+  void process();
 
 private:
 

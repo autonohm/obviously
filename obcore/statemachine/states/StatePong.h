@@ -18,17 +18,17 @@ public:
   /**
    * Constructor
    */
-  StatePong(Agent* agent);
+  StatePong();
 
   /**
    * Destructor
    */
-  virtual ~StatePong(void);
+  virtual ~StatePong();
 
   /**
    * Process method (step-wise, never block this method)
    */
-  void process(void);
+  void process();
 
 private:
 

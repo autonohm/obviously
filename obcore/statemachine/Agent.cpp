@@ -48,6 +48,7 @@ StateMachine* Agent::getStateMachine()
 
 void Agent::setState(StateBase* state)
 {
+  state->setAgent(this);
   _machine->setState(state);
 }
 
