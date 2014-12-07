@@ -133,16 +133,16 @@ public:
   void clearPath();
 
   /**
-   * Set target
-   * @param path
+   * Add target
+   * @param target target
    */
-//  void setTarget(std::vector<obvious::Point2D> target);
-//
-//  /**
-//   * Get targets
-//   * @param path
-//   */
-//  void getTargets(std::vector<obvious::Point2D>& targets);
+  void addTarget(obvious::Point2D target);
+
+  /**
+   * Get target
+   * @return target
+   */
+  bool getNextTarget(obvious::Point2D& target);
 
 private:
 

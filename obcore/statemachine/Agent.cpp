@@ -115,19 +115,24 @@ void Agent::getPath(std::vector<obvious::Point2D>& path)
   path = _path;
 }
 
-//void Agent::setTarget(std::vector<obvious::Point2D> target)
-//{
-//  push.back(target);
-//}
-//
-//void Agent::getTargets(std::vector<obvious::Point2D>& targets)
-//{
-//  targets = _targets;
-//}
-
 void Agent::clearPath()
 {
   _path.clear();
+}
+
+void Agent::addTarget(obvious::Point2D target)
+{
+  _targets.push_back(target);
+}
+
+bool Agent::getNextTarget(obvious::Point2D& target)
+{
+  if(_targets.size()==0) return false;
+
+  target = _targets[0];
+  _targets.erase(_targets.begin());
+
+  return true;
 }
 
 } // end namespace
