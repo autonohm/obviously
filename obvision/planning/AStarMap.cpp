@@ -357,7 +357,7 @@ AStarMap* AStarMap::load(std::string path)
   return NULL;
 }
 
-AStarMap* AStarMap::create(char* data, obfloat cellSize, unsigned int width, unsigned int height)
+AStarMap* AStarMap::create(const char* data, obfloat cellSize, unsigned int width, unsigned int height)
 {
   AStarMap* map = new AStarMap(cellSize, width, height);
   memcpy(*(map->_map), data, width*height*sizeof(**(map->_map)));
