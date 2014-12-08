@@ -13,10 +13,10 @@ TEST(quaternion_test_constructor, quaternion_test)
 {
   Quaternion q;
 
-  EXPECT_EQ(q._w, 1.0);
-  EXPECT_EQ(q._x, 0.0);
-  EXPECT_EQ(q._y, 0.0);
-  EXPECT_EQ(q._z, 0.0);
+  EXPECT_EQ(q.w(), 1.0);
+  EXPECT_EQ(q.x(), 0.0);
+  EXPECT_EQ(q.y(), 0.0);
+  EXPECT_EQ(q.z(), 0.0);
 }
 
 TEST(quaternion_test_constructor2, quaternion_test)
@@ -27,10 +27,10 @@ TEST(quaternion_test_constructor2, quaternion_test)
 
   Quaternion q(cosine, sine*len, sine*len, sine*len);
 
-  EXPECT_EQ(q._w, cosine);
-  EXPECT_EQ(q._x, sine*len);
-  EXPECT_EQ(q._y, sine*len);
-  EXPECT_EQ(q._z, sine*len);
+  EXPECT_EQ(q.w(), cosine);
+  EXPECT_EQ(q.x(), sine*len);
+  EXPECT_EQ(q.y(), sine*len);
+  EXPECT_EQ(q.z(), sine*len);
 }
 
 TEST(quaternion_test_constructor3, quaternion_test)
@@ -40,10 +40,10 @@ TEST(quaternion_test_constructor3, quaternion_test)
 
   Quaternion q(R);
 
-  EXPECT_EQ(q._w, cos(phi/2.0));
-  EXPECT_EQ(q._x, 0.0);
-  EXPECT_EQ(q._y, 0.0);
-  EXPECT_EQ(q._z, sin(phi/2.0));
+  EXPECT_EQ(q.w(), cos(phi/2.0));
+  EXPECT_EQ(q.x(), 0.0);
+  EXPECT_EQ(q.y(), 0.0);
+  EXPECT_EQ(q.z(), sin(phi/2.0));
 }
 
 TEST(quaternion_test_constructor4, quaternion_test)
@@ -53,10 +53,10 @@ TEST(quaternion_test_constructor4, quaternion_test)
 
   Quaternion q(R);
 
-  EXPECT_EQ(q._w, cos(phi/2.0));
-  EXPECT_EQ(q._x, 0.0);
-  EXPECT_EQ(q._y, 0.0);
-  EXPECT_EQ(q._z, sin(phi/2.0));
+  EXPECT_EQ(q.w(), cos(phi/2.0));
+  EXPECT_EQ(q.x(), 0.0);
+  EXPECT_EQ(q.y(), 0.0);
+  EXPECT_EQ(q.z(), sin(phi/2.0));
 }
 
 TEST(quaternion_test_constructor5, quaternion_test)
@@ -66,10 +66,10 @@ TEST(quaternion_test_constructor5, quaternion_test)
 
   Quaternion q(R);
 
-  EXPECT_EQ(q._w, cos(phi/2.0));
-  EXPECT_EQ(q._x, 0.0);
-  EXPECT_EQ(q._y, 0.0);
-  EXPECT_EQ(q._z, sin(phi/2.0));
+  EXPECT_EQ(q.w(), cos(phi/2.0));
+  EXPECT_EQ(q.x(), 0.0);
+  EXPECT_EQ(q.y(), 0.0);
+  EXPECT_EQ(q.z(), sin(phi/2.0));
 }
 
 TEST(quaternion_test_constructor6, quaternion_test)

@@ -126,6 +126,26 @@ Quaternion::~Quaternion()
 
 }
 
+double Quaternion::w() const
+{
+  return _w;
+}
+
+double Quaternion::x() const
+{
+  return _x;
+}
+
+double Quaternion::y() const
+{
+  return _y;
+}
+
+double Quaternion::z() const
+{
+  return _z;
+}
+
 Quaternion operator + (const Quaternion &q1, const Quaternion &q2)
 {
   Quaternion q(q1._w, q1._x, q1._y, q1._z);
