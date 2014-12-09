@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.6)
 
 SET(CMAKE_BUILD_TYPE Release)
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS} -fopenmp -Wall -O2 -DNDEBUG -ffast-math -funroll-loops -msse -mmmx -mtune=core2 -msse2 -msse3 -msse4 -mssse3")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS} -fopenmp -Wall -O2 -DNDEBUG -funroll-loops -msse -mmmx -mtune=core2 -msse2 -msse3 -msse4 -mssse3")
 
 SET(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../../cmake)
 
