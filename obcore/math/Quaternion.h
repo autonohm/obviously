@@ -64,6 +64,30 @@ public:
   virtual ~Quaternion();
 
   /**
+   * Const accessor
+   * @return w-component
+   */
+  double w() const;
+
+  /**
+   * Const accessor
+   * @return x-component of axis
+   */
+  double x() const;
+
+  /**
+   * Const accessor
+   * @return y-component of axis
+   */
+  double y() const;
+
+  /**
+   * Const accessor
+   * @return z-component of axis
+   */
+  double z() const;
+
+  /**
    * Add two quaternions
    * @param q1 first quaternion
    * @param q2 second quaternion
@@ -103,6 +127,8 @@ public:
    * @return matrix
    */
   Matrix convertToMatrix();
+
+private:
 
   obfloat _w;
 

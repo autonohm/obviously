@@ -395,7 +395,7 @@ AStarMap* AStarMap::load(std::string path)
   return NULL;
 }
 
-AStarMap* AStarMap::create(char* data, obfloat cellSize, unsigned int width, unsigned int height)
+AStarMap* AStarMap::create(const char* data, obfloat cellSize, unsigned int width, unsigned int height)
 {
   //Creates a map form a occupancy grid
   AStarMap* map = new AStarMap(cellSize, width, height);
