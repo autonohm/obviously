@@ -3,6 +3,7 @@
 
 #include <string>
 #include <list>
+#include <pthread.h>
 
 #include "obvision/planning/Obstacle.h"
 #include "obcore/base/Point.h"
@@ -55,6 +56,12 @@ public:
   obfloat getCellSize();
 
   /**
+   * Set occupancy grid data
+   * data occupancy grid data of layout width x height
+   */
+  void setData(char* data);
+
+  /**
    * Add obstacle to map
    * @param obstacle obstacle container with coordinates
    */
@@ -84,17 +91,21 @@ public:
    */
   void inflate(obfloat robotRadius);
 
+  char** getMap(bool inflated=true);
+
   /**
    * Get map with obstacles as occupied cells
+   * @param inflated get inflated/non-inflated map
    * @return map
    */
-  char** getMapWithObstacles();
+  char** getMapWithObstacles(bool inflated=true);
 
   /**
    * Convert map to raw image
    * @param buffer raw image as RGB triples
+   * @param inflated return non-inflated/inflated map
    */
-  void convertToImage(unsigned char* buffer);
+  void convertToImage(unsigned char* buffer, bool inflated=false);
 
   /**
    * translate indices to coordinates
@@ -153,9 +164,11 @@ private:
 
   char** _map;
 
-  char** _mapObstacle;
+  char** _mapBuf;
 
-  char** _mapWork;
+  char** _mapInflated;
+
+  char** _mapObstacle;
 
   bool _mapIsDirty;
 
@@ -172,6 +185,8 @@ private:
   unsigned int _cellsY;
 
   std::list<Obstacle> _obstacles;
+
+  pthread_mutex_t _mutex;
 };
 
 } /* namespace obvious */

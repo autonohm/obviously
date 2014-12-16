@@ -49,6 +49,8 @@ Obstacle::Obstacle(ObstacleBounds bounds)
   _bounds.xmax           = bounds.xmax;
   _bounds.ymin           = bounds.ymin;
   _bounds.ymax           = bounds.ymax;
+  cout << __PRETTY_FUNCTION__ << "obstacle created" << endl;
+
 }
 
 Obstacle::Obstacle(Obstacle* o)

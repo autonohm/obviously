@@ -19,11 +19,12 @@ AStarMap::AStarMap(obfloat cellSize, unsigned int cellsX, unsigned int cellsY)
   _cellSize  = cellSize;
 
   obvious::System<char>::allocate(_cellsY, _cellsX, _map);
+  obvious::System<char>::allocate(_cellsY, _cellsX, _mapBuf);
+  obvious::System<char>::allocate(_cellsY, _cellsX, _mapInflated);
   obvious::System<char>::allocate(_cellsY, _cellsX, _mapObstacle);
-  obvious::System<char>::allocate(_cellsY, _cellsX, _mapWork);
-  obvious::System<int>::allocate(_cellsY, _cellsX, _closedNodesMap);
-  obvious::System<int>::allocate(_cellsY, _cellsX, _openNodesMap);
-  obvious::System<int>::allocate(_cellsY, _cellsX, _dirMap);
+  obvious::System<int>::allocate(_cellsY,  _cellsX, _closedNodesMap);
+  obvious::System<int>::allocate(_cellsY,  _cellsX, _openNodesMap);
+  obvious::System<int>::allocate(_cellsY,  _cellsX, _dirMap);
 
   for(unsigned int y=0;y<_cellsY;y++)
   {
@@ -31,7 +32,8 @@ AStarMap::AStarMap(obfloat cellSize, unsigned int cellsX, unsigned int cellsY)
     {
       _closedNodesMap[y][x] = 0;
       _openNodesMap[y][x]   = 0;
-      _map[y][x]        = 1;
+      _map[y][x]            = 1;
+      _mapInflated[y][x]    = 1;
     }
   }
 
@@ -45,15 +47,17 @@ AStarMap::AStarMap(AStarMap &map)
   _cellSize = map._cellSize;
 
   obvious::System<char>::allocate(_cellsY, _cellsX, _map);
+  obvious::System<char>::allocate(_cellsY, _cellsX, _mapBuf);
+  obvious::System<char>::allocate(_cellsY, _cellsX, _mapInflated);
   obvious::System<char>::allocate(_cellsY, _cellsX, _mapObstacle);
-  obvious::System<char>::allocate(_cellsY, _cellsX, _mapWork);
-  obvious::System<int>::allocate(_cellsY, _cellsX, _closedNodesMap);
-  obvious::System<int>::allocate(_cellsY, _cellsX, _openNodesMap);
-  obvious::System<int>::allocate(_cellsY, _cellsX, _dirMap);
+  obvious::System<int>::allocate(_cellsY,  _cellsX, _closedNodesMap);
+  obvious::System<int>::allocate(_cellsY,  _cellsX, _openNodesMap);
+  obvious::System<int>::allocate(_cellsY,  _cellsX, _dirMap);
 
   memcpy(*_closedNodesMap, *(map._closedNodesMap), _cellsX*_cellsY*sizeof(**_closedNodesMap));
   memcpy(*_openNodesMap, *(map._openNodesMap), _cellsX*_cellsY*sizeof(**_openNodesMap));
   memcpy(*_map, *(map._map), _cellsX*_cellsY*sizeof(**_map));
+  memcpy(*_mapInflated, *(map._mapInflated), _cellsX*_cellsY*sizeof(**_mapInflated));
   memcpy(*_mapObstacle, *(map._mapObstacle), _cellsX*_cellsY*sizeof(**_mapObstacle));
 
   _mapIsDirty = map._mapIsDirty;
@@ -62,11 +66,19 @@ AStarMap::AStarMap(AStarMap &map)
 AStarMap::~AStarMap()
 {
   obvious::System<char>::deallocate(_map);
+  obvious::System<char>::deallocate(_mapBuf);
+  obvious::System<char>::deallocate(_mapInflated);
   obvious::System<char>::deallocate(_mapObstacle);
-  obvious::System<char>::deallocate(_mapWork);
   obvious::System<int>::deallocate(_closedNodesMap);
   obvious::System<int>::deallocate(_openNodesMap);
   obvious::System<int>::deallocate(_dirMap);
+}
+
+void AStarMap::setData(char* data)
+{
+  pthread_mutex_lock(&_mutex);
+  memcpy(*_map, data, _cellsX*_cellsY*sizeof(**_map));
+  pthread_mutex_unlock(&_mutex);
 }
 
 unsigned int AStarMap::getWidth()
@@ -121,7 +133,8 @@ Obstacle* AStarMap::checkObstacleIntersection(Obstacle obstacle)
 
 void AStarMap::inflate(obfloat robotRadius)
 {
-  memcpy(*_mapWork, *_map, _cellsY*_cellsX*sizeof(**_map));
+//  pthread_mutex_lock(&_mutex);
+  memcpy(*_mapInflated, *_map, _cellsX*_cellsY*sizeof(**_mapInflated));
 
   int radius = static_cast<unsigned int>(robotRadius / _cellSize + 0.5);
 
@@ -129,7 +142,7 @@ void AStarMap::inflate(obfloat robotRadius)
   {
     for(unsigned int x = 0; x < _cellsX; x++)
     {
-      if(_mapWork[y][x]!=0)  //obstacle
+      if(_map[y][x]!=0)  //obstacle
       {
         for(unsigned int v = y - radius; v < y + radius; v++)
         {
@@ -138,21 +151,38 @@ void AStarMap::inflate(obfloat robotRadius)
             for(unsigned int u = x - radius; u < x + radius; u++)
             {
               if(u < _cellsX)
-                _map[v][u]=1;
+                _mapInflated[v][u]=1;
             }
           }
         }
       }
     }
   }
-  _mapIsDirty = true;
+//  pthread_mutex_unlock(&_mutex);
 }
 
-char** AStarMap::getMapWithObstacles()
+char** AStarMap::getMap(bool inflated)
 {
+  char** map = _map;
+  if(inflated) map = _mapInflated;
+  pthread_mutex_lock(&_mutex);
+  memcpy(*_mapBuf, *map, _cellsX*_cellsY*sizeof(**_mapBuf));
+  pthread_mutex_unlock(&_mutex);
+  return _mapBuf;
+}
+
+char** AStarMap::getMapWithObstacles(bool inflated)
+{
+  pthread_mutex_lock(&_mutex);
   if(_mapIsDirty)
   {
-    memcpy(*_mapObstacle, *_map, _cellsX*_cellsY*sizeof(**_map));
+    if(inflated)
+      memcpy(*_mapObstacle, *_mapInflated, _cellsX*_cellsY*sizeof(**_mapInflated));
+    else
+      memcpy(*_mapObstacle, *_map, _cellsX*_cellsY*sizeof(**_map));
+
+    std::cout << __PRETTY_FUNCTION__  << "test 1" << std::endl;
+
     for(list<Obstacle>::iterator it=_obstacles.begin(); it!=_obstacles.end(); ++it)
     {
       ObstacleBounds* bounds = it->getBounds();
@@ -160,6 +190,8 @@ char** AStarMap::getMapWithObstacles()
       int xmax = int(bounds->xmax/_cellSize+0.5)+_cellsX/2;
       int ymin = int(bounds->ymin/_cellSize+0.5)+_cellsY/2;
       int ymax = int(bounds->ymax/_cellSize+0.5)+_cellsY/2;
+
+      std::cout << __PRETTY_FUNCTION__  << "test 2" << std::endl;
 
       for(int y=ymin; y<ymax; y++)
       {
@@ -169,25 +201,30 @@ char** AStarMap::getMapWithObstacles()
         }
       }
     }
+
     _mapIsDirty = false;
   }
+  pthread_mutex_unlock(&_mutex);
   return _mapObstacle;
 }
 
-void AStarMap::convertToImage(unsigned char* buffer)
+void AStarMap::convertToImage(unsigned char* buffer, bool inflated)
 {
+  char** map = _map;
+  if(inflated) map = _mapInflated;
+  pthread_mutex_lock(&_mutex);
   for(unsigned int y=0;y<_cellsY;y++)
   {
     for(unsigned int x=0;x<_cellsX;x++)
     {
       unsigned int idx = 3 * (y * _cellsX + x);
-      if(_map[y][x] == 0)
+      if(map[y][x] == 0)
       {
         buffer[idx + 0] = 0;
         buffer[idx + 1] = 255;
         buffer[idx + 2] = 0;
       }
-      else if(_map[y][x] == 50)
+      else if(map[y][x] == 50)
       {
         buffer[idx + 0] = 0;
         buffer[idx + 1] = 0;
@@ -222,6 +259,7 @@ void AStarMap::convertToImage(unsigned char* buffer)
       }
     }
   }
+  pthread_mutex_unlock(&_mutex);
 }
 
 void AStarMap::translatePixelToCoord(Pixel pixel, Point2D* coord)
@@ -359,6 +397,7 @@ AStarMap* AStarMap::load(std::string path)
 
 AStarMap* AStarMap::create(const char* data, obfloat cellSize, unsigned int width, unsigned int height)
 {
+  //Creates a map form a occupancy grid
   AStarMap* map = new AStarMap(cellSize, width, height);
   memcpy(*(map->_map), data, width*height*sizeof(**(map->_map)));
 
@@ -367,6 +406,7 @@ AStarMap* AStarMap::create(const char* data, obfloat cellSize, unsigned int widt
 
 void AStarMap::serialize(std::string path)
 {
+  pthread_mutex_lock(&_mutex);
   string line;
   ofstream file;
 
@@ -384,5 +424,6 @@ void AStarMap::serialize(std::string path)
   }
   else
     cout << "Opening of output file " << path << " failed!" << endl;
+  pthread_mutex_unlock(&_mutex);
 }
 } /* namespace obvious */
