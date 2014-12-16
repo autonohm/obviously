@@ -96,7 +96,6 @@ public:
    */
   void getPosition(double& x, double& y, double& z);
 
-
   /**
    * Set orientation of robot around z-axis (psi and theta will be set to 0)
    * @param phi

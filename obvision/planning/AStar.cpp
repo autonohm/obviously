@@ -57,10 +57,16 @@ std::vector<unsigned int> AStar::pathFind(AStarMap* map, const Pixel start, cons
 
   unsigned int height  = map->getHeight();
   unsigned int width   = map->getWidth();
-  char** buffer        = map->getMapWithObstacles();
+  std::cout << __PRETTY_FUNCTION__  << "test 1" << std::endl;
+  char** buffer        = map->getMapWithObstacles(true);
+
+  std::cout << __PRETTY_FUNCTION__  << "test 2" << std::endl;
+
+//  char** buffer        = map->getMap(false);
   int** closedNodesMap = map->_closedNodesMap;
   int** openNodesMap   = map->_openNodesMap;
   int** dirMap         = map->_dirMap;
+
 
   // reset the Node maps
   for(y=0;y<height;y++)
@@ -71,6 +77,7 @@ std::vector<unsigned int> AStar::pathFind(AStarMap* map, const Pixel start, cons
       openNodesMap[y][x]   = 0;
     }
   }
+
 
   // create the start Node and push into list of open Nodes
   n0=new AStarNode(start.u, start.v, 0, 0);
