@@ -3,6 +3,7 @@
 
 #include <string>
 #include <list>
+#include <pthread.h>
 
 #include "obvision/planning/Obstacle.h"
 #include "obcore/base/Point.h"
@@ -178,6 +179,8 @@ private:
   unsigned int _cellsY;
 
   std::list<Obstacle> _obstacles;
+
+  pthread_mutex_t _mutex;
 };
 
 } /* namespace obvious */

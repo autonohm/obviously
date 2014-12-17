@@ -71,8 +71,10 @@ AStarMap::~AStarMap()
 
 void AStarMap::copyFrom(AStarMap* map)
 {
+  pthread_mutex_lock(&_mutex);
   memcpy(*_mapObstacle, *(map->_mapObstacle), _cellsY*_cellsX*sizeof(**_mapObstacle));
   memcpy(*_map, *(map->_map), _cellsY*_cellsX*sizeof(**_mapObstacle));
+  pthread_mutex_unlock(&_mutex);
 }
 
 unsigned int AStarMap::getWidth()
@@ -127,6 +129,7 @@ Obstacle* AStarMap::checkObstacleIntersection(Obstacle obstacle)
 
 void AStarMap::inflate(obfloat robotRadius)
 {
+  pthread_mutex_lock(&_mutex);
   memcpy(*_mapWork, *_map, _cellsY*_cellsX*sizeof(**_map));
 
   int radius = static_cast<unsigned int>(robotRadius / _cellSize + 0.5);
@@ -151,11 +154,13 @@ void AStarMap::inflate(obfloat robotRadius)
       }
     }
   }
+  pthread_mutex_unlock(&_mutex);
   _mapIsDirty = true;
 }
 
 void AStarMap::getMapWithObstacles(char** map)
 {
+  pthread_mutex_lock(&_mutex);
   if(_mapIsDirty)
   {
     memcpy(*_mapObstacle, *_map, _cellsX*_cellsY*sizeof(**_map));
@@ -178,10 +183,12 @@ void AStarMap::getMapWithObstacles(char** map)
     _mapIsDirty = false;
   }
   memcpy(*map, *_mapObstacle, _cellsX*_cellsY*sizeof(**_map));
+  pthread_mutex_unlock(&_mutex);
 }
 
 void AStarMap::convertToImage(unsigned char* buffer)
 {
+  pthread_mutex_lock(&_mutex);
   for(unsigned int y=0;y<_cellsY;y++)
   {
     for(unsigned int x=0;x<_cellsX;x++)
@@ -207,6 +214,7 @@ void AStarMap::convertToImage(unsigned char* buffer)
       }
     }
   }
+  pthread_mutex_unlock(&_mutex);
 
   for(list<Obstacle>::iterator it=_obstacles.begin(); it!=_obstacles.end(); ++it)
   {
@@ -373,6 +381,7 @@ AStarMap* AStarMap::create(const char* data, obfloat cellSize, unsigned int widt
 
 void AStarMap::serialize(std::string path)
 {
+  pthread_mutex_lock(&_mutex);
   string line;
   ofstream file;
 
@@ -390,5 +399,6 @@ void AStarMap::serialize(std::string path)
   }
   else
     cout << "Opening of output file " << path << " failed!" << endl;
+  pthread_mutex_unlock(&_mutex);
 }
 } /* namespace obvious */
