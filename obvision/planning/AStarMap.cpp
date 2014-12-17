@@ -69,6 +69,12 @@ AStarMap::~AStarMap()
   obvious::System<int>::deallocate(_dirMap);
 }
 
+void AStarMap::copyFrom(AStarMap* map)
+{
+  memcpy(*_mapObstacle, *(map->_mapObstacle), _cellsY*_cellsX*sizeof(**_mapObstacle));
+  memcpy(*_map, *(map->_map), _cellsY*_cellsX*sizeof(**_mapObstacle));
+}
+
 unsigned int AStarMap::getWidth()
 {
   return _cellsX;
@@ -148,7 +154,7 @@ void AStarMap::inflate(obfloat robotRadius)
   _mapIsDirty = true;
 }
 
-char** AStarMap::getMapWithObstacles()
+void AStarMap::getMapWithObstacles(char** map)
 {
   if(_mapIsDirty)
   {
@@ -171,7 +177,7 @@ char** AStarMap::getMapWithObstacles()
     }
     _mapIsDirty = false;
   }
-  return _mapObstacle;
+  memcpy(*map, *_mapObstacle, _cellsX*_cellsY*sizeof(**_map));
 }
 
 void AStarMap::convertToImage(unsigned char* buffer)

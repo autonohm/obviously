@@ -57,7 +57,9 @@ std::vector<unsigned int> AStar::pathFind(AStarMap* map, const Pixel start, cons
 
   unsigned int height  = map->getHeight();
   unsigned int width   = map->getWidth();
-  char** buffer        = map->getMapWithObstacles();
+  char** buffer;
+  obvious::System<char>::allocate(height, width, buffer);
+  map->getMapWithObstacles(buffer);
   int** closedNodesMap = map->_closedNodesMap;
   int** openNodesMap   = map->_openNodesMap;
   int** dirMap         = map->_dirMap;
@@ -107,6 +109,7 @@ std::vector<unsigned int> AStar::pathFind(AStarMap* map, const Pixel start, cons
       }
 
       // garbage collection
+      obvious::System<char>::deallocate(buffer);
       delete n0;
       // empty the leftover Nodes
       while(!pq[pqi].empty()) pq[pqi].pop();
@@ -165,6 +168,7 @@ std::vector<unsigned int> AStar::pathFind(AStarMap* map, const Pixel start, cons
     }
     delete n0; // garbage collection
   }
+  obvious::System<char>::deallocate(buffer);
   return std::vector<unsigned int>(); // no route found
 }
 

@@ -37,6 +37,12 @@ public:
   ~AStarMap();
 
   /**
+   *
+   * @return
+   */
+  void copyFrom(AStarMap* map);
+
+  /**
    * Get width of map
    * @return width
    */
@@ -88,7 +94,7 @@ public:
    * Get map with obstacles as occupied cells
    * @return map
    */
-  char** getMapWithObstacles();
+  void getMapWithObstacles(char** map);
 
   /**
    * Convert map to raw image
