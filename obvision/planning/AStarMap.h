@@ -86,6 +86,12 @@ public:
   void removeObstacle(Obstacle* obstacle);
 
   /**
+   *
+   * @param id
+   */
+  void removeObstacleById(int id);
+
+  /**
    * Remove all previously added obstacles
    */
   void removeAllObstacles();

@@ -115,7 +115,21 @@ void AStarMap::removeObstacle(Obstacle* obstacle)
   pthread_mutex_lock(&_mutex);
   for(list<Obstacle>::iterator it=_obstacles.begin(); it!=_obstacles.end(); ++it)
   {
-    if((*it).getID()==obstacle->getID())
+    if(it->getID()==obstacle->getID())
+    {
+      it = _obstacles.erase(it);
+      _mapIsDirty = true;
+    }
+  }
+  pthread_mutex_unlock(&_mutex);
+}
+
+void AStarMap::removeObstacleById(int id)
+{
+  pthread_mutex_lock(&_mutex);
+  for(list<Obstacle>::iterator it=_obstacles.begin(); it!=_obstacles.end(); ++it)
+  {
+    if(it->getID()==(unsigned int)id)
     {
       it = _obstacles.erase(it);
       _mapIsDirty = true;
