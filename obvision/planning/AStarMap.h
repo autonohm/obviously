@@ -39,9 +39,15 @@ public:
 
   /**
    *
-   * @return
+   * @param map
    */
   void copyFrom(AStarMap* map);
+
+  /**
+   *
+   * @param map
+   */
+  void copyTo(AStarMap* map);
 
   /**
    * Get width of map
@@ -165,12 +171,6 @@ private:
   char** _mapWork;
 
   bool _mapIsDirty;
-
-  int** _closedNodesMap;
-
-  int** _openNodesMap;
-
-  int** _dirMap;
 
   obfloat _cellSize;
 

@@ -21,19 +21,17 @@ AStarMap::AStarMap(obfloat cellSize, unsigned int cellsX, unsigned int cellsY)
   obvious::System<char>::allocate(_cellsY, _cellsX, _map);
   obvious::System<char>::allocate(_cellsY, _cellsX, _mapObstacle);
   obvious::System<char>::allocate(_cellsY, _cellsX, _mapWork);
-  obvious::System<int>::allocate(_cellsY, _cellsX, _closedNodesMap);
-  obvious::System<int>::allocate(_cellsY, _cellsX, _openNodesMap);
-  obvious::System<int>::allocate(_cellsY, _cellsX, _dirMap);
 
   for(unsigned int y=0;y<_cellsY;y++)
   {
     for(unsigned int x=0;x<_cellsX;x++)
     {
-      _closedNodesMap[y][x] = 0;
-      _openNodesMap[y][x]   = 0;
       _map[y][x]        = 1;
     }
   }
+
+  if(pthread_mutex_init(&_mutex, NULL)!= 0)
+    cout << "Init of mutex failed!" << endl;
 
   _mapIsDirty = true;
 }
@@ -47,33 +45,38 @@ AStarMap::AStarMap(AStarMap &map)
   obvious::System<char>::allocate(_cellsY, _cellsX, _map);
   obvious::System<char>::allocate(_cellsY, _cellsX, _mapObstacle);
   obvious::System<char>::allocate(_cellsY, _cellsX, _mapWork);
-  obvious::System<int>::allocate(_cellsY, _cellsX, _closedNodesMap);
-  obvious::System<int>::allocate(_cellsY, _cellsX, _openNodesMap);
-  obvious::System<int>::allocate(_cellsY, _cellsX, _dirMap);
 
-  memcpy(*_closedNodesMap, *(map._closedNodesMap), _cellsX*_cellsY*sizeof(**_closedNodesMap));
-  memcpy(*_openNodesMap, *(map._openNodesMap), _cellsX*_cellsY*sizeof(**_openNodesMap));
-  memcpy(*_map, *(map._map), _cellsX*_cellsY*sizeof(**_map));
-  memcpy(*_mapObstacle, *(map._mapObstacle), _cellsX*_cellsY*sizeof(**_mapObstacle));
+  if(pthread_mutex_init(&_mutex, NULL)!= 0)
+    cout << "Init of mutex failed!" << endl;
+
+  map.copyTo(this);
 
   _mapIsDirty = map._mapIsDirty;
 }
 
 AStarMap::~AStarMap()
 {
+  pthread_mutex_destroy(&_mutex);
   obvious::System<char>::deallocate(_map);
   obvious::System<char>::deallocate(_mapObstacle);
   obvious::System<char>::deallocate(_mapWork);
-  obvious::System<int>::deallocate(_closedNodesMap);
-  obvious::System<int>::deallocate(_openNodesMap);
-  obvious::System<int>::deallocate(_dirMap);
 }
 
 void AStarMap::copyFrom(AStarMap* map)
 {
   pthread_mutex_lock(&_mutex);
   memcpy(*_mapObstacle, *(map->_mapObstacle), _cellsY*_cellsX*sizeof(**_mapObstacle));
-  memcpy(*_map, *(map->_map), _cellsY*_cellsX*sizeof(**_mapObstacle));
+  memcpy(*_map, *(map->_map), _cellsY*_cellsX*sizeof(**_map));
+  _mapIsDirty = true;
+  pthread_mutex_unlock(&_mutex);
+}
+
+void AStarMap::copyTo(AStarMap* map)
+{
+  pthread_mutex_lock(&_mutex);
+  memcpy(*(map->_mapObstacle), *_mapObstacle, _cellsY*_cellsX*sizeof(**_mapObstacle));
+  memcpy(*(map->_map), *_map, _cellsY*_cellsX*sizeof(**_map));
+  map->_mapIsDirty = true;
   pthread_mutex_unlock(&_mutex);
 }
 
@@ -94,13 +97,16 @@ obfloat AStarMap::getCellSize()
 
 void AStarMap::addObstacle(Obstacle &obstacle)
 {
+  pthread_mutex_lock(&_mutex);
   Obstacle o(obstacle);
   _obstacles.push_back(o);
   _mapIsDirty = true;
+  pthread_mutex_unlock(&_mutex);
 }
 
 void AStarMap::removeObstacle(Obstacle* obstacle)
 {
+  pthread_mutex_lock(&_mutex);
   for(list<Obstacle>::iterator it=_obstacles.begin(); it!=_obstacles.end(); ++it)
   {
     if((*it).getID()==obstacle->getID())
@@ -109,12 +115,15 @@ void AStarMap::removeObstacle(Obstacle* obstacle)
       _mapIsDirty = true;
     }
   }
+  pthread_mutex_unlock(&_mutex);
 }
 
 void AStarMap::removeAllObstacles()
 {
+  pthread_mutex_lock(&_mutex);
   _obstacles.clear();
   _mapIsDirty = true;
+  pthread_mutex_unlock(&_mutex);
 }
 
 Obstacle* AStarMap::checkObstacleIntersection(Obstacle obstacle)
@@ -154,8 +163,8 @@ void AStarMap::inflate(obfloat robotRadius)
       }
     }
   }
-  pthread_mutex_unlock(&_mutex);
   _mapIsDirty = true;
+  pthread_mutex_unlock(&_mutex);
 }
 
 void AStarMap::getMapWithObstacles(char** map)
@@ -172,11 +181,18 @@ void AStarMap::getMapWithObstacles(char** map)
       int ymin = int(bounds->ymin/_cellSize+0.5)+_cellsY/2;
       int ymax = int(bounds->ymax/_cellSize+0.5)+_cellsY/2;
 
-      for(int y=ymin; y<ymax; y++)
+      if(xmin<0 || xmax >= (int)_cellsX || ymin<0 || ymax >= (int)_cellsY)
       {
-        for(int x=xmin; x<xmax; x++)
+        cout << "Warning: invalid obstacle added, x: " << xmin << " - " << xmax << ", y: " << ymin << " - " << ymax << endl;
+      }
+      else
+      {
+        for(int y=ymin; y<ymax; y++)
         {
-          _mapObstacle[y][x] = 1;
+          for(int x=xmin; x<xmax; x++)
+          {
+            _mapObstacle[y][x] = 1;
+          }
         }
       }
     }
