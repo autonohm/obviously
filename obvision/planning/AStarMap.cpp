@@ -65,7 +65,6 @@ AStarMap::~AStarMap()
 void AStarMap::copyFrom(AStarMap* map)
 {
   pthread_mutex_lock(&_mutex);
-  memcpy(*_mapObstacle, *(map->_mapObstacle), _cellsY*_cellsX*sizeof(**_mapObstacle));
   memcpy(*_map, *(map->_map), _cellsY*_cellsX*sizeof(**_map));
   _mapIsDirty = true;
   pthread_mutex_unlock(&_mutex);
@@ -74,9 +73,16 @@ void AStarMap::copyFrom(AStarMap* map)
 void AStarMap::copyTo(AStarMap* map)
 {
   pthread_mutex_lock(&_mutex);
-  memcpy(*(map->_mapObstacle), *_mapObstacle, _cellsY*_cellsX*sizeof(**_mapObstacle));
   memcpy(*(map->_map), *_map, _cellsY*_cellsX*sizeof(**_map));
   map->_mapIsDirty = true;
+  pthread_mutex_unlock(&_mutex);
+}
+
+void AStarMap::setData(char* data)
+{
+  pthread_mutex_lock(&_mutex);
+  memcpy(*_map, data, _cellsY*_cellsX*sizeof(**_map));
+  _mapIsDirty = true;
   pthread_mutex_unlock(&_mutex);
 }
 

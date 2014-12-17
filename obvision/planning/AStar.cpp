@@ -35,12 +35,12 @@ std::vector<unsigned int> AStar::pathFind(AStarMap* map, const Point2D coordStar
 std::vector<unsigned int> AStar::pathFind(AStarMap* map, const Pixel start, const Pixel target)
 {
   cout << __PRETTY_FUNCTION__ << endl;
-  static priority_queue<AStarNode> pq[2]; // list of open (not-yet-tried) MapNodes
-  static int pqi; // pq index
-  static AStarNode* n0;
-  static AStarNode* m0;
-  static unsigned int i, j, x, y;
-  static int xdx, ydy;
+  priority_queue<AStarNode> pq[2]; // list of open (not-yet-tried) MapNodes
+  int pqi; // pq index
+  AStarNode* n0;
+  AStarNode* m0;
+  unsigned int i, j, x, y;
+  int xdx, ydy;
 
   int dx[8];
   int dy[8];
@@ -208,6 +208,7 @@ std::vector<unsigned int> AStar::pathFind(AStarMap* map, const Pixel start, cons
     }
     delete n0;
   }
+
   obvious::System<char>::deallocate(buffer);
   obvious::System<int>::deallocate(closedNodesMap);
   obvious::System<int>::deallocate(openNodesMap);

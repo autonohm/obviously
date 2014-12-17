@@ -50,6 +50,12 @@ public:
   void copyTo(AStarMap* map);
 
   /**
+   *
+   * @param data
+   */
+  void setData(char* data);
+
+  /**
    * Get width of map
    * @return width
    */
