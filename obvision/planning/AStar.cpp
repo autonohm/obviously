@@ -20,7 +20,7 @@ bool operator<(const AStarNode & a, const AStarNode & b)
   return a.getPriority() > b.getPriority();
 }
 
-std::vector<unsigned int> AStar::pathFind(AStarMap* map, const Point2D coordStart, const Point2D coordTarget)
+std::vector<unsigned int> AStar::pathFind(AStarMap* map, const Point2D coordStart, const Point2D coordTarget, const bool penalty)
 {
   Pixel start;
   Pixel target;
@@ -29,10 +29,10 @@ std::vector<unsigned int> AStar::pathFind(AStarMap* map, const Point2D coordStar
 	target.u = (unsigned int)((coordTarget.x / (obfloat)map->getCellSize()) + map->getWidth()/2 + 0.5);
 	target.v = (unsigned int)((coordTarget.y / (obfloat)map->getCellSize()) + map->getHeight()/2 + 0.5);
 
-	return pathFind(map, start, target);
+	return pathFind(map, start, target, penalty);
 }
 
-std::vector<unsigned int> AStar::pathFind(AStarMap* map, const Pixel start, const Pixel target)
+std::vector<unsigned int> AStar::pathFind(AStarMap* map, const Pixel start, const Pixel target, const bool penalty)
 {
   cout << __PRETTY_FUNCTION__ << endl;
   priority_queue<AStarNode> pq[2]; // list of open (not-yet-tried) MapNodes
@@ -169,7 +169,8 @@ std::vector<unsigned int> AStar::pathFind(AStarMap* map, const Pixel start, cons
       {
         // generate a child Node
         m0 = new AStarNode( xdx, ydy, n0->getLevel(), n0->getPriority(), n0->getCurrentDir());
-        m0->nextLevel(i);
+        if(penalty) m0->nextLevelPenalty(i);
+        else m0->nextLevel(i);
         m0->updatePriority(target.u, target.v);
 
         // if it is not in the open list then add into that

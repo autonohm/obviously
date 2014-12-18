@@ -20,7 +20,7 @@ int main(int argc, char* argv[])
   Timer timer;
 
   double robotRadius    = 0.1;
-
+  bool penalty          = false;
   AStarMap* map         = AStarMap::load(argv[1]);
   unsigned int width    = map->getWidth();
   unsigned int height   = map->getHeight();
@@ -56,7 +56,7 @@ int main(int argc, char* argv[])
   map->translatePixelToCoord(start, &coordStart);
   map->translatePixelToCoord(target, &coordTarget);
   timer.reset();
-  vector<unsigned int> path = AStar::pathFind(map, coordStart, coordTarget);
+  vector<unsigned int> path = AStar::pathFind(map, coordStart, coordTarget, penalty);
   cout << "elapsed for planning: " << timer.reset() << " ms" << endl;
 
   int cont_route = 0;

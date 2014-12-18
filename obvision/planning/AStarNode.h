@@ -79,6 +79,12 @@ public:
   void nextLevel(const int & i);
 
   /**
+   * Calculate next level with directional penalty
+   * @param i direction
+   */
+  void nextLevelPenalty(const int & i);
+
+  /**
    * Estimation function for the remaining distance to the goal.
    * @param xDest
    * @param yDest

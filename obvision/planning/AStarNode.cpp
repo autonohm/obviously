@@ -61,7 +61,7 @@ void AStarNode::updatePriority(const int & xDest, const int & yDest)
   _priority=_level+estimate(xDest, yDest)*10;
 }
 
-void AStarNode::nextLevel(const int & i)
+void AStarNode::nextLevelPenalty(const int & i)
 {
   // give better priority to going strait instead of diagonally
   //_level+=(i%2==0?10:14);
@@ -70,6 +70,17 @@ void AStarNode::nextLevel(const int & i)
   // 14 represents diagonal
   // a penalty is added when the direction needs to be changed
   _level+=((i%2==0?10:14) + (( ((i+4)%8)==_currentDir) ? 0 : 1));
+}
+
+void AStarNode::nextLevel(const int & i)
+{
+  // give better priority to going strait instead of diagonally
+  //_level+=(i%2==0?10:14);
+
+  // factor 10 is used to represent distance with two digits precision
+  // 14 represents diagonal
+  // a penalty is added when the direction needs to be changed
+  _level+=(i%2==0?10:14);
 }
 
 const int AStarNode::estimate(const int & xDest, const int & yDest) const
