@@ -20,7 +20,7 @@ bool operator<(const AStarNode & a, const AStarNode & b)
   return a.getPriority() > b.getPriority();
 }
 
-std::vector<unsigned int> AStar::pathFind(AStarMap* map, const Point2D coordStart, const Point2D coordTarget)
+std::vector<unsigned int> AStar::pathFind(AStarMap* map, const Point2D coordStart, const Point2D coordTarget, const bool penalty)
 {
   Pixel start;
   Pixel target;
@@ -29,10 +29,10 @@ std::vector<unsigned int> AStar::pathFind(AStarMap* map, const Point2D coordStar
 	target.u = (unsigned int)((coordTarget.x / (obfloat)map->getCellSize()) + map->getWidth()/2 + 0.5);
 	target.v = (unsigned int)((coordTarget.y / (obfloat)map->getCellSize()) + map->getHeight()/2 + 0.5);
 
-	return pathFind(map, start, target);
+	return pathFind(map, start, target, penalty);
 }
 
-std::vector<unsigned int> AStar::pathFind(AStarMap* map, const Pixel start, const Pixel target)
+std::vector<unsigned int> AStar::pathFind(AStarMap* map, const Pixel start, const Pixel target, const bool penalty)
 {
   cout << __PRETTY_FUNCTION__ << endl;
   priority_queue<AStarNode> pq[2]; // list of open (not-yet-tried) MapNodes
@@ -113,7 +113,7 @@ std::vector<unsigned int> AStar::pathFind(AStarMap* map, const Pixel start, cons
   }
 
   // create the start Node and push into list of open Nodes
-  n0=new AStarNode(start.u, start.v, 0, 0);
+  n0 = new AStarNode(start.u, start.v, 0, 0, -1);
   n0->updatePriority(target.u, target.v);
   pq[pqi].push(*n0);
 
@@ -123,14 +123,16 @@ std::vector<unsigned int> AStar::pathFind(AStarMap* map, const Pixel start, cons
   while(!pq[pqi].empty())
   {
     // get the current Node w/ the highest priority from the list of open Nodes
-    n0=new AStarNode( pq[pqi].top().getxPos(), pq[pqi].top().getyPos(), pq[pqi].top().getLevel(), pq[pqi].top().getPriority());
+    AStarNode prevNode = pq[pqi].top();
+    n0 = new AStarNode( prevNode.getxPos(), prevNode.getyPos(), prevNode.getLevel(), prevNode.getPriority(), prevNode.getCurrentDir());
 
-    x=n0->getxPos(); y=n0->getyPos();
+    x = n0->getxPos();
+    y = n0->getyPos();
 
     pq[pqi].pop(); // remove the Node from the open list
-    openNodesMap[y][x]=0;
+    openNodesMap[y][x]   = 0;
     // mark it on the closed Nodes map
-    closedNodesMap[y][x]=1;
+    closedNodesMap[y][x] = 1;
 
     // quit searching when the goal state is reached if((*n0).estimate(xFinish, yFinish) == 0)
     if(x==target.u && y==target.v)
@@ -140,10 +142,10 @@ std::vector<unsigned int> AStar::pathFind(AStarMap* map, const Pixel start, cons
       std::vector<unsigned int> path;
       while(!(x==start.u && y==start.v))
       {
-        j=dirMap[y][x];
+        j = dirMap[y][x];
         path.push_back((j+4)%8);
-        x+=dx[j];
-        y+=dy[j];
+        x += dx[j];
+        y += dy[j];
       }
 
       obvious::System<int>::deallocate(closedNodesMap);
@@ -166,14 +168,16 @@ std::vector<unsigned int> AStar::pathFind(AStarMap* map, const Pixel start, cons
       if(!(xdx<0 || xdx>(int)(width-1) || ydy<0 || ydy>(int)(height-1) || buffer[ydy][xdx]!=0 || closedNodesMap[ydy][xdx]==1))
       {
         // generate a child Node
-        m0=new AStarNode( xdx, ydy, n0->getLevel(), n0->getPriority());
-        m0->nextLevel(i);
+        m0 = new AStarNode( xdx, ydy, n0->getLevel(), n0->getPriority(), n0->getCurrentDir());
+        if(penalty) m0->nextLevelPenalty(i);
+        else m0->nextLevel(i);
         m0->updatePriority(target.u, target.v);
 
         // if it is not in the open list then add into that
         if(openNodesMap[ydy][xdx]==0)
         {
-          openNodesMap[ydy][xdx]=m0->getPriority();
+          openNodesMap[ydy][xdx] = m0->getPriority();
+          m0->setCurrentDir((i+4)%8);
           pq[pqi].push(*m0);
           // mark its parent Node direction
           dirMap[ydy][xdx]=(i+4)%8;
@@ -181,7 +185,8 @@ std::vector<unsigned int> AStar::pathFind(AStarMap* map, const Pixel start, cons
         else if(openNodesMap[ydy][xdx]>m0->getPriority())
         {
           // update the priority info
-          openNodesMap[ydy][xdx]=m0->getPriority();
+          openNodesMap[ydy][xdx] = m0->getPriority();
+          m0->setCurrentDir((i+4)%8);
           // update the parent direction info
           dirMap[ydy][xdx]=(i+4)%8;
 

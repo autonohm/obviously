@@ -429,7 +429,7 @@ void AStarMap::serialize(std::string path)
 
     for(unsigned int i=0; i<_cellsX*_cellsY; i++)
     {
-      file << _map[0][i] << endl;
+      file << (int)_map[0][i] << endl;
     }
     file.close();
   }

@@ -5,23 +5,34 @@
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <iostream>
 
 namespace obvious
 {
 
 
-AStarNode::AStarNode(int xp, int yp, int d, int p)
+AStarNode::AStarNode(int xp, int yp, int d, int p, int currentDir)
 {
-  _dir = 8;
-  _xPos=xp;
-  _yPos=yp;
-  _level=d;
-  _priority=p;
+  _xPos       = xp;
+  _yPos       = yp;
+  _level      = d;
+  _priority   = p;
+  _currentDir = currentDir;
 }
 
 AStarNode::~AStarNode()
 {
 
+}
+
+void AStarNode::setCurrentDir(int dir)
+{
+  _currentDir = dir;
+}
+
+int AStarNode::getCurrentDir() const
+{
+  return _currentDir;
 }
 
 int AStarNode::getxPos() const
@@ -46,13 +57,30 @@ int AStarNode::getPriority() const
 
 void AStarNode::updatePriority(const int & xDest, const int & yDest)
 {
-  _priority=_level+estimate(xDest, yDest)*10; //A*
+  // factor 10 is used to represent distance with two digits precision
+  _priority=_level+estimate(xDest, yDest)*10;
+}
+
+void AStarNode::nextLevelPenalty(const int & i)
+{
+  // give better priority to going strait instead of diagonally
+  //_level+=(i%2==0?10:14);
+
+  // factor 10 is used to represent distance with two digits precision
+  // 14 represents diagonal
+  // a penalty is added when the direction needs to be changed
+  _level+=((i%2==0?10:14) + (( ((i+4)%8)==_currentDir) ? 0 : 1));
 }
 
 void AStarNode::nextLevel(const int & i)
 {
   // give better priority to going strait instead of diagonally
-  _level+=(_dir==8?(i%2==0?10:14):10);
+  //_level+=(i%2==0?10:14);
+
+  // factor 10 is used to represent distance with two digits precision
+  // 14 represents diagonal
+  // a penalty is added when the direction needs to be changed
+  _level+=(i%2==0?10:14);
 }
 
 const int AStarNode::estimate(const int & xDest, const int & yDest) const

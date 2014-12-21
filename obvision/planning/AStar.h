@@ -27,18 +27,20 @@ public:
    * @param map map
    * @param start pixel coordinates of starting point
    * @param target pixel coordinates of target
+   * @param penalty use directional change penalty
    * @return path
    */
-  static std::vector<unsigned int> pathFind(AStarMap* map, const Pixel start, const Pixel target);
+  static std::vector<unsigned int> pathFind(AStarMap* map, const Pixel start, const Pixel target, const bool penalty);
 
   /**
    * Plan path giving start and target coordinates
    * @param map map
    * @param coordStart coordinates of starting point
    * @param coordTarget coordinates of target
+   * @param penalty use directional change penalty
    * @return path
    */
-  static std::vector<unsigned int> pathFind(AStarMap* map, const Point2D coordStart, const Point2D coordTarget);
+  static std::vector<unsigned int> pathFind(AStarMap* map, const Point2D coordStart, const Point2D coordTarget, const bool penalty);
 
 private:
 

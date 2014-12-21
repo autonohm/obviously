@@ -22,12 +22,24 @@ public:
    * @param d
    * @param p
    */
-  AStarNode(int xp, int yp, int d, int p);
+  AStarNode(int xp, int yp, int d, int p, int currentDir);
 
   /**
    * Destructor
    */
   virtual ~AStarNode();
+
+  /**
+   * Set current direction
+   * @param dir direction
+   */
+  void setCurrentDir(int dir);
+
+  /**
+   * Get current direction
+   * @return current direction
+   */
+  int getCurrentDir() const;
 
   /**
    *
@@ -67,13 +79,17 @@ public:
   void nextLevel(const int & i);
 
   /**
+   * Calculate next level with directional penalty
+   * @param i direction
+   */
+  void nextLevelPenalty(const int & i);
+
+  /**
    * Estimation function for the remaining distance to the goal.
    * @param xDest
    * @param yDest
    */
   const int estimate(const int & xDest, const int & yDest) const;
-
-  int _dir;
 
 private:
 
@@ -93,11 +109,15 @@ private:
   int _level;
 
   /**
-   * priority=level+remaining distance estimate
+   * priority=level+remaining distance estimate+heuristic
    * smaller: higher priority
    */
   int _priority;
 
+  /**
+   * current direction
+   */
+  int _currentDir;
 };
 
 } /* namespace obvious */
