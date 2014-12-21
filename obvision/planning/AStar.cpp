@@ -45,14 +45,14 @@ std::vector<unsigned int> AStar::pathFind(AStarMap* map, const Pixel start, cons
   int dx[8];
   int dy[8];
 
-  dx[0]=1;  dy[0]=0;  // 1
-  dx[1]=1;  dy[1]=1;  // 2
-  dx[2]=0;  dy[2]=1;  // 3
-  dx[3]=-1; dy[3]=1;  // 4
-  dx[4]=-1; dy[4]=0;  // 5
-  dx[5]=-1; dy[5]=-1; // 6
-  dx[6]=0;  dy[6]=-1; // 7
-  dx[7]=1;  dy[7]=-1; // 8
+  dx[0]=1;  dy[0]=0;  // 0
+  dx[1]=1;  dy[1]=1;  // 1
+  dx[2]=0;  dy[2]=1;  // 2
+  dx[3]=-1; dy[3]=1;  // 3
+  dx[4]=-1; dy[4]=0;  // 4
+  dx[5]=-1; dy[5]=-1; // 5
+  dx[6]=0;  dy[6]=-1; // 6
+  dx[7]=1;  dy[7]=-1; // 7
 
   pqi=0;
 
