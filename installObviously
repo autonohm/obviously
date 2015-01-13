@@ -8,14 +8,21 @@ echo "export OBVIOUSLY_ROOT=$HERE" >> ~/.bashrc
 echo "source ~/.bashrc"
 
 #packages for obcore
-apt-get install gls-bin libgsl0-dev libudev-dev libxml++2.6-dev 
- liblua5.1-0-dev
+apt-get install gls-bin 
+apt-get install libgsl0-dev 
+apt-get install libudev-dev 
+apt-get install libxml++2.6-dev 
+apt-get install liblua5.1-0-dev
 
 #packages for obdevice
-apt-get install ps-engine openni-dev libv4l-dev
+apt-get install ps-engine 
+apt-get install openni-dev 
+apt-get install libv4l-dev
 
 #packages for obgraphic
-apt-get install libvtk5-dev libvtk5.8 freeglut3-dev
+apt-get install libvtk5-dev 
+apt-get install libvtk5.8 
+apt-get install freeglut3-dev
 
 #packages for obvision
 add-apt-repository ppa:v-launchpad-jochen-sprickerhof-de/pcl

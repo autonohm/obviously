@@ -68,6 +68,10 @@ public:
    */
   double getPhiMin();
 
+  double getPhiLowerBound(void)const;
+
+  double getPhiUpperBound(void)const;
+
 private:
 
   double _angularRes;

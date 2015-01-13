@@ -137,4 +137,14 @@ double SensorPolar2D::getPhiMin(void)
   return _phiMin;
 }
 
+double SensorPolar2D::getPhiLowerBound(void)const
+{
+  return _phiLowerBound;
+}
+
+double SensorPolar2D::getPhiUpperBound(void)const
+{
+  return _phiUpperBound;
+}
+
 }
