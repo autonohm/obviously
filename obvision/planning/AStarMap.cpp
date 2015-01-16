@@ -167,6 +167,16 @@ void AStarMap::inflate(obfloat robotRadius)
   {
     for(unsigned int x = 0; x < _cellsX; x++)
     {
+      // check, if surrounding is already related to an obstacle
+      // => inflation of current pixel is not necessary
+      if(x > 0 && x < (_cellsX - 1) && y > 0 && y < (_cellsY - 1) &&
+          _mapWork[y - 1][x] != 0 &&
+          _mapWork[y + 1][x] != 0 &&
+          _mapWork[y][x - 1] != 0 &&
+          _mapWork[y][x + 1] != 0 )
+       {
+          continue;
+       }
       if(_mapWork[y][x]!=0)  //obstacle
       {
         for(unsigned int v = y - radius; v < y + radius; v++)
