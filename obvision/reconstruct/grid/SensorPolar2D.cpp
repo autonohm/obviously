@@ -23,7 +23,7 @@ SensorPolar2D::SensorPolar2D(unsigned int size, double angularRes, double phiMin
   _phiLowerBound = -0.5*_angularRes + _phiMin;
 
   // if angle is too large, it might be projected with modulo 2 PI to a valid index
-  _phiUpperBound = _phiMin + ((double)size)*_angularRes;
+  _phiUpperBound = _phiMin + (((double)size)-0.5)*_angularRes;
 
   if(_phiMin>=180.0)
   {
