@@ -101,6 +101,7 @@ TsdGrid::TsdGrid(const std::string& path)
 
 void TsdGrid::init(const double cellSize, const EnumTsdGridLayout layoutPartition, const EnumTsdGridLayout layoutGrid)
 {
+  _initialPushAccomplished = false;
   _cellSize = cellSize;
   _invCellSize = 1.0 / _cellSize;
 
@@ -296,6 +297,8 @@ void TsdGrid::push(SensorPolar2D* sensor)
   propagateBorders();
 
   LOGMSG(DBG_DEBUG, "Elapsed push: " << t.elapsed() << "s");
+
+  _initialPushAccomplished = true;
 }
 
 void TsdGrid::pushTree(SensorPolar2D* sensor)
@@ -356,6 +359,11 @@ void TsdGrid::pushTree(SensorPolar2D* sensor)
   propagateBorders();
 
   LOGMSG(DBG_DEBUG, "Elapsed pushTree: " << t.elapsed() << "s");
+}
+
+bool TsdGrid::containsData()
+{
+  return _initialPushAccomplished;
 }
 
 void TsdGrid::pushRecursion(SensorPolar2D* sensor, obfloat pos[2], TsdGridComponent* comp, vector<TsdGridPartition*> &partitionsToCheck)
