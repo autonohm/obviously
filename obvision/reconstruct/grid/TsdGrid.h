@@ -146,6 +146,8 @@ enum EnumTsdGridPartitionIdentifier{ UNINITIALIZED = 0,
   void push(SensorPolar2D* sensor);
   void pushTree(SensorPolar2D* sensor);
 
+  bool containsData();
+
   /**
    * Create color image from tsdf grid
    * @param[out] color image (3-channel)
@@ -248,6 +250,8 @@ enum EnumTsdGridPartitionIdentifier{ UNINITIALIZED = 0,
   EnumTsdGridLayout _layoutPartitions;
 
   EnumTsdGridLayout _layoutGrid;
+
+  bool _initialPushAccomplished;
 
  };
 
