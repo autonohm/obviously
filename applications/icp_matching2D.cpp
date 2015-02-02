@@ -92,7 +92,7 @@ int main(int argc, char** argv)
   obvious::Matrix F = icp->getFinalTransformation();
   F.invert();
   cout << endl << "Error: " << estimator->getRMS() << endl;
-  cout << "Iterations: " << estimator->getIterations() << endl;
+  cout << "Iterations: " << it << endl;
 
   char folder[6] = "trace";
   icp->serializeTrace(folder, animationDelay);

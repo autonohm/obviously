@@ -119,8 +119,9 @@ public:
    * @param y cell y-index
    * @param sdf SDF
    * @param maxTruncation maximum truncation radius
+   * @param weight measurement weight
    */
-  void addTsd(const unsigned int x, const unsigned int y, const obfloat sdf, const obfloat maxTruncation);
+  void addTsd(const unsigned int x, const unsigned int y, const obfloat sdf, const obfloat maxTruncation, const obfloat weight);
 
   /**
    * Increase emptiness of whole partition, i.e., every measurement ray passes through partition

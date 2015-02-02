@@ -101,4 +101,5 @@ bool TsdGridComponent::isInRange(obfloat pos[2], Sensor* sensor, obfloat maxTrun
   }
   return true;
 }
-}
+
+} // namespace

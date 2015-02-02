@@ -47,8 +47,6 @@ class ClosedFormEstimator2D : public IRigidEstimator
 		 * @return RMS error
 		 */
 		virtual double getRMS();
-		
-		virtual unsigned int getIterations(void);
 
 		/**
 		 * Determine the transformation matrix that registers the scene to the model.

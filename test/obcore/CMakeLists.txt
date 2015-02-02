@@ -11,7 +11,7 @@ link_directories($ENV{OBVIOUSLY_ROOT}/build/release/obcore
                  )
 
 # experimental
-find_package(Eigen REQUIRED)
+#find_package(Eigen REQUIRED)
 find_package(Qt4 REQUIRED)
 find_package(VTK REQUIRED)
 

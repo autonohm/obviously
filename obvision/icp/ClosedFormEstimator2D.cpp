@@ -16,7 +16,6 @@ ClosedFormEstimator2D::ClosedFormEstimator2D()
   _cs[0] = 0.0;
   _cs[1] = 0.0;
   _pairs = NULL;
-  _iterations = 0;
 }
 
 ClosedFormEstimator2D::~ClosedFormEstimator2D()
@@ -59,12 +58,12 @@ void ClosedFormEstimator2D::setPairs(std::vector<StrCartesianIndexPair>* pairs)
     _cs[1] += pointScene[1];
     _rms += distSqr2D(pointModel, pointScene);
   }
-  double dSizeInv = 1.0 / (double) size;
-  _rms *= dSizeInv;
-  _cm[0] *= dSizeInv;
-  _cm[1] *= dSizeInv;
-  _cs[0] *= dSizeInv;
-  _cs[1] *= dSizeInv;
+  double sizeInv = 1.0 / (double) size;
+  _rms   *= sizeInv;
+  _cm[0] *= sizeInv;
+  _cm[1] *= sizeInv;
+  _cs[0] *= sizeInv;
+  _cs[1] *= sizeInv;
 }
 
 double ClosedFormEstimator2D::getRMS()
@@ -72,45 +71,39 @@ double ClosedFormEstimator2D::getRMS()
   return _rms;
 }
 
-unsigned int ClosedFormEstimator2D::getIterations(void)
-{
-  return _iterations;
-}
-
 void ClosedFormEstimator2D::estimateTransformation(Matrix* T)
 {
-  double dNominator = 0.0, dDenominator = 0.0;
+  double nominator = 0.0, denominator = 0.0;
 
   for (unsigned int i = 0; i < (*_pairs).size(); i++)
   {
-    double dXFCm = _model[(*_pairs)[i].indexFirst][0]  - _cm[0];
-    double dYFCm = _model[(*_pairs)[i].indexFirst][1]  - _cm[1];
-    double dXSCs = _scene[(*_pairs)[i].indexSecond][0] - _cs[0];
-    double dYSCs = _scene[(*_pairs)[i].indexSecond][1] - _cs[1];
-    dNominator   += dYFCm * dXSCs - dXFCm * dYSCs;
-    dDenominator += dXFCm * dXSCs + dYFCm * dYSCs;
+    double xFCm = _model[(*_pairs)[i].indexFirst][0]  - _cm[0];
+    double yFCm = _model[(*_pairs)[i].indexFirst][1]  - _cm[1];
+    double xSCs = _scene[(*_pairs)[i].indexSecond][0] - _cs[0];
+    double ySCs = _scene[(*_pairs)[i].indexSecond][1] - _cs[1];
+    nominator   += yFCm * xSCs - xFCm * ySCs;
+    denominator += xFCm * xSCs + yFCm * ySCs;
   }
-  _iterations++;
 
   // compute rotation
-  double dDeltaTheta = atan2(dNominator, dDenominator);
+  double deltaTheta = atan2(nominator, denominator);
 
-  double dCosDeltaTheta = cos(dDeltaTheta);
-  double dSinDeltaTheta = sin(dDeltaTheta);
+  double cosDeltaTheta = cos(deltaTheta);
+  double sinDeltaTheta = sin(deltaTheta);
 
   // compute translation
-  double dDeltaX = (_cm[0] - (dCosDeltaTheta * _cs[0] - dSinDeltaTheta * _cs[1]));
-  double dDeltaY = (_cm[1] - (dCosDeltaTheta * _cs[1] + dSinDeltaTheta * _cs[0]));
+  double deltaX = (_cm[0] - (cosDeltaTheta * _cs[0] - sinDeltaTheta * _cs[1]));
+  double deltaY = (_cm[1] - (cosDeltaTheta * _cs[1] + sinDeltaTheta * _cs[0]));
 
   // fill result matrix
   T->setIdentity();
-  (*T)(0,0) = dCosDeltaTheta;
-  (*T)(0,1) = -dSinDeltaTheta;
-  (*T)(0,3) = dDeltaX;
+  (*T)(0,0) = cosDeltaTheta;
+  (*T)(0,1) = -sinDeltaTheta;
+  (*T)(0,3) = deltaX;
 
-  (*T)(1,0) = dSinDeltaTheta;
-  (*T)(1,1) = dCosDeltaTheta;
-  (*T)(1,3) = dDeltaY;
+  (*T)(1,0) = sinDeltaTheta;
+  (*T)(1,1) = cosDeltaTheta;
+  (*T)(1,3) = deltaY;
 
   (*T)(2,3) = 0;
 }

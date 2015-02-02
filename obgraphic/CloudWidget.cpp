@@ -1,5 +1,5 @@
 #include "CloudWidget.h"
-#include "IronPalette.h"
+//#include "IronPalette.h"
 
 #include <vtkPolyData.h>
 #include <vtkPointData.h>
@@ -147,7 +147,7 @@ void CloudWidget::setCloud(pcl::PointCloud<pcl::PointXYZRGBL>::ConstPtr cloud,
     vtkSmartPointer<vtkUnsignedCharArray> colours = vtkSmartPointer<vtkUnsignedCharArray>::New();
     colours->SetNumberOfComponents(3);
 
-    /* not the best code style here, but it works for the moment. /
+    // not the best code style here, but it works for the moment.
     float minTemperature;
     float maxTemperature;
 

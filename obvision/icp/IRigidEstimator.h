@@ -51,12 +51,6 @@ class IRigidEstimator
 		 * @return RMS error
 		 */	
 		virtual double getRMS() = 0;
-		
-		/**
-		 * Function to retrun the numbers of iterations
-		 * @return number of iterations
-		 */
-		virtual unsigned int getIterations(void) = 0;
 
 		/**
 		 * Determine the transformation matrix that registers the scene to the model.

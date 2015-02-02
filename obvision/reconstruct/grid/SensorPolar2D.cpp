@@ -55,7 +55,7 @@ SensorPolar2D::~SensorPolar2D()
 
 void SensorPolar2D::resetMask()
 {
-  for(int i=0; i<_size; i++)
+  for(unsigned int i=0; i<_size; i++)
     _mask[i] = true;
 }
 
@@ -64,7 +64,7 @@ void SensorPolar2D::maskDepthDiscontinuity(double thresh)
   int radius = 1;
   double cosphi = cos(_angularRes);
   double sinphi = sin(_angularRes);
-  for(int i=radius; i<_size-radius; i++)
+  for(int i=radius; i<((int)_size)-radius; i++)
   {
     double betamin = M_PI;
     double a = _data[i];

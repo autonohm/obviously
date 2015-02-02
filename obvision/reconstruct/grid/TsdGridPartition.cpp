@@ -178,24 +178,28 @@ unsigned int TsdGridPartition::getSize()
   return _cellsX*_cellsY;
 }
 
-void TsdGridPartition::addTsd(const unsigned int x, const unsigned int y, const obfloat sdf, const obfloat maxTruncation)
+void TsdGridPartition::addTsd(const unsigned int x, const unsigned int y, const obfloat sd, const obfloat maxTruncation, const obfloat weight)
 {
   // Factor avoids thin objects to be removed when seen from two sides
-  if(sdf >= -2.0*maxTruncation)
+  if(sd >= -2.0*maxTruncation)
   {
     TsdCell* cell = &_grid[y][x];
 
-    obfloat tsdf = min(sdf / maxTruncation, TSDINC);
+    obfloat tsd = min(sd / maxTruncation, TSDINC);
 
     if(isnan(cell->tsd))
     {
-      cell->tsd = tsdf;
-      cell->weight += TSDINC;
+      cell->tsd = tsd;
+      //cell->weight += TSDINC;
+      cell->weight += weight;
     }
     else
     {
-      cell->weight = min(cell->weight+TSDINC, TSDGRIDMAXWEIGHT);
-      cell->tsd   = (cell->tsd * (cell->weight - TSDINC) + tsdf) / cell->weight;
+      //cell->weight = min(cell->weight+TSDINC, TSDGRIDMAXWEIGHT);
+      //cell->tsd   = (cell->tsd * (cell->weight - TSDINC) + tsdf) / cell->weight;
+
+      cell->tsd   = (cell->tsd * cell->weight + tsd * weight) / (cell->weight + weight);
+      cell->weight = min(cell->weight+weight, TSDGRIDMAXWEIGHT);
     }
   }
 }

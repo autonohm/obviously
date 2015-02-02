@@ -226,7 +226,7 @@ void TsdGrid::setMaxTruncation(double val)
 {
   if(val < 2 * _cellSize)
   {
-    LOGMSG(DBG_WARN, "Truncation radius must be at 2 x cell size. Setting minimum size.");
+    LOGMSG(DBG_WARN, "Truncation radius must be at least 2 x cell size. Setting minimum size.");
     val = 2 * _cellSize;
   }
 
@@ -260,6 +260,12 @@ void TsdGrid::push(SensorPolar2D* sensor)
 
       part->init();
 
+      obfloat* partCentroid = part->getCentroid();
+      obfloat distCentroid = sqrt((partCentroid[0]-tr[0])*(partCentroid[0]-tr[0])+(partCentroid[1]-tr[1])*(partCentroid[1]-tr[1]));
+      if(distCentroid > sensor->getMaximumRange()) distCentroid = sensor->getMaximumRange();
+      obfloat partWeight = (sensor->getMaximumRange()-distCentroid)/sensor->getMaximumRange();
+      partWeight *= partWeight;
+
       Matrix* partCoords = part->getPartitionCoords();
       Matrix* cellCoordsHom = part->getCellCoordsHom();
       sensor->backProject(cellCoordsHom, idx);
@@ -276,16 +282,16 @@ void TsdGrid::push(SensorPolar2D* sensor)
           {
             if(!isinf(data[index]))
             {
-              // calculate signed distance, i.e. measurement minus distance of current cell to sensor
+              // calculate signed distance, i.e., measurement minus distance of current cell to sensor
               double sd = data[index] - sqrt( ((*cellCoordsHom)(c,0)-tr[0]) * ((*cellCoordsHom)(c,0)-tr[0]) + ((*cellCoordsHom)(c,1)-tr[1]) * ((*cellCoordsHom)(c,1)-tr[1]));
 
-              part->addTsd((*partCoords)(c, 0), (*partCoords)(c, 1), sd, _maxTruncation);
+              part->addTsd((*partCoords)(c, 0), (*partCoords)(c, 1), sd, _maxTruncation, partWeight);
             }
             else
             {
               double dist = sqrt( ((*cellCoordsHom)(c,0)-tr[0]) * ((*cellCoordsHom)(c,0)-tr[0]) + ((*cellCoordsHom)(c,1)-tr[1]) * ((*cellCoordsHom)(c,1)-tr[1]));
               if(dist<lowReflectivityRange)
-                part->addTsd((*partCoords)(c, 0), (*partCoords)(c, 1), _maxTruncation, _maxTruncation);
+                part->addTsd((*partCoords)(c, 0), (*partCoords)(c, 1), _maxTruncation, _maxTruncation, partWeight);
             }
           }
         }
@@ -326,6 +332,12 @@ void TsdGrid::pushTree(SensorPolar2D* sensor)
       TsdGridPartition* part = partitionsToCheck[i];
       part->init();
 
+      obfloat* partCentroid = part->getCentroid();
+      obfloat distCentroid = sqrt((partCentroid[0]-tr[0])*(partCentroid[0]-tr[0])+(partCentroid[1]-tr[1])*(partCentroid[1]-tr[1]));
+      if(distCentroid > sensor->getMaximumRange()) distCentroid = sensor->getMaximumRange();
+      obfloat partWeight = (sensor->getMaximumRange()-distCentroid)/sensor->getMaximumRange();
+      partWeight *= partWeight;
+
       Matrix* partCoords = part->getPartitionCoords();
       Matrix* cellCoordsHom = part->getCellCoordsHom();
       sensor->backProject(cellCoordsHom, idx);
@@ -342,13 +354,13 @@ void TsdGrid::pushTree(SensorPolar2D* sensor)
             // calculate signed distance, i.e. measurement minus distance of current cell to sensor
             double sd = data[index] - sqrt( ((*cellCoordsHom)(c,0)-tr[0]) * ((*cellCoordsHom)(c,0)-tr[0]) + ((*cellCoordsHom)(c,1)-tr[1]) * ((*cellCoordsHom)(c,1)-tr[1]));
 
-            part->addTsd((*partCoords)(c, 0), (*partCoords)(c, 1), sd, _maxTruncation);
+            part->addTsd((*partCoords)(c, 0), (*partCoords)(c, 1), sd, _maxTruncation, partWeight);
           }
           else
           {
             double dist = sqrt( ((*cellCoordsHom)(c,0)-tr[0]) * ((*cellCoordsHom)(c,0)-tr[0]) + ((*cellCoordsHom)(c,1)-tr[1]) * ((*cellCoordsHom)(c,1)-tr[1]));
             if(dist<sensor->getLowReflectivityRange())
-              part->addTsd((*partCoords)(c, 0), (*partCoords)(c, 1), _maxTruncation, _maxTruncation);
+              part->addTsd((*partCoords)(c, 0), (*partCoords)(c, 1), _maxTruncation, _maxTruncation, partWeight);
           }
         }
       }
