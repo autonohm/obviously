@@ -19,7 +19,7 @@ namespace obvious
 RansacMatching::RansacMatching()
 {
 
-  _epsDist = 0.01;
+  _epsDist = 0.03;
   _phiMax  = M_PI / 4.0;
   _trials  = 50;
 
@@ -62,10 +62,12 @@ obvious::Matrix RansacMatching::match(obvious::Matrix* M, obvious::Matrix* S)
   unsigned int cntBest = 0;
   double errBest = 1e12;
 
+  // Take subset as control set
   vector<unsigned int> idxControl;
-  for(unsigned int r=0; r<S->getRows(); r++)
+  for(unsigned int r=0; r<pointsS; r++)
   {
-    if(rand()%1000<500)
+    // simulate probability of picking a point
+    //if(rand()%1000<500)
       idxControl.push_back(r);
   }
   cout << "Scene size: " << S->getRows() << ", Control set: " << idxControl.size() << endl;
@@ -81,13 +83,11 @@ obvious::Matrix RansacMatching::match(obvious::Matrix* M, obvious::Matrix* S)
 
   for(unsigned int trial = 0; trial<_trials; trial++)
   {
-    // First model sample: Index i
-    unsigned int i = rand() % (pointsM-pointsM/2) + pointsM/4;
-    // Second model sample: Random != i
-    unsigned int i2 = rand() % (pointsM-pointsM/2) + pointsM/4;
-    if(i==i2) continue;
+    // First model sample: Index i (only from center part)
+    unsigned int i = rand() % (3*pointsM/8) + pointsM/4;
 
-    if(i2<i) swap(i, i2);
+    // Second model sample: Random != i
+    unsigned int i2 = i + rand()%(pointsM/8 - 1) + 1;
 
     double pointM[2];
     double pointM2[2];
@@ -138,8 +138,6 @@ obvious::Matrix RansacMatching::match(obvious::Matrix* M, obvious::Matrix* S)
       else
         continue;
 
-      //cout << "dist min: " << distSMin << endl;
-
       // Align scans
       double vS[2];
       vS[0] = pointS2[0] - pointS[0];
@@ -180,13 +178,6 @@ obvious::Matrix RansacMatching::match(obvious::Matrix* M, obvious::Matrix* S)
           q[1] = STemp(1, s);
           flann::Matrix<double> query(q, 1, 2);
 
-          //int count = _index->radiusSearch(query, indices, dists, _epsDist, -1);
-          //if(count>0)
-          //{
-          //    err += dists[0][0];
-          //    cntMatch++;
-          //}
-
           flann::SearchParams p(-1, 0.0);
           _index->knnSearch(query, indices, dists, 1, p);
           if(dists[0][0]<_epsDist)
@@ -202,7 +193,7 @@ obvious::Matrix RansacMatching::match(obvious::Matrix* M, obvious::Matrix* S)
 
         err /= cntMatch;
 
-        if(cntMatch>cntBest)//(idxControl.size()*0.7))
+        if(cntMatch>cntBest)
         {
           errBest = err;
           cntBest = cntMatch;
@@ -215,9 +206,6 @@ obvious::Matrix RansacMatching::match(obvious::Matrix* M, obvious::Matrix* S)
             errBest = err;
             cntBest = cntMatch;
             TBest = T;
-
-            //cout << "Cnt best" << cntBest << endl;
-            //T.print();
           }
         }
       }
