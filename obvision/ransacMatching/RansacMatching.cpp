@@ -208,6 +208,7 @@ obvious::Matrix RansacMatching::match(obvious::Matrix* M, obvious::Matrix* S, do
 
         obvious::Matrix STemp = T * SControl;
 
+        // Determine how many nearest neighbors (model <-> scene) are close enough
         double q[2];
         unsigned int cntMatch = 0;
         flann::Matrix<int> indices(new int[1], 1, 1);
