@@ -17,15 +17,15 @@ using namespace std;
 namespace obvious
 {
 
-RansacMatching::RansacMatching(unsigned int trials, double epsThresh, double phiMax, unsigned int sizeControlSet)
+RansacMatching::RansacMatching(unsigned int trials, double epsThresh, unsigned int sizeControlSet, bool clipPeripheralArea)
 {
 
-  _epsDist        = epsThresh;
-  _phiMax         = phiMax;
-  _trials         = trials;
-  _sizeControlSet = sizeControlSet;
-  _model          = NULL;
-  _index          = NULL;
+  _epsDist            = epsThresh;
+  _trials             = trials;
+  _sizeControlSet     = sizeControlSet;
+  _clipPeripheralArea = clipPeripheralArea;
+  _model              = NULL;
+  _index              = NULL;
 }
 
 RansacMatching::~RansacMatching()
@@ -39,7 +39,7 @@ RansacMatching::~RansacMatching()
   }
 }
 
-obvious::Matrix RansacMatching::match(obvious::Matrix* M, obvious::Matrix* S)
+obvious::Matrix RansacMatching::match(obvious::Matrix* M, obvious::Matrix* S, double phiMax)
 {
   obvious::Matrix  TBest(3,3);
   TBest.setIdentity();
@@ -50,12 +50,13 @@ obvious::Matrix RansacMatching::match(obvious::Matrix* M, obvious::Matrix* S)
     return TBest;
   }
 
-  double** mData;
-
   unsigned int pointsM = M->getRows();
   unsigned int pointsS = S->getRows();
 
+  // -----------------------------------------------------
+  // Build FLANN tree for fast access to nearest neighbors
   unsigned int cols = M->getCols();
+  double** mData;
   obvious::System<double>::allocate(pointsM, cols, mData);
   for(unsigned int r=0; r<pointsM; r++)
   {
@@ -66,21 +67,28 @@ obvious::Matrix RansacMatching::match(obvious::Matrix* M, obvious::Matrix* S)
   flann::KDTreeSingleIndexParams p;
   _index = new flann::Index<flann::L2<double> >(*_model, p);
   _index->buildIndex();
+  // -----------------------------------------------------
 
-  unsigned int cntBest = 0;
-  double errBest = 1e12;
 
+  // -----------------------------------------------------
   // randomly pick points from scene as control set
+  vector<unsigned int> indices;
+  unsigned int lowerBound = 0;
+  unsigned int upperBound = S->getRows()-1;
+  if(_clipPeripheralArea)
+  {
+    lowerBound = S->getRows()/8;
+    upperBound = 7*S->getRows()/8-1;
+  }
+
+  for(unsigned int i=lowerBound; i<upperBound; i++)
+    indices.push_back(i);
+
   unsigned int sizeControlSet = _sizeControlSet;
-  if(S->getRows()<sizeControlSet)
+  if((indices.size())<sizeControlSet)
   {
     LOGMSG(DBG_DEBUG, "Size of scene smaller than control set ... reducing size");
-    sizeControlSet = S->getRows();
-  }
-  vector<unsigned int> indices;
-  for(unsigned int i=0; i<S->getRows(); i++)
-  {
-    indices.push_back(i);
+    sizeControlSet = indices.size();
   }
   vector<unsigned int> idxControl;
   while(idxControl.size()<sizeControlSet)
@@ -89,9 +97,6 @@ obvious::Matrix RansacMatching::match(obvious::Matrix* M, obvious::Matrix* S)
     idxControl.push_back(indices[r]);
     indices.erase(indices.begin()+r);
   }
-
-  LOGMSG(DBG_DEBUG, "Scene size: " << S->getRows() << ", Control set: " << idxControl.size());
-
   obvious::Matrix SControl(3, idxControl.size());
   unsigned int ctr = 0;
   for(vector<unsigned int>::iterator it=idxControl.begin(); it!=idxControl.end(); ++it)
@@ -100,7 +105,21 @@ obvious::Matrix RansacMatching::match(obvious::Matrix* M, obvious::Matrix* S)
       SControl(1, ctr) = (*S)(*it, 1);
       SControl(2, ctr++) = 1.0;
   }
+  // -----------------------------------------------------
 
+  LOGMSG(DBG_DEBUG, "Scene size: " << S->getRows() << ", Control set: " << idxControl.size());
+
+
+  // -----------------------------------------------------
+  // Perform RANSAC scheme as follows:
+  // 1) pick random point from center part of model
+  // 2) pick 2nd random point from model (right of first point)
+  // 3) assign scene points to 1st point
+  // 4) search 2nd point in scene with similar distance (1st and 2nd point in model)
+  // 5) calculate transformation
+  // 6) rate control set, i.e., determine consensus
+  unsigned int cntBest = 0;
+  double errBest       = 1e12;
   for(unsigned int trial = 0; trial<_trials; trial++)
   {
     // First model sample: Index i (only from center part)
@@ -116,11 +135,12 @@ obvious::Matrix RansacMatching::match(obvious::Matrix* M, obvious::Matrix* S)
     pointM2[0] = (*M)(i2, 0);
     pointM2[1] = (*M)(i2, 1);
 
+    // Vector between model points (for determining orientation)
     double vM[2];
     vM[0] = pointM2[0] - pointM[0];
     vM[1] = pointM2[1] - pointM[1];
 
-    // Centroid of model
+    // Centroid of model (for determining translation)
     double cM[2];
     cM[0] = (pointM[0] + pointM2[0])/2.0;
     cM[1] = (pointM[1] + pointM2[1])/2.0;
@@ -137,16 +157,17 @@ obvious::Matrix RansacMatching::match(obvious::Matrix* M, obvious::Matrix* S)
 
       // Find scene sample with similar distance
       unsigned int jMin = 0;
-      double distSMin = 1e12;
+      double distSMin   = 1e12;
       for(unsigned int j2=j+1; j2<pointsS; j2++)
       {
-        pointS2[0] = (*S)(j2, 0);
-        pointS2[1] = (*S)(j2, 1);
-        double distS = euklideanDistance(pointS, pointS2, 2);
-        if(fabs(distS - distM)<distSMin)
+        pointS2[0]     = (*S)(j2, 0);
+        pointS2[1]     = (*S)(j2, 1);
+        double distS   = euklideanDistance(pointS, pointS2, 2);
+        double distEps = fabs(distS - distM);
+        if(distEps<distSMin)
         {
-          distSMin = fabs(distS - distM);
-          jMin = j2;
+          distSMin = distEps;
+          jMin     = j2;
         }
       }
 
@@ -163,16 +184,16 @@ obvious::Matrix RansacMatching::match(obvious::Matrix* M, obvious::Matrix* S)
       vS[0] = pointS2[0] - pointS[0];
       vS[1] = pointS2[1] - pointS[1];
 
-      // calculate polar angle
+      // Calculate polar angle
       double phiM = atan2(vM[1],vM[0]);
       if(phiM<0) phiM += 2.0*M_PI;
       double phiS = atan2(vS[1],vS[0]);
       if(phiS<0) phiS += 2.0*M_PI;
 
-      // solution for rotational part
+      // Solution for rotational part
       double phi = phiM - phiS;
 
-      if(fabs(phi) < _phiMax)
+      if(fabs(phi) < phiMax)
       {
         // Centroid of scene
         double cS[2];
@@ -228,9 +249,9 @@ obvious::Matrix RansacMatching::match(obvious::Matrix* M, obvious::Matrix* S)
             TBest = T;
           }
         }
-      }
-    }
-  }
+      } // if(fabs(phi) < _phiMax)
+    } // for all points in scene
+  } // for trials
 
   LOGMSG(DBG_DEBUG, "Matching result - cnt(best): " << cntBest << ", err(best): " << errBest);
 
