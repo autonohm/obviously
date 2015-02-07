@@ -9,6 +9,7 @@
 
 #include <math.h>
 #include "obcore/base/System.h"
+#include "obcore/base/Logger.h"
 #include "obcore/math/mathbase.h"
 
 using namespace std;
@@ -16,15 +17,15 @@ using namespace std;
 namespace obvious
 {
 
-RansacMatching::RansacMatching()
+RansacMatching::RansacMatching(unsigned int trials, double epsThresh, double phiMax, unsigned int sizeControlSet)
 {
 
-  _epsDist = 0.03;
-  _phiMax  = M_PI / 4.0;
-  _trials  = 50;
-
-  _model = NULL;
-  _index = NULL;
+  _epsDist        = epsThresh;
+  _phiMax         = phiMax;
+  _trials         = trials;
+  _sizeControlSet = sizeControlSet;
+  _model          = NULL;
+  _index          = NULL;
 }
 
 RansacMatching::~RansacMatching()
@@ -40,6 +41,15 @@ RansacMatching::~RansacMatching()
 
 obvious::Matrix RansacMatching::match(obvious::Matrix* M, obvious::Matrix* S)
 {
+  obvious::Matrix  TBest(3,3);
+  TBest.setIdentity();
+
+  if(S->getRows()<2)
+  {
+    LOGMSG(DBG_ERROR, "Size of scene too small, size: " << S->getRows());
+    return TBest;
+  }
+
   double** mData;
 
   unsigned int pointsM = M->getRows();
@@ -57,20 +67,30 @@ obvious::Matrix RansacMatching::match(obvious::Matrix* M, obvious::Matrix* S)
   _index = new flann::Index<flann::L2<double> >(*_model, p);
   _index->buildIndex();
 
-  obvious::Matrix  TBest(3,3);
-  TBest.setIdentity();
   unsigned int cntBest = 0;
   double errBest = 1e12;
 
-  // Take subset as control set
-  vector<unsigned int> idxControl;
-  for(unsigned int r=0; r<pointsS; r++)
+  // randomly pick points from scene as control set
+  unsigned int sizeControlSet = _sizeControlSet;
+  if(S->getRows()<sizeControlSet)
   {
-    // simulate probability of picking a point
-    //if(rand()%1000<500)
-      idxControl.push_back(r);
+    LOGMSG(DBG_DEBUG, "Size of scene smaller than control set ... reducing size");
+    sizeControlSet = S->getRows();
   }
-  cout << "Scene size: " << S->getRows() << ", Control set: " << idxControl.size() << endl;
+  vector<unsigned int> indices;
+  for(unsigned int i=0; i<S->getRows(); i++)
+  {
+    indices.push_back(i);
+  }
+  vector<unsigned int> idxControl;
+  while(idxControl.size()<sizeControlSet)
+  {
+    unsigned int r = rand()%indices.size();
+    idxControl.push_back(indices[r]);
+    indices.erase(indices.begin()+r);
+  }
+
+  LOGMSG(DBG_DEBUG, "Scene size: " << S->getRows() << ", Control set: " << idxControl.size());
 
   obvious::Matrix SControl(3, idxControl.size());
   unsigned int ctr = 0;
@@ -212,7 +232,7 @@ obvious::Matrix RansacMatching::match(obvious::Matrix* M, obvious::Matrix* S)
     }
   }
 
-  cout << "cnt(best): " << cntBest << ", err(best): " << errBest << endl;
+  LOGMSG(DBG_DEBUG, "Matching result - cnt(best): " << cntBest << ", err(best): " << errBest);
 
   obvious::System<double>::deallocate(mData);
 

@@ -1,10 +1,3 @@
-/*
- * RansacMatching.h
- *
- *  Created on: 23.09.2014
- *      Author: mayst
- */
-
 #ifndef RANSACMATCHING_H_
 #define RANSACMATCHING_H_
 
@@ -14,12 +7,34 @@
 namespace obvious
 {
 
+/**
+ * @class RansacMatching
+ * @brief Matching algorithm with RANSAC scheme
+ * @author Stefan May
+ **/
 class RansacMatching
 {
 public:
-  RansacMatching();
+  /**
+   * Constructor
+   * @param trials number of trials / matching guesses
+   * @param epsThresh threshold for rating good matches
+   * @param phiMax maximum rotation
+   * @param sizeControlSet approximate set of control set
+   */
+  RansacMatching(unsigned int trials = 50, double epsThresh = 0.03, double phiMax = M_PI / 4.0, unsigned int sizeControlSet = 180);
+
+  /**
+   * Destructor
+   */
   virtual ~RansacMatching();
 
+  /**
+   * Matching method
+   * @param M model
+   * @param S scene
+   * @return 3x3 registration matrix
+   */
   obvious::Matrix match(obvious::Matrix* M, obvious::Matrix* S);
 
 private:
@@ -33,8 +48,12 @@ private:
   // number of trials
   unsigned int _trials;
 
-  flann::Matrix<double>* _model;
+  // approximate control set
+  unsigned int _sizeControlSet;
+
+  // tree for accelerating NN search
   flann::Index<flann::L2<double> >* _index;
+  flann::Matrix<double>* _model;
 
 };
 

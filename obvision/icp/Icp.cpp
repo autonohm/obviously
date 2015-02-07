@@ -1,6 +1,7 @@
 #include "Icp.h"
 #include "obcore/base/tools.h"
 #include "obcore/base/Timer.h"
+#include "obcore/base/Logger.h"
 #include "obcore/math/mathbase.h"
 
 namespace obvious
@@ -144,7 +145,7 @@ void Icp::setModel(Matrix* coords, Matrix* normals, double probability)
 {
   if(coords->getCols()!=(size_t)_dim)
   {
-    cout << "WARNING: Model is not of correct dimensionality. Needed: " << _dim << endl;
+    LOGMSG(DBG_DEBUG, "Model is not of correct dimensionality. Needed: " << _dim);
     return;
   }
 
@@ -192,7 +193,7 @@ void Icp::setScene(double* coords, double* normals, const unsigned int size, dou
 {
   if(size==0)
   {
-    cout << "Scene of size 0 passed ... ignoring" << endl;
+    LOGMSG(DBG_DEBUG, "Scene of size 0 passed ... ignoring");
     return;
   }
 
@@ -239,7 +240,7 @@ void Icp::setScene(double* coords, double* normals, const unsigned int size, dou
 void Icp::setScene(Matrix* coords, Matrix* normals, double probability)
 {
   if(coords->getCols()!=(size_t)_dim) {
-    cout << "WARNING: Scene is not of correct dimensionality " << _dim << endl;
+    LOGMSG(DBG_DEBUG, "Scene is not of correct dimensionality " << _dim);
     return;
   }
 
