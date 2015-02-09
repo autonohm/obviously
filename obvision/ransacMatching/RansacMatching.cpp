@@ -111,6 +111,27 @@ obvious::Matrix RansacMatching::match(obvious::Matrix* M, obvious::Matrix* S, do
 
 
   // -----------------------------------------------------
+  // Lookup table for distances between scene points
+  double** SDists;
+  obvious::System<double>::allocate(pointsS, pointsS, SDists);
+  double pointS[2];
+  double pointS2[2];
+  for(unsigned int j=0; j<pointsS; j++)
+  {
+    pointS[0] = (*S)(j, 0);
+    pointS[1] = (*S)(j, 1);
+
+    for(unsigned int j2=j+1; j2<pointsS; j2++)
+    {
+      pointS2[0]     = (*S)(j2, 0);
+      pointS2[1]     = (*S)(j2, 1);
+      double distS   = euklideanDistance(pointS, pointS2, 2);
+      SDists[j][j2]  = distS;
+    }
+  }
+  // -----------------------------------------------------
+
+  // -----------------------------------------------------
   // Perform RANSAC scheme as follows:
   // 1) pick random point from center part of model
   // 2) pick 2nd random point from model (right of first point)
@@ -147,8 +168,6 @@ obvious::Matrix RansacMatching::match(obvious::Matrix* M, obvious::Matrix* S, do
 
     double distM = euklideanDistance<double>(pointM, pointM2, 2);
 
-    double pointS[2];
-    double pointS2[2];
     for(unsigned int j=0; j<pointsS; j++)
     {
       // Assign scene sample j
@@ -160,10 +179,7 @@ obvious::Matrix RansacMatching::match(obvious::Matrix* M, obvious::Matrix* S, do
       double distSMin   = 1e12;
       for(unsigned int j2=j+1; j2<pointsS; j2++)
       {
-        pointS2[0]     = (*S)(j2, 0);
-        pointS2[1]     = (*S)(j2, 1);
-        double distS   = euklideanDistance(pointS, pointS2, 2);
-        double distEps = fabs(distS - distM);
+        double distEps   = fabs(SDists[j][j2]-distM);
         if(distEps<distSMin)
         {
           distSMin = distEps;
@@ -256,6 +272,7 @@ obvious::Matrix RansacMatching::match(obvious::Matrix* M, obvious::Matrix* S, do
 
   LOGMSG(DBG_DEBUG, "Matching result - cnt(best): " << cntBest << ", err(best): " << errBest);
 
+  obvious::System<double>::deallocate(SDists);
   obvious::System<double>::deallocate(mData);
 
   return TBest;
