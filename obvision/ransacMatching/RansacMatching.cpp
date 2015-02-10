@@ -19,8 +19,7 @@ namespace obvious
 
 RansacMatching::RansacMatching(unsigned int trials, double epsThresh, unsigned int sizeControlSet, bool clipPeripheralArea)
 {
-
-  _epsDist            = epsThresh;
+  _epsSqr             = epsThresh*epsThresh;
   _trials             = trials;
   _sizeControlSet     = sizeControlSet;
   _clipPeripheralArea = clipPeripheralArea;
@@ -101,8 +100,8 @@ obvious::Matrix RansacMatching::match(obvious::Matrix* M, obvious::Matrix* S, do
   unsigned int ctr = 0;
   for(vector<unsigned int>::iterator it=idxControl.begin(); it!=idxControl.end(); ++it)
   {
-      SControl(0, ctr) = (*S)(*it, 0);
-      SControl(1, ctr) = (*S)(*it, 1);
+      SControl(0, ctr)   = (*S)(*it, 0);
+      SControl(1, ctr)   = (*S)(*it, 1);
       SControl(2, ctr++) = 1.0;
   }
   // -----------------------------------------------------
@@ -114,19 +113,13 @@ obvious::Matrix RansacMatching::match(obvious::Matrix* M, obvious::Matrix* S, do
   // Lookup table for distances between scene points
   double** SDists;
   obvious::System<double>::allocate(pointsS, pointsS, SDists);
-  double pointS[2];
-  double pointS2[2];
   for(unsigned int j=0; j<pointsS; j++)
   {
-    pointS[0] = (*S)(j, 0);
-    pointS[1] = (*S)(j, 1);
-
     for(unsigned int j2=j+1; j2<pointsS; j2++)
     {
-      pointS2[0]     = (*S)(j2, 0);
-      pointS2[1]     = (*S)(j2, 1);
-      double distS   = euklideanDistance(pointS, pointS2, 2);
-      SDists[j][j2]  = distS;
+      double dx = (*S)(j2, 0)-(*S)(j, 0);
+      double dy = (*S)(j2, 1)-(*S)(j, 1);
+      SDists[j][j2]  = dx*dx + dy*dy;
     }
   }
   // -----------------------------------------------------
@@ -149,25 +142,20 @@ obvious::Matrix RansacMatching::match(obvious::Matrix* M, obvious::Matrix* S, do
     // Second model sample: Random != i
     unsigned int i2 = i + rand()%(pointsM/8 - 1) + 1;
 
-    double pointM[2];
-    double pointM2[2];
-    pointM[0] = (*M)(i, 0);
-    pointM[1] = (*M)(i, 1);
-    pointM2[0] = (*M)(i2, 0);
-    pointM2[1] = (*M)(i2, 1);
-
     // Vector between model points (for determining orientation)
     double vM[2];
-    vM[0] = pointM2[0] - pointM[0];
-    vM[1] = pointM2[1] - pointM[1];
+    vM[0] = (*M)(i2, 0) - (*M)(i, 0);
+    vM[1] = (*M)(i2, 1) - (*M)(i, 1);
 
     // Centroid of model (for determining translation)
     double cM[2];
-    cM[0] = (pointM[0] + pointM2[0])/2.0;
-    cM[1] = (pointM[1] + pointM2[1])/2.0;
+    cM[0] = ((*M)(i, 0) + (*M)(i2, 0))/2.0;
+    cM[1] = ((*M)(i, 1) + (*M)(i2, 1))/2.0;
 
-    double distM = euklideanDistance<double>(pointM, pointM2, 2);
+    double distM = vM[0]*vM[0] + vM[1]*vM[1];
 
+    double pointS[2];
+    double pointS2[2];
     for(unsigned int j=0; j<pointsS; j++)
     {
       // Assign scene sample j
@@ -187,7 +175,7 @@ obvious::Matrix RansacMatching::match(obvious::Matrix* M, obvious::Matrix* S, do
         }
       }
 
-      if(distSMin<_epsDist)
+      if(distSMin<_epsSqr)
       {
         pointS2[0] = (*S)(jMin, 0);
         pointS2[1] = (*S)(jMin, 1);
@@ -238,7 +226,7 @@ obvious::Matrix RansacMatching::match(obvious::Matrix* M, obvious::Matrix* S, do
 
           flann::SearchParams p(-1, 0.0);
           _index->knnSearch(query, indices, dists, 1, p);
-          if(dists[0][0]<_epsDist)
+          if(dists[0][0]<_epsSqr)
           {
             err += dists[0][0];
             cntMatch++;
@@ -255,7 +243,7 @@ obvious::Matrix RansacMatching::match(obvious::Matrix* M, obvious::Matrix* S, do
         {
           errBest = err;
           cntBest = cntMatch;
-          TBest = T;
+          TBest   = T;
         }
         else if(cntMatch==cntBest)
         {
@@ -263,7 +251,7 @@ obvious::Matrix RansacMatching::match(obvious::Matrix* M, obvious::Matrix* S, do
           {
             errBest = err;
             cntBest = cntMatch;
-            TBest = T;
+            TBest   = T;
           }
         }
       } // if(fabs(phi) < _phiMax)

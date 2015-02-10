@@ -22,7 +22,7 @@ public:
    * @param phiMax maximum rotation
    * @param sizeControlSet approximate set of control set
    */
-  RansacMatching(unsigned int trials = 50, double epsThresh = 0.03, unsigned int sizeControlSet = 180, bool clipPeripheralArea = false);
+  RansacMatching(unsigned int trials = 50, double epsThresh = 0.15, unsigned int sizeControlSet = 180, bool clipPeripheralArea = false);
 
   /**
    * Destructor
@@ -39,8 +39,8 @@ public:
 
 private:
 
-  // distance threshold
-  double _epsDist;
+  // squared distance threshold
+  double _epsSqr;
 
   // number of trials
   unsigned int _trials;
