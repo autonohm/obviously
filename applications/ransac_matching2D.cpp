@@ -25,13 +25,12 @@ int main(int argc, char** argv)
   // Model coordinates
   obvious::Matrix* M = new obvious::Matrix(1000, 2);
 
-  for(int i=0; i<1000; i++)
+  for(int i = 0; i < 1000; i++)
   {
-    double di = (double) i;
-    (*M)(i,0) = sin(di/500.0);
-    (*M)(i,1) = sin(di/100.0);
+    double di = (double)i;
+    (*M)(i, 0) = sin(di / 500.0);
+    (*M)(i, 1) = sin(di / 100.0);
   }
-
 
   obvious::Matrix T = MatrixFactory::TransformationMatrix33(deg2rad(29.0), 0.4, 0.35);
 
