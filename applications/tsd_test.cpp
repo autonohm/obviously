@@ -85,7 +85,7 @@ int main(void)
      }
 
   sensor.setRealMeasurementData(distZ);
-  //sensor.setRealMeasurementRGB(texture);
+  sensor.setRealMeasurementRGB(texture);
   Timer t;
   space.push(&sensor);
 
@@ -126,7 +126,7 @@ int main(void)
   VtkCloud vcloud;
   vcloud.setCoords(coords, cnt/3, 3, normals);
   Matrix P = sensor.getTransformation();
-  if(sensor.hasRealMeasurmentRGB()) vcloud.setColors(rgb, cnt/3, 3);
+  if(sensor.hasRealMeasurementRGB()) vcloud.setColors(rgb, cnt/3, 3);
 
   Obvious3D viewer("TSD Cloud");
 

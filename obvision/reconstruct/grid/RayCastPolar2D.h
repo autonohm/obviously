@@ -18,13 +18,36 @@ class RayCastPolar2D
 {
 public:
 
+  /**
+   * Constructor
+   */
   RayCastPolar2D();
 
+  /**
+   * Destructor
+   */
   ~RayCastPolar2D();
 
+  /**
+   * Perform raycasting, i.e. calculate coordinates obtainable from the sensor's field of vision
+   * @param grid grid instance
+   * @param sensor sensor instance
+   * @param coords coordinates of intersection between beam and surface
+   * @param normals normals of surfaces
+   * @param ctr number of points
+   */
   void calcCoordsFromCurrentView(TsdGrid* grid, SensorPolar2D* sensor, double* coords, double* normals, unsigned int* ctr);
 
-  void calcCoordsFromCurrentViewMask(TsdGrid* grid, SensorPolar2D* sensor, double* coords, double* normals, bool* mask);
+  /**
+   * Perform raycasting, i.e. calculate coordinates obtainable from the sensor's field of vision
+   * @param grid grid instance
+   * @param sensor sensor instance
+   * @param coords coordinates of intersection between beam and surface
+   * @param normals normals of surfaces
+   * @param mask validity mask
+   * @return number of valid points, i.e., having mask[i]==true
+   */
+  unsigned int calcCoordsFromCurrentViewMask(TsdGrid* grid, SensorPolar2D* sensor, double* coords, double* normals, bool* mask);
 
 private:
 

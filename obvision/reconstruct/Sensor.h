@@ -118,6 +118,11 @@ public:
    */
   virtual void setRealMeasurementData(double* data, double scale=1.0);
 
+  /**
+   * Copy measurement data to internal buffer
+   * @param data source with 2D coordinates
+   * @param scale scale factor to multiply distances
+   */
   virtual void setRealMeasurementData(vector<float> data, float scale=1.f);
 
   /**
@@ -132,13 +137,29 @@ public:
    */
   unsigned int dataToCartesianVector(double* &coords);
 
+  /**
+   * Convert distance measurements to Cartesian coordinates represented as matrix
+   * @return Cartesian coordinate matrix
+   */
   Matrix dataToHomogeneousCoordMatrix();
 
+  /**
+   * Set measurement accuracy
+   * @param accuracy array
+   */
   virtual void setRealMeasurementAccuracy(double* accuracy);
 
+  /**
+   * Access measurement accuracy (if available, see hasRealMeasurmentAccuracy)
+   * @return accuracy array
+   */
   virtual double* getRealMeasurementAccuracy();
 
-  virtual bool hasRealMeasurmentAccuracy();
+  /**
+   * Instance contains accuracy values
+   * @return accuracy flag
+   */
+  virtual bool hasRealMeasurementAccuracy();
 
   /**
    * Copy measurement mask
@@ -146,7 +167,16 @@ public:
    */
   virtual void setRealMeasurementMask(bool* mask);
 
+  /**
+   * Copy measurement mask
+   * @param mask source mask
+   */
   virtual void setRealMeasurementMask(vector<unsigned char> mask);
+
+  /**
+   * Mask measurements having depth==0.0
+   */
+  virtual void maskZeroDepth();
 
   /**
    * Get validity mask
@@ -157,7 +187,7 @@ public:
   /**
    * @return flag indicate availability of RGB data
    */
-  virtual bool hasRealMeasurmentRGB();
+  virtual bool hasRealMeasurementRGB();
 
   /**
    * Copy rgb data to internal buffer
