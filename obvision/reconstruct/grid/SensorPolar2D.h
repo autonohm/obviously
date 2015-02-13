@@ -31,11 +31,6 @@ public:
   ~SensorPolar2D();
 
   /**
-   * Set mask for every pixel to true
-   */
-  void resetMask();
-
-  /**
    * Mask measurements with acute angles to neighbors
    * @param[in] thresh threshold in rad (meaningful values < 1/36*M_PI)
    */

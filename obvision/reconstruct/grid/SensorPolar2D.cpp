@@ -53,12 +53,6 @@ SensorPolar2D::~SensorPolar2D()
   delete _raysLocal;
 }
 
-void SensorPolar2D::resetMask()
-{
-  for(unsigned int i=0; i<_size; i++)
-    _mask[i] = true;
-}
-
 void SensorPolar2D::maskDepthDiscontinuity(double thresh)
 {
   int radius = 1;

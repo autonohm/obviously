@@ -174,6 +174,11 @@ public:
   virtual void setRealMeasurementMask(vector<unsigned char> mask);
 
   /**
+   * Set mask for every pixel to true
+   */
+  virtual void resetMask();
+
+  /**
    * Mask measurements having depth==0.0
    */
   virtual void maskZeroDepth();

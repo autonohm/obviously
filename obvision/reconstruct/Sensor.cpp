@@ -202,6 +202,12 @@ void Sensor::setRealMeasurementMask(vector<unsigned char> mask)
     _mask[i] = mask[i];
 }
 
+void Sensor::resetMask()
+{
+  for(unsigned int i=0; i<_size; i++)
+    _mask[i] = true;
+}
+
 void Sensor::maskZeroDepth()
 {
   for(unsigned int i=0; i<_size; i++)
