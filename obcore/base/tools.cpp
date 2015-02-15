@@ -182,7 +182,37 @@ int serializePBM(const char* szFilename, void* pvBuffer, unsigned int nWidth, un
   return 1;
 }
 
+/**@brief Load one line from istream source and convert it into double
+ *
+ * @param source istream reference (ifstream, sstream, ...)
+ * @return computed double value
+ */
+double getDoubleLine(std::istream& source)
+{
+  std::string lineVar;
+  std::getline(source, lineVar);
+  if(!lineVar.size())
+    return NAN;
+  else
+  {
+    return std::strtod(lineVar.c_str(), NULL);
+  }
+}
 
+/**@brief Load one line from istream source and convert it into integer
+ *
+ * @param source istream reference (ifstream, sstream, ...)
+ * @return computed integer value
+ */
+int getIntLine(std::istream& source)
+{
+  std::string lineVar;
+  std::getline(source, lineVar);
+  if(!lineVar.size())
+    return NAN;
+  else
+    return std::atoi(lineVar.c_str());
+}
 //#include "jpeglib.h"
 //#include <string.h>
 //

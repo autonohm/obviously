@@ -4,10 +4,12 @@
 #include "obcore/math/mathbase.h"
 #include "TsdGrid.h"
 #include "TsdGridBranch.h"
+#include "obcore/base/tools.h"
 
 #include <cstring>
 #include <cmath>
 #include <omp.h>
+#include <istream>
 
 namespace obvious
 {
@@ -19,57 +21,68 @@ TsdGrid::TsdGrid(const obfloat cellSize, const EnumTsdGridLayout layoutPartition
   this->init(cellSize, layoutPartition, layoutGrid);
 }
 
-TsdGrid::TsdGrid(const std::string& path)
+TsdGrid::TsdGrid(const std::string& data, const EnumTsdGridLoadSource source)
 {
   /* Data file:
    * Cell dimensions
    * Grid dimensions
    * Grid data partition[row][col].cells[row][col]
    */
-  std::fstream inFile;
-  char buffer[1000];
   double cellSize=0.0;
   double maxTruncation=0.0;
   EnumTsdGridLayout layoutPartition;
   EnumTsdGridLayout layoutGrid;
 
-  inFile.open(path.c_str(), std::fstream::in);
-  if(!inFile.is_open())
+  std::istream* istream=NULL;
+  std::ifstream inFile;
+  std::stringstream ss;
+
+  if(source == FILE)
   {
-    LOGMSG(DBG_ERROR, " error opening file " << path << "\n");
-    std::exit(2);
+    inFile.open(data.c_str(), std::fstream::in);
+    if(!inFile.is_open())
+    {
+      LOGMSG(DBG_ERROR, " error opening file " << data << "\n");
+      std::exit(2);
+    }
+    istream = &inFile;
   }
-  inFile.getline(buffer, 1000);
-  cellSize = std::atof(buffer);
-  inFile.getline(buffer, 1000);
-  layoutPartition = static_cast<EnumTsdGridLayout>(std::atoi(buffer));
-  inFile.getline(buffer, 1000);
-  layoutGrid = static_cast<EnumTsdGridLayout>(std::atoi(buffer));
+  else if(source == STRING)
+  {
+    ss << data;
+    LOGMSG(DBG_DEBUG, "loaded " << ss.str().size() << " characters into stringstream\n");
+    istream = &ss;
+  }
+
+  cellSize = getDoubleLine(*istream);
+  layoutPartition = static_cast<EnumTsdGridLayout>(getIntLine(*istream));
+  layoutGrid = static_cast<EnumTsdGridLayout>(getIntLine(*istream));
   if( (layoutGrid < 0) || (layoutPartition < 0) || (layoutGrid > 15) || (layoutPartition > 15) )
   {
     LOGMSG(DBG_ERROR, " error! Partition or Gridlayout invalid!\n");
-    inFile.close();
+    if(source == FILE)
+      inFile.close();
     std::exit(3);
   }
-  inFile.getline(buffer, 1000);
-  maxTruncation=std::atof(buffer);
+
+  maxTruncation=getDoubleLine(*istream);
+  //inFile.getline(buffer, 1000);
+  //maxTruncation=std::atof(buffer);
   this->init(cellSize, layoutPartition, layoutGrid);
   this->setMaxTruncation(maxTruncation);
   for(int y = 0; y < _partitionsInY; y++)
   {
     for(int x = 0; x < _partitionsInX; x++)
     {
-      inFile.getline(buffer, 1000);
-      EnumTsdGridPartitionIdentifier id = static_cast<EnumTsdGridPartitionIdentifier>(std::atoi(buffer));
-      TsdGridPartition* curPart = _partitions[y][x];
+      EnumTsdGridPartitionIdentifier id=static_cast<EnumTsdGridPartitionIdentifier>(getIntLine(*istream));
+      TsdGridPartition* curPart=_partitions[y][x];
       if(id == UNINITIALIZED)
       {
         continue;
       }
       else if(id == EMPTY)
       {
-        inFile.getline(buffer, 1000);
-        curPart->_initWeight = std::atof(buffer);
+        curPart->_initWeight=static_cast<obfloat>(getDoubleLine(*istream));
         curPart->_initWeight = std::min(curPart->_initWeight, TSDGRIDMAXWEIGHT);
       }
       else if(id == CONTENT)
@@ -79,10 +92,8 @@ TsdGrid::TsdGrid(const std::string& path)
         {
           for(unsigned int px = 0; px < curPart->getWidth(); px++)
           {
-            inFile.getline(buffer, 1000);
-            curPart->_grid[py][px].tsd = std::atof(buffer);
-            inFile.getline(buffer, 1000);
-            curPart->_grid[py][px].weight = std::atof(buffer);
+              curPart->_grid[py][px].tsd=static_cast<obfloat>(getDoubleLine(*istream));
+              curPart->_grid[py][px].weight=static_cast<obfloat>(getDoubleLine(*istream));
           }
         }
       }
@@ -94,9 +105,12 @@ TsdGrid::TsdGrid(const std::string& path)
       }
     }
   }
+  if(source == FILE)
+  {
   inFile.close();
   if(inFile.is_open())
-    LOGMSG(DBG_DEBUG, " warning! Closing of file " << path << " failed.\n");
+    LOGMSG(DBG_DEBUG, " warning! Closing of file " << data << " failed.\n");
+  }
 }
 
 void TsdGrid::init(const double cellSize, const EnumTsdGridLayout layoutPartition, const EnumTsdGridLayout layoutGrid)
@@ -715,7 +729,7 @@ bool TsdGrid::freeFootprint(const obfloat centerCoords[2], const obfloat width, 
 
   //check whether indices are in bounds
   if((minX > static_cast<unsigned int>(_cellsX)) || (maxX > static_cast<unsigned int>(_cellsX)) ||
-     (minY > static_cast<unsigned int>(_cellsY)) || (maxY > static_cast<unsigned int>(_cellsY)))
+      (minY > static_cast<unsigned int>(_cellsY)) || (maxY > static_cast<unsigned int>(_cellsY)))
   {
     LOGMSG(DBG_ERROR, " Error indices out of bounds\n");
     return false;
