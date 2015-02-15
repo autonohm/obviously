@@ -187,6 +187,24 @@ void TsdGridPartition::addTsd(const unsigned int x, const unsigned int y, const 
 
     obfloat tsd = min(sd / maxTruncation, TSDINC);
 
+    /** The following lines were proposed by
+     *  E. Bylow, J. Sturm, C. Kerl, F. Kahl, and D. Cremers.
+     *  Real-time camera tracking and 3d reconstruction using signed distance functions.
+     *  In Robotics: Science and Systems Conference (RSS), June 2013.
+     *
+     *  SM: Improvements in tracking need to be verified, for the moment this is commented due to runtime improvements
+     */
+    /*
+    obfloat w = 1.0;
+    const obfloat eps = -_maxTruncation/4.0;
+    if(sd <= eps)
+    {
+      const obfloat span = -_maxTruncation - eps;
+      const obfloat sigma = 3.0/(span*span);
+      w = exp(-sigma*(sd-eps)*(sd-eps));
+    }
+    weight *= w;*/
+
     if(isnan(cell->tsd))
     {
       cell->tsd = tsd;
