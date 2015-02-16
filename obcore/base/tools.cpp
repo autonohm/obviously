@@ -209,7 +209,7 @@ int getIntLine(std::istream& source)
   std::string lineVar;
   std::getline(source, lineVar);
   if(!lineVar.size())
-    return NAN;
+    return 0;
   else
     return std::atoi(lineVar.c_str());
 }
