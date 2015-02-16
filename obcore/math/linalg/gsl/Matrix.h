@@ -110,7 +110,7 @@ public:
 	 */
 	//double* operator [] (unsigned int i);
 
-  double& operator () (unsigned int row, unsigned int col);
+  double& operator () (unsigned int row, unsigned int col) const;
 
 	/**
 	 * Multiplication operator
@@ -151,13 +151,13 @@ public:
 	 * Property accessor
 	 * @return number of matrix rows
 	 */
-	unsigned int getRows();
+	unsigned int getRows() const;
 
 	/**
 	 * Property accessor
 	 * @return number of matrix columns
 	 */
-	unsigned int getCols();
+	unsigned int getCols() const;
 
 	/**
 	 * Set matrix to identity

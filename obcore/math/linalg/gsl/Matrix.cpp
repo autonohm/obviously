@@ -82,7 +82,7 @@ void Matrix::addToRow(unsigned int row, const double scalar)
   gsl_vector_add_constant(&V.vector, scalar);
 }
 
-double& Matrix::operator () (unsigned int row, unsigned int col)
+double& Matrix::operator () (unsigned int row, unsigned int col) const
 {
   return *gsl_matrix_ptr(_M, row, col);
 }
@@ -148,12 +148,12 @@ void Matrix::setData(double* array)
   gsl_matrix_memcpy(_M, &varray.matrix);
 }
 
-unsigned int Matrix::getRows()
+unsigned int Matrix::getRows() const
 {
   return _M->size1;
 }
 
-unsigned int Matrix::getCols()
+unsigned int Matrix::getCols() const
 {
   return _M->size2;
 }

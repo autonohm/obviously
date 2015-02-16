@@ -35,9 +35,12 @@ public:
    * @param S scene
    * @return 3x3 registration matrix
    */
-  obvious::Matrix match(obvious::Matrix* M, obvious::Matrix* S, double phiMax = M_PI / 4.0, double resolution = 0.0);
+  obvious::Matrix match(const obvious::Matrix* M, const bool* maskM, const obvious::Matrix* S, const bool* maskS, double phiMax = M_PI / 4.0, double resolution = 0.0);
 
 private:
+
+  // extract submatrix given a validity mask
+  obvious::Matrix* extractValidSubmatrix(const obvious::Matrix* M, const bool* mask);
 
   // opening angle of laser scanner (absolute value)
   double _fov;
@@ -54,8 +57,8 @@ private:
   // approximate control set
   unsigned int _sizeControlSet;
 
-  // clip peripheral area of laser (non-overlapping area)
-  bool _clipPeripheralArea;
+  // clip peripheral area of control set (non-overlapping area)
+  bool _clipControlSet;
 
   // tree for accelerating NN search
   flann::Index<flann::L2<double> >* _index;
