@@ -185,6 +185,21 @@ unsigned int Sensor::dataToCartesianVectorMask(double* &coords, bool* validityMa
   return cnt;
 }
 
+unsigned int Sensor::removeInvalidPoints(double* inPoints, bool* mask, unsigned int sizeMask, double* outPoints)
+{
+  unsigned int cnt = 0;
+  for(unsigned int i = 0; i < sizeMask; i++)
+  {
+    if(mask[i] == true)
+    {
+      outPoints[cnt*2] = inPoints[i*2];
+      outPoints[cnt*2+1] = inPoints[i*2+1];
+      cnt++;
+    }
+  }
+  return cnt;
+}
+
 Matrix Sensor::dataToHomogeneousCoordMatrix()
 {
   Matrix M(_dim+1, _size);
@@ -196,6 +211,8 @@ Matrix Sensor::dataToHomogeneousCoordMatrix()
   }
   return M;
 }
+
+
 
 void Sensor::setRealMeasurementAccuracy(double* accuracy)
 {
