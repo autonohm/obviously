@@ -157,7 +157,7 @@ unsigned int RayCastPolar2D::calcCoordsFromCurrentViewMask(TsdGrid* grid, Sensor
   M(2,0) = 1.0;
   N(2,0) = 0.0; // no translation for normals
 
-#pragma omp for schedule (dynamic)
+#pragma omp for schedule (dynamic) reduction(+:cnt)
   for (unsigned int beam = 0; beam < sensor->getRealMeasurementSize(); beam++)
   {
     obfloat ray[2];
