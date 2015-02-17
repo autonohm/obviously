@@ -42,6 +42,15 @@ private:
   // extract submatrix given a validity mask
   obvious::Matrix* extractValidSubmatrix(const obvious::Matrix* M, const bool* mask);
 
+  // init kd-tree for fast NN search in model
+  void initKDTree(obvious::Matrix* M);
+
+  // pick control set for RANSAC in-/outlier detection
+  obvious::Matrix* pickControlSet(const obvious::Matrix* M, const bool* mask, unsigned int span);
+
+  // create look-up table for point to point intra-distance of a point set
+  double** createLutIntraDistance(obvious::Matrix* M, int span);
+
   // opening angle of laser scanner (absolute value)
   double _fov;
 

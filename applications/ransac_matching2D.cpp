@@ -53,7 +53,7 @@ int main(int argc, char** argv)
   bool clipPeripheralArea     = true;
   RansacMatching matcher(trials, epsThresh, sizeControlSet, clipPeripheralArea);
 
-  Matrix F = matcher.match(M, mask, &S, mask, M_PI / 4.0, deg2rad(0.25));
+  Matrix F = matcher.match(M, mask, &S, mask, deg2rad(45.0), deg2rad(0.25));
 
   F.invert();
   cout << endl << "Estimated transformation:" << endl;
