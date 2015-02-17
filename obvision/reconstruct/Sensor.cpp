@@ -189,7 +189,7 @@ unsigned int Sensor::removeInvalidPoints(double* inPoints, bool* mask, unsigned 
   unsigned int cnt = 0;
   for(unsigned int i = 0; i < sizeMask; i++)
   {
-    if(mask[i] == true)
+    if(mask[i])
     {
       outPoints[cnt*2]   = inPoints[i*2];
       outPoints[cnt*2+1] = inPoints[i*2+1];
