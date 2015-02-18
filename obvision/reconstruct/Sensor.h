@@ -203,6 +203,11 @@ public:
   virtual void maskZeroDepth();
 
   /**
+   * Mask measurements having depth==NAN || INFINITY
+   */
+  virtual void maskInvalidDepth();
+
+  /**
    * Get validity mask
    * @return validity mask vector. True signals a valid measurement
    */
