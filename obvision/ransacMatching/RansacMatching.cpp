@@ -310,9 +310,10 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M,  const bool* mas
 
           flann::SearchParams p(-1, 0.0);
           _index->knnSearch(query, indices, dists, 1, p);
+          err += dists[0][0];
           if(dists[0][0] < _epsSqr)
           {
-            err += dists[0][0];
+            //err += dists[0][0];
             cntMatch++;
           }
         }
@@ -322,7 +323,7 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M,  const bool* mas
         if(cntMatch == 0)
           continue;
 
-        err /= cntMatch;
+        //err /= cntMatch;
 
         if(cntMatch > cntBest)
         {
