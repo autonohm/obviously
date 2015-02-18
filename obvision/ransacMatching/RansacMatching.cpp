@@ -212,7 +212,7 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M,  const bool* mas
     // pick randomly one point in model set
     unsigned int randIdx      = rand() % (idxMValid.size()-10);
     // ... and leave at least n points for 2nd choice
-    unsigned int remainingIdx = min(idxMValid.size()-randIdx-1, maxDist2ndSample);
+    unsigned int remainingIdx = min((unsigned int)(idxMValid.size()-randIdx-1), maxDist2ndSample);
     // Index for first model sample
     unsigned int idx1         = idxMValid[randIdx];
     // Second model sample: Random on right side != i
@@ -246,7 +246,7 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M,  const bool* mas
       // Find scene sample with similar distance
       unsigned int iMinDist = 0;
       double distSMin       = 1e12;
-      unsigned int i2max    = min(idxSValid.size(), i+maxDist2ndSample);
+      unsigned int i2max    = min((unsigned int)idxSValid.size(), i+maxDist2ndSample);
       for(unsigned int i2 = i + 1; i2 < i2max; i2++)
       {
         double distEps = fabs(SDists[i][i2] - distM);
