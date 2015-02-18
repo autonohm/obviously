@@ -17,12 +17,11 @@ using namespace std;
 namespace obvious
 {
 
-RansacMatching::RansacMatching(unsigned int trials, double epsThresh, unsigned int sizeControlSet, bool clipControlSet)
+RansacMatching::RansacMatching(unsigned int trials, double epsThresh, unsigned int sizeControlSet)
 {
   _epsSqr = epsThresh * epsThresh;
   _trials = trials;
   _sizeControlSet = sizeControlSet;
-  _clipControlSet = clipControlSet;
   _model = NULL;
   _index = NULL;
 }
@@ -38,42 +37,28 @@ RansacMatching::~RansacMatching()
   }
 }
 
-obvious::Matrix* RansacMatching::extractValidSubmatrix(const obvious::Matrix* M, const bool* mask)
+vector<unsigned int> RansacMatching::extractValidIndices(const obvious::Matrix* M, const bool* mask)
 {
-  unsigned int size       = M->getRows();
-  unsigned int sizeValid  = 0;
-
-  for(unsigned int i=0; i<size; i++)
-    if(mask[i]) sizeValid++;
-
-  obvious::Matrix* MValid = new Matrix(sizeValid, M->getCols());
-
-  unsigned int iValid = 0;
-  for(unsigned int i=0; i<size; i++)
+  vector<unsigned int> validIndices;
+  for(unsigned int i=0; i<M->getRows(); i++)
   {
     if(mask[i])
-    {
-      for(unsigned int j=0; j<M->getCols(); j++)
-      {
-        (*MValid)(iValid, j) = (*M)(i, j);
-      }
-      iValid++;
-    }
+      validIndices.push_back(i);
   }
-  return MValid;
+  return validIndices;
 }
 
-void RansacMatching::initKDTree(obvious::Matrix* M)
+void RansacMatching::initKDTree(const obvious::Matrix* M, vector<unsigned int> valid)
 {
   // Build FLANN tree for fast access to nearest neighbors
   unsigned int cols = M->getCols();
-  unsigned int rows = M->getRows();
+  unsigned int rows = valid.size();
   double** mData;
   obvious::System<double>::allocate(rows, cols, mData);
   for(unsigned int r = 0; r < rows; r++)
   {
-    mData[r][0] = (*M)(r, 0);
-    mData[r][1] = (*M)(r, 1);
+    mData[r][0] = (*M)(valid[r], 0);
+    mData[r][1] = (*M)(valid[r], 1);
   }
   if(_model)
   {
@@ -89,134 +74,128 @@ void RansacMatching::initKDTree(obvious::Matrix* M)
   obvious::System<double>::deallocate(mData);
 }
 
-obvious::Matrix* RansacMatching::pickControlSet(const obvious::Matrix* M, const bool* mask, unsigned int span)
+obvious::Matrix* RansacMatching::pickControlSet(const obvious::Matrix* M, vector<unsigned int> idxValid)
 {
-  vector<unsigned int> indices;
-  unsigned int lowerBound = 0;
-  unsigned int upperBound = M->getRows() - 1;
-  if(_clipControlSet)
-  {
-    lowerBound  = span;
-    upperBound -= span;
-
-    LOGMSG(DBG_DEBUG, "Clipped area of control set to " << lowerBound << " ... " << upperBound);
-  }
-
-  for(unsigned int i = lowerBound; i < upperBound; i++)
-  {
-    if(mask[i]) indices.push_back(i);
-  }
   unsigned int sizeControlSet = _sizeControlSet;
-  if((indices.size()) < sizeControlSet)
+  if((idxValid.size()) < sizeControlSet)
   {
     LOGMSG(DBG_DEBUG, "Size of scene smaller than control set ... reducing size");
-    sizeControlSet = indices.size();
+    sizeControlSet = idxValid.size();
   }
+  obvious::Matrix* C = new obvious::Matrix(3, _sizeControlSet);
   vector<unsigned int> idxControl;
+  vector<unsigned int> idxTemp = idxValid;
+  unsigned int ctr = 0;
   while(idxControl.size() < sizeControlSet)
   {
-    unsigned int r = rand() % indices.size();
-    idxControl.push_back(indices[r]);
-    indices.erase(indices.begin() + r);
-  }
-  obvious::Matrix* C = new obvious::Matrix(3, idxControl.size());
-  unsigned int ctr = 0;
-  for(vector<unsigned int>::iterator it = idxControl.begin(); it != idxControl.end(); ++it)
-  {
-    (*C)(0, ctr)   = (*M)(*it, 0);
-    (*C)(1, ctr)   = (*M)(*it, 1);
+    unsigned int r = rand() % idxTemp.size();
+    unsigned int idx = idxTemp[r];
+    idxControl.push_back(idx);
+    idxTemp.erase(idxTemp.begin() + r);
+
+    (*C)(0, ctr)   = (*M)(idx, 0);
+    (*C)(1, ctr)   = (*M)(idx, 1);
     (*C)(2, ctr++) = 1.0;
   }
   return C;
 }
 
-double** RansacMatching::createLutIntraDistance(obvious::Matrix* M, int span)
+double** RansacMatching::createLutIntraDistance(const obvious::Matrix* M, const bool* mask, int maxDist)
 {
   int points = (int)M->getRows();
   double** dists;
   obvious::System<double>::allocate(points, points, dists);
   for(int i = 0; i < points; i++)
   {
-    int jmin = max(i-span, 0);
-    int jmax = min(i+span, points);
-    for(int j = jmin; j < jmax; j++)
+    if(mask[i])
     {
-      double dx = (*M)(j, 0) - (*M)(i, 0);
-      double dy = (*M)(j, 1) - (*M)(i, 1);
-      dists[i][j] = dx * dx + dy * dy;
+      int jmax = min(i+maxDist, points);
+      for(int j = i+1; j < jmax; j++)
+      {
+        if(mask[j])
+        {
+          double dx = (*M)(j, 0) - (*M)(i, 0);
+          double dy = (*M)(j, 1) - (*M)(i, 1);
+          dists[i][j] = dx * dx + dy * dy;
+        }
+      }
     }
   }
   return dists;
 }
 
+#define MIN_VALID_POINTS 10
 obvious::Matrix RansacMatching::match(const obvious::Matrix* M,  const bool* maskM, const obvious::Matrix* S,  const bool* maskS, double phiMax, double resolution)
 {
-
   obvious::Matrix TBest(3, 3);
   TBest.setIdentity();
 
-  obvious::Matrix* MValid = extractValidSubmatrix(M, maskM);
-  obvious::Matrix* SValid = extractValidSubmatrix(S, maskS);
+  unsigned int pointsInS = S->getRows();
+  unsigned int pointsInM = M->getRows();
 
-  if(SValid->getRows() < 2 && MValid->getRows() < 2)
+  if(pointsInM != pointsInS)
   {
-    LOGMSG(DBG_ERROR, "Size of model or scene too small, size M: " << MValid->getRows() << ", size S: " << SValid->getRows());
+    LOGMSG(DBG_ERROR, "Model and scene need to be of same size, size of M: " << pointsInM << ", size of S: " << pointsInS);
     return TBest;
   }
 
-  // Calculate search "radius", i.e., maximum difference of indices because of rotation
+  vector<unsigned int> idxMValid = extractValidIndices(M, maskM);
+  vector<unsigned int> idxSValid = extractValidIndices(S, maskS);
+
+  if(idxMValid.size() < MIN_VALID_POINTS || idxSValid.size() < MIN_VALID_POINTS)
+  {
+    LOGMSG(DBG_ERROR, "Model or scene contain too less valid points, valid in M: " << idxMValid.size() << ", valid in S: " << idxSValid.size());
+    return TBest;
+  }
+
+  // Calculate search "radius", i.e., maximum difference in polar indices because of rotation
+  phiMax = min(phiMax, M_PI / 2.0);
   int span;
   if(resolution > 1e-6)
   {
     span = (int)(phiMax / resolution);
+    if(span > (int)pointsInM) span = (int)pointsInM;
   }
   else
   {
-    LOGMSG(DBG_ERROR, "Resolution not properly set: " << resolution);
+    LOGMSG(DBG_ERROR, "Resolution not properly set: resolution = " << resolution);
     return TBest;
   }
 
-  vector<int> modelSelection;
-  int valid = 0;
-  for(int i=0; i<(int)M->getRows(); i++)
+  // -----------------------------------------------------
+  // Map query point in M -> left bound in S
+  vector<unsigned int> mapMtoSBoundL;
+  // Map query point in M -> right bound in S
+  vector<unsigned int> mapMtoSBoundR;
+
+  // determine valid right bounding in S for leftmost query point in M
+  unsigned int idxR;
+  for(int i=0; i<span-1; i++)
+    if(maskS[i]) idxR = i;
+
+  // valid left bounding in S for leftmost query point in M
+  unsigned int idxL = idxSValid.front();
+
+  for(int i=0; i<(int)pointsInM; i++)
   {
-    if(maskM[i])
-    {
-      modelSelection.push_back(valid++);
-    }
+    unsigned int iL = max(i-span, 0);
+    if(maskS[iL]) idxL = iL;
+    mapMtoSBoundL.push_back(idxL);
+
+    unsigned int iR = min(i+span, (int)pointsInS-1);
+    if(maskS[iR]) idxR = iR;
+    mapMtoSBoundR.push_back(idxR);
   }
+  // -----------------------------------------------------
 
-  // ------------------------------------------------------
-  // Calculate look up tables for phiMax selection
-  vector<int> reverseMapM;
-  vector<int> lutSearchRangeS;
-  for(unsigned int i=0; i<M->getRows(); i++)
-  {
-    if(maskM[i])
-    {
-      reverseMapM.push_back(i);
-    }
-  }
-  unsigned int cnt = 0;
-  for(unsigned int i=0; i<S->getRows(); i++)
-  {
-    if(maskS[i]) cnt++;
-    if(cnt==0)
-      lutSearchRangeS.push_back(0);
-    else
-      lutSearchRangeS.push_back(cnt-1);
-  }
-  // with this table, one can select an area as follows
-  // [lutSearchRangeS(reverseMapM(i)-span); lutSearchRangeS(reverseMapM(i)+span)]
-  // ------------------------------------------------------
+  initKDTree(M, idxMValid);
 
-  initKDTree(MValid);
+  obvious::Matrix* Control = pickControlSet(S, idxSValid);
 
-  obvious::Matrix* Control = pickControlSet(S, maskS, span);
+  LOGMSG(DBG_DEBUG, "Valid points in scene: " << idxSValid.size() << ", Control set: " << Control->getCols());
 
-  LOGMSG(DBG_DEBUG, "Scene size: " << SValid->getRows() << ", Control set: " << Control->getRows());
-
-  double** SDists = createLutIntraDistance(SValid, span);
+  unsigned int maxDist2ndSample = (M_PI/6.0) / resolution;
+  double** SDists = createLutIntraDistance(S, maskS, maxDist2ndSample);
 
   // -----------------------------------------------------
   // Perform RANSAC scheme as follows:
@@ -231,61 +210,65 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M,  const bool* mas
   for(unsigned int trial = 0; trial < _trials; trial++)
   {
     // pick randomly one point in model set
-    unsigned int randIdx      = rand() % (modelSelection.size()-10);
-    // ... and leave at least n points
-    unsigned int remainingIdx = modelSelection.size()-randIdx-1;
+    unsigned int randIdx      = rand() % (idxMValid.size()-10);
+    // ... and leave at least n points for 2nd choice
+    unsigned int remainingIdx = min(idxMValid.size()-randIdx-1, maxDist2ndSample);
     // Index for first model sample
-    unsigned int i = modelSelection[randIdx];
-    // Second model sample: Random != i
-    unsigned int i2 = modelSelection[randIdx + rand()%remainingIdx];
+    unsigned int idx1         = idxMValid[randIdx];
+    // Second model sample: Random on right side != i
+    unsigned int idx2         = idxMValid[randIdx + rand()%remainingIdx];
 
     //LOGMSG(DBG_DEBUG, "Candidates: " << i << ", " << i2);
 
     // Vector between model points (for determining orientation)
     double vM[2];
-    vM[0] = (*MValid)(i2, 0) - (*MValid)(i, 0);
-    vM[1] = (*MValid)(i2, 1) - (*MValid)(i, 1);
+    vM[0] = (*M)(idx2, 0) - (*M)(idx1, 0);
+    vM[1] = (*M)(idx2, 1) - (*M)(idx1, 1);
 
     // Centroid of model (for determining translation)
     double cM[2];
-    cM[0] = ((*MValid)(i, 0) + (*MValid)(i2, 0)) / 2.0;
-    cM[1] = ((*MValid)(i, 1) + (*MValid)(i2, 1)) / 2.0;
+    cM[0] = ((*M)(idx1, 0) + (*M)(idx2, 0)) / 2.0;
+    cM[1] = ((*M)(idx1, 1) + (*M)(idx2, 1)) / 2.0;
 
     double distM = vM[0] * vM[0] + vM[1] * vM[1];
 
+    // coordinates of point in S with similar intra-distance
     double sceneSimilar[2];
 
-    //Calculate interesting area of scene points according to phiMax, field of view (FoV) and number of sample points
-    unsigned int jMin = lutSearchRangeS[max(reverseMapM[i]-span, 0)];
-    unsigned int jMax = lutSearchRangeS[min(reverseMapM[i]+span, (int)(lutSearchRangeS.size()-1))];
+    // leftmost scene point belonging to query point idx1
+    unsigned int iMin = mapMtoSBoundL[idx1];
+    // rightmost scene point belonging to query point idx1
+    unsigned int iMax = mapMtoSBoundR[idx1];
+
     //LOGMSG(DBG_DEBUG, "Search range: " << jMin << " " << jMax);
-    for(unsigned int j = jMin; j < jMax; j++)
+    for(unsigned int i = iMin; i < iMax; i++)
     {
       // Find scene sample with similar distance
-      unsigned int jMinDist = 0;
+      unsigned int iMinDist = 0;
       double distSMin       = 1e12;
-      for(unsigned int j2 = j + 1; j2 < SValid->getRows(); j2++)
+      unsigned int i2max    = min(idxSValid.size(), i+maxDist2ndSample);
+      for(unsigned int i2 = i + 1; i2 < i2max; i2++)
       {
-        double distEps = fabs(SDists[j][j2] - distM);
+        double distEps = fabs(SDists[i][i2] - distM);
         if(distEps < distSMin)
         {
           distSMin = distEps;
-          jMinDist = j2;
+          iMinDist = i2;
         }
       }
 
       if(distSMin < _epsSqr)
       {
-        sceneSimilar[0] = (*SValid)(jMinDist, 0);
-        sceneSimilar[1] = (*SValid)(jMinDist, 1);
+        sceneSimilar[0] = (*S)(iMinDist, 0);
+        sceneSimilar[1] = (*S)(iMinDist, 1);
       }
       else
         continue;
 
       // Align scans
       double vS[2];
-      vS[0] = sceneSimilar[0] - (*SValid)(j, 0);
-      vS[1] = sceneSimilar[1] - (*SValid)(j, 1);
+      vS[0] = sceneSimilar[0] - (*S)(i, 0);
+      vS[1] = sceneSimilar[1] - (*S)(i, 1);
 
       // Calculate polar angle
       double phiM = atan2(vM[1], vM[0]);
@@ -302,8 +285,8 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M,  const bool* mas
       {
         // Centroid of scene
         double cS[2];
-        cS[0] = (sceneSimilar[0] + (*SValid)(j, 0)) / 2.0;
-        cS[1] = (sceneSimilar[1] + (*SValid)(j, 1)) / 2.0;
+        cS[0] = (sceneSimilar[0] + (*S)(i, 0)) / 2.0;
+        cS[1] = (sceneSimilar[1] + (*S)(i, 1)) / 2.0;
 
         obvious::Matrix T = obvious::MatrixFactory::TransformationMatrix33(phi, 0, 0);
 
@@ -365,8 +348,6 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M,  const bool* mas
   obvious::System<double>::deallocate(SDists);
 
   delete Control;
-  delete MValid;
-  delete SValid;
 
   return TBest;
 }

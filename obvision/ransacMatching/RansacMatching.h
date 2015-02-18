@@ -22,7 +22,7 @@ public:
    * @param phiMax maximum rotation
    * @param sizeControlSet approximate set of control set
    */
-  RansacMatching(unsigned int trials = 50, double epsThresh = 0.15, unsigned int sizeControlSet = 180, bool clipPeripheralArea = false);
+  RansacMatching(unsigned int trials = 50, double epsThresh = 0.15, unsigned int sizeControlSet = 180);
 
   /**
    * Destructor
@@ -39,17 +39,17 @@ public:
 
 private:
 
-  // extract submatrix given a validity mask
-  obvious::Matrix* extractValidSubmatrix(const obvious::Matrix* M, const bool* mask);
+  // extract valid indices from matrix giving a validity mask
+  vector<unsigned int> extractValidIndices(const obvious::Matrix* M, const bool* mask);
 
   // init kd-tree for fast NN search in model
-  void initKDTree(obvious::Matrix* M);
+  void initKDTree(const obvious::Matrix* M, vector<unsigned int> valid);
 
   // pick control set for RANSAC in-/outlier detection
-  obvious::Matrix* pickControlSet(const obvious::Matrix* M, const bool* mask, unsigned int span);
+  obvious::Matrix* pickControlSet(const obvious::Matrix* M, vector<unsigned int> idxValid);
 
   // create look-up table for point to point intra-distance of a point set
-  double** createLutIntraDistance(obvious::Matrix* M, int span);
+  double** createLutIntraDistance(const obvious::Matrix* M, const bool* mask, int maxDist);
 
   // opening angle of laser scanner (absolute value)
   double _fov;
@@ -65,9 +65,6 @@ private:
 
   // approximate control set
   unsigned int _sizeControlSet;
-
-  // clip peripheral area of control set (non-overlapping area)
-  bool _clipControlSet;
 
   // tree for accelerating NN search
   flann::Index<flann::L2<double> >* _index;

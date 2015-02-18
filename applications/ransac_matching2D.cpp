@@ -26,14 +26,16 @@ int main(int argc, char** argv)
 
   // Model coordinates
   obvious::Matrix* M = new obvious::Matrix(DATASETSIZE, 2);
-  bool mask[DATASETSIZE];
+  bool maskM[DATASETSIZE];
+  bool maskS[DATASETSIZE];
 
   for(int i = 0; i < DATASETSIZE; i++)
   {
     double di  = (double)i;
     (*M)(i, 0) = sin(di / 500.0);
     (*M)(i, 1) = sin(di / 100.0);
-    mask[i]    = true;
+    maskM[i]    = (i%4!=0);
+    maskS[i]    = (i%2!=0);
   }
 
   obvious::Matrix T = MatrixFactory::TransformationMatrix33(deg2rad(35.0), 0.4, 0.35);
@@ -50,10 +52,9 @@ int main(int argc, char** argv)
   unsigned int trials         = 50;
   double epsThresh            = 0.15;
   unsigned int sizeControlSet = 180;
-  bool clipPeripheralArea     = true;
-  RansacMatching matcher(trials, epsThresh, sizeControlSet, clipPeripheralArea);
+  RansacMatching matcher(trials, epsThresh, sizeControlSet);
 
-  Matrix F = matcher.match(M, mask, &S, mask, deg2rad(45.0), deg2rad(0.25));
+  Matrix F = matcher.match(M, maskM, &S, maskS, deg2rad(45.0), deg2rad(0.25));
 
   F.invert();
   cout << endl << "Estimated transformation:" << endl;
