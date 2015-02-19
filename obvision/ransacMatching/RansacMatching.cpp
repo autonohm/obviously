@@ -83,7 +83,6 @@ obvious::Matrix* RansacMatching::pickControlSet(const obvious::Matrix* M, vector
     sizeControlSet = idxValid.size();
   }
   obvious::Matrix* C = new obvious::Matrix(3, _sizeControlSet);
-  //vector<unsigned int> idxControl;
   vector<unsigned int> idxTemp = idxValid;
   unsigned int ctr = 0;
   while(idxControl.size() < sizeControlSet)
