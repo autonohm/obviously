@@ -74,7 +74,7 @@ void RansacMatching::initKDTree(const obvious::Matrix* M, vector<unsigned int> v
   obvious::System<double>::deallocate(mData);
 }
 
-obvious::Matrix* RansacMatching::pickControlSet(const obvious::Matrix* M, vector<unsigned int> idxValid)
+obvious::Matrix* RansacMatching::pickControlSet(const obvious::Matrix* M, vector<unsigned int> idxValid, vector<unsigned int> &idxControl)
 {
   unsigned int sizeControlSet = _sizeControlSet;
   if((idxValid.size()) < sizeControlSet)
@@ -83,7 +83,6 @@ obvious::Matrix* RansacMatching::pickControlSet(const obvious::Matrix* M, vector
     sizeControlSet = idxValid.size();
   }
   obvious::Matrix* C = new obvious::Matrix(3, _sizeControlSet);
-  vector<unsigned int> idxControl;
   vector<unsigned int> idxTemp = idxValid;
   unsigned int ctr = 0;
   while(idxControl.size() < sizeControlSet)
@@ -190,7 +189,8 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M,  const bool* mas
 
   initKDTree(M, idxMValid);
 
-  obvious::Matrix* Control = pickControlSet(S, idxSValid);
+  vector<unsigned int> idxControl;  //represents the indices of points used for Control in S.
+  obvious::Matrix* Control = pickControlSet(S, idxSValid, idxControl);
 
   LOGMSG(DBG_DEBUG, "Valid points in scene: " << idxSValid.size() << ", Control set: " << Control->getCols());
 
@@ -302,8 +302,13 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M,  const bool* mas
         flann::Matrix<int> indices(new int[1], 1, 1);
         flann::Matrix<double> dists(new double[1], 1, 1);
         double err = 0;
+
+        int clippedBeams = (int) (phi / resolution);
         for(unsigned int s = 0; s < STemp.getCols(); s++)
         {
+          if( idxControl[s] < (unsigned int) max(0, clippedBeams) || idxControl[s] > min(pointsInS, pointsInS+clippedBeams) )
+            continue; // points that won't have a corresponding point due to rotation are ignored for the metric
+
           q[0] = STemp(0, s);
           q[1] = STemp(1, s);
           flann::Matrix<double> query(q, 1, 2);
@@ -323,7 +328,7 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M,  const bool* mas
         if(cntMatch == 0)
           continue;
 
-        //err /= cntMatch;
+        err /= cntMatch;
 
         if(cntMatch > cntBest)
         {

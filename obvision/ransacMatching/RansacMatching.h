@@ -46,7 +46,7 @@ private:
   void initKDTree(const obvious::Matrix* M, vector<unsigned int> valid);
 
   // pick control set for RANSAC in-/outlier detection
-  obvious::Matrix* pickControlSet(const obvious::Matrix* M, vector<unsigned int> idxValid);
+  obvious::Matrix* pickControlSet(const obvious::Matrix* M, vector<unsigned int> idxValid, vector<unsigned int> &idxControl);
 
   // create look-up table for point to point intra-distance of a point set
   double** createLutIntraDistance(const obvious::Matrix* M, const bool* mask, int maxDist);
