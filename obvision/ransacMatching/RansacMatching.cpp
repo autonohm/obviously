@@ -303,9 +303,7 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M,  const bool* mas
         flann::Matrix<double> dists(new double[1], 1, 1);
         double err = 0;
 
-
         int clippedBeams = (int) (phi / resolution);
-
         for(unsigned int s = 0; s < STemp.getCols(); s++)
         {
           if( idxControl[s] < (unsigned int) max(0, clippedBeams) || idxControl[s] > min(pointsInS, pointsInS+clippedBeams) )
