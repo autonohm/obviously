@@ -8,7 +8,7 @@
 
 #include "obgraphic/VtkCloud.h"
 #include "obgraphic/Obvious3D.h"
-#include "obvision/icp/icp_def.h"
+#include "obvision/registration/icp/icp_def.h"
 #include "obvision/normals/NormalsEstimator.h"
 #include "obvision/mesh/TriangleMesh.h"
 #include "obcore/base/tools.h"

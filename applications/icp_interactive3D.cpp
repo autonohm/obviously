@@ -3,7 +3,7 @@
 #include "obcore/base/Timer.h"
 #include "obcore/math/geometry.h"
 
-#include "obvision/icp/icp_def.h"
+#include "obvision/registration/icp/icp_def.h"
 
 #include <sstream>
 

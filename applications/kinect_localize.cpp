@@ -1,7 +1,7 @@
 #include <iostream>
 #include "obgraphic/Obvious3D.h"
 #include "obdevice/Kinect.h"
-#include "obvision/icp/icp_def.h"
+#include "obvision/registration/icp/icp_def.h"
 #include "obvision/normals/NormalsEstimator.h"
 
 using namespace std;

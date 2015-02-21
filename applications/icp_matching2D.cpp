@@ -9,9 +9,9 @@
 
 #include "obcore/math/linalg/linalg.h"
 #include "obcore/base/Timer.h"
-#include "obvision/icp/icp_def.h"
-#include "obvision/icp/IcpMultiInitIterator.h"
-//#include "obvision/icp/assign/NaboPairAssignment.h"
+#include "obvision/registration/icp/icp_def.h"
+#include "obvision/registration/icp/IcpMultiInitIterator.h"
+//#include "obvision/registration/icp/assign/NaboPairAssignment.h"
 
 using namespace std;
 using namespace obvious;

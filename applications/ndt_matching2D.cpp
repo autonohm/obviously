@@ -10,7 +10,7 @@
 #include "obcore/math/mathbase.h"
 #include "obcore/math/linalg/linalg.h"
 #include "obcore/base/Timer.h"
-#include "obvision/ndt/Ndt.h"
+#include "obvision/registration/ndt/Ndt.h"
 
 using namespace std;
 using namespace obvious;

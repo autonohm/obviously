@@ -11,7 +11,7 @@
 #include "obvision/reconstruct/grid/TsdGrid.h"
 #include "obvision/reconstruct/grid/RayCastPolar2D.h"
 #include "obvision/reconstruct/grid/RayCastAxisAligned2D.h"
-#include "obvision/icp/icp_def.h"
+#include "obvision/registration/icp/icp_def.h"
 
 #include "obgraphic/Obvious2D.h"
 

@@ -12,28 +12,28 @@ INCLUDE_DIRECTORIES(..
 					/usr/include/eigen3)
 
 add_library(obvision
-	icp/assign/PairAssignment.cpp
-	icp/assign/AnnPairAssignment.cpp
-	icp/assign/FlannPairAssignment.cpp
-#	icp/assign/NaboPairAssignment.cpp
-	icp/assign/ProjectivePairAssignment.cpp
-	icp/assign/filter/ProjectionFilter.cpp
-	icp/assign/filter/OcclusionFilter.cpp
-	icp/assign/filter/TrimmedFilter.cpp
-	icp/assign/filter/ReciprocalFilter.cpp
-	icp/assign/filter/DistanceFilter.cpp
-	icp/assign/filter/OutOfBoundsFilter2D.cpp
-	icp/assign/filter/OutOfBoundsFilter3D.cpp
-	icp/assign/filter/RobotFootprintFilter.cpp
-	icp/ClosedFormEstimator2D.cpp
-	icp/PointToPointEstimator3D.cpp
-	icp/PointToPlaneEstimator3D.cpp
-	icp/PointToLineEstimator2D.cpp
-	icp/Icp.cpp
-	icp/IcpTrace.cpp
-	icp/IcpMultiInitIterator.cpp
-	ndt/Ndt.cpp
-	ransacMatching/RansacMatching.cpp
+	registration/icp/assign/PairAssignment.cpp
+	registration/icp/assign/AnnPairAssignment.cpp
+	registration/icp/assign/FlannPairAssignment.cpp
+#	registration/icp/assign/NaboPairAssignment.cpp
+	registration/icp/assign/ProjectivePairAssignment.cpp
+	registration/icp/assign/filter/ProjectionFilter.cpp
+	registration/icp/assign/filter/OcclusionFilter.cpp
+	registration/icp/assign/filter/TrimmedFilter.cpp
+	registration/icp/assign/filter/ReciprocalFilter.cpp
+	registration/icp/assign/filter/DistanceFilter.cpp
+	registration/icp/assign/filter/OutOfBoundsFilter2D.cpp
+	registration/icp/assign/filter/OutOfBoundsFilter3D.cpp
+	registration/icp/assign/filter/RobotFootprintFilter.cpp
+	registration/icp/ClosedFormEstimator2D.cpp
+	registration/icp/PointToPointEstimator3D.cpp
+	registration/icp/PointToPlaneEstimator3D.cpp
+	registration/icp/PointToLineEstimator2D.cpp
+	registration/icp/Icp.cpp
+	registration/icp/IcpMultiInitIterator.cpp
+	registration/ndt/Ndt.cpp
+	registration/ransacMatching/RansacMatching.cpp
+	registration/Trace.cpp
 	normals/NormalsEstimator.cpp
 	mesh/TriangleMesh.cpp
 	reconstruct/Sensor.cpp

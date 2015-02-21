@@ -12,7 +12,7 @@
 #include "obcore/math/linalg/linalg.h"
 #include "obcore/base/Timer.h"
 
-#include "obvision/ransacMatching/RansacMatching.h"
+#include "obvision/registration/ransacMatching/RansacMatching.h"
 
 using namespace std;
 using namespace obvious;
@@ -53,9 +53,9 @@ int main(int argc, char** argv)
   double epsThresh            = 0.15;
   unsigned int sizeControlSet = 180;
   RansacMatching matcher(trials, epsThresh, sizeControlSet);
-
+  matcher.activateTrace();
   Matrix F = matcher.match(M, maskM, &S, maskS, deg2rad(45.0), deg2rad(0.25));
-
+  matcher.serializeTrace("/tmp/trace", 100);
   F.invert();
   cout << endl << "Estimated transformation:" << endl;
   F.print();
