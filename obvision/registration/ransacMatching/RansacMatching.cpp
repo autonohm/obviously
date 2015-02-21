@@ -381,6 +381,7 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M,  const bool* mas
     }  // for all points in scene
     if(foundBetterMatch && _trace)
     {
+      LOGMSG(DBG_DEBUG, "err: " << errBest << ", cnt: " << cntBest);
       double** rawScene;
       System<double>::allocate(BestFit->getCols(), 2, rawScene);
       for(unsigned int j=0; j<BestFit->getCols(); j++)
@@ -390,15 +391,14 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M,  const bool* mas
       }
       vector<StrCartesianIndexPair> pairs;
       StrCartesianIndexPair p;
-      /*p.indexFirst = m1Best;
+      p.indexFirst = m1Best;
       p.indexSecond = -1;
       pairs.push_back(p);
       p.indexFirst = m2Best;
       p.indexSecond = -1;
-      pairs.push_back(p);*/
+      pairs.push_back(p);
       _trace->addAssignment(rawScene, BestFit->getCols(), pairs);
       System<double>::deallocate(rawScene);
-      cout << "trace" << endl;
     }
   }  // for trials
 

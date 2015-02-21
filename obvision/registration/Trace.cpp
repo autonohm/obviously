@@ -109,22 +109,16 @@ void Trace::serialize(char* folder, unsigned int delay)
     {
       snprintf(filename, 512, "%s/pairs_%05d.dat", folder, i);
       file.open(filename, ios::out);
-      Matrix* S = _scenes[i];
+      //Matrix* S = _scenes[i];
       vector<StrCartesianIndexPair> pairs = _pairs[i];
       for(unsigned int p=0; p<pairs.size(); p++)
       {
         unsigned int idxM = pairs[p].indexFirst;
-        unsigned int idxS = pairs[p].indexSecond;
+        //unsigned int idxS = pairs[p].indexSecond;
 
         if(idxM>=_M->getRows())
         {
           LOGMSG(DBG_ERROR, "Index for model point wrong ... skipping, index: " << idxM << ", size: " << _M->getRows());
-          continue;
-        }
-
-        if(idxS>=S->getRows())
-        {
-          LOGMSG(DBG_ERROR, "Index for scene point wrong ... skipping, index: " << idxS << ", size: " << S->getRows());
           continue;
         }
 
@@ -133,11 +127,18 @@ void Trace::serialize(char* folder, unsigned int delay)
           double coord = (*_M)(idxM,j);
           file << coord << " ";
         }
+
+        /*if(idxS>=S->getRows())
+        {
+          LOGMSG(DBG_ERROR, "Index for scene point wrong ... skipping, index: " << idxS << ", size: " << S->getRows());
+          continue;
+        }
+
         for(unsigned int j=0; j<_dim; j++)
         {
           double coord = (*S)(idxS,j);
           file << coord << " ";
-        }
+        }*/
         file << endl;
       }
       file.close();
@@ -156,8 +157,8 @@ void Trace::serialize(char* folder, unsigned int delay)
       file << "for NR in `seq -f \"%05g\" 0 " << _scenes.size()-1 << "`" << endl;
       file << "do" << endl;
       file << "echo \"plot \\\"./model.dat\\\" u 1:2 w p pt 19 ps 1 t \\\"model\\\"";
-      file << ", \\\"./scene_${NR}.dat\\\" u 1:2 w p pt 19 t \\\"scene\\\"";
-      file << ", \\\"./pairs_${NR}.dat\\\" u 1:2 w p pt 20 t \\\"pairs (model)\\\"";
+      file << ", \\\"./scene_${NR}.dat\\\" u 1:2 w p pt 19 t \\\"scene($NR)\\\"";
+      file << ", \\\"./pairs_${NR}.dat\\\" u 1:2 w p pt 20 ps 2 t \\\"pairs (model)\\\"";
       file << "\" >> animate_trace.gpi" << endl;
       file << "done" << endl;
       file.close();
