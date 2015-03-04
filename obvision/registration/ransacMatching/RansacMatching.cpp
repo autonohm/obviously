@@ -29,10 +29,10 @@ RansacMatching::~RansacMatching()
     delete _index;
     _index = NULL;
   }
-  if(_trace) delete _trace;
+  if(_trace)
+    delete _trace;
   _trace = NULL;
 }
-
 
 void RansacMatching::activateTrace()
 {
@@ -238,6 +238,7 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M,  const bool* mas
   // 6) rate control set, i.e., determine consensus
   unsigned int cntBest     = 0;
   double errBest           = 1e12;
+  double cntRateBest       = 0;
   obvious::Matrix* BestFit = new Matrix(*Control);
   unsigned int m1Best      = 0;
   unsigned int m2Best      = 0;
@@ -329,6 +330,12 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M,  const bool* mas
         T(0, 2) = cM[0] - (T(0, 0) * cS[0] + T(0, 1) * cS[1]);
         T(1, 2) = cM[1] - (T(1, 0) * cS[0] + T(1, 1) * cS[1]);
 
+        if(sqrt(pow(T(0, 2), 2) + pow(T(1, 2), 2)) > 1.5)
+        {
+          //cerr<<"Translation is to big"<<endl;
+          continue;
+        }
+
         obvious::Matrix STemp = T * (*Control);
 
         // Determine how many nearest neighbors (model <-> scene) are close enough
@@ -339,10 +346,13 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M,  const bool* mas
         double err = 0;
 
         int clippedBeams = (int) (phi / resolution);
+        unsigned int clippedPoints = 0;
         for(unsigned int s = 0; s < STemp.getCols(); s++)
         {
-          if( idxControl[s] < (unsigned int) max(0, clippedBeams) || idxControl[s] > min(pointsInS, pointsInS+clippedBeams) )
+          if( idxControl[s] < (unsigned int) max(0, clippedBeams) || idxControl[s] > min(pointsInS, pointsInS+clippedBeams) ) {
+            clippedPoints++;
             continue; // points that won't have a corresponding point due to rotation are ignored for the metric
+          }
 
           q[0] = STemp(0, s);
           q[1] = STemp(1, s);
@@ -350,7 +360,7 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M,  const bool* mas
 
           flann::SearchParams p(-1, 0.0);
           _index->knnSearch(query, indices, dists, 1, p);
-          err += dists[0][0];
+          err += pow(dists[0][0],2);
           if(dists[0][0] < _epsSqr)
           {
             //err += dists[0][0];
@@ -363,13 +373,27 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M,  const bool* mas
         if(cntMatch == 0)
           continue;
 
-        err /= cntMatch;
+        // Relative MatchCnt Score
+        unsigned int maxMatchCnt = (STemp.getCols() - clippedPoints);
+        double cntRate = (double)cntMatch / (double) maxMatchCnt; //* STemp.getCols();
+        //double matchStep = 1.0 / maxMatchCnt;
+        //LOGMSG(DBG_DEBUG, "Rate: "<<cntRate<< ", Clipped: " << clippedControlPoints << ", Points: " << STemp.getCols());
 
-        bool goodMatch = (cntMatch>cntBest) || ((cntMatch==cntBest) && (err < errBest));
+
+        //err /= cntMatch;
+        //err /=cntRate;
+
+        bool goodMatch = (cntRate > cntRateBest) || (( fabs(cntRate-cntRateBest) < 1e-2 ) && (err < errBest));
+        //bool goodMatch = (cntMatch>cntBest) || ((cntMatch==cntBest) && (err < errBest));
+        //bool goodMatch = (err < errBest) && (cntRate > 0.8);
+        //bool goodMatch = (err < errBest);
+
+       // bool goodMatch = (cntMatch>cntBest) || ((cntMatch==cntBest) && (err < errBest));
         if(goodMatch)
         {
           errBest = err;
           cntBest = cntMatch;
+          cntRateBest = cntRate;
           TBest = T;
           if(_trace)
             *BestFit = STemp;
@@ -379,9 +403,12 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M,  const bool* mas
         }
       }  // if(fabs(phi) < _phiMax)
     }  // for all points in scene
+    if(foundBetterMatch)
+      LOGMSG(DBG_DEBUG, "err: " << errBest << ", cnt: " << cntBest<< ", cntScoreBest: "<<cntRateBest);
+
     if(foundBetterMatch && _trace)
     {
-      LOGMSG(DBG_DEBUG, "err: " << errBest << ", cnt: " << cntBest);
+      //LOGMSG(DBG_DEBUG, "err: " << errBest << ", cnt: " << cntBest);
       double** rawScene;
       System<double>::allocate(BestFit->getCols(), 2, rawScene);
       for(unsigned int j=0; j<BestFit->getCols(); j++)
