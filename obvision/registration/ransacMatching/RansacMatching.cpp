@@ -366,8 +366,8 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M,  const bool* mas
             err += dists[0][0];
             cntMatch++;
           }
-          else
-            err += sqrt( dists[0][0] );
+          //else
+          //  err += sqrt( dists[0][0] );
 
 
         }
@@ -385,11 +385,11 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M,  const bool* mas
 
 
         //err /= cntMatch;
-        //err /=cntRate;
+        err /= cntRate;
 
         double eqThres = 1e-5;
         bool goodMatch = (cntRate - cntRateBest) > eqThres || ( (fabs(cntRate-cntRateBest) < eqThres) && (err < errBest) );
-        //bool goodMatch = (err < errBest) && (cntRate > 0.8);
+        //bool goodMatch = (err < errBest) && (cntRate > 0.95);
         //bool goodMatch = (err < errBest);
 
        // bool goodMatch = (cntMatch>cntBest) || ((cntMatch==cntBest) && (err < errBest));
