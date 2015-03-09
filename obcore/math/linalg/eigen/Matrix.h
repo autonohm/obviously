@@ -140,7 +140,7 @@ public:
 	 * Data accessor
 	 * @param array buffer to copy data into (must be instantiated outside)
 	 */
-	void getData(double* array);
+	void getData(double* array) const;
 
 	/**
 	 * Data mutator
