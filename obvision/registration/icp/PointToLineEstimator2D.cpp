@@ -61,8 +61,7 @@ void PointToLine2DEstimator::setPairs(std::vector<StrCartesianIndexPair>* pairs)
     double* pointModel         = _model[pair.indexFirst];
     double* pointScene         = _scene[pair.indexSecond];
     double* pointNorm          = _normals[pair.indexFirst];
-
-    _rms += distSqr2D(pointModel,pointScene)*abs2D(pointNorm);
+    _rms += distSqr2D<double>(pointModel,pointScene)*abs2D(pointNorm);
   }
   _rms /= (double)size;
   _rms = sqrt(_rms);
