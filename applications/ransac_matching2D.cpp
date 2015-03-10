@@ -39,33 +39,33 @@ int main(int argc, char** argv)
   }
 
   //Model Normals
-  obvious::Matrix* N = new obvious::Matrix(DATASETSIZE, 2);
-  // compute mean of components build by left and right neighbors
-  for(int i=1; i<DATASETSIZE-1; i++)
-  {
-    double xleft  = (*M)(i, 0)   - (*M)(i-1, 0);
-    double xright = (*M)(i+1, 0) - (*M)(i, 0);
-    double yleft  = (*M)(i, 1)   - (*M)(i-1, 1);
-    double yright = (*M)(i+1, 1) - (*M)(i, 1);
-
-
-    // x-component of normal
-    double xNormal = -(yright + yleft) / 2.0;
-    // y-component of normal
-    double yNormal = (xright + xleft) / 2.0;
-    //Normalize
-    double lengthNormal = sqrt(xNormal*xNormal + yNormal*yNormal);
-    (*N)(i-1, 0) = xNormal / lengthNormal;
-    (*N)(i-1, 1) = yNormal / lengthNormal;
-  }
-
-  // left bound
-  (*N)(0, 0) = -((*M)(1, 1) - (*M)(0, 1));
-  (*N)(0, 1) = (*M)(1, 0) - (*M)(0, 0);
-
-  // right bound
-  (*N)(DATASETSIZE-1, 0) = -((*M)(DATASETSIZE-1, 1) - (*M)(DATASETSIZE-2, 1));
-  (*N)(DATASETSIZE-1, 1) = (*M)(DATASETSIZE-1, 0) - (*M)(DATASETSIZE-2, 0);
+//  obvious::Matrix* N = new obvious::Matrix(DATASETSIZE, 2);
+//  // compute mean of components build by left and right neighbors
+//  for(int i=1; i<DATASETSIZE-1; i++)
+//  {
+//    double xleft  = (*M)(i, 0)   - (*M)(i-1, 0);
+//    double xright = (*M)(i+1, 0) - (*M)(i, 0);
+//    double yleft  = (*M)(i, 1)   - (*M)(i-1, 1);
+//    double yright = (*M)(i+1, 1) - (*M)(i, 1);
+//
+//
+//    // x-component of normal
+//    double xNormal = -(yright + yleft) / 2.0;
+//    // y-component of normal
+//    double yNormal = (xright + xleft) / 2.0;
+//    //Normalize
+//    double lengthNormal = sqrt(xNormal*xNormal + yNormal*yNormal);
+//    (*N)(i-1, 0) = xNormal / lengthNormal;
+//    (*N)(i-1, 1) = yNormal / lengthNormal;
+//  }
+//
+//  // left bound
+//  (*N)(0, 0) = -((*M)(1, 1) - (*M)(0, 1));
+//  (*N)(0, 1) = (*M)(1, 0) - (*M)(0, 0);
+//
+//  // right bound
+//  (*N)(DATASETSIZE-1, 0) = -((*M)(DATASETSIZE-1, 1) - (*M)(DATASETSIZE-2, 1));
+//  (*N)(DATASETSIZE-1, 1) = (*M)(DATASETSIZE-1, 0) - (*M)(DATASETSIZE-2, 0);
 
   obvious::Matrix T = MatrixFactory::TransformationMatrix33(deg2rad(35.0), 0.4, 0.35);
 
@@ -83,7 +83,7 @@ int main(int argc, char** argv)
   unsigned int sizeControlSet = 180;
   RansacMatching matcher(trials, epsThresh, sizeControlSet);
   matcher.activateTrace();
-  Matrix F = matcher.match(M, N, maskM, &S, maskS, deg2rad(45.0), deg2rad(0.25));
+  Matrix F = matcher.match(M, maskM, &S, maskS, deg2rad(45.0), deg2rad(0.25));
   matcher.serializeTrace("/tmp/trace", 100);
   F.invert();
   cout << endl << "Estimated transformation:" << endl;

@@ -132,7 +132,7 @@ double** RansacMatching::createLutIntraDistance(const obvious::Matrix* M, const 
 }
 
 #define MIN_VALID_POINTS 10
-obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const obvious::Matrix* N, const bool* maskM, const obvious::Matrix* S,  const bool* maskS, double phiMax, double resolution)
+obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const bool* maskM, const obvious::Matrix* S,  const bool* maskS, double phiMax, double resolution)
 {
   obvious::Matrix TBest(3, 3);
   TBest.setIdentity();
@@ -220,25 +220,6 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const obvious::M
 
   initKDTree(M, idxMValid);
 
-  //Estimator
-  //Model with same structure as _model
-  //Extract valid normals (same index structure as _model)
-  double** arrayM;
-  double** arrayN;
-  System<double>::allocate(idxMValid.size(), 2, arrayN);
-  System<double>::allocate(idxMValid.size(), 2, arrayM);
-
-  //double* arrayN = new double [idxMValid.size() * 2];
-  for(unsigned int i=0; i<idxMValid.size(); i++)
-  {
-    arrayN[i][0] = (*N)(idxMValid[i], 0);
-    arrayN[i][1] = (*N)(idxMValid[i], 1);
-    arrayM[i][0] = (*M)(idxMValid[i], 0);
-    arrayM[i][1] = (*M)(idxMValid[i], 1);
-  }
-  PointToLine2DEstimator* estimator = new PointToLine2DEstimator();
-  estimator->setModel(arrayM, idxMValid.size() * 2, arrayN);
-
   vector<unsigned int> idxControl;  //represents the indices of points used for Control in S.
   obvious::Matrix* Control = pickControlSet(S, idxSValid, idxControl);
 
@@ -257,6 +238,7 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const obvious::M
   // 6) rate control set, i.e., determine consensus
   unsigned int cntBest     = 0;
   double errBest           = 1e12;
+  double cntRateBest       = 0;
   obvious::Matrix* BestFit = new Matrix(*Control);
   unsigned int m1Best      = 0;
   unsigned int m2Best      = 0;
@@ -372,9 +354,10 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const obvious::M
         {
           arrayS[s][0] = STemp(0,s);
           arrayS[s][1] = STemp(1,s);
-          if( idxControl[s] < (unsigned int) max(0, clippedBeams) || idxControl[s] > min(pointsInS, pointsInS+clippedBeams) ) {
+          if( idxControl[s] < (unsigned int) max(0, clippedBeams) || idxControl[s] > min(pointsInS, pointsInS+clippedBeams) )
+          {
             clippedPoints++;
-            continue; // points that won't have a corresponding point due to rotation are ignored for the metric
+            continue; // Cut of Scene Points, points that won't have a corresponding point due to rotation are ignored for the metric
           }
 
           q[0] = STemp(0, s);
@@ -383,16 +366,20 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const obvious::M
 
           flann::SearchParams p(-1, 0.0);
           _index->knnSearch(query, indices, dists, 1, p);
+          unsigned int rawIdx = idxMValid[ indices[0][0] ]; //raw index of closest model point
+          if(rawIdx < (unsigned int) max(0, -clippedBeams) || rawIdx > min(pointsInS, pointsInS-clippedBeams)) {
+            clippedPoints++;
+            continue; //Cut off point correspondences to Model points that don't have a reasonable corresponding point due to rotation.
+          }
 
-          StrCartesianIndexPair pair;
-          pair.indexFirst = indices[0][0]; //valid model indices
-          pair.indexSecond = s;
-          pairs.push_back(pair);
 
           if(dists[0][0] < _epsSqr)
           {
+            err += sqrt(dists[0][0]);
             cntMatch++;
           }
+          else
+            err += dists[0][0];
 
         }
         delete[] indices.ptr();
@@ -401,20 +388,21 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const obvious::M
         if(cntMatch == 0)
           continue;
 
-        //Calculate the score with PointToLineEstimator
-        estimator->setScene(arrayS, STemp.getRows() * STemp.getCols());
-        estimator->setPairs(&pairs);
-        err = estimator->getRMS();
-        delete [] arrayS;
-
+        // Relative MatchCnt Score
+        unsigned int maxMatchCnt = (STemp.getCols() - clippedPoints);
+        double cntRate = (double)cntMatch / (double) maxMatchCnt;
+        double cntStepSize = 1.0 /STemp.getCols();
         //err /=cntMatch;
+        double equalThres = cntStepSize;// 1e-5;
 
+        bool goodMatch = (cntRate - cntRateBest) > equalThres || ( (fabs(cntRate-cntRateBest) < equalThres) && (err < errBest) );
         //bool goodMatch = (cntMatch > cntBest) || ((cntMatch == cntBest) && (err < errBest));
-        bool goodMatch = (err < errBest);
+        //bool goodMatch = (err < errBest);
         if(goodMatch)
         {
           errBest = err;
           cntBest = cntMatch;
+          cntRateBest = cntRate;
           TBest = T;
           if(_trace)
             *BestFit = STemp;
@@ -425,7 +413,7 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const obvious::M
       }  // if(fabs(phi) < _phiMax)
     }  // for all points in scene
     if(foundBetterMatch)
-      LOGMSG(DBG_DEBUG, "err: " << errBest << ", cnt: " << cntBest);
+      LOGMSG(DBG_DEBUG, "err: " << errBest << ", cnt: " << cntBest<< ", cntScoreBest: "<<cntRateBest);
 
     if(foundBetterMatch && _trace)
     {
@@ -456,8 +444,6 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const obvious::M
 
   delete Control;
   delete BestFit;
-  delete [] arrayN;
-  delete estimator;
 
   return TBest;
 }

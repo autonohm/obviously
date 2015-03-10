@@ -47,7 +47,7 @@ public:
    * @param S scene
    * @return 3x3 registration matrix
    */
-  obvious::Matrix match(const obvious::Matrix* M, const obvious::Matrix* N, const bool* maskM, const obvious::Matrix* S, const bool* maskS, double phiMax = M_PI / 4.0, double resolution = 0.0);
+  obvious::Matrix match(const obvious::Matrix* M, const bool* maskM, const obvious::Matrix* S, const bool* maskS, double phiMax = M_PI / 4.0, double resolution = 0.0);
 
   /**
    * Serialize assignment to trace folder
