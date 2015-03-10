@@ -225,7 +225,7 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const bool* mask
 
   LOGMSG(DBG_DEBUG, "Valid points in scene: " << idxSValid.size() << ", Control set: " << Control->getCols());
 
-  unsigned int maxDist2ndSample = (M_PI/6.0) / resolution;
+  unsigned int maxDist2ndSample = 0.5 * phiMax / resolution; //(M_PI/6.0) / resolution
   double** SDists = createLutIntraDistance(S, maskS, maxDist2ndSample);
 
   // -----------------------------------------------------
@@ -319,6 +319,32 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const bool* mask
 
       if(fabs(phi) < phiMax)
       {
+        //We can cut off the outer parts of the scene/model as
+        //the rotations tells how much information is not shared by the scans
+        int clippedBeams = (int) (phi / resolution);
+
+        bool m1error = false;
+        bool m2error = false;
+        bool s1error = false;
+        bool s2error = false;
+        if(idx1 < (unsigned int) max(0, -clippedBeams) || idx1 > min(pointsInS, pointsInS-clippedBeams))
+          m1error = true;//continue; //Cut off point correspondences to Model points that don't have a reasonable corresponding point due to rotation.
+        else if (idx2 < (unsigned int) max(0, -clippedBeams) || idx2 > min(pointsInS, pointsInS-clippedBeams))
+          m2error = true; //continue; //Cut off point correspondences to Model points that don't have a reasonable corresponding point due to rotation.
+        else if( i < (unsigned int) max(0, clippedBeams) || i > min(pointsInS, pointsInS+clippedBeams) )
+          s1error = true; //continue; // Cut of Scene Points, points that won't have a corresponding point due to rotation are ignored for the metric
+        else  if( iMinDist < (unsigned int) max(0, clippedBeams) || iMinDist > min(pointsInS, pointsInS+clippedBeams) )
+          s2error = true; //continue; // Cut of Scene Points, points that won't have a corresponding point due to rotation are ignored for the metric
+
+        if(m1error || m2error || s1error || s2error) {
+          LOGMSG(DBG_DEBUG, "Cut off error");
+//          LOGMSG(DBG_DEBUG, "Cut off errors: m1-"<< m1error<<endl
+//                                      << " m2-"<< m2error<<endl
+//                                      << " s1-"<< s1error<<endl
+//                                      << " s2-"<< s2error<<endl);
+          continue;
+        }
+
         // Centroid of scene
         double cS[2];
         cS[0] = (sceneSimilar[0] + (*S)(i, 0)) / 2.0;
@@ -345,41 +371,38 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const bool* mask
         flann::Matrix<double> dists(new double[1], 1, 1);
         double err = 0;
 
-        std::vector<StrCartesianIndexPair> pairs;
-        double** arrayS;
-        System<double>::allocate(STemp.getCols(), 2, arrayS);
-        int clippedBeams = (int) (phi / resolution);
         unsigned int clippedPoints = 0;
         for(unsigned int s = 0; s < STemp.getCols(); s++)
         {
-          arrayS[s][0] = STemp(0,s);
-          arrayS[s][1] = STemp(1,s);
+          //Clip control points according to phi
           if( idxControl[s] < (unsigned int) max(0, clippedBeams) || idxControl[s] > min(pointsInS, pointsInS+clippedBeams) )
           {
             clippedPoints++;
             continue; // Cut of Scene Points, points that won't have a corresponding point due to rotation are ignored for the metric
           }
 
+          //Find nearest neighbor for control point
           q[0] = STemp(0, s);
           q[1] = STemp(1, s);
           flann::Matrix<double> query(q, 1, 2);
-
           flann::SearchParams p(-1, 0.0);
           _index->knnSearch(query, indices, dists, 1, p);
+
+          //Check if model point is not clipped
           unsigned int rawIdx = idxMValid[ indices[0][0] ]; //raw index of closest model point
-          if(rawIdx < (unsigned int) max(0, -clippedBeams) || rawIdx > min(pointsInS, pointsInS-clippedBeams)) {
+          if(rawIdx < (unsigned int) max(0, -clippedBeams) || rawIdx > min(pointsInS, pointsInS-clippedBeams))
+          {
             clippedPoints++;
             continue; //Cut off point correspondences to Model points that don't have a reasonable corresponding point due to rotation.
           }
-
 
           if(dists[0][0] < _epsSqr)
           {
             err += sqrt(dists[0][0]);
             cntMatch++;
           }
-          else
-            err += dists[0][0];
+          //else
+            //err += dists[0][0];
 
         }
         delete[] indices.ptr();
