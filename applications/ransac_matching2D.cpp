@@ -48,11 +48,15 @@ int main(int argc, char** argv)
     double yleft  = (*M)(i, 1)   - (*M)(i-1, 1);
     double yright = (*M)(i+1, 1) - (*M)(i, 1);
 
-    // x-component of normal
-    (*N)(i-1, 0) = -(yright + yleft) / 2.0;
 
+    // x-component of normal
+    double xNormal = -(yright + yleft) / 2.0;
     // y-component of normal
-    (*N)(i-1, 1) = (xright + xleft) / 2.0;
+    double yNormal = (xright + xleft) / 2.0;
+    //Normalize
+    double lengthNormal = sqrt(xNormal*xNormal + yNormal*yNormal);
+    (*N)(i-1, 0) = xNormal / lengthNormal;
+    (*N)(i-1, 1) = yNormal / lengthNormal;
   }
 
   // left bound

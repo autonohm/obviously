@@ -384,12 +384,13 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const obvious::M
           flann::SearchParams p(-1, 0.0);
           _index->knnSearch(query, indices, dists, 1, p);
 
+          StrCartesianIndexPair pair;
+          pair.indexFirst = indices[0][0]; //valid model indices
+          pair.indexSecond = s;
+          pairs.push_back(pair);
+
           if(dists[0][0] < _epsSqr)
           {
-            StrCartesianIndexPair pair;
-            pair.indexFirst = indices[0][0]; //valid model indices
-            pair.indexSecond = s;
-            pairs.push_back(pair);
             cntMatch++;
           }
 
@@ -406,6 +407,9 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const obvious::M
         err = estimator->getRMS();
         delete [] arrayS;
 
+        //err /=cntMatch;
+
+        //bool goodMatch = (cntMatch > cntBest) || ((cntMatch == cntBest) && (err < errBest));
         bool goodMatch = (err < errBest);
         if(goodMatch)
         {
