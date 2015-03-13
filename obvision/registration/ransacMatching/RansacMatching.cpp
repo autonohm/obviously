@@ -206,14 +206,26 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const bool* mask
   // valid left bounding in S for leftmost query point in M
   unsigned int idxL = idxSValid.front();
 
+  //determine leftmost and rightmost valid point within span for index of M
   for(int i=0; i<(int)pointsInM; i++)
   {
     unsigned int iL = max(i-span, 0);
-    if(maskS[iL]) idxL = iL;
+    bool sucess = false;
+    for(int j= iL; j<=i; j++)
+    {
+      if(maskS[iL])
+      {
+        idxL = iL;
+        sucess = true;
+        break;
+      }
+    }
+    if(!sucess) idxL = i;
     mapMtoSBoundL.push_back(idxL);
 
     unsigned int iR = min(i+span, (int)pointsInS-1);
     if(maskS[iR]) idxR = iR;
+
     mapMtoSBoundR.push_back(idxR);
   }
   // -----------------------------------------------------
@@ -225,7 +237,9 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const bool* mask
 
   LOGMSG(DBG_DEBUG, "Valid points in scene: " << idxSValid.size() << ", Control set: " << Control->getCols());
 
-  unsigned int maxDist2ndSample = 0.5 * phiMax / resolution; //(M_PI/6.0) / resolution
+  unsigned int maxDist2ndSample =  (M_PI/6.0) / resolution; //0.5 * phiMax / resolution;
+  unsigned int minDist2ndSample = 10;
+  assert(minDist2ndSample >= 1);
   double** SDists = createLutIntraDistance(S, maskS, maxDist2ndSample);
 
   // -----------------------------------------------------
@@ -246,13 +260,13 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const bool* mask
   {
     bool foundBetterMatch = false;
     // pick randomly one point in model set
-    unsigned int randIdx      = rand() % (idxMValid.size()-10);
+    unsigned int randIdx      = rand() % (idxMValid.size()-minDist2ndSample);
     // ... and leave at least n points for 2nd choice
     unsigned int remainingIdx = min((unsigned int)(idxMValid.size()-randIdx-1), maxDist2ndSample);
     // Index for first model sample
     unsigned int idx1         = idxMValid[randIdx];
     // Second model sample: Random on right side != i
-    unsigned int idx2         = idxMValid[randIdx + rand()%remainingIdx];
+    unsigned int idx2         = idxMValid[randIdx + (rand()%remainingIdx-minDist2ndSample) + minDist2ndSample];
 
     //LOGMSG(DBG_DEBUG, "Candidates: " << i << ", " << i2);
 
@@ -279,11 +293,12 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const bool* mask
     //LOGMSG(DBG_DEBUG, "Search range: " << jMin << " " << jMax);
     for(unsigned int i = iMin; i < iMax; i++)
     {
+      if (valid)
       // Find scene sample with similar distance
       unsigned int iMinDist = 0;
       double distSMin       = 1e12;
       unsigned int i2max    = min((unsigned int)idxSValid.size(), i+maxDist2ndSample);
-      for(unsigned int i2 = i + 1; i2 < i2max; i2++)
+      for(unsigned int i2 = i + minDist2ndSample; i2 < i2max; i2++)
       {
         double distEps = fabs(SDists[i][i2] - distM);
         if(distEps < distSMin)
@@ -322,28 +337,28 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const bool* mask
         //We can cut off the outer parts of the scene/model as
         //the rotations tells how much information is not shared by the scans
         int clippedBeams = (int) (phi / resolution);
-
-        bool m1error = false;
-        bool m2error = false;
-        bool s1error = false;
-        bool s2error = false;
-        if(idx1 < (unsigned int) max(0, -clippedBeams) || idx1 > min(pointsInS, pointsInS-clippedBeams))
-          m1error = true;//continue; //Cut off point correspondences to Model points that don't have a reasonable corresponding point due to rotation.
-        else if (idx2 < (unsigned int) max(0, -clippedBeams) || idx2 > min(pointsInS, pointsInS-clippedBeams))
-          m2error = true; //continue; //Cut off point correspondences to Model points that don't have a reasonable corresponding point due to rotation.
-        else if( i < (unsigned int) max(0, clippedBeams) || i > min(pointsInS, pointsInS+clippedBeams) )
-          s1error = true; //continue; // Cut of Scene Points, points that won't have a corresponding point due to rotation are ignored for the metric
-        else  if( iMinDist < (unsigned int) max(0, clippedBeams) || iMinDist > min(pointsInS, pointsInS+clippedBeams) )
-          s2error = true; //continue; // Cut of Scene Points, points that won't have a corresponding point due to rotation are ignored for the metric
-
-        if(m1error || m2error || s1error || s2error) {
-          LOGMSG(DBG_DEBUG, "Cut off error");
-//          LOGMSG(DBG_DEBUG, "Cut off errors: m1-"<< m1error<<endl
-//                                      << " m2-"<< m2error<<endl
-//                                      << " s1-"<< s1error<<endl
-//                                      << " s2-"<< s2error<<endl);
-          continue;
-        }
+//
+//        bool m1error = false;
+//        bool m2error = false;
+//        bool s1error = false;
+//        bool s2error = false;
+//        if(idx1 < (unsigned int) max(0, -clippedBeams) || idx1 > min(pointsInS, pointsInS-clippedBeams))
+//          m1error = true;//continue; //Cut off point correspondences to Model points that don't have a reasonable corresponding point due to rotation.
+//        else if (idx2 < (unsigned int) max(0, -clippedBeams) || idx2 > min(pointsInS, pointsInS-clippedBeams))
+//          m2error = true; //continue; //Cut off point correspondences to Model points that don't have a reasonable corresponding point due to rotation.
+//        else if( i < (unsigned int) max(0, clippedBeams) || i > min(pointsInS, pointsInS+clippedBeams) )
+//          s1error = true; //continue; // Cut of Scene Points, points that won't have a corresponding point due to rotation are ignored for the metric
+//        else  if( iMinDist < (unsigned int) max(0, clippedBeams) || iMinDist > min(pointsInS, pointsInS+clippedBeams) )
+//          s2error = true; //continue; // Cut of Scene Points, points that won't have a corresponding point due to rotation are ignored for the metric
+//
+//        if(m1error || m2error || s1error || s2error) {
+//          LOGMSG(DBG_DEBUG, "Cut off error");
+////          LOGMSG(DBG_DEBUG, "Cut off errors: m1-"<< m1error<<endl
+////                                      << " m2-"<< m2error<<endl
+////                                      << " s1-"<< s1error<<endl
+////                                      << " s2-"<< s2error<<endl);
+//          continue;
+//        }
 
         // Centroid of scene
         double cS[2];
@@ -401,9 +416,10 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const bool* mask
             err += sqrt(dists[0][0]);
             cntMatch++;
           }
-          //else
-            //err += dists[0][0];
-
+          else
+          {
+            err += dists[0][0];
+          }
         }
         delete[] indices.ptr();
         delete[] dists.ptr();
@@ -415,12 +431,16 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const bool* mask
         unsigned int maxMatchCnt = (STemp.getCols() - clippedPoints);
         double cntRate = (double)cntMatch / (double) maxMatchCnt;
         double cntStepSize = 1.0 /STemp.getCols();
-        //err /=cntMatch;
         double equalThres = cntStepSize;// 1e-5;
 
-        bool goodMatch = (cntRate - cntRateBest) > equalThres || ( (fabs(cntRate-cntRateBest) < equalThres) && (err < errBest) );
-        //bool goodMatch = (cntMatch > cntBest) || ((cntMatch == cntBest) && (err < errBest));
-        //bool goodMatch = (err < errBest);
+        //bool goodMatch = (cntRate - cntRateBest) > equalThres || ( (fabs(cntRate-cntRateBest) < equalThres) && (err < errBest) );
+        //bool goodMatch = ( (fabs(cntRate-cntRateBest) < equalThres) && (cntMatch > cntBest));
+        bool goodMatch = (err < errBest);
+
+        bool rateCondition = (cntRate - cntRateBest) > equalThres;
+        bool cntCondition =  fabs( (cntRate-cntRateBest) < equalThres ) && (cntMatch > cntBest);
+        bool errorCondition = fabs( (cntRate-cntRateBest) < equalThres ) && (cntMatch == cntBest) && err < errBest;
+        // bool goodMatch = rateCondition || cntCondition || errorCondition;
         if(goodMatch)
         {
           errBest = err;
