@@ -211,7 +211,7 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const bool* mask
   {
     unsigned int iL = max(i-span, 0);
     bool sucess = false;
-    for(int j= iL; j<=i; j++)
+    for(int j=iL; j<i; j++)
     {
       if(maskS[iL])
       {
@@ -238,7 +238,7 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const bool* mask
   LOGMSG(DBG_DEBUG, "Valid points in scene: " << idxSValid.size() << ", Control set: " << Control->getCols());
 
   unsigned int maxDist2ndSample =  (M_PI/6.0) / resolution; //0.5 * phiMax / resolution;
-  unsigned int minDist2ndSample = 10;
+  unsigned int minDist2ndSample = 1;
   assert(minDist2ndSample >= 1);
   double** SDists = createLutIntraDistance(S, maskS, maxDist2ndSample);
 
@@ -293,13 +293,18 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const bool* mask
     //LOGMSG(DBG_DEBUG, "Search range: " << jMin << " " << jMax);
     for(unsigned int i = iMin; i < iMax; i++)
     {
-      if (valid)
+      if(!maskS[i])
+        continue;         //fixme Only iMin iMax are ensured as valid points at the moment by mapMtoSBound
+
       // Find scene sample with similar distance
       unsigned int iMinDist = 0;
       double distSMin       = 1e12;
       unsigned int i2max    = min((unsigned int)idxSValid.size(), i+maxDist2ndSample);
       for(unsigned int i2 = i + minDist2ndSample; i2 < i2max; i2++)
       {
+        if(!maskS[i])
+          continue;           //fixme Only iMin iMax... see above
+
         double distEps = fabs(SDists[i][i2] - distM);
         if(distEps < distSMin)
         {
@@ -353,10 +358,10 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const bool* mask
 //
 //        if(m1error || m2error || s1error || s2error) {
 //          LOGMSG(DBG_DEBUG, "Cut off error");
-////          LOGMSG(DBG_DEBUG, "Cut off errors: m1-"<< m1error<<endl
-////                                      << " m2-"<< m2error<<endl
-////                                      << " s1-"<< s1error<<endl
-////                                      << " s2-"<< s2error<<endl);
+//          LOGMSG(DBG_DEBUG, "Cut off errors: m1-"<< m1error<<endl
+//                                      << " m2-"<< m2error<<endl
+//                                      << " s1-"<< s1error<<endl
+//                                      << " s2-"<< s2error<<endl);
 //          continue;
 //        }
 
@@ -416,10 +421,10 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const bool* mask
             err += sqrt(dists[0][0]);
             cntMatch++;
           }
-          else
-          {
-            err += dists[0][0];
-          }
+//          else
+//          {
+//            err += dists[0][0];
+//          }
         }
         delete[] indices.ptr();
         delete[] dists.ptr();
@@ -431,54 +436,48 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const bool* mask
         unsigned int maxMatchCnt = (STemp.getCols() - clippedPoints);
         double cntRate = (double)cntMatch / (double) maxMatchCnt;
         double cntStepSize = 1.0 /STemp.getCols();
-        double equalThres = cntStepSize;// 1e-5;
+        double equalThres = 1e-5;//cntStepSize;// 1e-5;
 
-        //bool goodMatch = (cntRate - cntRateBest) > equalThres || ( (fabs(cntRate-cntRateBest) < equalThres) && (err < errBest) );
+        bool goodMatch = (cntRate - cntRateBest) > equalThres || ( (fabs(cntRate-cntRateBest) < equalThres) && (err < errBest) ); //taugt meistens, problem dass in manchen Fällen sehr wenig Punkte gute Matches ergeben.
         //bool goodMatch = ( (fabs(cntRate-cntRateBest) < equalThres) && (cntMatch > cntBest));
-        bool goodMatch = (err < errBest);
+        //bool goodMatch = (err < errBest);
 
-        bool rateCondition = (cntRate - cntRateBest) > equalThres;
-        bool cntCondition =  fabs( (cntRate-cntRateBest) < equalThres ) && (cntMatch > cntBest);
-        bool errorCondition = fabs( (cntRate-cntRateBest) < equalThres ) && (cntMatch == cntBest) && err < errBest;
-        // bool goodMatch = rateCondition || cntCondition || errorCondition;
-        if(goodMatch)
+//        bool rateCondition = ((cntRate - cntRateBest) > equalThres) && (cntMatch > cntBest);
+//        bool cntCondition =  fabs( (cntRate-cntRateBest) < equalThres ) && (cntMatch > cntBest);
+//        bool errorCondition = fabs( (cntRate-cntRateBest) < equalThres ) && (cntMatch == cntBest) && err < errBest;
+//        bool goodMatch = rateCondition || cntCondition || errorCondition;
+        if(goodMatch && cntMatch > cntBest) //behebt ein bisschen das problem von oben, dafür werden rotationen nichtmehr so gut erkannt.
         {
           errBest = err;
           cntBest = cntMatch;
           cntRateBest = cntRate;
           TBest = T;
-          if(_trace)
+          if(_trace) {
+            LOGMSG(DBG_DEBUG, "err: " << errBest << ", cnt: " << cntBest<< ", cntScoreBest: "<<cntRateBest);
             *BestFit = STemp;
-          m1Best = mapMRawToValid[idx1];
-          m2Best = mapMRawToValid[idx2];
-          foundBetterMatch = true;
+            //LOGMSG(DBG_DEBUG, "err: " << errBest << ", cnt: " << cntBest);
+            double** rawScene;
+            System<double>::allocate(BestFit->getCols(), 2, rawScene);
+            for(unsigned int j=0; j<BestFit->getCols(); j++)
+            {
+              rawScene[j][0] = (*BestFit)(0, j);
+              rawScene[j][1] = (*BestFit)(1, j);
+            }
+            vector<StrCartesianIndexPair> pairs;
+            StrCartesianIndexPair p;
+            p.indexFirst = mapMRawToValid[idx1];
+            p.indexSecond = -1;
+            pairs.push_back(p);
+            p.indexFirst = mapMRawToValid[idx2];
+            p.indexSecond = -1;
+            pairs.push_back(p);
+            _trace->addAssignment(rawScene, BestFit->getCols(), pairs);
+            System<double>::deallocate(rawScene);
+          }
+
         }
       }  // if(fabs(phi) < _phiMax)
     }  // for all points in scene
-    if(foundBetterMatch)
-      LOGMSG(DBG_DEBUG, "err: " << errBest << ", cnt: " << cntBest<< ", cntScoreBest: "<<cntRateBest);
-
-    if(foundBetterMatch && _trace)
-    {
-      //LOGMSG(DBG_DEBUG, "err: " << errBest << ", cnt: " << cntBest);
-      double** rawScene;
-      System<double>::allocate(BestFit->getCols(), 2, rawScene);
-      for(unsigned int j=0; j<BestFit->getCols(); j++)
-      {
-        rawScene[j][0] = (*BestFit)(0, j);
-        rawScene[j][1] = (*BestFit)(1, j);
-      }
-      vector<StrCartesianIndexPair> pairs;
-      StrCartesianIndexPair p;
-      p.indexFirst = m1Best;
-      p.indexSecond = -1;
-      pairs.push_back(p);
-      p.indexFirst = m2Best;
-      p.indexSecond = -1;
-      pairs.push_back(p);
-      _trace->addAssignment(rawScene, BestFit->getCols(), pairs);
-      System<double>::deallocate(rawScene);
-    }
   }  // for trials
 
   LOGMSG(DBG_DEBUG, "Matching result - cnt(best): " << cntBest << ", err(best): " << errBest);
