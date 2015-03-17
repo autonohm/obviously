@@ -237,7 +237,7 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const bool* mask
 
   LOGMSG(DBG_DEBUG, "Valid points in scene: " << idxSValid.size() << ", Control set: " << Control->getCols());
 
-  unsigned int maxDist2ndSample =  (M_PI/6.0) / resolution; //0.5 * phiMax / resolution;
+  unsigned int maxDist2ndSample =  (M_PI/6.0) / resolution;//(unsigned int) phiMax/resolution; //(M_PI/6.0) / resolution; //0.5 * phiMax / resolution;
   unsigned int minDist2ndSample = 1;
   assert(minDist2ndSample >= 1);
   double** SDists = createLutIntraDistance(S, maskS, maxDist2ndSample);
@@ -254,8 +254,6 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const bool* mask
   double errBest           = 1e12;
   double cntRateBest       = 0;
   obvious::Matrix* BestFit = new Matrix(*Control);
-  unsigned int m1Best      = 0;
-  unsigned int m2Best      = 0;
   for(unsigned int trial = 0; trial < _trials; trial++)
   {
     bool foundBetterMatch = false;
@@ -342,28 +340,6 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const bool* mask
         //We can cut off the outer parts of the scene/model as
         //the rotations tells how much information is not shared by the scans
         int clippedBeams = (int) (phi / resolution);
-//
-//        bool m1error = false;
-//        bool m2error = false;
-//        bool s1error = false;
-//        bool s2error = false;
-//        if(idx1 < (unsigned int) max(0, -clippedBeams) || idx1 > min(pointsInS, pointsInS-clippedBeams))
-//          m1error = true;//continue; //Cut off point correspondences to Model points that don't have a reasonable corresponding point due to rotation.
-//        else if (idx2 < (unsigned int) max(0, -clippedBeams) || idx2 > min(pointsInS, pointsInS-clippedBeams))
-//          m2error = true; //continue; //Cut off point correspondences to Model points that don't have a reasonable corresponding point due to rotation.
-//        else if( i < (unsigned int) max(0, clippedBeams) || i > min(pointsInS, pointsInS+clippedBeams) )
-//          s1error = true; //continue; // Cut of Scene Points, points that won't have a corresponding point due to rotation are ignored for the metric
-//        else  if( iMinDist < (unsigned int) max(0, clippedBeams) || iMinDist > min(pointsInS, pointsInS+clippedBeams) )
-//          s2error = true; //continue; // Cut of Scene Points, points that won't have a corresponding point due to rotation are ignored for the metric
-//
-//        if(m1error || m2error || s1error || s2error) {
-//          LOGMSG(DBG_DEBUG, "Cut off error");
-//          LOGMSG(DBG_DEBUG, "Cut off errors: m1-"<< m1error<<endl
-//                                      << " m2-"<< m2error<<endl
-//                                      << " s1-"<< s1error<<endl
-//                                      << " s2-"<< s2error<<endl);
-//          continue;
-//        }
 
         // Centroid of scene
         double cS[2];
@@ -416,15 +392,26 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const bool* mask
             continue; //Cut off point correspondences to Model points that don't have a reasonable corresponding point due to rotation.
           }
 
+// Combined metric for rotation and translation
+//          double weight = 3.0;
+//          double pMx = (*_model)[indices[0][0]][0];
+//          double pMy = (*_model)[indices[0][0]][1];
+//          double d_x = pMx - q[0]; //q is the transformed scene point
+//          double d_y = pMy - q[1];
+//          double numerator = pow(d_x * q[1] - d_y * q[0], 2);
+//          double denominator = q[1]*q[1] + q[0]*q[0] + weight*weight;
+//          err += dists[0][0] - numerator / denominator;
+
+          err += dists[0][0];
           if(dists[0][0] < _epsSqr)
           {
-            err += sqrt(dists[0][0]);
+            //err += sqrt(dists[0][0]);
             cntMatch++;
           }
-//          else
-//          {
-//            err += dists[0][0];
-//          }
+
+
+          err = sqrt(err);
+
         }
         delete[] indices.ptr();
         delete[] dists.ptr();
@@ -438,15 +425,16 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const bool* mask
         double cntStepSize = 1.0 /STemp.getCols();
         double equalThres = 1e-5;//cntStepSize;// 1e-5;
 
-        bool goodMatch = (cntRate - cntRateBest) > equalThres || ( (fabs(cntRate-cntRateBest) < equalThres) && (err < errBest) ); //taugt meistens, problem dass in manchen Fällen sehr wenig Punkte gute Matches ergeben.
+
+        //bool goodMatch = (cntRate - cntRateBest) > equalThres || ( (fabs(cntRate-cntRateBest) < equalThres) && (err < errBest) ); //taugt meistens, problem dass in manchen Fällen sehr wenig Punkte gute Matches ergeben.
         //bool goodMatch = ( (fabs(cntRate-cntRateBest) < equalThres) && (cntMatch > cntBest));
         //bool goodMatch = (err < errBest);
+        //bool goodMatch = (cntMatch > cntBest) && (err < errBest);
 
-//        bool rateCondition = ((cntRate - cntRateBest) > equalThres) && (cntMatch > cntBest);
-//        bool cntCondition =  fabs( (cntRate-cntRateBest) < equalThres ) && (cntMatch > cntBest);
-//        bool errorCondition = fabs( (cntRate-cntRateBest) < equalThres ) && (cntMatch == cntBest) && err < errBest;
-//        bool goodMatch = rateCondition || cntCondition || errorCondition;
-        if(goodMatch && cntMatch > cntBest) //behebt ein bisschen das problem von oben, dafür werden rotationen nichtmehr so gut erkannt.
+        bool rateCondition = ((cntRate - cntRateBest) > equalThres) && (cntMatch > cntBest);
+        bool errorCondition = fabs( (cntRate-cntRateBest) < equalThres ) && (cntMatch == cntBest) && err < errBest;
+        bool goodMatch = rateCondition || errorCondition;
+        if(goodMatch)// && cntMatch > cntBest) //behebt ein bisschen das problem von oben, dafür werden rotationen nichtmehr so gut erkannt.
         {
           errBest = err;
           cntBest = cntMatch;
