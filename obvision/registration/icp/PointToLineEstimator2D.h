@@ -26,7 +26,7 @@ public:
    * Setting internal pointer to model array. The model is seen as the ground truth against which the scene has to be registered.
    * @param model Pointer to 3 dimensional model array
    */
-  virtual void setModel(double** model, unsigned int size, double** normals=NULL);
+  virtual void setModel(double** model, unsigned int size, double** normals);
   /**
    * Setting internal pointer to scene array. (See commend for setModel)
    * @param scene Pointer to 3 dimensional scene array

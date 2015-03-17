@@ -4,6 +4,7 @@
 #include <flann/flann.hpp>
 #include "obcore/math/linalg/linalg.h"
 #include "obvision/registration/Trace.h"
+#include "obvision/registration/icp/PointToLineEstimator2D.h"
 
 namespace obvious
 {
