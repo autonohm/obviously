@@ -28,7 +28,7 @@
 
 using namespace obvious;
 
-#define VXLDIM 0.02
+#define VXLDIM 0.005
 #define LAYOUTPARTITION LAYOUT_8x8x8
 #define LAYOUTSPACE LAYOUT_256x256x256
 

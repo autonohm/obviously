@@ -118,9 +118,9 @@ int main(void)
   unsigned int cells = space.getXDimension()*space.getYDimension()*space.getZDimension();
   double* coords = new double[cells];
   double* normals = new double[cells];
-  unsigned char* rgb = NULL;
+  unsigned char* rgb = new unsigned char[rows*cols*3];
   RayCastAxisAligned3D raycaster;
-  raycaster.calcCoords(&space, coords, normals, &cnt);
+  raycaster.calcCoords(&space, coords, normals, rgb, &cnt);
 #endif
 
   VtkCloud vcloud;
