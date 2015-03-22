@@ -13,6 +13,8 @@
 #include "obvision/registration/icp/IcpMultiInitIterator.h"
 //#include "obvision/registration/icp/assign/NaboPairAssignment.h"
 
+#define POINTS 100
+
 using namespace std;
 using namespace obvious;
 
@@ -27,20 +29,20 @@ int main(int argc, char** argv)
   timer.start();
 
   // Model coordinates
-  obvious::Matrix* M = new obvious::Matrix(100, 2);
+  obvious::Matrix* M = new obvious::Matrix(POINTS, 2);
 
   // Normals
-  obvious::Matrix* N = new obvious::Matrix(100, 2);
+  obvious::Matrix* N = new obvious::Matrix(POINTS, 2);
 
-  for(int i=0; i<100; i++)
+  for(int i=0; i<POINTS; i++)
   {
     double di = (double) i;
-    (*M)(i,0) = sin(di/50.0);
-    (*M)(i,1) = sin(di/10.0);
+    (*M)(i,0) = sin(di/(double)(POINTS/2));
+    (*M)(i,1) = sin(di/(double)(POINTS/5));
   }
 
   // compute mean of components build by left and right neighbors
-  for(int i=1; i<99; i++)
+  for(int i=1; i<POINTS-1; i++)
   {
     double xleft  = (*M)(i, 0) - (*M)(i-1, 0);
     double xright = (*M)(i+1, 0) - (*M)(i, 0);
@@ -59,8 +61,8 @@ int main(int argc, char** argv)
   (*N)(0, 1) =  (*M)(1, 0) - (*M)(0, 0);
 
   // right bound
-  (*N)(99, 0) = -((*M)(99, 1) - (*M)(98, 1));
-  (*N)(99, 1) =  (*M)(99, 0) - (*M)(98, 0);
+  (*N)(POINTS-1, 0) = -((*M)(POINTS-1, 1) - (*M)(POINTS-2, 1));
+  (*N)(POINTS-1, 1) =  (*M)(POINTS-1, 0) - (*M)(POINTS-2, 0);
 
   obvious::Matrix T = MatrixFactory::TransformationMatrix33(deg2rad(9.0), 0.4, 0.35);
   obvious::Matrix S = M->createTransform(T);
@@ -87,7 +89,7 @@ int main(int argc, char** argv)
   double rms;
   unsigned int pairs;
   unsigned int it;
-  //for(int i=0; i<1000; i++)
+
   icp->iterate(&rms, &pairs, &it);
   obvious::Matrix F = icp->getFinalTransformation();
   F.invert();
