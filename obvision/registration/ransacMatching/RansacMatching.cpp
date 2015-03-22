@@ -377,10 +377,10 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const bool* mask
             cntMatch++;
           }
 
-
-          err = sqrt(err);
-
         }
+
+        err = sqrt(err);
+
         delete[] indices.ptr();
         delete[] dists.ptr();
 
