@@ -138,7 +138,7 @@ void RayCast3D::calcCoordsFromCurrentPose(TsdSpace* space, Sensor* sensor, doubl
     delete[] color_tmp; color_tmp = NULL;
   }
 
-  LOGMSG(DBG_DEBUG, "Elapsed TSDF projection: " << t.elapsed() << "ms");
+  LOGMSG(DBG_DEBUG, "Elapsed TSDF projection: " << t.elapsed() << "s");
   LOGMSG(DBG_DEBUG, "Raycasting finished! Found " << *size << " coordinates");
 
 #if PRINTSTATISTICS

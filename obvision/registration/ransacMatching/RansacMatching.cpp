@@ -29,10 +29,10 @@ RansacMatching::~RansacMatching()
     delete _index;
     _index = NULL;
   }
-  if(_trace) delete _trace;
+  if(_trace)
+    delete _trace;
   _trace = NULL;
 }
-
 
 void RansacMatching::activateTrace()
 {
@@ -125,6 +125,12 @@ double** RansacMatching::createLutIntraDistance(const obvious::Matrix* M, const 
           double dy = (*M)(j, 1) - (*M)(i, 1);
           dists[i][j] = dx * dx + dy * dy;
         }
+        else
+      	{
+      		dists[i][j] = NAN;
+      	}
+        	
+        
       }
     }
   }
@@ -132,7 +138,7 @@ double** RansacMatching::createLutIntraDistance(const obvious::Matrix* M, const 
 }
 
 #define MIN_VALID_POINTS 10
-obvious::Matrix RansacMatching::match(const obvious::Matrix* M,  const bool* maskM, const obvious::Matrix* S,  const bool* maskS, double phiMax, double resolution)
+obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const bool* maskM, const obvious::Matrix* S,  const bool* maskS, double phiMax, double transMax, double resolution)
 {
   obvious::Matrix TBest(3, 3);
   TBest.setIdentity();
@@ -192,32 +198,6 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M,  const bool* mas
     return TBest;
   }
 
-  // -----------------------------------------------------
-  // Map query point in M -> left bound in S
-  vector<unsigned int> mapMtoSBoundL;
-  // Map query point in M -> right bound in S
-  vector<unsigned int> mapMtoSBoundR;
-
-  // determine valid right bounding in S for leftmost query point in M
-  unsigned int idxR;
-  for(int i=0; i<span-1; i++)
-    if(maskS[i]) idxR = i;
-
-  // valid left bounding in S for leftmost query point in M
-  unsigned int idxL = idxSValid.front();
-
-  for(int i=0; i<(int)pointsInM; i++)
-  {
-    unsigned int iL = max(i-span, 0);
-    if(maskS[iL]) idxL = iL;
-    mapMtoSBoundL.push_back(idxL);
-
-    unsigned int iR = min(i+span, (int)pointsInS-1);
-    if(maskS[iR]) idxR = iR;
-    mapMtoSBoundR.push_back(idxR);
-  }
-  // -----------------------------------------------------
-
   initKDTree(M, idxMValid);
 
   vector<unsigned int> idxControl;  //represents the indices of points used for Control in S.
@@ -225,7 +205,9 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M,  const bool* mas
 
   LOGMSG(DBG_DEBUG, "Valid points in scene: " << idxSValid.size() << ", Control set: " << Control->getCols());
 
-  unsigned int maxDist2ndSample = (M_PI/6.0) / resolution;
+  unsigned int maxDist2ndSample =  phiMax / resolution; //(M_PI/6.0) / resolution;//(unsigned int) phiMax/resolution; //(M_PI/6.0) / resolution; //0.5 * phiMax / resolution;
+  unsigned int minDist2ndSample = 1;
+  assert(minDist2ndSample >= 1);
   double** SDists = createLutIntraDistance(S, maskS, maxDist2ndSample);
 
   // -----------------------------------------------------
@@ -238,20 +220,19 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M,  const bool* mas
   // 6) rate control set, i.e., determine consensus
   unsigned int cntBest     = 0;
   double errBest           = 1e12;
+  double cntRateBest       = 0;
   obvious::Matrix* BestFit = new Matrix(*Control);
-  unsigned int m1Best      = 0;
-  unsigned int m2Best      = 0;
   for(unsigned int trial = 0; trial < _trials; trial++)
   {
     bool foundBetterMatch = false;
     // pick randomly one point in model set
-    unsigned int randIdx      = rand() % (idxMValid.size()-10);
+    unsigned int randIdx      = rand() % (idxMValid.size()-minDist2ndSample);
     // ... and leave at least n points for 2nd choice
     unsigned int remainingIdx = min((unsigned int)(idxMValid.size()-randIdx-1), maxDist2ndSample);
     // Index for first model sample
     unsigned int idx1         = idxMValid[randIdx];
     // Second model sample: Random on right side != i
-    unsigned int idx2         = idxMValid[randIdx + rand()%remainingIdx];
+    unsigned int idx2         = idxMValid[randIdx + (rand()%remainingIdx-minDist2ndSample) + minDist2ndSample];
 
     //LOGMSG(DBG_DEBUG, "Candidates: " << i << ", " << i2);
 
@@ -271,20 +252,26 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M,  const bool* mas
     double sceneSimilar[2];
 
     // leftmost scene point belonging to query point idx1
-    unsigned int iMin = mapMtoSBoundL[idx1];
+    unsigned int iMin = max((int) idx1-span, 0);
     // rightmost scene point belonging to query point idx1
-    unsigned int iMax = mapMtoSBoundR[idx1];
+    unsigned int iMax = min(idx1+span, pointsInS);
 
     //LOGMSG(DBG_DEBUG, "Search range: " << jMin << " " << jMax);
     for(unsigned int i = iMin; i < iMax; i++)
     {
+      if(!maskS[i]) { continue; }
+
       // Find scene sample with similar distance
       unsigned int iMinDist = 0;
       double distSMin       = 1e12;
-      unsigned int i2max    = min((unsigned int)idxSValid.size(), i+maxDist2ndSample);
-      for(unsigned int i2 = i + 1; i2 < i2max; i2++)
+      unsigned int i2max    = min(pointsInS, i+maxDist2ndSample);
+      for(unsigned int i2 = i + minDist2ndSample; i2 < i2max; i2++)
       {
-        double distEps = fabs(SDists[i][i2] - distM);
+        if(!maskS[i2]) { continue; }
+
+        double distS = SDists[i][i2];
+        assert(distS != NAN);
+        double distEps = fabs(distS - distM);
         if(distEps < distSMin)
         {
           distSMin = distEps;
@@ -318,6 +305,10 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M,  const bool* mas
 
       if(fabs(phi) < phiMax)
       {
+        //We can cut off the outer parts of the scene/model as
+        //the rotations tells how much information is not shared by the scans
+        int clippedBeams = (int) (phi / resolution);
+
         // Centroid of scene
         double cS[2];
         cS[0] = (sceneSimilar[0] + (*S)(i, 0)) / 2.0;
@@ -329,6 +320,12 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M,  const bool* mas
         T(0, 2) = cM[0] - (T(0, 0) * cS[0] + T(0, 1) * cS[1]);
         T(1, 2) = cM[1] - (T(1, 0) * cS[0] + T(1, 1) * cS[1]);
 
+        if(sqrt(pow(T(0, 2), 2) + pow(T(1, 2), 2)) > 1.5)
+        {
+          //cerr<<"Translation is to big"<<endl;
+          continue;
+        }
+
         obvious::Matrix STemp = T * (*Control);
 
         // Determine how many nearest neighbors (model <-> scene) are close enough
@@ -338,24 +335,51 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M,  const bool* mas
         flann::Matrix<double> dists(new double[1], 1, 1);
         double err = 0;
 
-        int clippedBeams = (int) (phi / resolution);
+        unsigned int clippedPoints = 0;
         for(unsigned int s = 0; s < STemp.getCols(); s++)
         {
+          //Clip control points according to phi
           if( idxControl[s] < (unsigned int) max(0, clippedBeams) || idxControl[s] > min(pointsInS, pointsInS+clippedBeams) )
-            continue; // points that won't have a corresponding point due to rotation are ignored for the metric
+          {
+            clippedPoints++;
+            continue; // Cut of Scene Points, points that won't have a corresponding point due to rotation are ignored for the metric
+          }
 
+          //Find nearest neighbor for control point
           q[0] = STemp(0, s);
           q[1] = STemp(1, s);
           flann::Matrix<double> query(q, 1, 2);
-
           flann::SearchParams p(-1, 0.0);
           _index->knnSearch(query, indices, dists, 1, p);
+
+          //Check if model point is not clipped
+          unsigned int rawIdx = idxMValid[ indices[0][0] ]; //raw index of closest model point
+          if(rawIdx < (unsigned int) max(0, -clippedBeams) || rawIdx > min(pointsInS, pointsInS-clippedBeams))
+          {
+            clippedPoints++;
+            continue; //Cut off point correspondences to Model points that don't have a reasonable corresponding point due to rotation.
+          }
+
+// Combined metric for rotation and translation
+//          double weight = 3.0;
+//          double pMx = (*_model)[indices[0][0]][0];
+//          double pMy = (*_model)[indices[0][0]][1];
+//          double d_x = pMx - q[0]; //q is the transformed scene point
+//          double d_y = pMy - q[1];
+//          double numerator = pow(d_x * q[1] - d_y * q[0], 2);
+//          double denominator = q[1]*q[1] + q[0]*q[0] + weight*weight;
+//          err += dists[0][0] - numerator / denominator;
+
           err += dists[0][0];
           if(dists[0][0] < _epsSqr)
           {
-            //err += dists[0][0];
+            //err += sqrt(dists[0][0]);
             cntMatch++;
           }
+
+
+          err = sqrt(err);
+
         }
         delete[] indices.ptr();
         delete[] dists.ptr();
@@ -363,43 +387,53 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M,  const bool* mas
         if(cntMatch == 0)
           continue;
 
-        err /= cntMatch;
+        // Relative MatchCnt Score
+        unsigned int maxMatchCnt = (STemp.getCols() - clippedPoints);
+        double cntRate = (double)cntMatch / (double) maxMatchCnt;
+        double cntStepSize = 1.0 / STemp.getCols();
+        double equalThres = 1e-5;//cntStepSize;// 1e-5;
 
-        bool goodMatch = (cntMatch>cntBest) || ((cntMatch==cntBest) && (err < errBest));
+
+        //bool goodMatch = (cntRate - cntRateBest) > equalThres || ( (fabs(cntRate-cntRateBest) < equalThres) && (err < errBest) ); //taugt meistens, problem dass in manchen Fällen sehr wenig Punkte gute Matches ergeben.
+        //bool goodMatch = ( (fabs(cntRate-cntRateBest) < equalThres) && (cntMatch > cntBest));
+        //bool goodMatch = (err < errBest);
+        //bool goodMatch = (cntMatch > cntBest) && (err < errBest);
+
+        bool rateCondition = ((cntRate - cntRateBest) > equalThres) && (cntMatch > cntBest);
+        bool errorCondition = fabs( (cntRate-cntRateBest) < equalThres ) && (cntMatch == cntBest) && err < errBest;
+        bool goodMatch = rateCondition || errorCondition;
         if(goodMatch)
         {
           errBest = err;
           cntBest = cntMatch;
+          cntRateBest = cntRate;
           TBest = T;
-          if(_trace)
+          if(_trace) {
+            LOGMSG(DBG_DEBUG, "err: " << errBest << ", cnt: " << cntBest<< ", cntScoreBest: "<<cntRateBest);
             *BestFit = STemp;
-          m1Best = mapMRawToValid[idx1];
-          m2Best = mapMRawToValid[idx2];
-          foundBetterMatch = true;
+            //LOGMSG(DBG_DEBUG, "err: " << errBest << ", cnt: " << cntBest);
+            double** rawScene;
+            System<double>::allocate(BestFit->getCols(), 2, rawScene);
+            for(unsigned int j=0; j<BestFit->getCols(); j++)
+            {
+              rawScene[j][0] = (*BestFit)(0, j);
+              rawScene[j][1] = (*BestFit)(1, j);
+            }
+            vector<StrCartesianIndexPair> pairs;
+            StrCartesianIndexPair p;
+            p.indexFirst = mapMRawToValid[idx1];
+            p.indexSecond = -1;
+            pairs.push_back(p);
+            p.indexFirst = mapMRawToValid[idx2];
+            p.indexSecond = -1;
+            pairs.push_back(p);
+            _trace->addAssignment(rawScene, BestFit->getCols(), pairs);
+            System<double>::deallocate(rawScene);
+          }
+
         }
       }  // if(fabs(phi) < _phiMax)
     }  // for all points in scene
-    if(foundBetterMatch && _trace)
-    {
-      LOGMSG(DBG_DEBUG, "err: " << errBest << ", cnt: " << cntBest);
-      double** rawScene;
-      System<double>::allocate(BestFit->getCols(), 2, rawScene);
-      for(unsigned int j=0; j<BestFit->getCols(); j++)
-      {
-        rawScene[j][0] = (*BestFit)(0, j);
-        rawScene[j][1] = (*BestFit)(1, j);
-      }
-      vector<StrCartesianIndexPair> pairs;
-      StrCartesianIndexPair p;
-      p.indexFirst = m1Best;
-      p.indexSecond = -1;
-      pairs.push_back(p);
-      p.indexFirst = m2Best;
-      p.indexSecond = -1;
-      pairs.push_back(p);
-      _trace->addAssignment(rawScene, BestFit->getCols(), pairs);
-      System<double>::deallocate(rawScene);
-    }
   }  // for trials
 
   LOGMSG(DBG_DEBUG, "Matching result - cnt(best): " << cntBest << ", err(best): " << errBest);

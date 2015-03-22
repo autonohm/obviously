@@ -31,12 +31,41 @@ int main(int argc, char** argv)
 
   for(int i = 0; i < DATASETSIZE; i++)
   {
-    double di  = (double)i;
+    double di = (double)i;
     (*M)(i, 0) = sin(di / 500.0);
     (*M)(i, 1) = sin(di / 100.0);
-    maskM[i]    = (i%4!=0);
-    maskS[i]    = (i%2!=0);
+    maskM[i] = (i % 4 != 0);
+    maskS[i] = (i % 2 != 0);
   }
+
+  //Model Normals
+//  obvious::Matrix* N = new obvious::Matrix(DATASETSIZE, 2);
+//  // compute mean of components build by left and right neighbors
+//  for(int i=1; i<DATASETSIZE-1; i++)
+//  {
+//    double xleft  = (*M)(i, 0)   - (*M)(i-1, 0);
+//    double xright = (*M)(i+1, 0) - (*M)(i, 0);
+//    double yleft  = (*M)(i, 1)   - (*M)(i-1, 1);
+//    double yright = (*M)(i+1, 1) - (*M)(i, 1);
+//
+//
+//    // x-component of normal
+//    double xNormal = -(yright + yleft) / 2.0;
+//    // y-component of normal
+//    double yNormal = (xright + xleft) / 2.0;
+//    //Normalize
+//    double lengthNormal = sqrt(xNormal*xNormal + yNormal*yNormal);
+//    (*N)(i-1, 0) = xNormal / lengthNormal;
+//    (*N)(i-1, 1) = yNormal / lengthNormal;
+//  }
+//
+//  // left bound
+//  (*N)(0, 0) = -((*M)(1, 1) - (*M)(0, 1));
+//  (*N)(0, 1) = (*M)(1, 0) - (*M)(0, 0);
+//
+//  // right bound
+//  (*N)(DATASETSIZE-1, 0) = -((*M)(DATASETSIZE-1, 1) - (*M)(DATASETSIZE-2, 1));
+//  (*N)(DATASETSIZE-1, 1) = (*M)(DATASETSIZE-1, 0) - (*M)(DATASETSIZE-2, 0);
 
   obvious::Matrix T = MatrixFactory::TransformationMatrix33(deg2rad(35.0), 0.4, 0.35);
 
@@ -49,8 +78,8 @@ int main(int argc, char** argv)
   T.invert();
   T.print();
 
-  unsigned int trials         = 50;
-  double epsThresh            = 0.15;
+  unsigned int trials = 50;
+  double epsThresh = 0.15;
   unsigned int sizeControlSet = 180;
   RansacMatching matcher(trials, epsThresh, sizeControlSet);
   matcher.activateTrace();

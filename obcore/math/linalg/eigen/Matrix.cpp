@@ -107,7 +107,7 @@ ostream& operator <<(ostream &os, Matrix &M)
   return os;
 }
 
-void Matrix::getData(double* array)
+void Matrix::getData(double* array) const
 {
   int i=0;
   for(int r=0; r<_M.rows(); r++)

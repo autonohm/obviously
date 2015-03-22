@@ -129,7 +129,7 @@ ostream& operator <<(ostream &os, Matrix &M)
   return os;
 }
 
-void Matrix::getData(double* array)
+void Matrix::getData(double* array) const
 {
   unsigned int rows = _M->size1;
   unsigned int cols = _M->size2;
