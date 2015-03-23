@@ -369,14 +369,13 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const bool* mask
             cntMatch++;
           }
         }
+        err = sqrt(err);
+
         delete[] indices.ptr();
         delete[] dists.ptr();
 
         if(cntMatch == 0)
           continue;
-
-        err = sqrt(err);
-
 
         // Relative MatchCnt Score
         unsigned int maxMatchCnt = (STemp.getCols() - clippedPoints);
