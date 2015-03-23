@@ -467,6 +467,8 @@ void Icp::serializeTrace(char* folder, unsigned int delay)
 {
   if(_trace)
     _trace->serialize(folder, delay);
+  else
+    LOGMSG(DBG_ERROR, "Trace not activated");
 }
 
 Matrix Icp::getFinalTransformation4x4()

@@ -247,13 +247,13 @@ void Sensor::resetMask()
 void Sensor::maskZeroDepth()
 {
   for(unsigned int i=0; i<_size; i++)
-    _mask[i] = (_data[i]!=0.0);
+    _mask[i] =  _mask[i] && (_data[i]!=0.0);
 }
 
 void Sensor::maskInvalidDepth()
 {
   for(unsigned int i=0; i<_size; i++)
-    _mask[i] = (!(isinf(_data[i]) || isnan(_data[i]) || _data[i]>_maxRange));
+    _mask[i] =  _mask[i] && (!(isinf(_data[i]) || isnan(_data[i]) || _data[i]>_maxRange));
 }
 
 bool* Sensor::getRealMeasurementMask()

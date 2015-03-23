@@ -90,7 +90,7 @@ obvious::Matrix* RansacMatching::pickControlSet(const obvious::Matrix* M, vector
     LOGMSG(DBG_DEBUG, "Size of scene smaller than control set ... reducing size");
     sizeControlSet = idxValid.size();
   }
-  obvious::Matrix* C = new obvious::Matrix(3, _sizeControlSet);
+  obvious::Matrix* C = new obvious::Matrix(3, sizeControlSet);
   vector<unsigned int> idxTemp = idxValid;
   unsigned int ctr = 0;
   while(idxControl.size() < sizeControlSet)
@@ -173,14 +173,24 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const bool* mask
   if(_trace)
   {
     double** rawModel;
+    double** rawScene;
     System<double>::allocate(idxMValid.size(), 2, rawModel);
+    System<double>::allocate(idxSValid.size(), 2, rawScene);
     for(unsigned int i=0; i<idxMValid.size(); i++)
     {
       rawModel[i][0] = (*M)(idxMValid[i], 0);
       rawModel[i][1] = (*M)(idxMValid[i], 1);
     }
+    for(unsigned int i=0; i<idxSValid.size(); i++)
+    {
+      rawScene[i][0] = (*S)(idxSValid[i], 0);
+      rawScene[i][1] = (*S)(idxSValid[i], 1);
+    }
     _trace->reset();
     _trace->setModel(rawModel, idxMValid.size());
+    vector<StrCartesianIndexPair> noAssignment;
+    _trace->addAssignment(rawScene, idxSValid.size(), noAssignment);
+    System<double>::deallocate(rawScene);
     System<double>::deallocate(rawModel);
   }
 
@@ -205,8 +215,8 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const bool* mask
 
   LOGMSG(DBG_DEBUG, "Valid points in scene: " << idxSValid.size() << ", Control set: " << Control->getCols());
 
-  unsigned int maxDist2ndSample =  phiMax / resolution; //(M_PI/6.0) / resolution;//(unsigned int) phiMax/resolution; //(M_PI/6.0) / resolution; //0.5 * phiMax / resolution;
-  unsigned int minDist2ndSample = 1;
+  unsigned int maxDist2ndSample = phiMax / resolution; //(M_PI/6.0) / resolution;//(unsigned int) phiMax/resolution; //(M_PI/6.0) / resolution; //0.5 * phiMax / resolution;
+  unsigned int minDist2ndSample = 5;
   assert(minDist2ndSample >= 1);
   double** SDists = createLutIntraDistance(S, maskS, maxDist2ndSample);
 
@@ -221,18 +231,17 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const bool* mask
   unsigned int cntBest     = 0;
   double errBest           = 1e12;
   double cntRateBest       = 0;
-  obvious::Matrix* BestFit = new Matrix(*Control);
   for(unsigned int trial = 0; trial < _trials; trial++)
   {
     bool foundBetterMatch = false;
     // pick randomly one point in model set
-    unsigned int randIdx      = rand() % (idxMValid.size()-minDist2ndSample);
+    unsigned int randIdx      = rand() % ((idxMValid.size()-1)-minDist2ndSample);
     // ... and leave at least n points for 2nd choice
     unsigned int remainingIdx = min((unsigned int)(idxMValid.size()-randIdx-1), maxDist2ndSample);
     // Index for first model sample
     unsigned int idx1         = idxMValid[randIdx];
     // Second model sample: Random on right side != i
-    unsigned int idx2         = idxMValid[randIdx + (rand()%remainingIdx-minDist2ndSample) + minDist2ndSample];
+    unsigned int idx2         = idxMValid[randIdx + (rand()%(remainingIdx-minDist2ndSample)) + minDist2ndSample];
 
     //LOGMSG(DBG_DEBUG, "Candidates: " << i << ", " << i2);
 
@@ -408,29 +417,28 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const bool* mask
           cntBest = cntMatch;
           cntRateBest = cntRate;
           TBest = T;
-          if(_trace) {
-            LOGMSG(DBG_DEBUG, "err: " << errBest << ", cnt: " << cntBest<< ", cntScoreBest: "<<cntRateBest);
-            *BestFit = STemp;
-            //LOGMSG(DBG_DEBUG, "err: " << errBest << ", cnt: " << cntBest);
-            double** rawScene;
-            System<double>::allocate(BestFit->getCols(), 2, rawScene);
-            for(unsigned int j=0; j<BestFit->getCols(); j++)
-            {
-              rawScene[j][0] = (*BestFit)(0, j);
-              rawScene[j][1] = (*BestFit)(1, j);
-            }
-            vector<StrCartesianIndexPair> pairs;
-            StrCartesianIndexPair p;
-            p.indexFirst = mapMRawToValid[idx1];
-            p.indexSecond = -1;
-            pairs.push_back(p);
-            p.indexFirst = mapMRawToValid[idx2];
-            p.indexSecond = -1;
-            pairs.push_back(p);
-            _trace->addAssignment(rawScene, BestFit->getCols(), pairs);
-            System<double>::deallocate(rawScene);
+        }
+        if(_trace)
+        {
+          LOGMSG(DBG_DEBUG, "err: " << errBest << ", cnt: " << cntBest<< ", cntScoreBest: "<<cntRateBest);
+          //LOGMSG(DBG_DEBUG, "err: " << errBest << ", cnt: " << cntBest);
+          double** rawScene;
+          System<double>::allocate(STemp.getCols(), 2, rawScene);
+          for(unsigned int j=0; j<STemp.getCols(); j++)
+          {
+            rawScene[j][0] = STemp(0, j);
+            rawScene[j][1] = STemp(1, j);
           }
-
+          vector<StrCartesianIndexPair> pairs;
+          StrCartesianIndexPair p;
+          p.indexFirst = mapMRawToValid[idx1];
+          p.indexSecond = -1;
+          pairs.push_back(p);
+          p.indexFirst = mapMRawToValid[idx2];
+          p.indexSecond = -1;
+          pairs.push_back(p);
+          _trace->addAssignment(rawScene, STemp.getCols(), pairs);
+          System<double>::deallocate(rawScene);
         }
       }  // if(fabs(phi) < _phiMax)
     }  // for all points in scene
@@ -441,7 +449,6 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const bool* mask
   obvious::System<double>::deallocate(SDists);
 
   delete Control;
-  delete BestFit;
 
   return TBest;
 }
@@ -450,6 +457,8 @@ void RansacMatching::serializeTrace(char* folder, unsigned int delay)
 {
   if(_trace)
     _trace->serialize(folder, delay);
+  else
+    LOGMSG(DBG_ERROR, "Trace not activated");
 }
 
 }
