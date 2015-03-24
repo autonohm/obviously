@@ -34,8 +34,8 @@ int main(int argc, char** argv)
     double di = (double)i;
     (*M)(i, 0) = sin(di / 500.0);
     (*M)(i, 1) = sin(di / 100.0);
-    maskM[i] = (i % 4 != 0);
-    maskS[i] = (i % 2 != 0);
+    maskM[i] = ((i % 4) != 0);
+    maskS[i] = ((i % 2) != 0);
   }
 
   //Model Normals
@@ -84,7 +84,7 @@ int main(int argc, char** argv)
   RansacMatching matcher(trials, epsThresh, sizeControlSet);
   matcher.activateTrace();
   Matrix F = matcher.match(M, maskM, &S, maskS, deg2rad(45.0), 1.5 , deg2rad(0.25));
-  matcher.serializeTrace("/tmp/trace", 100);
+  matcher.serializeTrace("/tmp/trace", 20);
   F.invert();
   cout << endl << "Estimated transformation:" << endl;
   F.print();

@@ -21,8 +21,10 @@ class Trace
 public:
 	/**
 	 * Default constructor
+	 * @param dim dimensionality
+	 * @param maxQueue maximum queue length
 	 */
-	Trace(unsigned int dim);
+	Trace(unsigned int dim, unsigned int maxQueue=1000);
 		 
 	/**
 	 * Destructor
@@ -65,7 +67,8 @@ private:
 	vector<Matrix*> _scenes;
 	
 	vector< vector<StrCartesianIndexPair> > _pairs;
-	
+
+	unsigned int _maxQueue;
 };
 
 }

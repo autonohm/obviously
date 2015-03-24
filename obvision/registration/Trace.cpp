@@ -8,10 +8,11 @@
 namespace obvious
 {
 
-Trace::Trace(unsigned int dim)
+Trace::Trace(unsigned int dim, unsigned int maxQueue)
 {
-  _dim = dim;
-  _M   = NULL;
+  _dim      = dim;
+  _M        = NULL;
+  _maxQueue = maxQueue;
 }
 		 
 Trace::~Trace()
@@ -50,6 +51,8 @@ void Trace::setModel(double** model, unsigned int sizeM)
 
 void Trace::addAssignment(double** scene, unsigned int sizeS, vector<StrCartesianIndexPair> pairs)
 {
+  if(_scenes.size()>=_maxQueue) return;
+
   Matrix* s = new Matrix(sizeS, _dim, *scene);
   _scenes.push_back(s);
 

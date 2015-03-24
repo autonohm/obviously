@@ -275,18 +275,18 @@ if (_trace)
     // rightmost scene point belonging to query point idx1
     unsigned int iMax = min(idx1+span, pointsInS);
 
-//    LOGMSG(DBG_DEBUG, "Search range: " << iMin << " " << iMax);
+    LOGMSG(DBG_DEBUG, "idx1: " << idx1 << " idx2: " << idx2 << ", search range: " << iMin << " " << iMax);
     for(unsigned int i = iMin; i < iMax; i++)
     {
-      if(!maskS[i]) { continue; }
+      if(!maskS[i]) continue;
 
       // Find scene sample with similar distance
       unsigned int iMinDist = 0;
-      double distSMin       = 1e12;
       unsigned int i2max    = min(pointsInS, i+maxDist2ndSample);
+      double distSMin       = 1e12;
       for(unsigned int i2 = i + minDist2ndSample; i2 < i2max; i2++)
       {
-        if(!maskS[i2]) { continue; }
+        if(!maskS[i2])continue;
 
         double distS = SDists[i][i2];
         assert(distS != NAN);
@@ -426,8 +426,7 @@ if (_trace)
 }
         if(_trace)
         {
-          LOGMSG(DBG_DEBUG, "err: " << errBest << ", cnt: " << cntBest<< ", cntScoreBest: "<<cntRateBest);
-          //LOGMSG(DBG_DEBUG, "err: " << errBest << ", cnt: " << cntBest);
+          //LOGMSG(DBG_DEBUG, "err: " << errBest << ", cnt: " << cntBest<< ", cntScoreBest: "<<cntRateBest);
           double** rawScene;
           System<double>::allocate(STemp.getCols(), 2, rawScene);
           for(unsigned int j=0; j<STemp.getCols(); j++)
