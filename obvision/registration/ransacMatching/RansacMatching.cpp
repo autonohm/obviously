@@ -239,7 +239,7 @@ if (_trace)
 
 #pragma omp parallel
 {
-  cout<<"Number of Threads: "<< omp_get_num_threads()<<endl;
+  //cout<<"Number of Threads: "<< omp_get_num_threads()<<endl;
   #pragma omp for
   for(unsigned int trial = 0; trial < _trials; trial++)
   {
