@@ -265,7 +265,7 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const bool* mask
     // rightmost scene point belonging to query point idx1
     unsigned int iMax = min(idx1+span, pointsInS);
 
-    //LOGMSG(DBG_DEBUG, "Search range: " << jMin << " " << jMax);
+//    LOGMSG(DBG_DEBUG, "Search range: " << iMin << " " << iMax);
     for(unsigned int i = iMin; i < iMax; i++)
     {
       if(!maskS[i]) { continue; }
@@ -329,9 +329,9 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const bool* mask
         T(0, 2) = cM[0] - (T(0, 0) * cS[0] + T(0, 1) * cS[1]);
         T(1, 2) = cM[1] - (T(1, 0) * cS[0] + T(1, 1) * cS[1]);
 
-        if(sqrt(pow(T(0, 2), 2) + pow(T(1, 2), 2)) > 1.5)
+        if(sqrt(pow(T(0, 2), 2) + pow(T(1, 2), 2)) > transMax)
         {
-          //cerr<<"Translation is to big"<<endl;
+          LOGMSG(DBG_DEBUG, "Translation is too big!");
           continue;
         }
 
@@ -385,9 +385,7 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const bool* mask
             //err += sqrt(dists[0][0]);
             cntMatch++;
           }
-
         }
-
         err = sqrt(err);
 
         delete[] indices.ptr();
@@ -401,12 +399,6 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const bool* mask
         double cntRate = (double)cntMatch / (double) maxMatchCnt;
         double cntStepSize = 1.0 / STemp.getCols();
         double equalThres = 1e-5;//cntStepSize;// 1e-5;
-
-
-        //bool goodMatch = (cntRate - cntRateBest) > equalThres || ( (fabs(cntRate-cntRateBest) < equalThres) && (err < errBest) ); //taugt meistens, problem dass in manchen Fällen sehr wenig Punkte gute Matches ergeben.
-        //bool goodMatch = ( (fabs(cntRate-cntRateBest) < equalThres) && (cntMatch > cntBest));
-        //bool goodMatch = (err < errBest);
-        //bool goodMatch = (cntMatch > cntBest) && (err < errBest);
 
         bool rateCondition = ((cntRate - cntRateBest) > equalThres) && (cntMatch > cntBest);
         bool errorCondition = fabs( (cntRate-cntRateBest) < equalThres ) && (cntMatch == cntBest) && err < errBest;
