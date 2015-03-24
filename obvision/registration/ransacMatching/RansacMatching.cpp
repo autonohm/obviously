@@ -90,7 +90,7 @@ obvious::Matrix* RansacMatching::pickControlSet(const obvious::Matrix* M, vector
     LOGMSG(DBG_DEBUG, "Size of scene smaller than control set ... reducing size");
     sizeControlSet = idxValid.size();
   }
-  obvious::Matrix* C = new obvious::Matrix(3, _sizeControlSet);
+  obvious::Matrix* C = new obvious::Matrix(3, sizeControlSet);
   vector<unsigned int> idxTemp = idxValid;
   unsigned int ctr = 0;
   while(idxControl.size() < sizeControlSet)
@@ -154,7 +154,6 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const bool* mask
 
   vector<unsigned int> idxMValid = extractValidIndices(M, maskM);
   vector<unsigned int> idxSValid = extractValidIndices(S, maskS);
-  LOGMSG(DBG_DEBUG, "validPoints"<<idxMValid.size()<<"/"<<idxSValid.size());
   vector<unsigned int> mapMRawToValid;
   unsigned int cnt = 0;
   for(unsigned int i=0; i<M->getRows(); i++)
@@ -208,8 +207,6 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const bool* mask
     LOGMSG(DBG_ERROR, "Resolution not properly set: resolution = " << resolution);
     return TBest;
   }
-  LOGMSG(DBG_DEBUG, "Span: "<<span);
-
 
   initKDTree(M, idxMValid);
 
@@ -236,6 +233,7 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const bool* mask
   double cntRateBest       = 0;
   for(unsigned int trial = 0; trial < _trials; trial++)
   {
+  	bool foundBetterMatch = false;
     // pick randomly one point in model set
     unsigned int randIdx      = rand() % ((idxMValid.size()-1)-minDist2ndSample);
     // ... and leave at least n points for 2nd choice
@@ -371,13 +369,25 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const bool* mask
             continue; //Cut off point correspondences to Model points that don't have a reasonable corresponding point due to rotation.
           }
 
+// Combined metric for rotation and translation
+//          double weight = 3.0;
+//          double pMx = (*_model)[indices[0][0]][0];
+//          double pMy = (*_model)[indices[0][0]][1];
+//          double d_x = pMx - q[0]; //q is the transformed scene point
+//          double d_y = pMy - q[1];
+//          double numerator = pow(d_x * q[1] - d_y * q[0], 2);
+//          double denominator = q[1]*q[1] + q[0]*q[0] + weight*weight;
+//          err += dists[0][0] - numerator / denominator;
+
           err += dists[0][0];
           if(dists[0][0] < _epsSqr)
           {
-            //err += dists[0][0];
+            //err += sqrt(dists[0][0]);
             cntMatch++;
           }
+          
         }
+        
         err = sqrt(err);
 
         delete[] indices.ptr();
@@ -388,9 +398,15 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const bool* mask
 
         // Relative MatchCnt Score
         unsigned int maxMatchCnt = (STemp.getCols() - clippedPoints);
-        LOGMSG(DBG_DEBUG, "Valid Control Points: "<<maxMatchCnt);
         double cntRate = (double)cntMatch / (double) maxMatchCnt;
+        double cntStepSize = 1.0 / STemp.getCols();
         double equalThres = 1e-5;//cntStepSize;// 1e-5;
+
+
+				//bool goodMatch = (cntRate - cntRateBest) > equalThres || ( (fabs(cntRate-cntRateBest) < equalThres) && (err < errBest) ); //taugt meistens, problem dass in manchen Fällen sehr wenig Punkte gute Matches ergeben.
+        //bool goodMatch = ( (fabs(cntRate-cntRateBest) < equalThres) && (cntMatch > cntBest));
+        //bool goodMatch = (err < errBest);
+        //bool goodMatch = (cntMatch > cntBest) && (err < errBest);
 
         bool rateCondition = ((cntRate - cntRateBest) > equalThres) && (cntMatch > cntBest);
         bool errorCondition = fabs( (cntRate-cntRateBest) < equalThres ) && (cntMatch == cntBest) && err < errBest;
@@ -401,29 +417,28 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const bool* mask
           cntBest = cntMatch;
           cntRateBest = cntRate;
           TBest = T;
-          LOGMSG(DBG_DEBUG, "err: " << errBest << ", cnt: " << cntBest<< ", cntScoreBest: "<<cntRateBest);
-          if(_trace) {
-            //LOGMSG(DBG_DEBUG, "err: " << errBest << ", cnt: " << cntBest<< ", cntScoreBest: "<<cntRateBest);
-            *BestFit = STemp;
-            double** rawScene;
-            System<double>::allocate(BestFit->getCols(), 2, rawScene);
-            for(unsigned int j=0; j<BestFit->getCols(); j++)
-            {
-              rawScene[j][0] = (*BestFit)(0, j);
-              rawScene[j][1] = (*BestFit)(1, j);
-            }
-            vector<StrCartesianIndexPair> pairs;
-            StrCartesianIndexPair p;
-            p.indexFirst = mapMRawToValid[idx1];
-            p.indexSecond = -1;
-            pairs.push_back(p);
-            p.indexFirst = mapMRawToValid[idx2];
-            p.indexSecond = -1;
-            pairs.push_back(p);
-            _trace->addAssignment(rawScene, BestFit->getCols(), pairs);
-            System<double>::deallocate(rawScene);
+        }
+        if(_trace)
+        {
+           LOGMSG(DBG_DEBUG, "err: " << errBest << ", cnt: " << cntBest<< ", cntScoreBest: "<<cntRateBest);
+          //LOGMSG(DBG_DEBUG, "err: " << errBest << ", cnt: " << cntBest);
+          double** rawScene;
+          System<double>::allocate(STemp.getCols(), 2, rawScene);
+          for(unsigned int j=0; j<STemp.getCols(); j++)
+          {
+            rawScene[j][0] = STemp(0, j);
+            rawScene[j][1] = STemp(1, j);
           }
-
+          vector<StrCartesianIndexPair> pairs;
+          StrCartesianIndexPair p;
+          p.indexFirst = mapMRawToValid[idx1];
+          p.indexSecond = -1;
+          pairs.push_back(p);
+          p.indexFirst = mapMRawToValid[idx2];
+          p.indexSecond = -1;
+          pairs.push_back(p);
+          _trace->addAssignment(rawScene, STemp.getCols(), pairs);
+          System<double>::deallocate(rawScene);
         }
       }  // if(fabs(phi) < _phiMax)
     }  // for all points in scene
@@ -434,7 +449,6 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const bool* mask
   obvious::System<double>::deallocate(SDists);
 
   delete Control;
-  delete BestFit;
 
   return TBest;
 }
