@@ -410,12 +410,12 @@ if (_trace)
         double cntStepSize = 1.0 / STemp.getCols();
         double equalThres = 1e-5;//cntStepSize;// 1e-5;
 
+#pragma omp critical
+{
         bool rateCondition = ((cntRate - cntRateBest) > equalThres) && (cntMatch > cntBest);
         bool errorCondition = fabs( (cntRate-cntRateBest) < equalThres ) && (cntMatch == cntBest) && err < errBest;
         bool goodMatch = rateCondition || errorCondition;
 
-#pragma omp critical
-{
         if(goodMatch)
         {
           errBest = err;
