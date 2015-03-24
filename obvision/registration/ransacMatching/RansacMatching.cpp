@@ -174,14 +174,24 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const bool* mask
   if(_trace)
   {
     double** rawModel;
+    double** rawScene;
     System<double>::allocate(idxMValid.size(), 2, rawModel);
+    System<double>::allocate(idxSValid.size(), 2, rawScene);
     for(unsigned int i=0; i<idxMValid.size(); i++)
     {
       rawModel[i][0] = (*M)(idxMValid[i], 0);
       rawModel[i][1] = (*M)(idxMValid[i], 1);
     }
+    for(unsigned int i=0; i<idxSValid.size(); i++)
+    {
+      rawScene[i][0] = (*S)(idxSValid[i], 0);
+      rawScene[i][1] = (*S)(idxSValid[i], 1);
+    }
     _trace->reset();
     _trace->setModel(rawModel, idxMValid.size());
+    vector<StrCartesianIndexPair> noAssignment;
+    _trace->addAssignment(rawScene, idxSValid.size(), noAssignment);
+    System<double>::deallocate(rawScene);
     System<double>::deallocate(rawModel);
   }
 
@@ -208,8 +218,8 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const bool* mask
 
   LOGMSG(DBG_DEBUG, "Valid points in scene: " << idxSValid.size() << ", Control set: " << Control->getCols());
 
-  unsigned int maxDist2ndSample =  phiMax / resolution; //(M_PI/6.0) / resolution;//(unsigned int) phiMax/resolution; //(M_PI/6.0) / resolution; //0.5 * phiMax / resolution;
-  unsigned int minDist2ndSample = 1;
+  unsigned int maxDist2ndSample = phiMax / resolution; //(M_PI/6.0) / resolution;//(unsigned int) phiMax/resolution; //(M_PI/6.0) / resolution; //0.5 * phiMax / resolution;
+  unsigned int minDist2ndSample = 5;
   assert(minDist2ndSample >= 1);
   double** SDists = createLutIntraDistance(S, maskS, maxDist2ndSample);
 
@@ -224,17 +234,16 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const bool* mask
   unsigned int cntBest     = 0;
   double errBest           = 1e12;
   double cntRateBest       = 0;
-  obvious::Matrix* BestFit = new Matrix(*Control);
   for(unsigned int trial = 0; trial < _trials; trial++)
   {
     // pick randomly one point in model set
-    unsigned int randIdx      = rand() % (idxMValid.size()-minDist2ndSample);
+    unsigned int randIdx      = rand() % ((idxMValid.size()-1)-minDist2ndSample);
     // ... and leave at least n points for 2nd choice
     unsigned int remainingIdx = min((unsigned int)(idxMValid.size()-randIdx-1), maxDist2ndSample);
     // Index for first model sample
     unsigned int idx1         = idxMValid[randIdx];
     // Second model sample: Random on right side != i
-    unsigned int idx2         = idxMValid[randIdx + (rand()%remainingIdx-minDist2ndSample) + minDist2ndSample];
+    unsigned int idx2         = idxMValid[randIdx + (rand()%(remainingIdx-minDist2ndSample)) + minDist2ndSample];
 
     //LOGMSG(DBG_DEBUG, "Candidates: " << i << ", " << i2);
 
@@ -434,6 +443,8 @@ void RansacMatching::serializeTrace(char* folder, unsigned int delay)
 {
   if(_trace)
     _trace->serialize(folder, delay);
+  else
+    LOGMSG(DBG_ERROR, "Trace not activated");
 }
 
 }
