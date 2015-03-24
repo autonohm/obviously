@@ -138,7 +138,7 @@ double** RansacMatching::createLutIntraDistance(const obvious::Matrix* M, const 
 }
 
 #define MIN_VALID_POINTS 10
-obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const bool* maskM, const obvious::Matrix* S,  const bool* maskS, double phiMax, double transMax, double resolution)
+obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const bool* maskM, const obvious::Matrix* S,  const bool* maskS, double phiMax, const double transMax, const double resolution)
 {
   obvious::Matrix TBest(3, 3);
   TBest.setIdentity();
@@ -231,6 +231,16 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const bool* mask
   unsigned int cntBest     = 0;
   double errBest           = 1e12;
   double cntRateBest       = 0;
+
+if (_trace)
+{
+  omp_set_num_threads(1);
+}
+
+#pragma omp parallel
+{
+  //cout<<"Number of Threads: "<< omp_get_num_threads()<<endl;
+  #pragma omp for
   for(unsigned int trial = 0; trial < _trials; trial++)
   {
     bool foundBetterMatch = false;
@@ -400,9 +410,12 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const bool* mask
         double cntStepSize = 1.0 / STemp.getCols();
         double equalThres = 1e-5;//cntStepSize;// 1e-5;
 
+#pragma omp critical
+{
         bool rateCondition = ((cntRate - cntRateBest) > equalThres) && (cntMatch > cntBest);
         bool errorCondition = fabs( (cntRate-cntRateBest) < equalThres ) && (cntMatch == cntBest) && err < errBest;
         bool goodMatch = rateCondition || errorCondition;
+
         if(goodMatch)
         {
           errBest = err;
@@ -410,6 +423,7 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const bool* mask
           cntRateBest = cntRate;
           TBest = T;
         }
+}
         if(_trace)
         {
           LOGMSG(DBG_DEBUG, "err: " << errBest << ", cnt: " << cntBest<< ", cntScoreBest: "<<cntRateBest);
@@ -435,6 +449,7 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const bool* mask
       }  // if(fabs(phi) < _phiMax)
     }  // for all points in scene
   }  // for trials
+} //OpenMP END
 
   LOGMSG(DBG_DEBUG, "Matching result - cnt(best): " << cntBest << ", err(best): " << errBest);
 
