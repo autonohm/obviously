@@ -138,7 +138,7 @@ double** RansacMatching::createLutIntraDistance(const obvious::Matrix* M, const 
 }
 
 #define MIN_VALID_POINTS 10
-obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const bool* maskM, const obvious::Matrix* S,  const bool* maskS, double phiMax, double transMax, double resolution)
+obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const bool* maskM, const obvious::Matrix* S,  const bool* maskS, double phiMax, const double transMax, const double resolution)
 {
   obvious::Matrix TBest(3, 3);
   TBest.setIdentity();
@@ -232,12 +232,14 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const bool* mask
   double errBest           = 1e12;
   double cntRateBest       = 0;
 
-//if (_trace)
+if (_trace)
+{
   omp_set_num_threads(1);
+}
 
 #pragma omp parallel
 {
-  cerr<<"Number of Threads: "<< omp_get_num_threads()<<endl;
+  cout<<"Number of Threads: "<< omp_get_num_threads()<<endl;
   #pragma omp for
   for(unsigned int trial = 0; trial < _trials; trial++)
   {

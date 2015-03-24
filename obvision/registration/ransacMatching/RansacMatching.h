@@ -53,7 +53,7 @@ public:
    * @param resolution Angular resolution of the laser scan
    * @return 3x3 registration matrix
    */
-  obvious::Matrix match(const obvious::Matrix* M, const bool* maskM, const obvious::Matrix* S, const bool* maskS, double phiMax = M_PI / 4.0, double transMax = 1.5, double resolution = 0.0);
+  obvious::Matrix match(const obvious::Matrix* M, const bool* maskM, const obvious::Matrix* S, const bool* maskS, double phiMax = M_PI / 4.0, const double transMax = 1.5, const double resolution = 0.0);
 
   /**
    * Serialize assignment to trace folder
