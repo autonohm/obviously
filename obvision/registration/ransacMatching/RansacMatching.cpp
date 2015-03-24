@@ -231,6 +231,14 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const bool* mask
   unsigned int cntBest     = 0;
   double errBest           = 1e12;
   double cntRateBest       = 0;
+
+//if (_trace)
+  omp_set_num_threads(1);
+
+#pragma omp parallel
+{
+  cerr<<"Number of Threads: "<< omp_get_num_threads()<<endl;
+  #pragma omp for
   for(unsigned int trial = 0; trial < _trials; trial++)
   {
     bool foundBetterMatch = false;
@@ -403,6 +411,9 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const bool* mask
         bool rateCondition = ((cntRate - cntRateBest) > equalThres) && (cntMatch > cntBest);
         bool errorCondition = fabs( (cntRate-cntRateBest) < equalThres ) && (cntMatch == cntBest) && err < errBest;
         bool goodMatch = rateCondition || errorCondition;
+
+#pragma omp critical
+{
         if(goodMatch)
         {
           errBest = err;
@@ -410,6 +421,7 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const bool* mask
           cntRateBest = cntRate;
           TBest = T;
         }
+}
         if(_trace)
         {
           LOGMSG(DBG_DEBUG, "err: " << errBest << ", cnt: " << cntBest<< ", cntScoreBest: "<<cntRateBest);
@@ -435,6 +447,7 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const bool* mask
       }  // if(fabs(phi) < _phiMax)
     }  // for all points in scene
   }  // for trials
+} //OpenMP END
 
   LOGMSG(DBG_DEBUG, "Matching result - cnt(best): " << cntBest << ", err(best): " << errBest);
 

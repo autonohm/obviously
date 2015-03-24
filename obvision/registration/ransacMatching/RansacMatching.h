@@ -5,6 +5,7 @@
 #include "obcore/math/linalg/linalg.h"
 #include "obvision/registration/Trace.h"
 #include "obvision/registration/icp/PointToLineEstimator2D.h"
+#include "omp.h"
 
 namespace obvious
 {
