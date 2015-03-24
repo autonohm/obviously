@@ -233,7 +233,7 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const bool* mask
   double cntRateBest       = 0;
   for(unsigned int trial = 0; trial < _trials; trial++)
   {
-  	bool foundBetterMatch = false;
+    bool foundBetterMatch = false;
     // pick randomly one point in model set
     unsigned int randIdx      = rand() % ((idxMValid.size()-1)-minDist2ndSample);
     // ... and leave at least n points for 2nd choice
@@ -385,9 +385,7 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const bool* mask
             //err += sqrt(dists[0][0]);
             cntMatch++;
           }
-          
         }
-        
         err = sqrt(err);
 
         delete[] indices.ptr();
@@ -402,12 +400,6 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const bool* mask
         double cntStepSize = 1.0 / STemp.getCols();
         double equalThres = 1e-5;//cntStepSize;// 1e-5;
 
-
-				//bool goodMatch = (cntRate - cntRateBest) > equalThres || ( (fabs(cntRate-cntRateBest) < equalThres) && (err < errBest) ); //taugt meistens, problem dass in manchen Fällen sehr wenig Punkte gute Matches ergeben.
-        //bool goodMatch = ( (fabs(cntRate-cntRateBest) < equalThres) && (cntMatch > cntBest));
-        //bool goodMatch = (err < errBest);
-        //bool goodMatch = (cntMatch > cntBest) && (err < errBest);
-
         bool rateCondition = ((cntRate - cntRateBest) > equalThres) && (cntMatch > cntBest);
         bool errorCondition = fabs( (cntRate-cntRateBest) < equalThres ) && (cntMatch == cntBest) && err < errBest;
         bool goodMatch = rateCondition || errorCondition;
@@ -420,7 +412,7 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const bool* mask
         }
         if(_trace)
         {
-           LOGMSG(DBG_DEBUG, "err: " << errBest << ", cnt: " << cntBest<< ", cntScoreBest: "<<cntRateBest);
+          LOGMSG(DBG_DEBUG, "err: " << errBest << ", cnt: " << cntBest<< ", cntScoreBest: "<<cntRateBest);
           //LOGMSG(DBG_DEBUG, "err: " << errBest << ", cnt: " << cntBest);
           double** rawScene;
           System<double>::allocate(STemp.getCols(), 2, rawScene);
