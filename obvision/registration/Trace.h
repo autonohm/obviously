@@ -1,15 +1,26 @@
 #ifndef TRACE_H_
 #define TRACE_H_
 
-#include <iostream>
-#include <vector>
 #include "obvision/registration/icp/assign/assignbase.h"
 #include "obcore/math/linalg/linalg.h"
+
+#include <iostream>
+#include <vector>
 
 using namespace std;
 
 namespace obvious
 {
+
+/**
+ * @struct pair coordinates for 2D or 3D data. Last dimension is ignored for 2D case.
+ * @author Stefan May
+ */
+struct StrTraceCartesianPair
+{
+  double first[3];
+  double second[3];
+};
 
 /**
  * @class Trace
@@ -22,9 +33,8 @@ public:
 	/**
 	 * Default constructor
 	 * @param dim dimensionality
-	 * @param maxQueue maximum queue length
 	 */
-	Trace(unsigned int dim, unsigned int maxQueue=1000);
+	Trace(unsigned int dim);
 		 
 	/**
 	 * Destructor
@@ -44,31 +54,43 @@ public:
 	void setModel(double** model, unsigned int sizeM);
 
 	/**
+   * Set scene of trace record
+   * @param scene scene data
+   * @param sizeS size of scene
+   */
+	void setScene(double** scene, unsigned int sizeS);
+
+	/**
 	 * Add scene assignment to trace record
 	 * @param scene scene data
 	 * @param sizeS size of scene
-	 * @param pairs tuple of assigned indices
+	 * @param pairs assigned pairs coordinates
+	 * @param score score
+	 * @param id of assignment, e.g., the iteration
 	 */
-	void addAssignment(double** scene, unsigned int sizeS, vector<StrCartesianIndexPair> pairs);
+	void addAssignment(double** scene, unsigned int sizeS, vector<StrTraceCartesianPair> pairs, const double score, vector<unsigned int> id = vector<unsigned int>());
 	
 	/**
 	 * Serialize assignment to trace folder
 	 * @param folder trace folder (must not be existent)
-	 * @param delay animation delay (specified in delay*1/100s)
 	 */
-	void serialize(char* folder, unsigned int delay);
+	void serialize(char* folder);
 
 private:
 	
 	unsigned int _dim;
 
-	Matrix* _M;
-	
-	vector<Matrix*> _scenes;
-	
-	vector< vector<StrCartesianIndexPair> > _pairs;
+	obvious::Matrix* _M;
 
-	unsigned int _maxQueue;
+	obvious::Matrix* _S;
+
+	vector<obvious::Matrix*> _scenes;
+	
+	vector< vector<StrTraceCartesianPair> > _pairs;
+
+	vector< vector<unsigned int> > _ids;
+
+	vector<double> _scores;
 };
 
 }

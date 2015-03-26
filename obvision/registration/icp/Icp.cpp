@@ -390,11 +390,6 @@ EnumIcpState Icp::step(double* rms, unsigned int* pairs)
   pvPairs = _assigner->getPairs();
   *pairs = pvPairs->size();
 
-  if(_trace)
-  {
-    _trace->addAssignment(_sceneTmp, _sizeScene, *pvPairs);
-  }
-
   if(pvPairs->size()>2)
   {
     // Estimate transformation
@@ -403,12 +398,30 @@ EnumIcpState Icp::step(double* rms, unsigned int* pairs)
     // get mapping error
     *rms = _estimator->getRMS();
 
+    if(_trace)
+    {
+      vector<StrTraceCartesianPair> pairsTrace;
+      for(unsigned int i=0; i<*pairs; i++)
+      {
+        StrTraceCartesianPair p;
+        for(int j=0; j<_dim; j++)
+        {
+          p.first[j] = _model[(*pvPairs)[i].indexFirst][j];
+          p.second[j] = _sceneTmp[(*pvPairs)[i].indexSecond][j];
+        }
+        pairsTrace.push_back(p);
+      }
+      _trace->addAssignment(_sceneTmp, _sizeScene, pairsTrace, *rms);
+    }
+
     // estimate transformation
     _estimator->estimateTransformation(_Tlast);
 
     applyTransformation(_sceneTmp, _sizeScene, _dim, _Tlast);
     if(_normalsS)
       applyTransformation(_normalsSTmp, _sizeScene, _dim, _Tlast);
+
+
 
     // update overall transformation
     (*_Tfinal4x4) = (*_Tlast) * (*_Tfinal4x4);
@@ -427,6 +440,7 @@ EnumIcpState Icp::iterate(double* rms, unsigned int* pairs, unsigned int* iterat
   {
     _trace->reset();
     _trace->setModel(_model, _sizeModel);
+    _trace->setScene(_scene, _sizeScene);
   }
 
   _Tfinal4x4->setIdentity();
@@ -463,10 +477,10 @@ EnumIcpState Icp::iterate(double* rms, unsigned int* pairs, unsigned int* iterat
   return eRetval;
 }	
 
-void Icp::serializeTrace(char* folder, unsigned int delay)
+void Icp::serializeTrace(char* folder)
 {
   if(_trace)
-    _trace->serialize(folder, delay);
+    _trace->serialize(folder);
   else
     LOGMSG(DBG_ERROR, "Trace not activated");
 }

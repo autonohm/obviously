@@ -177,9 +177,8 @@ public:
   /**
    * Serialize assignment to trace folder
    * @param folder trace folder (must not be existent)
-   * @param delay animation delay (specified in delay*1/100s)
    */
-  void serializeTrace(char* folder, unsigned int delay=10);
+  void serializeTrace(char* folder);
 
   /**
    * Get final 4x4 rotation matrix determined through iteration

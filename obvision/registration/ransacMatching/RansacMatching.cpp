@@ -188,10 +188,10 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const bool* mask
     }
     _trace->reset();
     _trace->setModel(rawModel, idxMValid.size());
-    vector<StrCartesianIndexPair> noAssignment;
-    _trace->addAssignment(rawScene, idxSValid.size(), noAssignment);
-    System<double>::deallocate(rawScene);
+    _trace->setScene(rawScene, idxSValid.size());
+
     System<double>::deallocate(rawModel);
+    System<double>::deallocate(rawScene);
   }
 
   // Calculate search "radius", i.e., maximum difference in polar indices because of rotation
@@ -215,8 +215,8 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const bool* mask
 
   LOGMSG(DBG_DEBUG, "Valid points in scene: " << idxSValid.size() << ", Control set: " << Control->getCols());
 
-  unsigned int maxDist2ndSample = phiMax / resolution; //(M_PI/6.0) / resolution;//(unsigned int) phiMax/resolution; //(M_PI/6.0) / resolution; //0.5 * phiMax / resolution;
-  unsigned int minDist2ndSample = 5;
+  unsigned int maxDist2ndSample = 10.0 / rad2deg(resolution); //(M_PI/6.0) / resolution;//(unsigned int) phiMax/resolution; //(M_PI/6.0) / resolution; //0.5 * phiMax / resolution;
+  unsigned int minDist2ndSample = 3.0 / rad2deg(resolution);
   assert(minDist2ndSample >= 1);
   double** SDists = createLutIntraDistance(S, maskS, maxDist2ndSample);
 
@@ -232,10 +232,12 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const bool* mask
   double errBest           = 1e12;
   double cntRateBest       = 0;
 
+#ifndef DEBUG
 if (_trace)
 {
   omp_set_num_threads(1);
 }
+#endif
 
 #pragma omp parallel
 {
@@ -243,7 +245,7 @@ if (_trace)
   #pragma omp for
   for(unsigned int trial = 0; trial < _trials; trial++)
   {
-    bool foundBetterMatch = false;
+    //bool foundBetterMatch = false;
     // pick randomly one point in model set
     unsigned int randIdx      = rand() % ((idxMValid.size()-1)-minDist2ndSample);
     // ... and leave at least n points for 2nd choice
@@ -297,6 +299,9 @@ if (_trace)
           iMinDist = i2;
         }
       }
+
+      if(iMinDist==0) continue;
+      assert(iMinDist > i);
 
       if(distSMin < _epsSqr)
       {
@@ -407,7 +412,7 @@ if (_trace)
         // Relative MatchCnt Score
         unsigned int maxMatchCnt = (STemp.getCols() - clippedPoints);
         double cntRate = (double)cntMatch / (double) maxMatchCnt;
-        double cntStepSize = 1.0 / STemp.getCols();
+        //double cntStepSize = 1.0 / STemp.getCols();
         double equalThres = 1e-5;//cntStepSize;// 1e-5;
 
 #pragma omp critical
@@ -426,7 +431,6 @@ if (_trace)
 }
         if(_trace)
         {
-          //LOGMSG(DBG_DEBUG, "err: " << errBest << ", cnt: " << cntBest<< ", cntScoreBest: "<<cntRateBest);
           double** rawScene;
           System<double>::allocate(STemp.getCols(), 2, rawScene);
           for(unsigned int j=0; j<STemp.getCols(); j++)
@@ -434,15 +438,22 @@ if (_trace)
             rawScene[j][0] = STemp(0, j);
             rawScene[j][1] = STemp(1, j);
           }
-          vector<StrCartesianIndexPair> pairs;
-          StrCartesianIndexPair p;
-          p.indexFirst = mapMRawToValid[idx1];
-          p.indexSecond = -1;
-          pairs.push_back(p);
-          p.indexFirst = mapMRawToValid[idx2];
-          p.indexSecond = -1;
-          pairs.push_back(p);
-          _trace->addAssignment(rawScene, STemp.getCols(), pairs);
+          vector<StrTraceCartesianPair> tracePair;
+          StrTraceCartesianPair p;
+          p.first[0] = (*M)(idx1, 0);
+          p.first[1] = (*M)(idx1, 1);
+          p.second[0] = (*S)(i, 0);
+          p.second[1] = (*S)(i, 1);
+          tracePair.push_back(p);
+          p.first[0] = (*M)(idx2, 0);
+          p.first[1] = (*M)(idx2, 1);
+          p.second[0] = (*S)(iMinDist, 0);
+          p.second[1] = (*S)(iMinDist, 1);
+          tracePair.push_back(p);
+          vector<unsigned int> id;
+          id.push_back(trial);
+          id.push_back(i);
+          _trace->addAssignment(rawScene, STemp.getCols(), tracePair, err, id);
           System<double>::deallocate(rawScene);
         }
       }  // if(fabs(phi) < _phiMax)
@@ -459,10 +470,10 @@ if (_trace)
   return TBest;
 }
 
-void RansacMatching::serializeTrace(char* folder, unsigned int delay)
+void RansacMatching::serializeTrace(char* folder)
 {
   if(_trace)
-    _trace->serialize(folder, delay);
+    _trace->serialize(folder);
   else
     LOGMSG(DBG_ERROR, "Trace not activated");
 }

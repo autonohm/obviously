@@ -4,15 +4,16 @@
 
 #include <iostream>
 #include <fstream>
+#include <iomanip>
 
 namespace obvious
 {
 
-Trace::Trace(unsigned int dim, unsigned int maxQueue)
+Trace::Trace(unsigned int dim)
 {
   _dim      = dim;
   _M        = NULL;
-  _maxQueue = maxQueue;
+  _S        = NULL;
 }
 		 
 Trace::~Trace()
@@ -28,14 +29,23 @@ void Trace::reset()
     _M = NULL;
   }
 
+  if(_S)
+  {
+    delete _S;
+    _S = NULL;
+  }
+
   for(unsigned int i=0; i<_scenes.size(); i++)
     delete _scenes[i];
   _scenes.clear();
 
-  for(unsigned int i=0; i<_pairs.size(); i++)
-      _pairs[i].clear();
   _pairs.clear();
+
+  _ids.clear();
+
+  _scores.clear();
 }
+
 void Trace::setModel(double** model, unsigned int sizeM)
 {
   if(model)
@@ -49,17 +59,29 @@ void Trace::setModel(double** model, unsigned int sizeM)
   }
 }
 
-void Trace::addAssignment(double** scene, unsigned int sizeS, vector<StrCartesianIndexPair> pairs)
+void Trace::setScene(double** scene, unsigned int sizeS)
 {
-  if(_scenes.size()>=_maxQueue) return;
-
-  Matrix* s = new Matrix(sizeS, _dim, *scene);
-  _scenes.push_back(s);
-
-  _pairs.push_back(pairs);
+  if(scene)
+  {
+    if(_S) delete _S;
+    _S = new Matrix(sizeS, _dim, *scene);
+  }
+  else
+  {
+    LOGMSG(DBG_WARN, "Empty scene passed");
+  }
 }
 
-void Trace::serialize(char* folder, unsigned int delay)
+void Trace::addAssignment(double** scene, unsigned int sizeS, vector<StrTraceCartesianPair> pairs, const double score, vector<unsigned int> id)
+{
+  obvious::Matrix* sceneCopy = new obvious::Matrix(sizeS, _dim, *scene);
+  _scenes.push_back(sceneCopy);
+  _ids.push_back(id);
+  _pairs.push_back(pairs);
+  _scores.push_back(score);
+}
+
+void Trace::serialize(char* folder)
 {
   char cmd[256];
   sprintf(cmd, "mkdir %s", folder);
@@ -82,7 +104,25 @@ void Trace::serialize(char* folder, unsigned int delay)
           double coord = (*_M)(p,j);
           if(minCoord[j]>coord) minCoord[j] = coord;
           if(maxCoord[j]<coord) maxCoord[j] = coord;
-          file << coord << " ";
+          file << std::setprecision(9) << std::fixed << coord << " ";
+        }
+        file << endl;
+      }
+      file.close();
+    }
+
+    if(_S)
+    {
+      snprintf(filename, 512, "%s/scene.dat", folder);
+      file.open(filename, ios::out);
+      for(unsigned int p=0; p<_S->getRows(); p++)
+      {
+        for(unsigned int j=0; j<_dim; j++)
+        {
+          double coord = (*_S)(p,j);
+          if(minCoord[j]>coord) minCoord[j] = coord;
+          if(maxCoord[j]<coord) maxCoord[j] = coord;
+          file << std::setprecision(9) << std::fixed << coord << " ";
         }
         file << endl;
       }
@@ -91,7 +131,11 @@ void Trace::serialize(char* folder, unsigned int delay)
 
     for(unsigned int i=0; i<_scenes.size(); i++)
     {
-      snprintf(filename, 512, "%s/scene_%05d.dat", folder, i);
+      vector<unsigned int> id = _ids[i];
+      if(id.size()==2)
+        snprintf(filename, 512, "%s/scene_%05d_%05d.dat", folder, id[0], id[1]);
+      else
+        snprintf(filename, 512, "%s/scene_%05d.dat", folder, i);
       file.open(filename, ios::out);
       Matrix* S = _scenes[i];
       for(unsigned int p=0; p<S->getRows(); p++)
@@ -101,7 +145,7 @@ void Trace::serialize(char* folder, unsigned int delay)
           double coord = (*S)(p,j);
           if(minCoord[j]>coord) minCoord[j] = coord;
           if(maxCoord[j]<coord) maxCoord[j] = coord;
-          file << coord << " ";
+          file << std::setprecision(9) << std::fixed << coord << " ";
         }
         file << endl;
       }
@@ -110,60 +154,113 @@ void Trace::serialize(char* folder, unsigned int delay)
 
     for(unsigned int i=0; i<_pairs.size(); i++)
     {
-      snprintf(filename, 512, "%s/pairs_%05d.dat", folder, i);
+      vector<unsigned int> id = _ids[i];
+      if(id.size()==2)
+        snprintf(filename, 512, "%s/pairs_%05d_%05d.dat", folder, id[0], id[1]);
+      else
+        snprintf(filename, 512, "%s/pairs_%05d.dat", folder, i);
+
       file.open(filename, ios::out);
-      //Matrix* S = _scenes[i];
-      vector<StrCartesianIndexPair> pairs = _pairs[i];
-      for(unsigned int p=0; p<pairs.size(); p++)
+      for(unsigned int p=0; p<_pairs[i].size(); p++)
       {
-        unsigned int idxM = pairs[p].indexFirst;
-        //unsigned int idxS = pairs[p].indexSecond;
-
-        if(idxM>=_M->getRows())
-        {
-          LOGMSG(DBG_ERROR, "Index for model point wrong ... skipping, index: " << idxM << ", size: " << _M->getRows());
-          continue;
-        }
+        StrTraceCartesianPair pair = _pairs[i][p];
 
         for(unsigned int j=0; j<_dim; j++)
         {
-          double coord = (*_M)(idxM,j);
-          file << coord << " ";
+          double coord = pair.first[j];
+          file << std::setprecision(9) << std::fixed << coord << " ";
         }
-
-        /*if(idxS>=S->getRows())
-        {
-          LOGMSG(DBG_ERROR, "Index for scene point wrong ... skipping, index: " << idxS << ", size: " << S->getRows());
-          continue;
-        }
-
         for(unsigned int j=0; j<_dim; j++)
         {
-          double coord = (*S)(idxS,j);
-          file << coord << " ";
-        }*/
+          double coord = pair.second[j];
+          file << std::setprecision(9) << std::fixed << coord << " ";
+        }
         file << endl;
       }
       file.close();
     }
 
+    for(unsigned int i=0; i<_scores.size(); i++)
+    {
+      vector<unsigned int> id = _ids[i];
+
+      bool newfile = false;
+      if(i==0)
+      {
+        newfile = true;
+      }
+      else if(id.size()==2)
+      {
+        newfile = (id[0] != _ids[i-1][0]);
+      }
+
+      if(newfile)
+      {
+        if(file.is_open()) file.close();
+        if(id.size()==2)
+          snprintf(filename, 512, "%s/score_%05d.dat", folder, id[0]);
+        else
+          snprintf(filename, 512, "%s/score.dat", folder);
+
+        file.open(filename, ios::out);
+      }
+
+      if(id.size()==2) file << id[1] << " ";
+      else file << i << " ";
+      file << std::setprecision(9) << std::fixed << _scores[i] << endl;
+    }
+
+    if(file.is_open()) file.close();
+
     if(_dim==2)
     {
-      snprintf(filename, 512, "%s/animate_trace.sh", folder);
+      snprintf(filename, 512, "%s/animate_trace.gpi", folder);
       file.open(filename, ios::out);
-      file << "#!/bin/bash" << endl << "echo \"clear\" > animate_trace.gpi" << endl;
-      file << "echo \"reset\" >> animate_trace.gpi" << endl << "echo \"set terminal gif animate delay " << delay << "\" >> animate_trace.gpi" << endl;
-      file << "echo \"set output \\\"animate_trace.gif\\\"\" >> animate_trace.gpi" << endl;
-      file << "echo \"set isosample 40\" >> animate_trace.gpi" << endl;
-      file << "echo \"set xrange [" << minCoord[0] << ":" << maxCoord[0] << "]\" >> animate_trace.gpi" << endl;
-      file << "echo \"set yrange [" << minCoord[1] << ":" << maxCoord[1] << "]\" >> animate_trace.gpi" << endl;
-      file << "for NR in `seq -f \"%05g\" 0 " << _scenes.size()-1 << "`" << endl;
-      file << "do" << endl;
-      file << "echo \"plot \\\"./model.dat\\\" u 1:2 w p pt 19 ps 1 t \\\"model\\\"";
-      file << ", \\\"./scene_${NR}.dat\\\" u 1:2 w p pt 19 t \\\"scene($NR)\\\"";
-      file << ", \\\"./pairs_${NR}.dat\\\" u 1:2 w p pt 20 ps 2 t \\\"pairs (model)\\\"";
-      file << "\" >> animate_trace.gpi" << endl;
-      file << "done" << endl;
+      file << "clear" << endl;
+      file << "reset" << endl << "set terminal png" << endl;
+      file << "set isosample 40" << endl;
+      file << "set xrange [" << minCoord[0] << ":" << maxCoord[0] << "]" << endl;
+      file << "set yrange [" << minCoord[1] << ":" << maxCoord[1] << "]" << endl;
+
+      for(unsigned int i=0; i<_scenes.size(); i++)
+      {
+        vector<unsigned int> id = _ids[i];
+        char buf[64];
+        file << "set output \"animate_trace_";
+        if(id.size()==2)
+          sprintf(buf, "%05d_%05d", id[0], id[1]);
+        else
+          sprintf(buf, "%05d", i);
+        file << buf;
+        file << ".png\"" << endl;
+        file << "plot \"./model.dat\" u 1:2 w p pt 18 ps 1 t \"model\"";
+        file << ", \"./scene.dat\" u 1:2 w p pt 19 ps 1 t \"scene\"";
+        file << ", \"./scene_" << buf << ".dat\" u 1:2 w p pt 19 t \"scene(" << buf << ")\"";
+        file << ", \"./pairs_" << buf << ".dat\" u 1:2 w p pt 20 ps 2 t \"pairs (model)\"";
+        file << ", \"./pairs_" << buf << ".dat\" u 3:4 w p pt 16 ps 2 t \"pairs (scene)\"";
+        file << endl;
+      }
+
+      file << "set autoscale" << endl;
+      vector<unsigned int> id = _ids[0];
+      if(id.size()==2)
+      {
+        for(unsigned int i=0; i<_scores.size(); i++)
+        {
+          vector<unsigned int> id = _ids[i];
+          char buf[64];
+          file << "set output \"score_";
+          snprintf(buf, 64, "%05d", id[0]);
+          file << buf << ".png\"" << endl;
+          file << "plot \"./score_" << buf << ".dat\" u 1:2 w lp" << endl;
+        }
+      }
+      else
+      {
+        file << "set output \"score.png\"" << endl;
+        file << "plot \"./score.dat\" u 1:2 w lp" << endl;
+      }
+
       file.close();
 
       LOGMSG(DBG_DEBUG, "Trace serialized, execute animation script for gnuplot visualization");

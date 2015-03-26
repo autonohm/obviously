@@ -29,15 +29,15 @@ int main(int argc, char** argv)
   bool maskM[DATASETSIZE];
   bool maskS[DATASETSIZE];
 
+  double omega = 100.0;
   for(int i = 0; i < DATASETSIZE; i++)
   {
     double di = (double)i;
-    (*M)(i, 0) = sin(di / 500.0);
-    (*M)(i, 1) = sin(di / 100.0);
+    (*M)(i, 0) = (di / (500.0));
+    (*M)(i, 1) = sin(di / omega);
     maskM[i] = ((i % 4) != 0);
     maskS[i] = ((i % 2) != 0);
   }
-
   //Model Normals
 //  obvious::Matrix* N = new obvious::Matrix(DATASETSIZE, 2);
 //  // compute mean of components build by left and right neighbors
@@ -71,6 +71,9 @@ int main(int argc, char** argv)
 
   obvious::Matrix S = M->createTransform(T);
 
+  //for(unsigned int i=0; i<S.getRows(); i++)
+  //  cout << S(i, 0) << endl;
+
   cout << "Applied transformation:" << endl;
   T.print();
 
@@ -84,7 +87,7 @@ int main(int argc, char** argv)
   RansacMatching matcher(trials, epsThresh, sizeControlSet);
   matcher.activateTrace();
   Matrix F = matcher.match(M, maskM, &S, maskS, deg2rad(45.0), 1.5 , deg2rad(0.25));
-  matcher.serializeTrace("/tmp/trace", 20);
+  matcher.serializeTrace("/tmp/trace");
   F.invert();
   cout << endl << "Estimated transformation:" << endl;
   F.print();

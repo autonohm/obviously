@@ -20,11 +20,6 @@ using namespace obvious;
 
 int main(int argc, char** argv)
 {
-  int animationDelay = 10;
-
-  if(argc>1)
-    animationDelay = atoi(argv[1]);
-
   Timer timer;
   timer.start();
 
@@ -44,9 +39,9 @@ int main(int argc, char** argv)
   // compute mean of components build by left and right neighbors
   for(int i=1; i<POINTS-1; i++)
   {
-    double xleft  = (*M)(i, 0) - (*M)(i-1, 0);
+    double xleft  = (*M)(i, 0)   - (*M)(i-1, 0);
     double xright = (*M)(i+1, 0) - (*M)(i, 0);
-    double yleft  = (*M)(i, 1) - (*M)(i-1, 1);
+    double yleft  = (*M)(i, 1)   - (*M)(i-1, 1);
     double yright = (*M)(i+1, 1) - (*M)(i, 1);
 
     // x-component of normal
@@ -58,11 +53,11 @@ int main(int argc, char** argv)
 
   // left bound
   (*N)(0, 0) = -((*M)(1, 1) - (*M)(0, 1));
-  (*N)(0, 1) =  (*M)(1, 0) - (*M)(0, 0);
+  (*N)(0, 1) =   (*M)(1, 0) - (*M)(0, 0);
 
   // right bound
   (*N)(POINTS-1, 0) = -((*M)(POINTS-1, 1) - (*M)(POINTS-2, 1));
-  (*N)(POINTS-1, 1) =  (*M)(POINTS-1, 0) - (*M)(POINTS-2, 0);
+  (*N)(POINTS-1, 1) =   (*M)(POINTS-1, 0) - (*M)(POINTS-2, 0);
 
   obvious::Matrix T = MatrixFactory::TransformationMatrix33(deg2rad(9.0), 0.4, 0.35);
   obvious::Matrix S = M->createTransform(T);
@@ -97,7 +92,7 @@ int main(int argc, char** argv)
   cout << "Iterations: " << it << endl;
 
   char folder[6] = "trace";
-  icp->serializeTrace(folder, animationDelay);
+  icp->serializeTrace(folder);
 
 
   // Test with multiple initialization matrices
