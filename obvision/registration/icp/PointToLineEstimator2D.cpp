@@ -56,7 +56,8 @@ void PointToLine2DEstimator::setPairs(std::vector<StrCartesianIndexPair>* pairs)
 
   unsigned int size = pairs->size();
 
-  for(unsigned int i=0; i<size; i++) {
+  for(unsigned int i=0; i<size; i++)
+  {
     StrCartesianIndexPair pair = (*pairs)[i];
     double* pointModel         = _model[pair.indexFirst];
     double* pointScene         = _scene[pair.indexSecond];
@@ -84,7 +85,8 @@ double PointToLine2DEstimator::getRMS()
  */
 void PointToLine2DEstimator::estimateTransformation(Matrix* T)
 {
-  if(_normals==NULL) {
+  if(_normals==NULL)
+  {
     cout << "WARNING (" << __PRETTY_FUNCTION__ << "): Normals not set." << endl;
     return;
   }
@@ -93,7 +95,7 @@ void PointToLine2DEstimator::estimateTransformation(Matrix* T)
 
   Matrix A(3, 3);
   A.setZero();
-  double b[3];
+  double b[3] = {0.0, 0.0, 0.0};
 
   for(unsigned int i=0 ; i< size ; i++)
   {
