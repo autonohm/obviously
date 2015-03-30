@@ -81,7 +81,7 @@ void Trace::addAssignment(double** scene, unsigned int sizeS, vector<StrTraceCar
   _scores.push_back(score);
 }
 
-void Trace::serialize(char* folder)
+void Trace::serialize(const char* folder)
 {
   char cmd[256];
   sprintf(cmd, "mkdir %s", folder);

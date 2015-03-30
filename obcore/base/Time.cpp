@@ -45,12 +45,12 @@ Time Time::now(void)
 
 double Time::hours(void) const
 {
-    return static_cast<double>(_seconds) / 3600.0f;
+    return static_cast<double>(_seconds) / 3600.0;
 }
 
 double Time::min(void) const
 {
-    return static_cast<double>(_seconds) / 60.0f;
+    return static_cast<double>(_seconds) / 60.0;
 }
 
 double Time::sec(void) const

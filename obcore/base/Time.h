@@ -64,36 +64,43 @@ public:
      * @return hours of this day.
      */
     double hours(void) const;
+
     /**
      * Gets the time in minutes of this day.
      * @return minutes of this day.
      */
     double min(void) const;
+
     /**
      * Gets the time in seconds of this day.
      * @return seconds of this day.
      */
     double sec(void) const;
+
     /**
      * Gets the time in museconds of this day.
      * @return mus of this day.
      */
     double mus(void) const;
+
      /**
      * Gets the current time.
      * @return the current time as Time object.
      */
     static Time now(void);
+
     /**
      * Assignment operator.
      * @param time will be copied.
      */
     Time& operator=(const Time& time);
+
     /**
      * Calculates the time difference between this and time object.
      * @param time will be subtracted from this.
      */
     double operator-(const Time& time) const;
+
     /**
      * Adds the given sec to this object.
      * @param sec will be added to this object.

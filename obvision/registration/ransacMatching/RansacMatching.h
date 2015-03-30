@@ -59,7 +59,7 @@ public:
    * Serialize assignment to trace folder
    * @param folder trace folder (must not be existent)
    */
-  void serializeTrace(char* folder);
+  void serializeTrace(const char* folder);
 
 private:
 

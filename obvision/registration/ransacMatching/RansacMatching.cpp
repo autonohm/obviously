@@ -466,7 +466,7 @@ if (_trace)
   return TBest;
 }
 
-void RansacMatching::serializeTrace(char* folder)
+void RansacMatching::serializeTrace(const char* folder)
 {
   if(_trace)
     _trace->serialize(folder);
