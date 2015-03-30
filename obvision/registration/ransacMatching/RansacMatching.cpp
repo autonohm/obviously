@@ -277,7 +277,7 @@ if (_trace)
     // rightmost scene point belonging to query point idx1
     unsigned int iMax = min(idx1+span, pointsInS);
 
-    LOGMSG(DBG_DEBUG, "idx1: " << idx1 << " idx2: " << idx2 << ", search range: " << iMin << " " << iMax);
+    //LOGMSG(DBG_DEBUG, "idx1: " << idx1 << " idx2: " << idx2 << ", search range: " << iMin << " " << iMax);
     for(unsigned int i = iMin; i < iMax; i++)
     {
       if(!maskS[i]) continue;
@@ -318,11 +318,7 @@ if (_trace)
 
       // Calculate polar angle
       double phiM = atan2(vM[1], vM[0]);
-      if(phiM < 0)
-        phiM += 2.0 * M_PI;
       double phiS = atan2(vS[1], vS[0]);
-      if(phiS < 0)
-        phiS += 2.0 * M_PI;
 
       // Solution for rotational part
       double phi = phiM - phiS;
@@ -346,7 +342,7 @@ if (_trace)
 
         if(sqrt(pow(T(0, 2), 2) + pow(T(1, 2), 2)) > transMax)
         {
-          LOGMSG(DBG_DEBUG, "Translation is too big!");
+          //LOGMSG(DBG_DEBUG, "Translation is too big!");
           continue;
         }
 
