@@ -448,6 +448,7 @@ if (_trace)
           tracePair.push_back(p);
           vector<unsigned int> id;
           id.push_back(trial);
+          id.push_back(idx1);
           id.push_back(i);
           _trace->addAssignment(rawScene, STemp.getCols(), tracePair, err, id);
           System<double>::deallocate(rawScene);
