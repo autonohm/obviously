@@ -36,7 +36,8 @@ RansacMatching::~RansacMatching()
 
 void RansacMatching::activateTrace()
 {
-  _trace = new Trace(2);
+  if(!_trace)
+    _trace = new Trace(2);
 }
 
 void RansacMatching::deactivateTrace()

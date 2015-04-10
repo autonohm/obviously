@@ -39,9 +39,9 @@ void Trace::reset()
     delete _scenes[i];
   _scenes.clear();
 
-  _pairs.clear();
-
   _ids.clear();
+
+  _pairs.clear();
 
   _scores.clear();
 }

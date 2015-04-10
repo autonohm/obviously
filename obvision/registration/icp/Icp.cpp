@@ -59,7 +59,8 @@ const char* Icp::state2char(EnumIcpState eState)
 
 void Icp::activateTrace()
 {
-  _trace = new Trace(_dim);
+  if(!_trace)
+    _trace = new Trace(_dim);
 }
 
 void Icp::deactivateTrace()
