@@ -81,7 +81,7 @@ void Trace::addAssignment(double** scene, unsigned int sizeS, vector<StrTraceCar
   _scores.push_back(score);
 }
 
-void Trace::serialize(char* folder)
+void Trace::serialize(const char* folder)
 {
   char cmd[256];
   sprintf(cmd, "mkdir %s", folder);
@@ -93,6 +93,7 @@ void Trace::serialize(char* folder)
     double minCoord[3] = { 10e12,  10e12,  10e12};
     double maxCoord[3] = {-10e12, -10e12, -10e12};
 
+    // -------------------- Model ----------------------
     if(_M)
     {
       snprintf(filename, 512, "%s/model.dat", folder);
@@ -110,7 +111,9 @@ void Trace::serialize(char* folder)
       }
       file.close();
     }
+    // -------------------------------------------------
 
+    // -------------------- Scene ----------------------
     if(_S)
     {
       snprintf(filename, 512, "%s/scene.dat", folder);
@@ -128,12 +131,14 @@ void Trace::serialize(char* folder)
       }
       file.close();
     }
+    // -------------------------------------------------
 
+    // ------------- Transformed scenes ----------------
     for(unsigned int i=0; i<_scenes.size(); i++)
     {
       vector<unsigned int> id = _ids[i];
-      if(id.size()==2)
-        snprintf(filename, 512, "%s/scene_%05d_%05d.dat", folder, id[0], id[1]);
+      if(id.size()==3)
+        snprintf(filename, 512, "%s/scene_%05d_%05d_%05d.dat", folder, id[0], id[1], id[2]);
       else
         snprintf(filename, 512, "%s/scene_%05d.dat", folder, i);
       file.open(filename, ios::out);
@@ -151,12 +156,14 @@ void Trace::serialize(char* folder)
       }
       file.close();
     }
+    // -------------------------------------------------
 
+    // ------------------ Pairs -------------------------
     for(unsigned int i=0; i<_pairs.size(); i++)
     {
       vector<unsigned int> id = _ids[i];
-      if(id.size()==2)
-        snprintf(filename, 512, "%s/pairs_%05d_%05d.dat", folder, id[0], id[1]);
+      if(id.size()==3)
+        snprintf(filename, 512, "%s/pairs_%05d_%05d_%05d.dat", folder, id[0], id[1], id[2]);
       else
         snprintf(filename, 512, "%s/pairs_%05d.dat", folder, i);
 
@@ -179,7 +186,9 @@ void Trace::serialize(char* folder)
       }
       file.close();
     }
+    // -------------------------------------------------
 
+    // ------------------ Scores -----------------------
     for(unsigned int i=0; i<_scores.size(); i++)
     {
       vector<unsigned int> id = _ids[i];
@@ -189,7 +198,7 @@ void Trace::serialize(char* folder)
       {
         newfile = true;
       }
-      else if(id.size()==2)
+      else if(id.size()==3)
       {
         newfile = (id[0] != _ids[i-1][0]);
       }
@@ -197,7 +206,7 @@ void Trace::serialize(char* folder)
       if(newfile)
       {
         if(file.is_open()) file.close();
-        if(id.size()==2)
+        if(id.size()>=2)
           snprintf(filename, 512, "%s/score_%05d.dat", folder, id[0]);
         else
           snprintf(filename, 512, "%s/score.dat", folder);
@@ -205,16 +214,48 @@ void Trace::serialize(char* folder)
         file.open(filename, ios::out);
       }
 
-      if(id.size()==2) file << id[1] << " ";
-      else file << i << " ";
+      if(id.size()==3)
+      {
+        file << id[1] << " " << id[2] << " ";
+      }
+      else
+        file << i << " ";
       file << std::setprecision(9) << std::fixed << _scores[i] << endl;
     }
-
     if(file.is_open()) file.close();
+    // -------------------------------------------------
 
+    // ------------------- Score3D ---------------------
+    if(_ids[0].size()==3)
+    {
+      snprintf(filename, 512, "%s/score3D.dat", folder);
+      file.open(filename, ios::out);
+      for(unsigned int i=0; i<_scores.size(); i++)
+      {
+        vector<unsigned int> id = _ids[i];
+
+        for(unsigned int j=0; j<id.size(); j++)
+          file << id[j] << " ";
+        file << std::setprecision(9) << std::fixed << _scores[i] << endl;
+      }
+      if(file.is_open()) file.close();
+
+      snprintf(filename, 512, "%s/score3D.gpi", folder);
+      file.open(filename, ios::out);
+      file << "clear" << endl;
+      file << "reset" << endl;
+      file << "set hidden3d" << endl;
+      file << "set dgrid3d 50,50 qnorm 2" << endl;
+      file << "splot \"./score3D.dat\" u 2:3:4 w l" << endl;
+
+      if(file.is_open()) file.close();
+    }
+    // -------------------------------------------------
+
+    // -----------------Trace script -------------------
     if(_dim==2)
     {
-      snprintf(filename, 512, "%s/animate_trace.gpi", folder);
+      snprintf(filename, 512, "%s/trace.gpi", folder);
       file.open(filename, ios::out);
       file << "clear" << endl;
       file << "reset" << endl << "set terminal png" << endl;
@@ -226,9 +267,9 @@ void Trace::serialize(char* folder)
       {
         vector<unsigned int> id = _ids[i];
         char buf[64];
-        file << "set output \"animate_trace_";
-        if(id.size()==2)
-          sprintf(buf, "%05d_%05d", id[0], id[1]);
+        file << "set output \"trace_";
+        if(id.size()==3)
+          sprintf(buf, "%05d_%05d_%05d", id[0], id[1], id[2]);
         else
           sprintf(buf, "%05d", i);
         file << buf;
@@ -243,7 +284,7 @@ void Trace::serialize(char* folder)
 
       file << "set autoscale" << endl;
       vector<unsigned int> id = _ids[0];
-      if(id.size()==2)
+      if(id.size()==3)
       {
         for(unsigned int i=0; i<_scores.size(); i++)
         {
@@ -252,7 +293,7 @@ void Trace::serialize(char* folder)
           file << "set output \"score_";
           snprintf(buf, 64, "%05d", id[0]);
           file << buf << ".png\"" << endl;
-          file << "plot \"./score_" << buf << ".dat\" u 1:2 w lp" << endl;
+          file << "plot \"./score_" << buf << ".dat\" u 2:3 w lp" << endl;
         }
       }
       else
@@ -260,8 +301,8 @@ void Trace::serialize(char* folder)
         file << "set output \"score.png\"" << endl;
         file << "plot \"./score.dat\" u 1:2 w lp" << endl;
       }
-
       file.close();
+      // -------------------------------------------------
 
       LOGMSG(DBG_DEBUG, "Trace serialized, execute animation script for gnuplot visualization");
     }

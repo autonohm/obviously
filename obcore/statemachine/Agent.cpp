@@ -52,30 +52,31 @@ void Agent::setState(StateBase* state)
   _machine->setState(state);
 }
 
-void Agent::setPosition(double x, double y, double z)
+bool Agent::isPoseUpToDate(const double interval)
 {
-  _pos.x = x;
-  _pos.y = y;
-  _pos.z = z;
+  return (_timer.elapsed() <= interval);
+}
+
+void Agent::setPosition(Point pos)
+{
+  _timer.reset();
+  _pos = pos;
 }
 
 void Agent::setPosition(Point2D pos)
 {
+  _timer.reset();
   _pos.x = pos.x;
   _pos.y = pos.y;
   _pos.z = 0;
 }
 
-void Agent::setPosition(Point pos)
+void Agent::setPosition(double x, double y, double z)
 {
-  _pos = pos;
-}
-
-void Agent::getPosition(double& x, double& y, double& z)
-{
-  x = _pos.x;
-  y = _pos.y;
-  z = _pos.z;
+  _timer.reset();
+  _pos.x = x;
+  _pos.y = y;
+  _pos.z = z;
 }
 
 void Agent::getPosition(Point& pos)
@@ -87,6 +88,13 @@ void Agent::getPosition(Point2D& pos)
 {
   pos.x = _pos.x;
   pos.y = _pos.y;
+}
+
+void Agent::getPosition(double& x, double& y, double& z)
+{
+  x = _pos.x;
+  y = _pos.y;
+  z = _pos.z;
 }
 
 void Agent::setOrientation2D(double phi)

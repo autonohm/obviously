@@ -3,6 +3,7 @@
 
 #include "obcore/statemachine/StateMachine.h"
 #include "obcore/base/Point.h"
+#include "obcore/base/Timer.h"
 
 #include <vector>
 /**
@@ -55,6 +56,12 @@ public:
    * @param state new state
    */
   void setState(StateBase* state);
+
+  /**
+   * Check whether pose was updated within given interval in ms
+   * @param interval time interval in seconds
+   */
+  bool isPoseUpToDate(const double interval);
 
   /**
    * Set position
@@ -157,6 +164,7 @@ private:
 
   StateMachine* _machine;
 
+  Timer _timer;
 };
 
 } // end namespace
