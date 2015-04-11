@@ -112,20 +112,24 @@ bool TsdSpaceComponent::isInRange(obfloat pos[3], Sensor* sensor, obfloat maxTru
 
     if(!isVisible) return false;
 
-    bool isEmpty = true;
-    for(int y=y_min; y<=y_max; y++)
+    // TODO: verify the following if clause
+    //if(validIndices==8)
     {
-      for(int x=x_min; x<=x_max; x++)
+      bool isEmpty = true;
+      for(int y=y_min; y<=y_max; y++)
       {
-        int idx = y*width+x;
-        isEmpty = isEmpty && (data[idx] > maxDist) && mask[idx];
+        for(int x=x_min; x<=x_max; x++)
+        {
+          int idx = y*width+x;
+          isEmpty = isEmpty && (data[idx] > maxDist) && mask[idx];
+        }
       }
-    }
 
-    if(isEmpty)
-    {
-      increaseEmptiness();
-      return false;
+      if(isEmpty)
+      {
+        increaseEmptiness();
+        return false;
+      }
     }
   }
   return true;

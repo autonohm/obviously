@@ -61,18 +61,36 @@ bool TsdGridComponent::isInRange(obfloat pos[2], Sensor* sensor, obfloat maxTrun
   {
     double* data = sensor->getRealMeasurementData();
     bool* mask = sensor->getRealMeasurementMask();
+    int measurements = sensor->getRealMeasurementSize();
 
     int idxEdge[4];
     sensor->backProject(_edgeCoordsHom, idxEdge);
 
+    // Index of -2 is lower bound
+    // Index of -1 is upper bound
+    bool isAnyEdgeVisible = false;
+    bool areAllEdgesVisible = true;
+    for(int i=0; i<4; i++)
+    {
+      if(idxEdge[i]==-1)
+      {
+        idxEdge[i] = measurements-1;
+        areAllEdgesVisible = false;
+      }
+      else if(idxEdge[i]==-2)
+      {
+        idxEdge[i] = 0;
+        areAllEdgesVisible = false;
+      }
+      else isAnyEdgeVisible = true;
+    }
+
+    // Check whether non of the cells are in the field of view
+    if(!isAnyEdgeVisible) return false;
+
     int minIdx;
     int maxIdx;
     minmaxArray<int>(idxEdge, 4, &minIdx, &maxIdx);
-
-    // Check whether non of the cells are in the field of view
-    if(maxIdx<0) return false;
-
-    if(minIdx<0) minIdx = 0;
 
     // Check if any cell comes closer than the truncation radius
     bool isVisible = false;
@@ -83,20 +101,23 @@ bool TsdGridComponent::isInRange(obfloat pos[2], Sensor* sensor, obfloat maxTrun
 
     if(!isVisible) return false;
 
-    bool isEmpty = true;
-    for(int j=minIdx; j<=maxIdx; j++)
+    if(areAllEdgesVisible)
     {
-      //isEmpty = isEmpty && (data[j] > farthestVoxelDist) && mask[j];
-      if(isinf(data[j]))
-        isEmpty = isEmpty && (distance < sensor->getLowReflectivityRange());
-      else
-        isEmpty = isEmpty && (data[j] > farthestVoxelDist) && mask[j];
-    }
+      bool isEmpty = true;
+      for(int j=minIdx; j<=maxIdx; j++)
+      {
+        //isEmpty = isEmpty && (data[j] > farthestVoxelDist) && mask[j];
+        if(isinf(data[j]))
+          isEmpty = isEmpty && (distance < sensor->getLowReflectivityRange());
+        else
+          isEmpty = isEmpty && (data[j] > farthestVoxelDist) && mask[j];
+      }
 
-    if(isEmpty)
-    {
-      increaseEmptiness();
-      return false;
+      if(isEmpty)
+      {
+        increaseEmptiness();
+        return false;
+      }
     }
   }
   return true;

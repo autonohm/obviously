@@ -39,14 +39,14 @@ public:
   /**
    * Assign an arbitrary 2D coordinate to a measurement beam
    * @param[in] coordinate vector
-   * @return beam index
+   * @return beam index, negative values are invalid, -1 -> exceeded upper bound, -2 -> exceeded lower bound
    */
   int backProject(double data[2]);
 
   /**
    * Parallel version of back projection
    * @param[in] M matrix of homogeneous 2D coordinates
-   * @param[out] indices vector of beam indices
+   * @param[out] indices vector of beam indices, negative values are invalid, -1 -> exceeded upper bound, -2 -> exceeded lower bound
    * @param[in] T temporary transformation matrix of coordinates
    */
   void backProject(Matrix* M, int* indices, Matrix* T=NULL);

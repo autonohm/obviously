@@ -23,7 +23,7 @@ SensorPolar2D::SensorPolar2D(unsigned int size, double angularRes, double phiMin
   _phiLowerBound = -0.5*_angularRes + _phiMin;
 
   // if angle is too large, it might be projected with modulo 2 PI to a valid index
-  // upper bound -> phiMin + (size-1) * resolution + 0.5
+  // upper bound -> phiMin + (size-1 + 0.5) * resolution
   _phiUpperBound = _phiMin + (((double)size)-0.5)*_angularRes;
 
   if(_phiMin>=180.0)
@@ -97,7 +97,7 @@ int SensorPolar2D::backProject(double data[2])
 
   double phi = atan2(xh(1,0), xh(0,0));
   // ensure angle to lie in valid bounds
-  if(phi<=_phiLowerBound) return -1;
+  if(phi<=_phiLowerBound) return -2;
   if(phi>=_phiUpperBound) return -1;
   return round((phi-_phiMin) /_angularRes);
 }
@@ -116,7 +116,7 @@ void SensorPolar2D::backProject(Matrix* M, int* indices, Matrix* T)
   for(unsigned int i=0; i<M->getRows(); i++)
   {
     const double phi = atan2(coords2D(1,i), coords2D(0,i));
-    if(phi<=_phiLowerBound) indices[i] = -1;
+    if(phi<=_phiLowerBound) indices[i] = -2;
     else if(phi>=_phiUpperBound) indices[i] = -1;
     else indices[i] = round((phi-_phiMin) * angularResInv);
   }

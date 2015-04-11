@@ -181,7 +181,7 @@ unsigned int TsdGridPartition::getSize()
 void TsdGridPartition::addTsd(const unsigned int x, const unsigned int y, const obfloat sd, const obfloat maxTruncation, const obfloat weight)
 {
   // Factor avoids thin objects to be removed when seen from two sides
-  if(sd >= -2.0*maxTruncation)
+  if(sd >= -1.1*maxTruncation)
   {
     TsdCell* cell = &_grid[y][x];
 
@@ -214,7 +214,7 @@ void TsdGridPartition::addTsd(const unsigned int x, const unsigned int y, const 
     else
     {
       //cell->weight = min(cell->weight+TSDINC, TSDGRIDMAXWEIGHT);
-      //cell->tsd   = (cell->tsd * (cell->weight - TSDINC) + tsdf) / cell->weight;
+      //cell->tsd   = (cell->tsd * (cell->weight - TSDINC) + tsd) / cell->weight;
 
       cell->tsd   = (cell->tsd * cell->weight + tsd * weight) / (cell->weight + weight);
       cell->weight = min(cell->weight+weight, TSDGRIDMAXWEIGHT);

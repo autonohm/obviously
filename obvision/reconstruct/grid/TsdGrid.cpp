@@ -10,6 +10,7 @@
 #include <cmath>
 #include <omp.h>
 #include <istream>
+#include <assert.h>
 
 namespace obvious
 {
