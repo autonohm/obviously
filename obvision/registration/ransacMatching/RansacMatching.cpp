@@ -108,7 +108,7 @@ obvious::Matrix* RansacMatching::pickControlSet(const obvious::Matrix* M, vector
   return C;
 }
 
-double** RansacMatching::createLutIntraDistance(const obvious::Matrix* M, const bool* mask, int maxDist)
+double** RansacMatching::createLutIntraDistance(const obvious::Matrix* M, const bool* mask, const int maxDist, vector<StrCartestianIndexDistancePair>& sortedDists)
 {
   int points = (int)M->getRows();
   double** dists;
@@ -125,17 +125,54 @@ double** RansacMatching::createLutIntraDistance(const obvious::Matrix* M, const 
           double dx = (*M)(j, 0) - (*M)(i, 0);
           double dy = (*M)(j, 1) - (*M)(i, 1);
           dists[i][j] = dx * dx + dy * dy;
+
+          StrCartestianIndexDistancePair pair;
+          pair.indexFirst = i;
+          pair.indexSecond = j;
+          pair.dist = dists[i][j];
+          sortedDists.push_back(pair);
+
         }
         else
-      	{
-      		dists[i][j] = NAN;
-      	}
+        {
+          dists[i][j] = NAN;
+        }
         	
         
       }
     }
   }
+
+  std::sort(sortedDists.begin(), sortedDists.end(), StrCartestianIndexDistancePair::pairCompareDist );
+
+  for(int i = 0; i<sortedDists.size(); i++)
+    cout<< sortedDists[i].dist<<endl;;
+
   return dists;
+}
+
+int binarySearch(const vector<StrCartestianIndexDistancePair>& data, const StrCartestianIndexDistancePair key)
+{
+  unsigned int low =  0;
+  unsigned int high = data.size()-1;
+  unsigned int middle = ( low + high + 1) /  2  ;
+
+  int location = -1; //if not found
+
+  while (low<=high && location == -1)
+  {
+    if(StrCartestianIndexDistancePair::pairCompareDist(key, data[middle])) //key < data
+      high = middle -1; // eliminate the higher half
+    else if (StrCartestianIndexDistancePair::pairCompareDist(data[middle], key)) //data < key
+      low = middle + 1; // eliminate the lower half
+    else
+      location = middle; // location is the current middle
+
+    middle = ( low + high + 1) / 2;   // recalculate the middle
+  }
+
+return location;
+// end function binarySearch
 }
 
 #define MIN_VALID_POINTS 10
@@ -219,7 +256,10 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const bool* mask
   unsigned int maxDist2ndSample = 10.0 / rad2deg(resolution); //(M_PI/6.0) / resolution;//(unsigned int) phiMax/resolution; //(M_PI/6.0) / resolution; //0.5 * phiMax / resolution;
   unsigned int minDist2ndSample = 3.0 / rad2deg(resolution);
   assert(minDist2ndSample >= 1);
-  double** SDists = createLutIntraDistance(S, maskS, maxDist2ndSample);
+
+  std::vector<StrCartestianIndexDistancePair> sortedScenePairs;
+  double** SDists = createLutIntraDistance(S, maskS, maxDist2ndSample, sortedScenePairs);
+
 
   // -----------------------------------------------------
   // Perform RANSAC scheme as follows:
