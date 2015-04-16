@@ -166,6 +166,7 @@ unsigned int Sensor::dataToCartesianVector(double* &coords)
 unsigned int Sensor::dataToCartesianVectorMask(double* &coords, bool* &validityMask)
 {
   unsigned int cnt = 0;
+  unsigned int validPoints = 0;
   for(unsigned int i = 0; i < _size; i++)
   {
     if(!isinf(_data[i]) && _mask[i])
@@ -174,14 +175,16 @@ unsigned int Sensor::dataToCartesianVectorMask(double* &coords, bool* &validityM
       {
         coords[cnt++] = (*_raysLocal)(j, i) * _data[i];
       }
+      validPoints++;
       validityMask[i] = true;
     }
     else
     {
+      cnt+=_dim;
       validityMask[i] = false;
     }
   }
-  return (cnt/_dim);
+  return validPoints;
 }
 
 unsigned int Sensor::removeInvalidPoints(double* inPoints, bool* mask, unsigned int sizeMask, double* outPoints)
