@@ -143,7 +143,7 @@ public:
    * @param mask Validity mask
    * @return number of valid points, i.e., having mask[i]==true
    */
-  unsigned int dataToCartesianVectorMask(double* &coords, bool* validityMask);
+  unsigned int dataToCartesianVectorMask(double* &coords, bool* &validityMask);
 
   /**
     * Removes points from a double vector [x1 y1 ....] according to a given mask.
