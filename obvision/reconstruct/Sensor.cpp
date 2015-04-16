@@ -163,7 +163,7 @@ unsigned int Sensor::dataToCartesianVector(double* &coords)
   return cnt;
 }
 
-unsigned int Sensor::dataToCartesianVectorMask(double* &coords, bool* validityMask)
+unsigned int Sensor::dataToCartesianVectorMask(double* &coords, bool* &validityMask)
 {
   unsigned int cnt = 0;
   for(unsigned int i = 0; i < _size; i++)
