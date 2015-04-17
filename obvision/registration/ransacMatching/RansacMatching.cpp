@@ -108,7 +108,7 @@ obvious::Matrix* RansacMatching::pickControlSet(const obvious::Matrix* M, vector
   return C;
 }
 
-double** RansacMatching::createLutIntraDistance(const obvious::Matrix* M, const bool* mask, const int maxDist, vector<StrCartestianIndexDistancePair>& sortedDists)
+double** RansacMatching::createLutIntraDistance(const obvious::Matrix* M, const bool* mask, const int maxDist)
 {
   int points = (int)M->getRows();
   double** dists;
@@ -125,13 +125,6 @@ double** RansacMatching::createLutIntraDistance(const obvious::Matrix* M, const 
           double dx = (*M)(j, 0) - (*M)(i, 0);
           double dy = (*M)(j, 1) - (*M)(i, 1);
           dists[i][j] = dx * dx + dy * dy;
-
-          StrCartestianIndexDistancePair pair;
-          pair.indexFirst = i;
-          pair.indexSecond = j;
-          pair.dist = dists[i][j];
-          sortedDists.push_back(pair);
-
         }
         else
         {
@@ -143,36 +136,7 @@ double** RansacMatching::createLutIntraDistance(const obvious::Matrix* M, const 
     }
   }
 
-  std::sort(sortedDists.begin(), sortedDists.end(), StrCartestianIndexDistancePair::pairCompareDist );
-
-  for(int i = 0; i<sortedDists.size(); i++)
-    cout<< sortedDists[i].dist<<endl;;
-
   return dists;
-}
-
-int binarySearch(const vector<StrCartestianIndexDistancePair>& data, const StrCartestianIndexDistancePair key)
-{
-  unsigned int low =  0;
-  unsigned int high = data.size()-1;
-  unsigned int middle = ( low + high + 1) /  2  ;
-
-  int location = -1; //if not found
-
-  while (low<=high && location == -1)
-  {
-    if(StrCartestianIndexDistancePair::pairCompareDist(key, data[middle])) //key < data
-      high = middle -1; // eliminate the higher half
-    else if (StrCartestianIndexDistancePair::pairCompareDist(data[middle], key)) //data < key
-      low = middle + 1; // eliminate the lower half
-    else
-      location = middle; // location is the current middle
-
-    middle = ( low + high + 1) / 2;   // recalculate the middle
-  }
-
-return location;
-// end function binarySearch
 }
 
 #define MIN_VALID_POINTS 10
@@ -257,8 +221,7 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const bool* mask
   unsigned int minDist2ndSample = 3.0 / rad2deg(resolution);
   assert(minDist2ndSample >= 1);
 
-  std::vector<StrCartestianIndexDistancePair> sortedScenePairs;
-  double** SDists = createLutIntraDistance(S, maskS, maxDist2ndSample, sortedScenePairs);
+  double** SDists = createLutIntraDistance(S, maskS, maxDist2ndSample);
 
 
   // -----------------------------------------------------
@@ -399,8 +362,18 @@ if (_trace)
         unsigned int clippedPoints = 0;
         for(unsigned int s = 0; s < STemp.getCols(); s++)
         {
-          //Clip control points according to phi
-          if( idxControl[s] < (unsigned int) max(0, clippedBeams) || idxControl[s] > min(pointsInS, pointsInS+clippedBeams) )
+          /* Clip control points according to phi:
+           *------------------------------------------
+           * Cases:
+           * for positive clipped points -> Scene is rotated left
+           *    Scene uses: [0; size-clippedPoints] -> cut of left side
+           *    Model uses: [0+clippedPoints; size] -> cut of right side
+           * for negative clipped points. -> Scene is rotate right
+           *    Scene uses: [0-clippedPoints; size] -> cut of right
+           *    Model uses: [0; scene + clippedPoints] -> cut of left
+           */
+
+          if( idxControl[s] < (unsigned int) max(0, -clippedBeams) || idxControl[s] > min(pointsInS, pointsInS-clippedBeams) )
           {
             clippedPoints++;
             continue; // Cut of Scene Points, points that won't have a corresponding point due to rotation are ignored for the metric
@@ -415,7 +388,7 @@ if (_trace)
 
           //Check if model point is not clipped
           unsigned int rawIdx = idxMValid[ indices[0][0] ]; //raw index of closest model point
-          if(rawIdx < (unsigned int) max(0, -clippedBeams) || rawIdx > min(pointsInS, pointsInS-clippedBeams))
+          if(rawIdx < (unsigned int) max(0, clippedBeams) || rawIdx > min(pointsInS, pointsInS+clippedBeams))
           {
             clippedPoints++;
             continue; //Cut off point correspondences to Model points that don't have a reasonable corresponding point due to rotation.

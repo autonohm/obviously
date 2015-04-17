@@ -5,7 +5,6 @@
 #include "obcore/math/linalg/linalg.h"
 #include "obvision/registration/Trace.h"
 #include "obvision/registration/icp/PointToLineEstimator2D.h"
-#include "obvision/registration/icp/assign/assignbase.h"
 #include "omp.h"
 
 namespace obvious
@@ -74,7 +73,7 @@ private:
   obvious::Matrix* pickControlSet(const obvious::Matrix* M, vector<unsigned int> idxValid, vector<unsigned int> &idxControl);
 
   // create look-up table for point to point intra-distance of a point set
-  double** createLutIntraDistance(const obvious::Matrix* M, const bool* mask, const int maxDist, vector<StrCartestianIndexDistancePair>& sortedDists);
+  double** createLutIntraDistance(const obvious::Matrix* M, const bool* mask, const int maxDist);
 
   // opening angle of laser scanner (absolute value)
   double _fov;
