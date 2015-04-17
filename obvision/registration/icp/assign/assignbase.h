@@ -43,6 +43,28 @@ struct StrCartesianIndexPair
   /** index of second point */
   unsigned int indexSecond;
 };
+
+/**
+ * @struct StrCartesianIndexDistancePair
+ * @brief Represents a point pair and the euclidian distance in between
+ * @author Markus Kühn
+ */
+struct StrCartestianIndexDistancePair
+{
+  /** index of first point*/
+  unsigned int indexFirst;
+  /** index of second point*/
+  unsigned int indexSecond;
+  /** absolute distance */
+  double dist;
+
+  /** Compare function according to distance, First is smaller second*/
+  static bool pairCompareDist(const StrCartestianIndexDistancePair& firstElem, const StrCartestianIndexDistancePair& secondElem) {
+    return firstElem.dist < secondElem.dist;
+
+  }
+};
+
 }
 
 #endif /* ASSIGNBASE_H */

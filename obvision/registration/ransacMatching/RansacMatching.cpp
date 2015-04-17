@@ -108,7 +108,7 @@ obvious::Matrix* RansacMatching::pickControlSet(const obvious::Matrix* M, vector
   return C;
 }
 
-double** RansacMatching::createLutIntraDistance(const obvious::Matrix* M, const bool* mask, int maxDist)
+double** RansacMatching::createLutIntraDistance(const obvious::Matrix* M, const bool* mask, const int maxDist)
 {
   int points = (int)M->getRows();
   double** dists;
@@ -127,14 +127,15 @@ double** RansacMatching::createLutIntraDistance(const obvious::Matrix* M, const 
           dists[i][j] = dx * dx + dy * dy;
         }
         else
-      	{
-      		dists[i][j] = NAN;
-      	}
+        {
+          dists[i][j] = NAN;
+        }
         	
         
       }
     }
   }
+
   return dists;
 }
 
@@ -219,7 +220,9 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const bool* mask
   unsigned int maxDist2ndSample = 10.0 / rad2deg(resolution); //(M_PI/6.0) / resolution;//(unsigned int) phiMax/resolution; //(M_PI/6.0) / resolution; //0.5 * phiMax / resolution;
   unsigned int minDist2ndSample = 3.0 / rad2deg(resolution);
   assert(minDist2ndSample >= 1);
+
   double** SDists = createLutIntraDistance(S, maskS, maxDist2ndSample);
+
 
   // -----------------------------------------------------
   // Perform RANSAC scheme as follows:
@@ -359,8 +362,18 @@ if (_trace)
         unsigned int clippedPoints = 0;
         for(unsigned int s = 0; s < STemp.getCols(); s++)
         {
-          //Clip control points according to phi
-          if( idxControl[s] < (unsigned int) max(0, clippedBeams) || idxControl[s] > min(pointsInS, pointsInS+clippedBeams) )
+          /* Clip control points according to phi:
+           *------------------------------------------
+           * Cases:
+           * for positive clipped points -> Scene is rotated left
+           *    Scene uses: [0; size-clippedPoints] -> cut of left side
+           *    Model uses: [0+clippedPoints; size] -> cut of right side
+           * for negative clipped points. -> Scene is rotate right
+           *    Scene uses: [0-clippedPoints; size] -> cut of right
+           *    Model uses: [0; scene + clippedPoints] -> cut of left
+           */
+
+          if( idxControl[s] < (unsigned int) max(0, -clippedBeams) || idxControl[s] > min(pointsInS, pointsInS-clippedBeams) )
           {
             clippedPoints++;
             continue; // Cut of Scene Points, points that won't have a corresponding point due to rotation are ignored for the metric
@@ -375,7 +388,7 @@ if (_trace)
 
           //Check if model point is not clipped
           unsigned int rawIdx = idxMValid[ indices[0][0] ]; //raw index of closest model point
-          if(rawIdx < (unsigned int) max(0, -clippedBeams) || rawIdx > min(pointsInS, pointsInS-clippedBeams))
+          if(rawIdx < (unsigned int) max(0, clippedBeams) || rawIdx > min(pointsInS, pointsInS+clippedBeams))
           {
             clippedPoints++;
             continue; //Cut off point correspondences to Model points that don't have a reasonable corresponding point due to rotation.
