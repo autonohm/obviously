@@ -6,22 +6,6 @@
 namespace obvious
 {
 
-Quaternion::Quaternion()
-{
-  _w = 1.0;
-  _x = 0.0;
-  _y = 0.0;
-  _z = 0.0;
-}
-
-Quaternion::Quaternion(obfloat w, obfloat x, obfloat y, obfloat z)
-{
-  _w = w;
-  _x = x;
-  _y = y;
-  _z = z;
-}
-
 Quaternion::Quaternion(Matrix R)
 {
 
@@ -62,25 +46,28 @@ Quaternion::Quaternion(Matrix R)
       if(R(0,0)>R(1,1) && R(0,0)>R(2,2))
       {
         obfloat s = 2.0 * sqrt(1.0 + R(0,0) - R(1,1) - R(2,2));
-        _w = (R(2,1) - R(1,2)) / s;
+        const obfloat s1 = 1.0/s;
+        _w = (R(2,1) - R(1,2)) * s1;
         _x = 0.25 * s;
-        _y = (R(0,1)+R(1,0)) / s;
-        _z = (R(0,2)+R(2,0)) / s;
+        _y = (R(0,1)+R(1,0)) * s1;
+        _z = (R(0,2)+R(2,0)) * s1;
       }
       else if(R(1,1)>R(2,2))
       {
         obfloat s = 2.0 * sqrt(1.0 + R(1,1) - R(0,0) - R(2,2));
-        _w = (R(0,2)-R(2,0)) / s;
-        _x = (R(0,1)+R(1,0)) / s;
+        const obfloat s1 = 1.0/s;
+        _w = (R(0,2)-R(2,0)) * s1;
+        _x = (R(0,1)+R(1,0)) * s1;
         _y = 0.25 * s;
-        _z = (R(1,2)+R(2,1)) / s;
+        _z = (R(1,2)+R(2,1)) * s1;
       }
       else
       {
         obfloat s = 2.0 * sqrt(1.0 + R(2,2) - R(0,0) - R(1,1));
-        _w = (R(1,0)-R(0,1)) / s;
-        _x = (R(0,2)+R(2,0)) / s;
-        _y = (R(1,2)+R(2,1)) / s;
+        const obfloat s1 = 1.0/s;
+        _w = (R(1,0)-R(0,1)) * s1;
+        _x = (R(0,2)+R(2,0)) * s1;
+        _y = (R(1,2)+R(2,1)) * s1;
         _z = 0.25 * s;
       }
     }
@@ -94,8 +81,9 @@ Quaternion::Quaternion(Matrix R)
 Quaternion Quaternion::QuaternionAroundX(obfloat psi)
 {
   Quaternion q;
-  q._w = cos(psi/2.0);
-  q._x = sin(psi/2.0);
+  sincos(psi*0.5, &(q._x), &(q._w));
+  //q._w = cos(psi/2.0);
+  //q._x = sin(psi/2.0);
   q._y = 0.0;
   q._z = 0.0;
   return q;
@@ -104,9 +92,10 @@ Quaternion Quaternion::QuaternionAroundX(obfloat psi)
 Quaternion Quaternion::QuaternionAroundY(obfloat theta)
 {
   Quaternion q;
-  q._w = cos(theta/2.0);
+  sincos(theta*0.5, &(q._y), &(q._w));
+  //q._w = cos(theta/2.0);
   q._x = 0.0;
-  q._y = sin(theta/2.0);
+  //q._y = sin(theta/2.0);
   q._z = 0.0;
   return q;
 }
@@ -114,81 +103,21 @@ Quaternion Quaternion::QuaternionAroundY(obfloat theta)
 Quaternion Quaternion::QuaternionAroundZ(obfloat phi)
 {
   Quaternion q;
-  q._w = cos(phi/2.0);
+  sincos(phi*0.5, &(q._z), &(q._w));
+  //q._w = cos(phi/2.0);
   q._x = 0.0;
   q._y = 0.0;
-  q._z = sin(phi/2.0);
-  return q;
-}
-
-Quaternion::~Quaternion()
-{
-
-}
-
-double Quaternion::w() const
-{
-  return _w;
-}
-
-double Quaternion::x() const
-{
-  return _x;
-}
-
-double Quaternion::y() const
-{
-  return _y;
-}
-
-double Quaternion::z() const
-{
-  return _z;
-}
-
-Quaternion operator + (const Quaternion &q1, const Quaternion &q2)
-{
-  Quaternion q(q1._w, q1._x, q1._y, q1._z);
-  q._w += q2._w;
-  q._x += q2._x;
-  q._y += q2._y;
-  q._z += q2._z;
+  //q._z = sin(phi/2.0);
   return q;
 }
 
 Quaternion operator * (const Quaternion &q1, const Quaternion &q2)
 {
-  Quaternion q;
-  q._w = q1._w*q2._w - q1._x*q2._x - q1._y*q2._y - q1._z*q2._z;
-  q._x = q1._y*q2._z - q1._z*q2._y + q1._w*q2._x + q1._x*q2._w;
-  q._y = q1._z*q2._x - q1._x*q2._z + q1._w*q2._y + q1._y*q2._w;
-  q._z = q1._x*q2._y - q1._y*q2._x + q1._w*q2._z + q1._z*q2._w;
-  return q;
-}
-
-Quaternion& Quaternion::operator += (const Quaternion &q)
-{
-  _w += q._w;
-  _x += q._x;
-  _y += q._y;
-  _z += q._z;
-  return *this;
-}
-
-Quaternion& Quaternion::operator -= (const Quaternion &q)
-{
-  _w -= q._w;
-  _x -= q._x;
-  _y -= q._y;
-  _z -= q._z;
-  return *this;
-}
-
-void Quaternion::conjugate()
-{
-  _x = -_x;
-  _y = -_y;
-  _z = -_z;
+  return Quaternion(
+  q1._w*q2._w - q1._x*q2._x - q1._y*q2._y - q1._z*q2._z,
+  q1._y*q2._z - q1._z*q2._y + q1._w*q2._x + q1._x*q2._w,
+  q1._z*q2._x - q1._x*q2._z + q1._w*q2._y + q1._y*q2._w,
+  q1._x*q2._y - q1._y*q2._x + q1._w*q2._z + q1._z*q2._w);
 }
 
 Matrix Quaternion::convertToMatrix()

@@ -36,11 +36,11 @@ TsdSpace::TsdSpace(const double voxelSize, const EnumTsdSpaceLayout layoutPartit
   _layoutSpace = layoutSpace;
 
   // determine number of voxels in each dimension
-  _cellsX = (unsigned int)pow(2.0,layoutSpace);
+  _cellsX = 1u << layoutSpace;
   _cellsY = _cellsX;
   _cellsZ = _cellsX;
 
-  unsigned int dimPartition = (unsigned int)pow(2.0, layoutPartition);
+  unsigned int dimPartition = 1u << layoutPartition;
 
   if(dimPartition > _cellsX)
   {

@@ -18,8 +18,8 @@ Matrix::Matrix(unsigned int rows, unsigned int cols, double* data)
 
 Matrix::Matrix(const Matrix &M)
 {
-  int r = M._M->size1;
-  int c = M._M->size2;
+  const size_t r = M._M->size1;
+  const size_t c = M._M->size2;
   _M = gsl_matrix_alloc(r, c);
   gsl_matrix_memcpy(_M, M._M);
 }
@@ -115,12 +115,12 @@ void Matrix::multiplyRight(const Matrix &M, bool transposeArg1, bool transposeAr
 
 ostream& operator <<(ostream &os, Matrix &M)
 {
-  unsigned int rows = M._M->size1;
-  unsigned int cols = M._M->size2;
-  for(unsigned int r=0; r<rows; r++)
+  const size_t rows = M._M->size1;
+  const size_t cols = M._M->size2;
+  for(size_t r=0; r<rows; r++)
   {
     os << M(r,0);
-    for(unsigned int c=1; c<cols; c++)
+    for(size_t c=1; c<cols; c++)
     {
       os << " " << M(r,c);
     }
@@ -131,11 +131,11 @@ ostream& operator <<(ostream &os, Matrix &M)
 
 void Matrix::getData(double* array) const
 {
-  unsigned int rows = _M->size1;
-  unsigned int cols = _M->size2;
-  for(unsigned int r=0; r<rows; r++)
+  const size_t rows = _M->size1;
+  const size_t cols = _M->size2;
+  for(size_t r=0; r<rows; r++)
   {
-    for(unsigned int c=0; c<cols; c++)
+    for(size_t c=0; c<cols; c++)
     {
       array[r*cols+c] = gsl_matrix_get(_M, r, c);
     }
@@ -146,16 +146,6 @@ void Matrix::setData(double* array)
 {
   gsl_matrix_const_view varray = gsl_matrix_const_view_array(array, _M->size1, _M->size2);
   gsl_matrix_memcpy(_M, &varray.matrix);
-}
-
-unsigned int Matrix::getRows() const
-{
-  return _M->size1;
-}
-
-unsigned int Matrix::getCols() const
-{
-  return _M->size2;
 }
 
 void Matrix::setIdentity()
@@ -177,7 +167,7 @@ Matrix Matrix::getInverse()
 
 void Matrix::invert()
 {
-  int r = _M->size1;
+  const size_t r = _M->size1;
   int sig;
   gsl_permutation* perm = gsl_permutation_alloc(r);
   gsl_matrix* work = gsl_matrix_alloc(_M->size1, _M->size2);
@@ -198,7 +188,7 @@ void Matrix::transpose()
   gsl_matrix_transpose(_M);
 }
 
-Matrix Matrix::getTranspose()
+Matrix Matrix::getTranspose() const
 {
   if(_M->size1 != _M->size2)
   {
@@ -214,7 +204,7 @@ Matrix Matrix::getTranspose()
   }
 }
 
-double Matrix::trace()
+double Matrix::trace() const
 {
   int rows = _M->size1;
   int cols = _M->size2;

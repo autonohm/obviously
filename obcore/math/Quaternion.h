@@ -61,31 +61,31 @@ public:
   /**
    * Destructor
    */
-  virtual ~Quaternion();
+  virtual ~Quaternion() {;}
 
   /**
    * Const accessor
    * @return w-component
    */
-  double w() const;
+  double w() const {return _w;};
 
   /**
    * Const accessor
    * @return x-component of axis
    */
-  double x() const;
+  double x() const {return _x;};
 
   /**
    * Const accessor
    * @return y-component of axis
    */
-  double y() const;
+  double y() const {return _y;};
 
   /**
    * Const accessor
    * @return z-component of axis
    */
-  double z() const;
+  double z() const {return _z;};
 
   /**
    * Add two quaternions
@@ -108,19 +108,38 @@ public:
    * @param q quaternion
    * @return resulting quaternion, i.e., this instance
    */
-  Quaternion& operator += (const Quaternion &q);
+  Quaternion& operator += (const Quaternion &q)
+  {
+    _w += q._w;
+    _x += q._x;
+    _y += q._y;
+    _z += q._z;
+    return *this;
+  }
 
   /**
    * Subtract quaternion
    * @param q quaternion
    * @return resulting quaternion, i.e., this instance
    */
-  Quaternion& operator -= (const Quaternion &q);
+  Quaternion& operator -= (const Quaternion &q)
+  {
+    _w -= q._w;
+    _x -= q._x;
+    _y -= q._y;
+    _z -= q._z;
+    return *this;
+  }
 
   /**
    * Conjugate quaternion
    */
-  void conjugate();
+  void conjugate()
+  {
+    _x = -_x;
+    _y = -_y;
+    _z = -_z;
+  }
 
   /**
    * Convert quaterion to 3x3 rotation matrix
@@ -138,6 +157,29 @@ private:
 
   obfloat _z;
 };
+
+inline Quaternion::Quaternion()
+{
+  _w = 1.0;
+  _x = 0.0;
+  _y = 0.0;
+  _z = 0.0;
+}
+
+inline Quaternion::Quaternion(obfloat w, obfloat x, obfloat y, obfloat z)
+{
+  _w = w;
+  _x = x;
+  _y = y;
+  _z = z;
+}
+
+inline Quaternion operator + (const Quaternion &q1, const Quaternion &q2)
+{
+  Quaternion q(q1);
+  q += q2;
+  return q;
+}
 
 } /* namespace obvious */
 #endif /* QUATERNION_H_ */

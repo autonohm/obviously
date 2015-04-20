@@ -10,7 +10,7 @@
 namespace obvious
 {
 
-static Matrix* _partCoords;
+Matrix* TsdGridPartition::_partCoords;
 
 TsdGridPartition::TsdGridPartition(const unsigned int x,
     const unsigned int y,
@@ -133,95 +133,6 @@ void TsdGridPartition::init()
   _initialized = true;
 }
 
-bool TsdGridPartition::isInitialized()
-{
-  return _initialized;
-}
-
-bool TsdGridPartition::isEmpty()
-{
-  return (!_initialized && _initWeight > 0.0);
-}
-
-unsigned int TsdGridPartition::getX()
-{
-  return _x;
-}
-
-unsigned int TsdGridPartition::getY()
-{
-  return _y;
-}
-
-Matrix* TsdGridPartition::getCellCoordsHom()
-{
-  return _cellCoordsHom;
-}
-
-Matrix* TsdGridPartition::getPartitionCoords()
-{
-  return _partCoords;
-}
-
-unsigned int TsdGridPartition::getWidth()
-{
-  return _cellsX;
-}
-
-unsigned int TsdGridPartition::getHeight()
-{
-  return _cellsY;
-}
-
-unsigned int TsdGridPartition::getSize()
-{
-  return _cellsX*_cellsY;
-}
-
-void TsdGridPartition::addTsd(const unsigned int x, const unsigned int y, const obfloat sd, const obfloat maxTruncation, const obfloat weight)
-{
-  // Factor avoids thin objects to be removed when seen from two sides
-  if(sd >= -1.1*maxTruncation)
-  {
-    TsdCell* cell = &_grid[y][x];
-
-    obfloat tsd = min(sd / maxTruncation, TSDINC);
-
-    /** The following lines were proposed by
-     *  E. Bylow, J. Sturm, C. Kerl, F. Kahl, and D. Cremers.
-     *  Real-time camera tracking and 3d reconstruction using signed distance functions.
-     *  In Robotics: Science and Systems Conference (RSS), June 2013.
-     *
-     *  SM: Improvements in tracking need to be verified, for the moment this is commented due to runtime improvements
-     */
-    /*
-    obfloat w = 1.0;
-    const obfloat eps = -_maxTruncation/4.0;
-    if(sd <= eps)
-    {
-      const obfloat span = -_maxTruncation - eps;
-      const obfloat sigma = 3.0/(span*span);
-      w = exp(-sigma*(sd-eps)*(sd-eps));
-    }
-    weight *= w;*/
-
-    if(isnan(cell->tsd))
-    {
-      cell->tsd = tsd;
-      //cell->weight += TSDINC;
-      cell->weight += weight;
-    }
-    else
-    {
-      //cell->weight = min(cell->weight+TSDINC, TSDGRIDMAXWEIGHT);
-      //cell->tsd   = (cell->tsd * (cell->weight - TSDINC) + tsd) / cell->weight;
-
-      cell->tsd   = (cell->tsd * cell->weight + tsd * weight) / (cell->weight + weight);
-      cell->weight = min(cell->weight+weight, TSDGRIDMAXWEIGHT);
-    }
-  }
-}
-
 void TsdGridPartition::increaseEmptiness()
 {
   if(_initialized)
@@ -250,15 +161,6 @@ void TsdGridPartition::increaseEmptiness()
     _initWeight += 1.0;
     _initWeight = min(_initWeight, TSDGRIDMAXWEIGHT);
   }
-}
-
-obfloat TsdGridPartition::interpolateBilinear(int x, int y, obfloat dx, obfloat dy)
-{
-  // Interpolate
-  return _grid[y][x].tsd         * (1. - dy) * (1. - dx)
-       + _grid[y + 1][x + 0].tsd *       dy  * (1. - dx)
-       + _grid[y + 0][x + 1].tsd * (1. - dy) *       dx
-       + _grid[y + 1][x + 1].tsd *       dy  *       dx;
 }
 
 }

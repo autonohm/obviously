@@ -130,8 +130,6 @@ double** RansacMatching::createLutIntraDistance(const obvious::Matrix* M, const 
         {
           dists[i][j] = NAN;
         }
-        	
-        
       }
     }
   }
@@ -145,8 +143,10 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const bool* mask
   obvious::Matrix TBest(3, 3);
   TBest.setIdentity();
 
-  unsigned int pointsInS = S->getRows();
-  unsigned int pointsInM = M->getRows();
+  const unsigned int pointsInS = S->getRows();
+  const unsigned int pointsInM = M->getRows();
+
+  const double transMaxSqr = transMax*transMax;
 
   if(pointsInM != pointsInS)
   {
@@ -217,8 +217,8 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const bool* mask
 
   LOGMSG(DBG_DEBUG, "Valid points in scene: " << idxSValid.size() << ", Control set: " << Control->getCols());
 
-  unsigned int maxDist2ndSample = 10.0 / rad2deg(resolution); //(M_PI/6.0) / resolution;//(unsigned int) phiMax/resolution; //(M_PI/6.0) / resolution; //0.5 * phiMax / resolution;
-  unsigned int minDist2ndSample = 3.0 / rad2deg(resolution);
+  const unsigned int maxDist2ndSample = 10.0 / rad2deg(resolution); //(M_PI/6.0) / resolution;//(unsigned int) phiMax/resolution; //(M_PI/6.0) / resolution; //0.5 * phiMax / resolution;
+  const unsigned int minDist2ndSample = 3.0 / rad2deg(resolution);
   assert(minDist2ndSample >= 1);
 
   double** SDists = createLutIntraDistance(S, maskS, maxDist2ndSample);
@@ -251,13 +251,13 @@ if (_trace)
   {
     //bool foundBetterMatch = false;
     // pick randomly one point in model set
-    unsigned int randIdx      = rand() % ((idxMValid.size()-1)-minDist2ndSample);
+    const unsigned int randIdx      = rand() % ((idxMValid.size()-1)-minDist2ndSample);
     // ... and leave at least n points for 2nd choice
-    unsigned int remainingIdx = min((unsigned int)(idxMValid.size()-randIdx-1), maxDist2ndSample);
+    const unsigned int remainingIdx = min((unsigned int)(idxMValid.size()-randIdx-1), maxDist2ndSample);
     // Index for first model sample
-    unsigned int idx1         = idxMValid[randIdx];
+    const unsigned int idx1         = idxMValid[randIdx];
     // Second model sample: Random on right side != i
-    unsigned int idx2         = idxMValid[randIdx + (rand()%(remainingIdx-minDist2ndSample)) + minDist2ndSample];
+    const unsigned int idx2         = idxMValid[randIdx + (rand()%(remainingIdx-minDist2ndSample)) + minDist2ndSample];
 
     //LOGMSG(DBG_DEBUG, "Candidates: " << i << ", " << i2);
 
@@ -271,15 +271,15 @@ if (_trace)
     cM[0] = ((*M)(idx1, 0) + (*M)(idx2, 0)) / 2.0;
     cM[1] = ((*M)(idx1, 1) + (*M)(idx2, 1)) / 2.0;
 
-    double distM = vM[0] * vM[0] + vM[1] * vM[1];
+    const double distM = vM[0] * vM[0] + vM[1] * vM[1];
 
     // coordinates of point in S with similar intra-distance
     double sceneSimilar[2];
 
     // leftmost scene point belonging to query point idx1
-    unsigned int iMin = max((int) idx1-span, 0);
+    const unsigned int iMin = max((int) idx1-span, 0);
     // rightmost scene point belonging to query point idx1
-    unsigned int iMax = min(idx1+span, pointsInS);
+    const unsigned int iMax = min(idx1+span, pointsInS);
 
     //LOGMSG(DBG_DEBUG, "idx1: " << idx1 << " idx2: " << idx2 << ", search range: " << iMin << " " << iMax);
     for(unsigned int i = iMin; i < iMax; i++)
@@ -344,7 +344,7 @@ if (_trace)
         T(0, 2) = cM[0] - (T(0, 0) * cS[0] + T(0, 1) * cS[1]);
         T(1, 2) = cM[1] - (T(1, 0) * cS[0] + T(1, 1) * cS[1]);
 
-        if(sqrt(pow(T(0, 2), 2) + pow(T(1, 2), 2)) > transMax)
+        if( (T(0, 2)*T(0, 2) + T(1, 2)*T(1, 2)) > transMaxSqr)
         {
           //LOGMSG(DBG_DEBUG, "Translation is too big!");
           continue;
@@ -393,16 +393,6 @@ if (_trace)
             clippedPoints++;
             continue; //Cut off point correspondences to Model points that don't have a reasonable corresponding point due to rotation.
           }
-
-// Combined metric for rotation and translation
-//          double weight = 3.0;
-//          double pMx = (*_model)[indices[0][0]][0];
-//          double pMy = (*_model)[indices[0][0]][1];
-//          double d_x = pMx - q[0]; //q is the transformed scene point
-//          double d_y = pMy - q[1];
-//          double numerator = pow(d_x * q[1] - d_y * q[0], 2);
-//          double denominator = q[1]*q[1] + q[0]*q[0] + weight*weight;
-//          err += dists[0][0] - numerator / denominator;
 
           err += dists[0][0];
           if(dists[0][0] < _epsSqr)

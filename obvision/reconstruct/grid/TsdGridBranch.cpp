@@ -26,7 +26,7 @@ TsdGridBranch::TsdGridBranch(TsdGridComponent*** leafs, int x, int y, int level)
   else
   {
     level--;
-    int step = (int)pow(2.0, level);
+    int step = 1 << level;
     branch          = new TsdGridBranch(leafs, x,      y, level);
     branchRight     = new TsdGridBranch(leafs, x+step, y, level);
     branchDown      = new TsdGridBranch(leafs, x,      y+step, level);

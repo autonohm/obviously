@@ -55,17 +55,25 @@ public:
    * Get angular resolution
    * @return angular resolution
    */
-  double getAngularResolution();
+  double getAngularResolution() const { return _angularRes;};
 
   /**
    * Get the minimum angle
    * @return minimum angle
    */
-  double getPhiMin();
+  double getPhiMin() const { return _phiMin; };
 
-  double getPhiLowerBound(void)const;
+  /**
+   * Get lower bound of field of view
+   * @return lower bound
+   */
+  double getPhiLowerBound(void) const { return _phiLowerBound; };
 
-  double getPhiUpperBound(void)const;
+  /**
+   * Get upper bound of field of view
+   * @return upper bound
+   */
+  double getPhiUpperBound(void) const { return _phiUpperBound; };
 
 private:
 

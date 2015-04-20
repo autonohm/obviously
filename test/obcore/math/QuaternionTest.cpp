@@ -96,3 +96,23 @@ TEST(quaternion_test_constructor6, quaternion_test)
   EXPECT_DOUBLE_EQ(R(2,1), R2(2,1));
   EXPECT_DOUBLE_EQ(R(2,2), R2(2,2));
 }
+
+TEST(quaternion_test_addition, quaternion_test)
+{
+  Quaternion q1(1,2,3,4);
+  Quaternion q2(2,3,4,5);
+  q1+=q2;
+  EXPECT_EQ(q1.w(), 3.0);
+  EXPECT_EQ(q1.x(), 5.0);
+  EXPECT_EQ(q1.y(), 7.0);
+  EXPECT_EQ(q1.z(), 9.0);
+}
+
+TEST(quaternion_test_axisX, quaternion_test)
+{
+  Quaternion q = Quaternion::QuaternionAroundX(deg2rad(90.0));
+  EXPECT_DOUBLE_EQ(q.w(), 1.0/sqrt(2.0));
+  EXPECT_DOUBLE_EQ(q.x(), 1.0/sqrt(2.0));
+  EXPECT_DOUBLE_EQ(q.y(), 0.0);
+  EXPECT_DOUBLE_EQ(q.z(), 0.0);
+}

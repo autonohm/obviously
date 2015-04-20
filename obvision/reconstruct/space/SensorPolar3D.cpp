@@ -42,24 +42,28 @@ SensorPolar3D::SensorPolar3D(unsigned int beams, double thetaRes, double thetaMi
 
   for(unsigned int p=0; p<_height; p++)
   {
+    const double phi = ((double)p) / ((double)_height) * M_PI - M_PI;
+    double cphi;
+    double sphi;
+    sincos(phi, &sphi, &cphi);
     for(unsigned int b=0; b<beams; b++, i++)
     {
       Matrix ray(3, 1);
-      double theta = _thetaMin + ((double)b) * _thetaRes;
-      double x = sin(theta);
-      double y = cos(theta);
+      const double theta = _thetaMin + ((double)b) * _thetaRes;
+      double x;
+      double y;
+      sincos(theta, &x, &y);
 
-      double phi = ((double)p) / ((double)_height) * M_PI - M_PI;
-
-      ray(0,0) = cos(phi) * x;
+      ray(0,0) = cphi * x;
       ray(1,0) = y;
-      ray(2,0) = sin(phi) * x;
-      double len = sqrt(ray(0,0)*ray(0,0)+ray(1,0)*ray(1,0)+ray(2,0)*ray(2,0));
+      ray(2,0) = sphi * x;
+      const double len = sqrt(ray(0,0)*ray(0,0)+ray(1,0)*ray(1,0)+ray(2,0)*ray(2,0));
+      const double lenInv = 1.0/len;
       ray = R * ray;
 
-      (*_rays)(0, i) = ray(0, 0) / len;
-      (*_rays)(1, i) = ray(1, 0) / len;
-      (*_rays)(2, i) = ray(2, 0) / len;
+      (*_rays)(0, i) = ray(0, 0) * lenInv;
+      (*_rays)(1, i) = ray(1, 0) * lenInv;
+      (*_rays)(2, i) = ray(2, 0) * lenInv;
     }
   }
 

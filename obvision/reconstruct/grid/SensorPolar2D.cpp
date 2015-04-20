@@ -35,7 +35,7 @@ SensorPolar2D::SensorPolar2D(unsigned int size, double angularRes, double phiMin
 
   for(unsigned int i=0; i<_size; i++)
   {
-    double phi = _phiMin + ((double)i) * _angularRes;
+    const double phi = _phiMin + ((double)i) * _angularRes;
     (*_rays)(0, i) = cos(phi);
     (*_rays)(1, i) = sin(phi);
   }
@@ -56,8 +56,9 @@ SensorPolar2D::~SensorPolar2D()
 void SensorPolar2D::maskDepthDiscontinuity(double thresh)
 {
   int radius = 1;
-  double cosphi = cos(_angularRes);
-  double sinphi = sin(_angularRes);
+  double cosphi;
+  double sinphi;
+  sincos(_angularRes, &sinphi, &cosphi);
   for(int i=radius; i<((int)_size)-radius; i++)
   {
     double betamin = M_PI;
@@ -65,7 +66,7 @@ void SensorPolar2D::maskDepthDiscontinuity(double thresh)
     if(isinf(a)) continue;
     for(int j=-radius; j<=radius; j++)
     {
-      double b = _data[i+j];
+      const double b = _data[i+j];
       if(isinf(b)) continue;
       // law of cosines
       double c = sqrt(a*a+b*b-2*a*b*cosphi);
@@ -73,7 +74,7 @@ void SensorPolar2D::maskDepthDiscontinuity(double thresh)
       if(a>b)
       {
         // law of sines
-        double beta  = asin(b/c*sinphi);
+        const double beta  = asin(b/c*sinphi);
 
         if(beta<betamin)
           betamin = beta;
@@ -95,7 +96,7 @@ int SensorPolar2D::backProject(double data[2])
   PoseInv.invert();
   xh = PoseInv * xh;
 
-  double phi = atan2(xh(1,0), xh(0,0));
+  const double phi = atan2(xh(1,0), xh(0,0));
   // ensure angle to lie in valid bounds
   if(phi<=_phiLowerBound) return -2;
   if(phi>=_phiUpperBound) return -1;
@@ -120,26 +121,6 @@ void SensorPolar2D::backProject(Matrix* M, int* indices, Matrix* T)
     else if(phi>=_phiUpperBound) indices[i] = -1;
     else indices[i] = round((phi-_phiMin) * angularResInv);
   }
-}
-
-double SensorPolar2D::getAngularResolution(void)
-{
-  return _angularRes;
-}
-
-double SensorPolar2D::getPhiMin(void)
-{
-  return _phiMin;
-}
-
-double SensorPolar2D::getPhiLowerBound(void)const
-{
-  return _phiLowerBound;
-}
-
-double SensorPolar2D::getPhiUpperBound(void)const
-{
-  return _phiUpperBound;
 }
 
 }

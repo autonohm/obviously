@@ -151,13 +151,13 @@ public:
 	 * Property accessor
 	 * @return number of matrix rows
 	 */
-	unsigned int getRows() const;
+	unsigned int getRows() const { return _M->size1;}
 
 	/**
 	 * Property accessor
 	 * @return number of matrix columns
 	 */
-	unsigned int getCols() const;
+	unsigned int getCols() const { return _M->size2;}
 
 	/**
 	 * Set matrix to identity
@@ -184,7 +184,7 @@ public:
 	 * Instantiate the transpose matrix of present matrix
 	 * @return transposed matrix as new instance
 	 */
-	Matrix getTranspose();
+	Matrix getTranspose() const;
 
 	/**
 	 * Transpose current matrix
@@ -195,7 +195,7 @@ public:
 	 * Calculate trace of matrix
 	 * @return trace
 	 */
-	double trace();
+	double trace() const;
 
 	/**
 	 * perform principle component analysis

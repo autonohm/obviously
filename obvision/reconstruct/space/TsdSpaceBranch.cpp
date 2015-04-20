@@ -34,7 +34,7 @@ TsdSpaceBranch::TsdSpaceBranch(TsdSpaceComponent**** leafs, int x, int y, int z,
   else
   {
     level--;
-    int step = (int)pow(2.0, level);
+    int step = 1<<level;
     branch            = new TsdSpaceBranch(leafs, x,      y,      z,      level);
     branchRight       = new TsdSpaceBranch(leafs, x+step, y,      z,      level);
     branchUp          = new TsdSpaceBranch(leafs, x,      y+step, z,      level);

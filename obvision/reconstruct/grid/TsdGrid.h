@@ -43,9 +43,9 @@ enum EnumTsdGridLoadSource{ FILE = 0,
  * @brief Grid on the basis of true signed distance functions
  * @author Stefan May, Philipp Koch
  */
- class TsdGrid
- {
- public:
+class TsdGrid
+{
+public:
 
   /**
    * Standard constructor
@@ -75,37 +75,49 @@ enum EnumTsdGridLoadSource{ FILE = 0,
    * @param x x coordinate
    * @return truncated signed distance
    */
-  obfloat& operator () (unsigned int y, unsigned int x);
+  obfloat& operator () (unsigned int y, unsigned int x) const
+  {
+    // Partition index
+    unsigned int px = x / _dimPartition;
+    // Cell index
+    unsigned int cx = x % _dimPartition;
+    // Partition index
+    unsigned int py = y / _dimPartition;
+    // Cell index
+    unsigned int cy = y % _dimPartition;
+
+    return (*_partitions[py][px])(cy, cx);
+  }
 
   /**
    * Get number of cells in x-dimension
    * @return number of cells
    */
-  unsigned int getCellsX();
+  unsigned int getCellsX() const { return _cellsX; }
 
   /**
    * Get number of cells in y-dimension
    * @return number of cells
    */
-  unsigned int getCellsY();
+  unsigned int getCellsY() const { return _cellsY; }
 
   /**
    * Get size of cell in meters
    * @return size
    */
-  obfloat getCellSize();
+  obfloat getCellSize() const { return _cellSize; }
 
   /**
    * Get minimum for x-coordinate
    * @return x-coordinate
    */
-  obfloat getMinX();
+  obfloat getMinX() const { return _minX; }
 
   /**
    * Get maximum for x-coordinate
    * @return x-coordinate
    */
-  obfloat getMaxX();
+  obfloat getMaxX() const { return _maxX; }
 
   /**
    * Get centroid of grid
@@ -117,19 +129,19 @@ enum EnumTsdGridLoadSource{ FILE = 0,
    * Get minimum for y-coordinate
    * @return y-coordinate
    */
-  obfloat getMinY();
+  obfloat getMinY() const { return _minY; }
 
   /**
    * Get maximum for y-coordinate
    * @return y-coordinate
    */
-  obfloat getMaxY();
+  obfloat getMaxY() const { return _maxY; }
 
   /**
    * Get number of cells along edge
    * @return number of cells
    */
-  unsigned int getPartitionSize();
+  unsigned int getPartitionSize() const { return _partitions[0][0]->getWidth(); }
 
   /**
    * Set maximum truncation radius
@@ -141,7 +153,7 @@ enum EnumTsdGridLoadSource{ FILE = 0,
    * Get maximum truncation radius
    * @return truncation radius
    */
-  double getMaxTruncation();
+  double getMaxTruncation() const { return _maxTruncation; }
 
   /**
    * Push current measurement from sensor
@@ -189,7 +201,7 @@ enum EnumTsdGridLoadSource{ FILE = 0,
    * Get pointer to internal partition space
    * @return pointer to 3D partition space
    */
-  TsdGridPartition*** getPartitions();
+  TsdGridPartition*** getPartitions() const { return _partitions; }
 
   /**
    * Determine whether sensor is in grid
@@ -213,7 +225,7 @@ enum EnumTsdGridLoadSource{ FILE = 0,
    */
   bool freeFootprint(const obfloat centerCoords[2], const obfloat width, const obfloat height);
 
- private:
+private:
 
   void init(const double cellSize, const EnumTsdGridLayout layoutPartition, const EnumTsdGridLayout layoutGrid);
 
@@ -257,7 +269,72 @@ enum EnumTsdGridLoadSource{ FILE = 0,
 
   bool _initialPushAccomplished;
 
- };
+};
+
+inline EnumTsdGridInterpolate TsdGrid::interpolateBilinear(obfloat coord[2], obfloat* tsd)
+{
+  int p;
+  int x;
+  int y;
+  obfloat dx;
+  obfloat dy;
+
+  if(!coord2Cell(coord, &p, &x, &y, &dx, &dy)) return INTERPOLATE_INVALIDINDEX;
+  if(!_partitions[0][p]->isInitialized()) return INTERPOLATE_EMPTYPARTITION;
+
+  const double wx = fabs((coord[0] - dx) * _invCellSize);
+  const double wy = fabs((coord[1] - dy) * _invCellSize);
+
+  *tsd = _partitions[0][p]->interpolateBilinear(x, y, wx, wy);
+
+  if(isnan(*tsd))
+    return INTERPOLATE_ISNAN;
+
+  return INTERPOLATE_SUCCESS;
+}
+
+inline bool TsdGrid::coord2Cell(obfloat coord[2], int* p, int* x, int* y, obfloat* dx, obfloat* dy)
+{
+  // Get cell indices
+  const obfloat dCoordX = coord[0] * _invCellSize;
+  const obfloat dCoordY = coord[1] * _invCellSize;
+
+  int xIdx = floor(dCoordX);
+  int yIdx = floor(dCoordY);
+
+  // Get center point of current cell
+  *dx = (obfloat(xIdx) + 0.5) * _cellSize;
+  *dy = (obfloat(yIdx) + 0.5) * _cellSize;
+
+  // Ensure that query point has 4 neighbors for bilinear interpolation
+  if (coord[0] < *dx)
+  {
+    xIdx--;
+    (*dx) -= _cellSize;
+  }
+  if (coord[1] < *dy)
+  {
+    yIdx--;
+    (*dy) -= _cellSize;
+  }
+
+  // Check boundaries
+  if ((xIdx >= _cellsX) || (xIdx < 0) || (yIdx >= _cellsY) || (yIdx < 0))
+    return false;
+
+  *p = yIdx / _dimPartition * _partitionsInX + xIdx / _dimPartition;
+  *x = xIdx % _dimPartition;
+  *y = yIdx % _dimPartition;
+
+  return true;
+}
+
+inline bool TsdGrid::isInsideGrid(Sensor* sensor)
+{
+  obfloat coord[2];
+  sensor->getPosition(coord);
+  return (coord[0]>_minX && coord[0]<_maxX && coord[1]>_minY && coord[1]<_maxY);
+}
 
 }
 

@@ -29,11 +29,6 @@ TsdGrid::TsdGrid(const std::string& data, const EnumTsdGridLoadSource source)
    * Grid dimensions
    * Grid data partition[row][col].cells[row][col]
    */
-  double cellSize=0.0;
-  double maxTruncation=0.0;
-  EnumTsdGridLayout layoutPartition;
-  EnumTsdGridLayout layoutGrid;
-
   std::istream* istream=NULL;
   std::ifstream inFile;
   std::stringstream ss;
@@ -55,9 +50,9 @@ TsdGrid::TsdGrid(const std::string& data, const EnumTsdGridLoadSource source)
     istream = &ss;
   }
 
-  cellSize = getDoubleLine(*istream);
-  layoutPartition = static_cast<EnumTsdGridLayout>(getIntLine(*istream));
-  layoutGrid = static_cast<EnumTsdGridLayout>(getIntLine(*istream));
+  const double cellSize = getDoubleLine(*istream);
+  const EnumTsdGridLayout layoutPartition = static_cast<EnumTsdGridLayout>(getIntLine(*istream));
+  const EnumTsdGridLayout layoutGrid = static_cast<EnumTsdGridLayout>(getIntLine(*istream));
   if( (layoutGrid < 0) || (layoutPartition < 0) || (layoutGrid > 15) || (layoutPartition > 15) )
   {
     LOGMSG(DBG_ERROR, " error! Partition or Gridlayout invalid!\n");
@@ -66,7 +61,7 @@ TsdGrid::TsdGrid(const std::string& data, const EnumTsdGridLoadSource source)
     std::exit(3);
   }
 
-  maxTruncation=getDoubleLine(*istream);
+  const double maxTruncation = getDoubleLine(*istream);
   //inFile.getline(buffer, 1000);
   //maxTruncation=std::atof(buffer);
   this->init(cellSize, layoutPartition, layoutGrid);
@@ -100,7 +95,7 @@ TsdGrid::TsdGrid(const std::string& data, const EnumTsdGridLoadSource source)
       }
       else
       {
-        LOGMSG(DBG_ERROR, " error! Unknown partition identifier partition(" << x << "/" << y << ")\n");
+        LOGMSG(DBG_ERROR, "Unknown partition identifier for partition(" << x << "/" << y << ")");
         inFile.close();
         std::exit(3);
       }
@@ -110,7 +105,7 @@ TsdGrid::TsdGrid(const std::string& data, const EnumTsdGridLoadSource source)
   {
   inFile.close();
   if(inFile.is_open())
-    LOGMSG(DBG_DEBUG, " warning! Closing of file " << data << " failed.\n");
+    LOGMSG(DBG_DEBUG, "Closing of file " << data << " failed.");
   }
 }
 
@@ -120,10 +115,10 @@ void TsdGrid::init(const double cellSize, const EnumTsdGridLayout layoutPartitio
   _cellSize = cellSize;
   _invCellSize = 1.0 / _cellSize;
 
-  _cellsX = (unsigned int)pow(2.0,layoutGrid);
+  _cellsX = 1u << layoutGrid;
   _cellsY = _cellsX; //toDo: What if the grid is not quadratic?
 
-  _dimPartition = (unsigned int)pow(2.0,layoutPartition);
+  _dimPartition = 1u << layoutPartition;
 
   if(_dimPartition > _cellsX)
   {
@@ -143,7 +138,7 @@ void TsdGrid::init(const double cellSize, const EnumTsdGridLayout layoutPartitio
       << " = " << ((double)_cellsX)*cellSize << "x" << ((double)_cellsY)*cellSize << " sqm");
 
   _minX = 0.0;
-  _maxX = ((obfloat)_cellsX + 0.5) * _cellSize;
+  _maxX = ((obfloat)_cellsX + 0.5) * _cellSize; // TODO: Check
   _minY = 0.0;
   _maxY = ((obfloat)_cellsY + 0.5) * _cellSize;
 
@@ -178,63 +173,10 @@ TsdGrid::~TsdGrid(void)
   System<TsdGridPartition*>::deallocate(_partitions);
 }
 
-obfloat& TsdGrid::operator () (unsigned int y, unsigned int x)
-{
-  // Partition index
-  unsigned int py = y / _dimPartition;
-  unsigned int px = x / _dimPartition;
-
-  // Cell index
-  unsigned int cx = x % _dimPartition;
-  unsigned int cy = y % _dimPartition;
-
-  return (*_partitions[py][px])(cy, cx);
-}
-
-unsigned int TsdGrid::getCellsX()
-{
-  return _cellsX;
-}
-
-unsigned int TsdGrid::getCellsY()
-{
-  return _cellsY;
-}
-
-obfloat TsdGrid::getCellSize()
-{
-  return _cellSize;
-}
-
-obfloat TsdGrid::getMinX()
-{
-  return _minX;
-}
-
-obfloat TsdGrid::getMaxX()
-{
-  return _maxX;
-}
-
-obfloat TsdGrid::getMinY()
-{
-  return _minY;
-}
-
-obfloat TsdGrid::getMaxY()
-{
-  return _maxY;
-}
-
-unsigned int TsdGrid::getPartitionSize()
-{
-  return _partitions[0][0]->getWidth();
-}
-
 void TsdGrid::getCentroid(double centroid[2])
 {
-  centroid[0] = (_minX + _maxX) / 2.0;
-  centroid[1] = (_minY + _maxY) / 2.0;
+  centroid[0] = (_minX + _maxX) * 0.5;
+  centroid[1] = (_minY + _maxY) * 0.5;
 }
 
 void TsdGrid::setMaxTruncation(double val)
@@ -248,19 +190,16 @@ void TsdGrid::setMaxTruncation(double val)
   _maxTruncation = val;
 }
 
-double TsdGrid::getMaxTruncation()
-{
-  return _maxTruncation;
-}
-
 void TsdGrid::push(SensorPolar2D* sensor)
 {
   Timer t;
   t.start();
-  double* data     = sensor->getRealMeasurementData();
-  bool* mask       = sensor->getRealMeasurementMask();
+  const double* data     = sensor->getRealMeasurementData();
+  const bool* mask       = sensor->getRealMeasurementMask();
   obfloat tr[2];
   sensor->getPosition(tr);
+
+  const double invMaxTruncation = 1.0 / _maxTruncation;
 
   unsigned int partSize = (_partitions[0][0])->getSize();
 
@@ -275,7 +214,7 @@ void TsdGrid::push(SensorPolar2D* sensor)
 
       part->init();
 
-      obfloat* partCentroid = part->getCentroid();
+      const obfloat* partCentroid = part->getCentroid();
       obfloat distCentroid = sqrt((partCentroid[0]-tr[0])*(partCentroid[0]-tr[0])+(partCentroid[1]-tr[1])*(partCentroid[1]-tr[1]));
       if(distCentroid > sensor->getMaximumRange()) distCentroid = sensor->getMaximumRange();
       obfloat partWeight = (sensor->getMaximumRange()-distCentroid)/sensor->getMaximumRange();
@@ -284,12 +223,12 @@ void TsdGrid::push(SensorPolar2D* sensor)
       Matrix* partCoords = part->getPartitionCoords();
       Matrix* cellCoordsHom = part->getCellCoordsHom();
       sensor->backProject(cellCoordsHom, idx);
-      double lowReflectivityRange = sensor->getLowReflectivityRange();
+      const double lowReflectivityRange = sensor->getLowReflectivityRange();
 
       for(unsigned int c=0; c<partSize; c++)
       {
         // Index of laser beam
-        int index = idx[c];
+        const int index = idx[c];
 
         if(index>=0)
         {
@@ -298,15 +237,15 @@ void TsdGrid::push(SensorPolar2D* sensor)
             if(!isinf(data[index]))
             {
               // calculate signed distance, i.e., measurement minus distance of current cell to sensor
-              double sd = data[index] - sqrt( ((*cellCoordsHom)(c,0)-tr[0]) * ((*cellCoordsHom)(c,0)-tr[0]) + ((*cellCoordsHom)(c,1)-tr[1]) * ((*cellCoordsHom)(c,1)-tr[1]));
+              const double sd = data[index] - sqrt( ((*cellCoordsHom)(c,0)-tr[0]) * ((*cellCoordsHom)(c,0)-tr[0]) + ((*cellCoordsHom)(c,1)-tr[1]) * ((*cellCoordsHom)(c,1)-tr[1]));
 
-              part->addTsd((*partCoords)(c, 0), (*partCoords)(c, 1), sd, _maxTruncation, partWeight);
+              part->addTsd((*partCoords)(c, 0), (*partCoords)(c, 1), sd, _maxTruncation, invMaxTruncation, partWeight);
             }
             else
             {
-              double dist = sqrt( ((*cellCoordsHom)(c,0)-tr[0]) * ((*cellCoordsHom)(c,0)-tr[0]) + ((*cellCoordsHom)(c,1)-tr[1]) * ((*cellCoordsHom)(c,1)-tr[1]));
+              const double dist = sqrt( ((*cellCoordsHom)(c,0)-tr[0]) * ((*cellCoordsHom)(c,0)-tr[0]) + ((*cellCoordsHom)(c,1)-tr[1]) * ((*cellCoordsHom)(c,1)-tr[1]));
               if(dist<lowReflectivityRange)
-                part->addTsd((*partCoords)(c, 0), (*partCoords)(c, 1), _maxTruncation, _maxTruncation, partWeight);
+                part->addTsd((*partCoords)(c, 0), (*partCoords)(c, 1), _maxTruncation, _maxTruncation, invMaxTruncation, partWeight);
             }
           }
         }
@@ -330,6 +269,8 @@ void TsdGrid::pushTree(SensorPolar2D* sensor)
 
   obfloat tr[2];
   sensor->getPosition(tr);
+
+  const double invMaxTruncation = 1.0 / _maxTruncation;
 
   TsdGridComponent* comp = _tree;
   vector<TsdGridPartition*> partitionsToCheck;
@@ -369,13 +310,13 @@ void TsdGrid::pushTree(SensorPolar2D* sensor)
             // calculate signed distance, i.e. measurement minus distance of current cell to sensor
             double sd = data[index] - sqrt( ((*cellCoordsHom)(c,0)-tr[0]) * ((*cellCoordsHom)(c,0)-tr[0]) + ((*cellCoordsHom)(c,1)-tr[1]) * ((*cellCoordsHom)(c,1)-tr[1]));
 
-            part->addTsd((*partCoords)(c, 0), (*partCoords)(c, 1), sd, _maxTruncation, partWeight);
+            part->addTsd((*partCoords)(c, 0), (*partCoords)(c, 1), sd, _maxTruncation, invMaxTruncation, partWeight);
           }
           else
           {
             double dist = sqrt( ((*cellCoordsHom)(c,0)-tr[0]) * ((*cellCoordsHom)(c,0)-tr[0]) + ((*cellCoordsHom)(c,1)-tr[1]) * ((*cellCoordsHom)(c,1)-tr[1]));
             if(dist<sensor->getLowReflectivityRange())
-              part->addTsd((*partCoords)(c, 0), (*partCoords)(c, 1), _maxTruncation, _maxTruncation, partWeight);
+              part->addTsd((*partCoords)(c, 0), (*partCoords)(c, 1), _maxTruncation, _maxTruncation, invMaxTruncation, partWeight);
           }
         }
       }
@@ -588,76 +529,6 @@ bool TsdGrid::interpolateNormal(const obfloat* coord, obfloat* normal)
   norm2<obfloat>(normal);
 
   return true;
-}
-
-EnumTsdGridInterpolate TsdGrid::interpolateBilinear(obfloat coord[2], obfloat* tsd)
-{
-  int p;
-  int x;
-  int y;
-  obfloat dx;
-  obfloat dy;
-
-  if(!coord2Cell(coord, &p, &x, &y, &dx, &dy)) return INTERPOLATE_INVALIDINDEX;
-  if(!_partitions[0][p]->isInitialized()) return INTERPOLATE_EMPTYPARTITION;
-
-  double wx = fabs((coord[0] - dx) / (_cellSize));
-  double wy = fabs((coord[1] - dy) / (_cellSize));
-
-  *tsd = _partitions[0][p]->interpolateBilinear(x, y, wx, wy);
-
-  if(isnan(*tsd))
-    return INTERPOLATE_ISNAN;
-
-  return INTERPOLATE_SUCCESS;
-}
-
-bool TsdGrid::coord2Cell(obfloat coord[2], int* p, int* x, int* y, obfloat* dx, obfloat* dy)
-{
-  // Get cell indices
-  obfloat dCoordX = coord[0] * _invCellSize;
-  obfloat dCoordY = coord[1] * _invCellSize;
-
-  int xIdx = floor(dCoordX);
-  int yIdx = floor(dCoordY);
-
-  // Get center point of current cell
-  *dx = (obfloat(xIdx) + 0.5) * _cellSize;
-  *dy = (obfloat(yIdx) + 0.5) * _cellSize;
-
-  // Ensure that query point has 4 neighbors for bilinear interpolation
-  if (coord[0] < *dx)
-  {
-    xIdx--;
-    (*dx) -= _cellSize;
-  }
-  if (coord[1] < *dy)
-  {
-    yIdx--;
-    (*dy) -= _cellSize;
-  }
-
-  // Check boundaries
-  if ((xIdx >= _cellsX) || (xIdx < 0) || (yIdx >= _cellsY) || (yIdx < 0))
-    return false;
-
-  *p = yIdx / _dimPartition * _partitionsInX + xIdx / _dimPartition;
-  *x = xIdx % _dimPartition;
-  *y = yIdx % _dimPartition;
-
-  return true;
-}
-
-TsdGridPartition*** TsdGrid::getPartitions()
-{
-  return _partitions;
-}
-
-bool TsdGrid::isInsideGrid(Sensor* sensor)
-{
-  obfloat coord[2];
-  sensor->getPosition(coord);
-  return (coord[0]>_minX && coord[0]<_maxX && coord[1]>_minY && coord[1]<_maxY);
 }
 
 bool TsdGrid::storeGrid(const std::string& path)

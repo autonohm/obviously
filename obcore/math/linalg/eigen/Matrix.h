@@ -109,8 +109,6 @@ public:
 	 * @param i row index
 	 * @return row elements as array
 	 */
-	//double* operator [] (unsigned int i);
-
 	double& operator () (unsigned int row, unsigned int col);
 
 	/**

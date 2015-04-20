@@ -15,6 +15,7 @@ DistanceFilter::DistanceFilter(double maxdist, double mindist, unsigned int iter
   _distSqr = _maxDistSqr;
   double it = (double)(iterations - 1);
   if(iterations < 1) it = 1.0;
+  // i'th root
   _multiplier = pow((mindist / maxdist), 1.0 / it);
 };
 
