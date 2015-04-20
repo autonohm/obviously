@@ -57,37 +57,37 @@ enum EnumTsdSpaceInterpolate { INTERPOLATE_SUCCESS=0,
 	/**
 	 * Get number of voxels in x-direction
 	 */
-	unsigned int getXDimension();
+	unsigned int getXDimension() const { return _cellsX; }
 
 	/**
 	 * Get number of voxels in y-direction
 	 */
-	unsigned int getYDimension();
+	unsigned int getYDimension() const { return _cellsY; }
 
 	/**
 	 * Get number of voxels in z-direction
 	 */
-	unsigned int getZDimension();
+	unsigned int getZDimension() const { return _cellsZ; }
 
 	/**
 	 * Get number of partitions in x-direction
 	 */
-	int getPartitionsInX();
+	int getPartitionsInX() const { return _partitionsInX; }
 
 	/**
 	 * Get number of partitions in y-direction
 	 */
-	int getPartitionsInY();
+	int getPartitionsInY() const { return _partitionsInY; }
 
 	/**
 	 * Get number of partitions in z-direction
 	 */
-	int getPartitionsInZ();
+	int getPartitionsInZ() const { return _partitionsInZ; }
 
 	/**
 	 * Get edge length of voxels
 	 */
-	obfloat getVoxelSize();
+	obfloat getVoxelSize() const { return _voxelSize; }
 
 	/**
 	 * Get number of cells along edge
@@ -99,37 +99,37 @@ enum EnumTsdSpaceInterpolate { INTERPOLATE_SUCCESS=0,
 	 * Get minimum for x-coordinate
 	 * @return x-coordinate
 	 */
-	obfloat getMinX();
+	obfloat getMinX() const { return _minX; }
 
 	/**
 	 * Get maximum for x-coordinate
 	 * @return x-coordinate
 	 */
-	obfloat getMaxX();
+	obfloat getMaxX() const { return _maxX; }
 
 	/**
 	 * Get minimum for y-coordinate
 	 * @return y-coordinate
 	 */
-	obfloat getMinY();
+	obfloat getMinY() const { return _minY; }
 
 	/**
 	 * Get maximum for y-coordinate
 	 * @return y-coordinate
 	 */
-	obfloat getMaxY();
+	obfloat getMaxY() const { return _maxY; }
 
 	/**
 	 * Get minimum for z-coordinate
 	 * @return z-coordinate
 	 */
-	obfloat getMinZ();
+	obfloat getMinZ() const { return _minZ; }
 
 	/**
 	 * Get maximum for z-coordinate
 	 * @return z-coordinate
 	 */
-	obfloat getMaxZ();
+	obfloat getMaxZ() const { return _maxZ; }
 
 	/**
 	 * Get centroid of space
@@ -148,13 +148,13 @@ enum EnumTsdSpaceInterpolate { INTERPOLATE_SUCCESS=0,
 	 * Get maximum truncation radius
 	 * @return truncation radius
 	 */
-	double getMaxTruncation();
+	double getMaxTruncation() const { return _maxTruncation; }
 
 	/**
 	 * Get pointer to internal partition space
 	 * @return pointer to 3D partition space
 	 */
-	TsdSpacePartition**** getPartitions();
+	TsdSpacePartition**** getPartitions() const { return _partitions; }
 
 	/**
 	 * Check, if partition belonging to coordinate is initialized

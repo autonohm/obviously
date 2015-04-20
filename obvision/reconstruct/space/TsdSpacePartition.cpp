@@ -10,8 +10,8 @@
 namespace obvious
 {
 
-static Matrix* _partCoords = NULL;
-static Matrix* _cellCoordsHom = NULL;
+Matrix* TsdSpacePartition::_partCoords = NULL;
+Matrix* TsdSpacePartition::_cellCoordsHom = NULL;
 
 static int _initializedPartitions = 0;
 
@@ -75,14 +75,14 @@ TsdSpacePartition::TsdSpacePartition(const unsigned int x,
   (*_edgeCoordsHom)(7, 2) = ((double)(z+cellsZ)) * _cellSize;
   (*_edgeCoordsHom)(7, 3) = 1.0;
 
-  _centroid[0] = ((*_edgeCoordsHom)(7, 0)+(*_edgeCoordsHom)(0, 0)) / 2.0;
-  _centroid[1] = ((*_edgeCoordsHom)(7, 1)+(*_edgeCoordsHom)(0, 1)) / 2.0;
-  _centroid[2] = ((*_edgeCoordsHom)(7, 2)+(*_edgeCoordsHom)(0, 2)) / 2.0;
+  _centroid[0] = ((*_edgeCoordsHom)(7, 0)+(*_edgeCoordsHom)(0, 0)) * 0.5;
+  _centroid[1] = ((*_edgeCoordsHom)(7, 1)+(*_edgeCoordsHom)(0, 1)) * 0.5;
+  _centroid[2] = ((*_edgeCoordsHom)(7, 2)+(*_edgeCoordsHom)(0, 2)) * 0.5;
 
   obfloat dx = ((*_edgeCoordsHom)(7, 0)-(*_edgeCoordsHom)(0, 0));
   obfloat dy = ((*_edgeCoordsHom)(7, 1)-(*_edgeCoordsHom)(0, 1));
   obfloat dz = ((*_edgeCoordsHom)(7, 2)-(*_edgeCoordsHom)(0, 2));
-  _circumradius = sqrt(dx*dx + dy*dy + dz*dz) / 2.0;
+  _circumradius = sqrt(dx*dx + dy*dy + dz*dz) * 0.5;
 
   _cellsX = cellsX;
   _cellsY = cellsY;
@@ -150,11 +150,6 @@ void TsdSpacePartition::reset()
   }
 }
 
-obfloat& TsdSpacePartition::operator () (unsigned int z, unsigned int y, unsigned int x)
-{
-  return _space[z][y][x].tsd;
-}
-
 void TsdSpacePartition::getRGB(unsigned int z, unsigned int y, unsigned int x, unsigned char rgb[3])
 {
   rgb[0] = _space[z][y][x].rgb[0];
@@ -195,36 +190,6 @@ bool TsdSpacePartition::isEmpty()
   return (_space==NULL && _initWeight > 0.0);
 }
 
-obfloat TsdSpacePartition::getInitWeight()
-{
-  return _initWeight;
-}
-
-void TsdSpacePartition::setInitWeight(obfloat weight)
-{
-  _initWeight = weight;
-}
-
-unsigned int TsdSpacePartition::getX()
-{
-  return _x;
-}
-
-unsigned int TsdSpacePartition::getY()
-{
-  return _y;
-}
-
-unsigned int TsdSpacePartition::getZ()
-{
-  return _z;
-}
-
-Matrix* TsdSpacePartition::getCellCoordsHom()
-{
-  return _cellCoordsHom;
-}
-
 void TsdSpacePartition::getCellCoordsOffset(obfloat offset[3])
 {
   offset[0] = _cellCoordsOffset[0];
@@ -232,33 +197,9 @@ void TsdSpacePartition::getCellCoordsOffset(obfloat offset[3])
   offset[2] = _cellCoordsOffset[2];
 }
 
-Matrix* TsdSpacePartition::getPartitionCoords()
-{
-  return _partCoords;
-}
-
-unsigned int TsdSpacePartition::getWidth()
-{
-  return _cellsX;
-}
-
-unsigned int TsdSpacePartition::getHeight()
-{
-  return _cellsY;
-}
-
-unsigned int TsdSpacePartition::getDepth()
-{
-  return _cellsZ;
-}
-
-unsigned int TsdSpacePartition::getSize()
-{
-  return _cellsX*_cellsY*_cellsZ;
-}
-
 void TsdSpacePartition::addTsd(const unsigned int x, const unsigned int y, const unsigned int z, const obfloat sd, const obfloat maxTruncation, const unsigned char rgb[3])
 {
+  // already checked int TsdSpace
   //if(sd >= -maxTruncation)
   {
     TsdVoxel* voxel = &_space[z][y][x];
@@ -342,7 +283,7 @@ void TsdSpacePartition::increaseEmptiness()
   }
 }
 
-obfloat TsdSpacePartition::interpolateTrilinear(int x, int y, int z, obfloat dx, obfloat dy, obfloat dz)
+obfloat TsdSpacePartition::interpolateTrilinear(int x, int y, int z, obfloat dx, obfloat dy, obfloat dz) const
 {
   // Interpolate
   return _space[z][y][x].tsd * (1. - dx) * (1. - dy) * (1. - dz)

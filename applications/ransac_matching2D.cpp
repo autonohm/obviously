@@ -50,9 +50,9 @@ int main(int argc, char** argv)
 //
 //
 //    // x-component of normal
-//    double xNormal = -(yright + yleft) / 2.0;
+//    double xNormal = -(yright + yleft) * 0.5;
 //    // y-component of normal
-//    double yNormal = (xright + xleft) / 2.0;
+//    double yNormal = (xright + xleft) * 0.5;
 //    //Normalize
 //    double lengthNormal = sqrt(xNormal*xNormal + yNormal*yNormal);
 //    (*N)(i-1, 0) = xNormal / lengthNormal;

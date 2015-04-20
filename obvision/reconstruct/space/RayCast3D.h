@@ -34,8 +34,27 @@ public:
    */
 	virtual ~RayCast3D();
 
+	/**
+	 *
+	 * @param space
+	 * @param sensor
+	 * @param coords
+	 * @param normals
+	 * @param rgb
+	 * @param size
+	 */
 	virtual void calcCoordsFromCurrentPose(TsdSpace* space, Sensor* sensor, double* coords, double* normals, unsigned char* rgb, unsigned int* size);
 
+	/**
+	 *
+	 * @param space
+	 * @param sensor
+	 * @param coords
+	 * @param normals
+	 * @param rgb
+	 * @param mask
+	 * @param size
+	 */
   virtual void calcCoordsFromCurrentPoseMask(TsdSpace* space, Sensor* sensor, double* coords, double* normals, unsigned char* rgb, bool* mask, unsigned int* size);
 
 	/**

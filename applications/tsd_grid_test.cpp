@@ -55,7 +55,7 @@ int main(void)
   {
 #if 1
     // circular structure
-    data[i] = maxRange / 2.0;
+    data[i] = maxRange * 0.5;
     mask[i] = true;
 #else
     // plain wall
@@ -64,7 +64,7 @@ int main(void)
     double theta = angularRes*((double)i)+minPhi;
     if(theta<0)
     {
-      double dist = abs(maxRange / 2.0 / sin(theta));
+      double dist = abs(maxRange * 0.5 / sin(theta));
       if(dist<maxRange)
       {
         data[i] = dist;

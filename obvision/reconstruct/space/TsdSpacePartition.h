@@ -47,11 +47,9 @@ public:
 
   static int getInitializedPartitionSize();
 
-  static int getDistancesPushed();
-
   void reset();
 
-  obfloat& operator () (unsigned int z, unsigned int y, unsigned int x);
+  obfloat& operator () (unsigned int z, unsigned int y, unsigned int x) const { return _space[z][y][x].tsd; }
 
   void getRGB(unsigned int z, unsigned int y, unsigned int x, unsigned char rgb[3]);
 
@@ -61,35 +59,35 @@ public:
 
   bool isEmpty();
 
-  obfloat getInitWeight();
+  obfloat getInitWeight() const { return _initWeight; }
 
-  void setInitWeight(obfloat weight);
+  void setInitWeight(obfloat weight) { _initWeight = weight; }
 
-  unsigned int getX();
+  unsigned int getX() const { return _x; }
 
-  unsigned int getY();
+  unsigned int getY() const { return _y; }
 
-  unsigned int getZ();
+  unsigned int getZ() const { return _z; }
 
-  static Matrix* getCellCoordsHom();
+  static Matrix* getCellCoordsHom() { return _cellCoordsHom; }
 
   void getCellCoordsOffset(obfloat offset[3]);
 
-  static Matrix* getPartitionCoords();
+  static Matrix* getPartitionCoords() { return _partCoords; }
 
-  unsigned int getWidth();
+  unsigned int getWidth() const { return _cellsX; }
 
-  unsigned int getHeight();
+  unsigned int getHeight() const { return _cellsY; }
 
-  unsigned int getDepth();
+  unsigned int getDepth() const { return _cellsZ; }
 
-  unsigned int getSize();
+  unsigned int getSize() const { return _cellsX*_cellsY*_cellsZ; }
 
   void addTsd(const unsigned int x, const unsigned int y, const unsigned int z, const obfloat sd, const obfloat maxTruncation, const unsigned char rgb[3]);
 
   virtual void increaseEmptiness();
 
-  obfloat interpolateTrilinear(int x, int y, int z, obfloat dx, obfloat dy, obfloat dz);
+  obfloat interpolateTrilinear(int x, int y, int z, obfloat dx, obfloat dy, obfloat dz) const;
 
   void serialize(ofstream* f);
 
@@ -98,6 +96,10 @@ public:
 private:
 
   TsdVoxel*** _space;
+
+  static obvious::Matrix* _partCoords;
+
+  static obvious::Matrix* _cellCoordsHom;
 
   obfloat _cellSize;
 

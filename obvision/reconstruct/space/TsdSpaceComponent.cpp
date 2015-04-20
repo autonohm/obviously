@@ -15,31 +15,6 @@ TsdSpaceComponent::~TsdSpaceComponent()
 
 }
 
-obfloat TsdSpaceComponent::getComponentSize()
-{
-  return _componentSize;
-}
-
-obfloat* TsdSpaceComponent::getCentroid()
-{
-  return _centroid;
-}
-
-obfloat TsdSpaceComponent::getCircumradius()
-{
-  return _circumradius;
-}
-
-Matrix* TsdSpaceComponent::getEdgeCoordsHom()
-{
-  return _edgeCoordsHom;
-}
-
-bool TsdSpaceComponent::isLeaf()
-{
-  return _isLeaf;
-}
-
 bool TsdSpaceComponent::isInRange(obfloat pos[3], Sensor* sensor, obfloat maxTruncation)
 {
   // Centroid-to-sensor distance

@@ -20,15 +20,15 @@ public:
 
   virtual ~TsdSpaceComponent();
 
-  obfloat getComponentSize();
+  obfloat getComponentSize() const { return _componentSize; }
 
-  obfloat* getCentroid();
+  obfloat* getCentroid() { return _centroid; }
 
-  obfloat getCircumradius();
+  obfloat getCircumradius() const { return _circumradius; };
 
-  Matrix* getEdgeCoordsHom();
+  Matrix* getEdgeCoordsHom() const { return _edgeCoordsHom; }
 
-  bool isLeaf();
+  bool isLeaf() const { return _isLeaf; }
 
   bool isInRange(obfloat pos[3], Sensor* sensor, obfloat maxTruncation);
 

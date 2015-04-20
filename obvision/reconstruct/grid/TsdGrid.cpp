@@ -594,10 +594,10 @@ bool TsdGrid::storeGrid(const std::string& path)
 
 bool TsdGrid::freeFootprint(const obfloat centerCoords[2], const obfloat width, const obfloat height)
 {
-  unsigned int minX = static_cast<unsigned int>((centerCoords[0] - width  / 2.0) / _cellSize + 0.5);
-  unsigned int maxX = static_cast<unsigned int>((centerCoords[0] + width  / 2.0) / _cellSize + 0.5);
-  unsigned int minY = static_cast<unsigned int>((centerCoords[1] - height / 2.0) / _cellSize + 0.5);
-  unsigned int maxY = static_cast<unsigned int>((centerCoords[1] + height / 2.0) / _cellSize + 0.5);
+  unsigned int minX = static_cast<unsigned int>((centerCoords[0] - width * 0.5) / _cellSize + 0.5);
+  unsigned int maxX = static_cast<unsigned int>((centerCoords[0] + width * 0.5) / _cellSize + 0.5);
+  unsigned int minY = static_cast<unsigned int>((centerCoords[1] - height * 0.5) / _cellSize + 0.5);
+  unsigned int maxY = static_cast<unsigned int>((centerCoords[1] + height * 0.5) / _cellSize + 0.5);
 
   //check whether indices are in bounds
   if((minX > static_cast<unsigned int>(_cellsX)) || (maxX > static_cast<unsigned int>(_cellsX)) ||

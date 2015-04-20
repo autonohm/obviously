@@ -122,81 +122,16 @@ void TsdSpace::reset()
   }
 }
 
-unsigned int TsdSpace::getXDimension()
-{
-  return _cellsX;
-}
-
-unsigned int TsdSpace::getYDimension()
-{
-  return _cellsY;
-}
-
-unsigned int TsdSpace::getZDimension()
-{
-  return _cellsZ;
-}
-
-int TsdSpace::getPartitionsInX()
-{
-  return _partitionsInX;
-}
-
-int TsdSpace::getPartitionsInY()
-{
-  return _partitionsInX;
-}
-
-int TsdSpace::getPartitionsInZ()
-{
-  return _partitionsInX;
-}
-
-obfloat TsdSpace::getVoxelSize()
-{
-  return _voxelSize;
-}
-
 unsigned int TsdSpace::getPartitionSize()
 {
   return _partitions[0][0][0]->getWidth();
 }
 
-obfloat TsdSpace::getMinX()
-{
-  return _minX;
-}
-
-obfloat TsdSpace::getMaxX()
-{
-  return _maxX;
-}
-
-obfloat TsdSpace::getMinY()
-{
-  return _minY;
-}
-
-obfloat TsdSpace::getMaxY()
-{
-  return _maxY;
-}
-
-obfloat TsdSpace::getMinZ()
-{
-  return _minZ;
-}
-
-obfloat TsdSpace::getMaxZ()
-{
-  return _maxZ;
-}
-
 void TsdSpace::getCentroid(obfloat centroid[3])
 {
-  centroid[0] = (_minX + _maxX) / 2.0;
-  centroid[1] = (_minY + _maxY) / 2.0;
-  centroid[2] = (_minZ + _maxZ) / 2.0;
+  centroid[0] = (_minX + _maxX) * 0.5;
+  centroid[1] = (_minY + _maxY) * 0.5;
+  centroid[2] = (_minZ + _maxZ) * 0.5;
 }
 
 void TsdSpace::setMaxTruncation(obfloat val)
@@ -208,16 +143,6 @@ void TsdSpace::setMaxTruncation(obfloat val)
   }
 
   _maxTruncation = val;
-}
-
-double TsdSpace::getMaxTruncation()
-{
-  return _maxTruncation;
-}
-
-TsdSpacePartition**** TsdSpace::getPartitions()
-{
-  return _partitions;
 }
 
 bool TsdSpace::isPartitionInitialized(obfloat coord[3])

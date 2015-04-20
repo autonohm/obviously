@@ -154,12 +154,12 @@ void _cbGenMesh(void)
   _vModel->transform(P);
   double lightPos[3];
   double lightLookAt[3];
-  lightPos[0] = _space->getMaxX() / 2.0;
-  lightPos[1] = _space->getMaxY() / 2.0;
+  lightPos[0] = _space->getMaxX() * 0.5;
+  lightPos[1] = _space->getMaxY() * 0.5;
   lightPos[2] = 0;
-  lightLookAt[0] = _space->getMaxX() / 2.0;
-  lightLookAt[1] = _space->getMaxY() / 2.0;
-  lightLookAt[2] = _space->getMaxZ() / 2.0;
+  lightLookAt[0] = _space->getMaxX() * 0.5;
+  lightLookAt[1] = _space->getMaxY() * 0.5;
+  lightLookAt[2] = _space->getMaxZ() * 0.5;
   _viewer3D->addLight(lightPos, lightLookAt);
   _viewer3D->update();
 

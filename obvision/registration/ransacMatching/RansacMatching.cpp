@@ -197,7 +197,7 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const bool* mask
   }
 
   // Calculate search "radius", i.e., maximum difference in polar indices because of rotation
-  phiMax = min(phiMax, M_PI / 2.0);
+  phiMax = min(phiMax, M_PI * 0.5);
   int span;
   if(resolution > 1e-6)
   {
@@ -268,8 +268,8 @@ if (_trace)
 
     // Centroid of model (for determining translation)
     double cM[2];
-    cM[0] = ((*M)(idx1, 0) + (*M)(idx2, 0)) / 2.0;
-    cM[1] = ((*M)(idx1, 1) + (*M)(idx2, 1)) / 2.0;
+    cM[0] = ((*M)(idx1, 0) + (*M)(idx2, 0)) * 0.5;
+    cM[1] = ((*M)(idx1, 1) + (*M)(idx2, 1)) * 0.5;
 
     const double distM = vM[0] * vM[0] + vM[1] * vM[1];
 
@@ -335,8 +335,8 @@ if (_trace)
 
         // Centroid of scene
         double cS[2];
-        cS[0] = (sceneSimilar[0] + (*S)(i, 0)) / 2.0;
-        cS[1] = (sceneSimilar[1] + (*S)(i, 1)) / 2.0;
+        cS[0] = (sceneSimilar[0] + (*S)(i, 0)) * 0.5;
+        cS[1] = (sceneSimilar[1] + (*S)(i, 1)) * 0.5;
 
         obvious::Matrix T = obvious::MatrixFactory::TransformationMatrix33(phi, 0, 0);
 

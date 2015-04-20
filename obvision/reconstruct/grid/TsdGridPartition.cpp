@@ -10,7 +10,7 @@
 namespace obvious
 {
 
-Matrix* TsdGridPartition::_partCoords;
+Matrix* TsdGridPartition::_partCoords = NULL;
 
 TsdGridPartition::TsdGridPartition(const unsigned int x,
     const unsigned int y,
@@ -67,7 +67,7 @@ TsdGridPartition::TsdGridPartition(const unsigned int x,
 
   obfloat dx = ((*_edgeCoordsHom)(3, 0)-(*_edgeCoordsHom)(0, 0));
   obfloat dy = ((*_edgeCoordsHom)(3, 1)-(*_edgeCoordsHom)(0, 1));
-  _circumradius = sqrt(dx*dx + dy*dy) / 2.0;
+  _circumradius = sqrt(dx*dx + dy*dy) * 0.5;
 
   _cellsX = cellsX;
   _cellsY = cellsY;
@@ -83,11 +83,6 @@ TsdGridPartition::~TsdGridPartition()
     delete [] _partCoords;
     _partCoords = NULL;
   }
-}
-
-obfloat& TsdGridPartition::operator () (unsigned int y, unsigned int x)
-{
-  return _grid[y][x].tsd;
 }
 
 void TsdGridPartition::init()

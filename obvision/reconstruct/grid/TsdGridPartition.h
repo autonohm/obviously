@@ -52,7 +52,7 @@ public:
    * @param x x-index
    * @return TSD
    */
-  obfloat& operator () (unsigned int y, unsigned int x);
+  obfloat& operator () (unsigned int y, unsigned int x) const { return _grid[y][x].tsd; }
 
   /**
    * Initialize partitions
