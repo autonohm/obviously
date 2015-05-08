@@ -40,6 +40,8 @@ SET(LIBRARY     base/CartesianCloud.cpp
                 filter/CartesianFilter.cpp
                 filter/NormalFilter.cpp
                 filter/BoundingBoxFilter.cpp
+                scripting/LuaScriptManager.cpp
+                scripting/LuaTable.cpp
                 )
 
 IF(USE_EIGEN)

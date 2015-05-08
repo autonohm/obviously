@@ -1,3 +1,4 @@
 -- Parameters grouped
-group = { value    = 0.17 }       -- example value
+group = { value1    = 0.17,
+          value2    = 1.2 }       -- example values
 

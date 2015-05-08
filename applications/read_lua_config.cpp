@@ -1,21 +1,9 @@
 #include <iostream>
-#include "lua.hpp"
+#include <unistd.h>
+#include "obcore/scripting/LuaScriptManager.h"
 
 using namespace std;
-
-double getNumber(lua_State* L, const char* key)
-{
-  double result;
-  lua_pushstring(L, key);
-  lua_gettable(L, -2);
-  if(!lua_isnumber(L, -1))
-    luaL_error(L, "invalid component in table: %s", lua_tostring(L, -1));
-
-  result = lua_tonumber(L, -1);
-  lua_pop(L, 1);
-  return result;
-}
-
+using namespace obvious;
 
 int main(int argc, char* argv[])
 {
@@ -25,21 +13,17 @@ int main(int argc, char* argv[])
     return -1;
   }
 
-  lua_State *L = luaL_newstate();
-  luaL_openlibs(L);
+  LuaScriptManager manager;
 
-  if(luaL_loadfile(L, argv[1]) || lua_pcall(L, 0, 0, 0))
-    luaL_error(L, "Cannot run configuration file: %s", lua_tostring(L, -1));
+  while(1)
+  {
+    LuaTable* table = manager.readTable(argv[1], "group");
+    cout << "Value read: " << table->getDouble("value1") << endl;
+    cout << "Value read: " << table->getDouble("value2") << endl;
+    delete table;
 
-  lua_getglobal(L, "group");
-  if(!lua_istable(L, -1))
-    luaL_error(L, "`group` is not a table");
-
-  double val = getNumber(L, "value");
-
-  cout << "Value read: " << val << endl;
-
-  lua_close(L);
+    usleep(500000);
+  }
 
   return 0;
 }
