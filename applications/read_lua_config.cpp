@@ -17,9 +17,16 @@ int main(int argc, char* argv[])
 
   while(1)
   {
-    LuaTable* table = manager.readTable(argv[1], "group");
+    LuaTable* table = manager.readTable(argv[1], "group1");
+    cout << "--- Table 1 ---" << endl;
     cout << "Value read: " << table->getDouble("value1") << endl;
     cout << "Value read: " << table->getDouble("value2") << endl;
+    delete table;
+
+    table = manager.readTable(argv[1], "group2");
+    cout << "--- Table 2 ---" << endl;
+    cout << "Value read: " << table->getDouble("value1") << endl;
+    cout << "Value read: " << table->getBool("value2") << endl;
     delete table;
 
     usleep(500000);
