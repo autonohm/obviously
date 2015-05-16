@@ -63,8 +63,8 @@ public:
 
 private:
 
-  // extract valid indices from matrix giving a validity mask
-  vector<unsigned int> extractValidIndices(const obvious::Matrix* M, const bool* mask);
+  // extract valid sample indices from matrix giving a validity mask
+  vector<unsigned int> extractSamples(const obvious::Matrix* M, const bool* mask);
 
   // init kd-tree for fast NN search in model
   void initKDTree(const obvious::Matrix* M, vector<unsigned int> valid);
@@ -93,6 +93,9 @@ private:
 
   // Trace module
   Trace* _trace;
+
+  // Number of samples used for PCA in local neighborhood
+  int _pcaCnt;
 };
 
 }
