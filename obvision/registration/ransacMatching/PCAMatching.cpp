@@ -111,7 +111,7 @@ obvious::Matrix* PCAMatching::pickControlSet(const obvious::Matrix* M, vector<un
 }
 
 #define MIN_VALID_POINTS 10
-obvious::Matrix PCAMatching::match(const obvious::Matrix* M, const bool* maskM, const obvious::Matrix* S,  const bool* maskS, double phiMax, const double transMax, const double resolution)
+obvious::Matrix PCAMatching::match(const obvious::Matrix* M, const bool* maskM, const obvious::Matrix* S, const bool* maskS, double phiMax, const double transMax, const double resolution)
 {
   obvious::Matrix TBest(3, 3);
   TBest.setIdentity();
@@ -123,6 +123,50 @@ obvious::Matrix PCAMatching::match(const obvious::Matrix* M, const bool* maskM, 
   {
     LOGMSG(DBG_ERROR, "Model and scene need to be of same size, size of M: " << pointsInM << ", size of S: " << pointsInS);
     return TBest;
+  }
+
+  // Determine orientation in local model neighborhood
+  double* phiM = new double[pointsInM];
+  bool* maskMpca = new bool[pointsInM];
+  memcpy(maskMpca, maskM, pointsInM*sizeof(bool));
+  for(int i=_pcaCnt/2; i<pointsInM-_pcaCnt/2; i++)
+  {
+    if(maskM[i])
+    {
+      unsigned int cnt = 0;
+      for(int j=-_pcaCnt/2; j<_pcaCnt/2; j++)
+      {
+        if(maskM[i+j]) cnt++;
+      }
+      if(cnt>4)
+      {
+        Matrix A(cnt, 2);
+        cnt = 0;
+        for(int j=-_pcaCnt/2; j<_pcaCnt/2; j++)
+        {
+          if(maskM[i+j])
+          {
+            A(cnt, 0) = (*M)(i+j, 0);
+            A(cnt, 1) = (*M)(i+j, 1);
+            cnt++;
+          }
+        }
+        Matrix* Axes = A.pcaAnalysis();
+        double dMx  = (*Axes)(0,1)-(*Axes)(0,0);
+        double dMy  = (*Axes)(0,3)-(*Axes)(0,2);
+        double dMx2 = (*Axes)(1,1)-(*Axes)(1,0);
+        double dMy2 = (*Axes)(1,3)-(*Axes)(1,2);
+        // rate axes lengths -> main axis needs to be twice as long as second axis
+        double len  = dMx*dMx + dMy*dMy;
+        double len2 = dMx2*dMx2 + dMy2*dMy2;
+        if(len2>1e-6 && (len/len2)<4.0) maskMpca[i] = false;
+
+        phiM[i] = atan2(dMy, dMx);
+        delete Axes;
+      }
+      else
+        maskMpca[i] = false;
+    }
   }
 
   vector<unsigned int> idxMValid = extractSamples(M, maskM);
@@ -148,36 +192,6 @@ obvious::Matrix PCAMatching::match(const obvious::Matrix* M, const bool* maskM, 
     return TBest;
   }
 
-  // Determine orientation in local model neighborhood
-  double* phiM = new double[pointsInM];
-  for(int i=_pcaCnt/2; i<pointsInM-_pcaCnt/2; i++)
-  {
-    unsigned int cnt = 0;
-    for(int j=-_pcaCnt/2; j<_pcaCnt/2; j++)
-    {
-      if(maskM[i+j]) cnt++;
-    }
-    if(cnt>4)
-    {
-      Matrix A(cnt, 2);
-      cnt = 0;
-      for(int j=-_pcaCnt/2; j<_pcaCnt/2; j++)
-      {
-        if(maskM[i+j])
-        {
-          A(cnt, 0) = (*M)(i+j, 0);
-          A(cnt, 1) = (*M)(i+j, 1);
-          cnt++;
-        }
-      }
-      Matrix* Axes = A.pcaAnalysis();
-      phiM[i] = atan2((*Axes)(0,3)-(*Axes)(0,2), (*Axes)(0,1)-(*Axes)(0,0));
-      delete Axes;
-    }
-    else
-      phiM[i] = std::numeric_limits<double>::quiet_NaN();
-  }
-
   // Determine number of valid samples in local scene neighborhood
   unsigned int* localSceneCnt = new unsigned int[pointsInS];
   for(int i=_pcaCnt/2; i<pointsInS-_pcaCnt/2; i++)
@@ -194,15 +208,21 @@ obvious::Matrix PCAMatching::match(const obvious::Matrix* M, const bool* maskM, 
   double errBest           = 1e12;
   double cntRateBest       = 0;
 
+  srand (time(NULL));
+
 #pragma omp parallel
 {
-  //cout<<"Number of Threads: "<< omp_get_num_threads()<<endl;
   #pragma omp for
   for(unsigned int trial = 0; trial < _trials; trial++)
   {
+    int idx;
+//#pragma omp critical
+//{
     const int randIdx     = rand() % (idxSValid.size()-1);
-    const int idx         = idxSValid[randIdx];
-
+    idx         = idxSValid[randIdx];
+    // remove chosen element to avoid picking same index a second time
+    //idxSValid.erase(idxSValid.begin() + randIdx);
+//}
     // Ensure at least a few samples for PCA analysis
     if(localSceneCnt[idx]>4)
     {
@@ -219,7 +239,15 @@ obvious::Matrix PCAMatching::match(const obvious::Matrix* M, const bool* maskM, 
       }
 
       Matrix* Axes = A.pcaAnalysis();
-      double phiS = atan2((*Axes)(0,3)-(*Axes)(0,2), (*Axes)(0,1)-(*Axes)(0,0));
+      double dSx  = (*Axes)(0,1)-(*Axes)(0,0);
+      double dSy  = (*Axes)(0,3)-(*Axes)(0,2);
+      double dSx2 = (*Axes)(1,1)-(*Axes)(1,0);
+      double dSy2 = (*Axes)(1,3)-(*Axes)(1,2);
+      // rate axes lengths -> main axis needs to be twice as long as second axis
+      double len  = dSx*dSx + dSy*dSy;
+      double len2 = dSx2*dSx2 + dSy2*dSy2;
+      if(len2>1e-6 && (len/len2)<4.0) continue;
+      double phiS = atan2(dSy, dSx);
       delete Axes;
 
       // leftmost scene point belonging to query point idx1
@@ -229,7 +257,7 @@ obvious::Matrix PCAMatching::match(const obvious::Matrix* M, const bool* maskM, 
 
       for(int i=iMin; i<iMax; i++)
       {
-        if(maskM[i] && !isnan(phiM[i]))
+        if(maskMpca[i])
         {
           double phi = phiM[i] - phiS;
 
@@ -292,11 +320,10 @@ obvious::Matrix PCAMatching::match(const obvious::Matrix* M, const bool* maskM, 
               err += dists[0][0];
               if(dists[0][0] < _epsSqr)
               {
-                //err += sqrt(dists[0][0]);
                 cntMatch++;
               }
             }
-            err = sqrt(err);
+            //err = sqrt(err);
 
             delete[] indices.ptr();
             delete[] dists.ptr();
@@ -312,8 +339,8 @@ obvious::Matrix PCAMatching::match(const obvious::Matrix* M, const bool* maskM, 
 
 #pragma omp critical
 {
-            bool rateCondition = ((cntRate - cntRateBest) > equalThres) && (cntMatch > cntBest);
-            bool errorCondition = fabs( (cntRate-cntRateBest) < equalThres ) && (cntMatch == cntBest) && err < errBest;
+            bool rateCondition  = ((cntRate-cntRateBest) > equalThres) && (cntMatch > cntBest);
+            bool errorCondition = ((cntRate-cntRateBest) < equalThres) && (cntMatch == cntBest) && err < errBest;
             bool goodMatch = rateCondition || errorCondition;
 
             if(goodMatch)
@@ -332,6 +359,8 @@ obvious::Matrix PCAMatching::match(const obvious::Matrix* M, const bool* maskM, 
 
 } // OMP
 
+  delete [] phiM;
+  delete [] maskMpca;
   delete [] localSceneCnt;
   return TBest;
 }

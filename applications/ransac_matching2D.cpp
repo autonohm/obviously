@@ -85,11 +85,11 @@ int main(int argc, char** argv)
   T.print();
 
   unsigned int trials = 50;
-  double epsThresh = 0.15;
+  double epsThresh = 0.02;
   unsigned int sizeControlSet = 180;
   //RansacMatching matcher(trials, epsThresh, sizeControlSet);
   PCAMatching matcher(trials, epsThresh, sizeControlSet);
-  matcher.activateTrace();
+  //matcher.activateTrace();
   Matrix F = matcher.match(M, maskM, &S, maskS, deg2rad(45.0), 1.5 , deg2rad(0.25));
   matcher.serializeTrace("/tmp/trace");
   F.invert();
