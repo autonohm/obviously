@@ -233,96 +233,98 @@ obvious::Matrix PCAMatching::match(const obvious::Matrix* M, const bool* maskM, 
         {
           double phi = phiM[i] - phiS;
 
-          obvious::Matrix T = obvious::MatrixFactory::TransformationMatrix33(phi, 0, 0);
-
-          // Calculate translation
-          T(0, 2) = (*M)(i,0) - (T(0, 0) * (*S)(idx,0) + T(0, 1) * (*S)(idx,1));
-          T(1, 2) = (*M)(i,1) - (T(1, 0) * (*S)(idx,0) + T(1, 1) * (*S)(idx,1));
-
-          obvious::Matrix STemp = T * (*Control);
-
-          // Determine how many nearest neighbors (model <-> scene) are close enough
-          double q[2];
-          unsigned int cntMatch = 0;
-          flann::Matrix<int> indices(new int[1], 1, 1);
-          flann::Matrix<double> dists(new double[1], 1, 1);
-          double err = 0;
-
-          //We can cut off the outer parts of the scene/model as
-          //the rotations tells how much information is not shared by the scans
-          int clippedBeams = (int) (phi / resolution);
-
-          unsigned int clippedPoints = 0;
-          for(unsigned int s = 0; s < STemp.getCols(); s++)
+          if(fabs(phi) < phiMax)
           {
-            /* Clip control points according to phi:
-             *------------------------------------------
-             * Cases:
-             * for positive clipped points -> Scene is rotated left
-             *    Scene uses: [0; size-clippedPoints] -> cut of left side
-             *    Model uses: [0+clippedPoints; size] -> cut of right side
-             * for negative clipped points. -> Scene is rotated right
-             *    Scene uses: [0-clippedPoints; size] -> cut of right
-             *    Model uses: [0; scene + clippedPoints] -> cut of left
-             */
+            obvious::Matrix T = obvious::MatrixFactory::TransformationMatrix33(phi, 0, 0);
 
-            if( idxControl[s] < (unsigned int) max(0, -clippedBeams) || idxControl[s] > min(pointsInS, pointsInS-clippedBeams) )
+            // Calculate translation
+            T(0, 2) = (*M)(i,0) - (T(0, 0) * (*S)(idx,0) + T(0, 1) * (*S)(idx,1));
+            T(1, 2) = (*M)(i,1) - (T(1, 0) * (*S)(idx,0) + T(1, 1) * (*S)(idx,1));
+
+            obvious::Matrix STemp = T * (*Control);
+
+            // Determine how many nearest neighbors (model <-> scene) are close enough
+            double q[2];
+            unsigned int cntMatch = 0;
+            flann::Matrix<int> indices(new int[1], 1, 1);
+            flann::Matrix<double> dists(new double[1], 1, 1);
+            double err = 0;
+
+            //We can cut off the outer parts of the scene/model as
+            //the rotations tells how much information is not shared by the scans
+            int clippedBeams = (int) (phi / resolution);
+
+            unsigned int clippedPoints = 0;
+            for(unsigned int s = 0; s < STemp.getCols(); s++)
             {
-              clippedPoints++;
-              continue; // Cut of Scene Points, points that won't have a corresponding point due to rotation are ignored for the metric
+              /* Clip control points according to phi:
+               *------------------------------------------
+               * Cases:
+               * for positive clipped points -> Scene is rotated left
+               *    Scene uses: [0; size-clippedPoints] -> cut of left side
+               *    Model uses: [0+clippedPoints; size] -> cut of right side
+               * for negative clipped points. -> Scene is rotated right
+               *    Scene uses: [0-clippedPoints; size] -> cut of right
+               *    Model uses: [0; scene + clippedPoints] -> cut of left
+               */
+
+              if( idxControl[s] < (unsigned int) max(0, -clippedBeams) || idxControl[s] > min(pointsInS, pointsInS-clippedBeams) )
+              {
+                clippedPoints++;
+                continue; // Cut of Scene Points, points that won't have a corresponding point due to rotation are ignored for the metric
+              }
+
+              //Find nearest neighbor for control point
+              q[0] = STemp(0, s);
+              q[1] = STemp(1, s);
+              flann::Matrix<double> query(q, 1, 2);
+              flann::SearchParams p(-1, 0.0);
+              _index->knnSearch(query, indices, dists, 1, p);
+
+              //Check if model point is not clipped
+              unsigned int rawIdx = idxMValid[ indices[0][0] ]; //raw index of closest model point
+              if(rawIdx < (unsigned int) max(0, clippedBeams) || rawIdx > min(pointsInS, pointsInS+clippedBeams))
+              {
+                clippedPoints++;
+                continue; //Cut off point correspondences to Model points that don't have a reasonable corresponding point due to rotation.
+              }
+
+              err += dists[0][0];
+              if(dists[0][0] < _epsSqr)
+              {
+                //err += sqrt(dists[0][0]);
+                cntMatch++;
+              }
             }
+            err = sqrt(err);
 
-            //Find nearest neighbor for control point
-            q[0] = STemp(0, s);
-            q[1] = STemp(1, s);
-            flann::Matrix<double> query(q, 1, 2);
-            flann::SearchParams p(-1, 0.0);
-            _index->knnSearch(query, indices, dists, 1, p);
+            delete[] indices.ptr();
+            delete[] dists.ptr();
 
-            //Check if model point is not clipped
-            unsigned int rawIdx = idxMValid[ indices[0][0] ]; //raw index of closest model point
-            if(rawIdx < (unsigned int) max(0, clippedBeams) || rawIdx > min(pointsInS, pointsInS+clippedBeams))
-            {
-              clippedPoints++;
-              continue; //Cut off point correspondences to Model points that don't have a reasonable corresponding point due to rotation.
-            }
+            if(cntMatch == 0)
+              continue;
 
-            err += dists[0][0];
-            if(dists[0][0] < _epsSqr)
-            {
-              //err += sqrt(dists[0][0]);
-              cntMatch++;
-            }
-          }
-          err = sqrt(err);
-
-          delete[] indices.ptr();
-          delete[] dists.ptr();
-
-          if(cntMatch == 0)
-            continue;
-
-          // Relative MatchCnt Score
-          unsigned int maxMatchCnt = (STemp.getCols() - clippedPoints);
-          double cntRate = (double)cntMatch / (double) maxMatchCnt;
-          //double cntStepSize = 1.0 / STemp.getCols();
-          double equalThres = 1e-5;//cntStepSize;// 1e-5;
+            // Relative MatchCnt Score
+            unsigned int maxMatchCnt = (STemp.getCols() - clippedPoints);
+            double cntRate = (double)cntMatch / (double) maxMatchCnt;
+            //double cntStepSize = 1.0 / STemp.getCols();
+            double equalThres = 1e-5;//cntStepSize;// 1e-5;
 
 #pragma omp critical
 {
-          bool rateCondition = ((cntRate - cntRateBest) > equalThres) && (cntMatch > cntBest);
-          bool errorCondition = fabs( (cntRate-cntRateBest) < equalThres ) && (cntMatch == cntBest) && err < errBest;
-          bool goodMatch = rateCondition || errorCondition;
+            bool rateCondition = ((cntRate - cntRateBest) > equalThres) && (cntMatch > cntBest);
+            bool errorCondition = fabs( (cntRate-cntRateBest) < equalThres ) && (cntMatch == cntBest) && err < errBest;
+            bool goodMatch = rateCondition || errorCondition;
 
-          if(goodMatch)
-          {
-            errBest = err;
-            cntBest = cntMatch;
-            cntRateBest = cntRate;
-            TBest = T;
-          }
+            if(goodMatch)
+            {
+              errBest = err;
+              cntBest = cntMatch;
+              cntRateBest = cntRate;
+              TBest = T;
+            }
 }
-
+          }
         } // if(!isnan(phiM[i]))
       } // for(int i=_pcaCnt/2; i<pointsInM-_pcaCnt/2; i++)
     } //if(localSceneCnt[idx]>4)
