@@ -35,7 +35,7 @@ int main(int argc, char** argv)
   {
     double di = (double)i;
     (*M)(i, 0) = (di / (500.0));
-    (*M)(i, 1) = sin(di / omega);
+    (*M)(i, 1) = sin(di / omega)+2.0;
     maskM[i] = ((i % 2) != 0);
     maskS[i] = ((i % 2) != 0);
     //maskM[i] = 1;
@@ -89,7 +89,7 @@ int main(int argc, char** argv)
   unsigned int sizeControlSet = 180;
   //RansacMatching matcher(trials, epsThresh, sizeControlSet);
   PCAMatching matcher(trials, epsThresh, sizeControlSet);
-  //matcher.activateTrace();
+  matcher.activateTrace();
   Matrix F = matcher.match(M, maskM, &S, maskS, deg2rad(45.0), 1.5 , deg2rad(0.25));
   matcher.serializeTrace("/tmp/trace");
   F.invert();

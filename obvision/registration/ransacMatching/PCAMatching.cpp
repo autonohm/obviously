@@ -162,6 +162,16 @@ obvious::Matrix PCAMatching::match(const obvious::Matrix* M, const bool* maskM, 
         if(len2>1e-6 && (len/len2)<4.0) maskMpca[i] = false;
 
         phiM[i] = atan2(dMy, dMx);
+
+        // correct orientation with dot product
+        if((*M)(i,0)*dMy-dMx*(*M)(i,1)>0.0)
+        {
+          if(phiM[i]>0.0)
+            phiM[i] -= M_PI;
+          else
+            phiM[i] += M_PI;
+        }
+
         delete Axes;
       }
       else
@@ -177,6 +187,32 @@ obvious::Matrix PCAMatching::match(const obvious::Matrix* M, const bool* maskM, 
   obvious::Matrix* Control = pickControlSet(S, idxSValid, idxControl);
 
   LOGMSG(DBG_DEBUG, "Valid points in scene: " << idxSValid.size() << ", Control set: " << Control->getCols());
+
+
+  if(_trace)
+  {
+    double** rawModel;
+    double** rawScene;
+    System<double>::allocate(idxMValid.size(), 2, rawModel);
+    System<double>::allocate(idxSValid.size(), 2, rawScene);
+    for(unsigned int i=0; i<idxMValid.size(); i++)
+    {
+      rawModel[i][0] = (*M)(idxMValid[i], 0);
+      rawModel[i][1] = (*M)(idxMValid[i], 1);
+    }
+    for(unsigned int i=0; i<idxSValid.size(); i++)
+    {
+      rawScene[i][0] = (*S)(idxSValid[i], 0);
+      rawScene[i][1] = (*S)(idxSValid[i], 1);
+    }
+    _trace->reset();
+    _trace->setModel(rawModel, idxMValid.size());
+    _trace->setScene(rawScene, idxSValid.size());
+
+    System<double>::deallocate(rawModel);
+    System<double>::deallocate(rawScene);
+  }
+
 
   // Calculate search "radius", i.e., maximum difference in polar indices because of rotation
   phiMax = min(phiMax, M_PI * 0.5);
@@ -210,6 +246,13 @@ obvious::Matrix PCAMatching::match(const obvious::Matrix* M, const bool* maskM, 
 
   srand (time(NULL));
 
+#ifndef DEBUG
+if (_trace)
+{
+  omp_set_num_threads(1);
+}
+#endif
+
 #pragma omp parallel
 {
   #pragma omp for
@@ -218,8 +261,8 @@ obvious::Matrix PCAMatching::match(const obvious::Matrix* M, const bool* maskM, 
     int idx;
 //#pragma omp critical
 //{
-    const int randIdx     = rand() % (idxSValid.size()-1);
-    idx         = idxSValid[randIdx];
+    const int randIdx = rand() % (idxSValid.size()-1);
+    idx               = idxSValid[randIdx];
     // remove chosen element to avoid picking same index a second time
     //idxSValid.erase(idxSValid.begin() + randIdx);
 //}
@@ -247,7 +290,18 @@ obvious::Matrix PCAMatching::match(const obvious::Matrix* M, const bool* maskM, 
       double len  = dSx*dSx + dSy*dSy;
       double len2 = dSx2*dSx2 + dSy2*dSy2;
       if(len2>1e-6 && (len/len2)<4.0) continue;
+
       double phiS = atan2(dSy, dSx);
+
+      // correct orientation with dot product
+      if((*S)(idx,0)*dSy-dSx*(*S)(idx,1)>0.0)
+      {
+        if(phiS>0.0)
+          phiS -= M_PI;
+        else
+          phiS += M_PI;
+      }
+
       delete Axes;
 
       // leftmost scene point belonging to query point idx1
@@ -259,8 +313,9 @@ obvious::Matrix PCAMatching::match(const obvious::Matrix* M, const bool* maskM, 
       {
         if(maskMpca[i])
         {
-          double phi = phiM[i] - phiS;
+          double phi  = phiM[i] - phiS;
 
+          //cout << "idx: " << idx << ", i:" << i << ", phiM:" << phiM[i] << ", phiS: " << phiS << ", phi: " << fabs(phi) << endl;
           if(fabs(phi) < phiMax)
           {
             obvious::Matrix T = obvious::MatrixFactory::TransformationMatrix33(phi, 0, 0);
@@ -351,6 +406,30 @@ obvious::Matrix PCAMatching::match(const obvious::Matrix* M, const bool* maskM, 
               TBest = T;
             }
 }
+
+            if(_trace)
+            {
+              double** rawScene;
+              System<double>::allocate(STemp.getCols(), 2, rawScene);
+              for(unsigned int j=0; j<STemp.getCols(); j++)
+              {
+                rawScene[j][0] = STemp(0, j);
+                rawScene[j][1] = STemp(1, j);
+              }
+              vector<StrTraceCartesianPair> tracePair;
+              StrTraceCartesianPair p;
+              p.first[0] = (*M)(i, 0);
+              p.first[1] = (*M)(i, 1);
+              p.second[0] = (*S)(idx, 0);
+              p.second[1] = (*S)(idx, 1);
+              tracePair.push_back(p);
+              vector<unsigned int> id;
+              id.push_back(trial);
+              id.push_back(i);
+              id.push_back(idx);
+              _trace->addAssignment(rawScene, STemp.getCols(), tracePair, err, id);
+              System<double>::deallocate(rawScene);
+            }
           }
         } // if(!isnan(phiM[i]))
       } // for(int i=_pcaCnt/2; i<pointsInM-_pcaCnt/2; i++)
