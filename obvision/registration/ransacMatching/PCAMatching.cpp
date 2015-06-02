@@ -19,8 +19,8 @@ PCAMatching::PCAMatching(unsigned int trials, double epsThresh, unsigned int siz
   _model          = NULL;
   _index          = NULL;
   _trace          = NULL;
-  _pcaSearchRange = 20;
-  _pcaMinSamples  = 8;
+  _pcaSearchRange = 10;
+  _pcaMinSamples  = 3;
 }
 
 PCAMatching::~PCAMatching()
@@ -113,6 +113,7 @@ obvious::Matrix* PCAMatching::pickControlSet(const obvious::Matrix* M, vector<un
 
 obvious::Matrix PCAMatching::match(const obvious::Matrix* M,
                                    const bool* maskM,
+                                   const obvious::Matrix* N,
                                    const obvious::Matrix* S,
                                    const bool* maskS,
                                    double phiMax,
@@ -136,59 +137,71 @@ obvious::Matrix PCAMatching::match(const obvious::Matrix* M,
   double* phiM = new double[pointsInM];
   bool* maskMpca = new bool[pointsInM];
   memcpy(maskMpca, maskM, pointsInM*sizeof(bool));
-  for(int i=0; i<_pcaSearchRange/2; i++)
-    maskMpca[i] = false;
-  for(int i=pointsInM-_pcaSearchRange/2; i<pointsInM; i++)
-    maskMpca[i] = false;
-  for(int i=_pcaSearchRange/2; i<pointsInM-_pcaSearchRange/2; i++)
+  if(N)
   {
-    if(maskM[i])
+    for(int i=0; i<pointsInM; i++)
     {
-      unsigned int cnt = 0;
-      for(int j=-_pcaSearchRange/2; j<_pcaSearchRange/2; j++)
-      {
-        if(maskM[i+j]) cnt++;
-      }
-      if(cnt>_pcaMinSamples)
-      {
-        Matrix A(cnt, 2);
-        cnt = 0;
-        for(int j=-_pcaSearchRange/2; j<_pcaSearchRange/2; j++)
-        {
-          if(maskM[i+j])
-          {
-            A(cnt, 0) = (*M)(i+j, 0);
-            A(cnt, 1) = (*M)(i+j, 1);
-            cnt++;
-          }
-        }
-        Matrix* Axes = A.pcaAnalysis();
-        double dMx  = (*Axes)(0,1)-(*Axes)(0,0);
-        double dMy  = (*Axes)(0,3)-(*Axes)(0,2);
-        double dMx2 = (*Axes)(1,1)-(*Axes)(1,0);
-        double dMy2 = (*Axes)(1,3)-(*Axes)(1,2);
-        // rate axes lengths -> main axis needs to be twice as long as second axis
-        double len  = dMx*dMx + dMy*dMy;
-        double len2 = dMx2*dMx2 + dMy2*dMy2;
-        assert(len>len2);
-        if(len2>1e-6 && (len/len2)<4.0) maskMpca[i] = false;
-
-        phiM[i] = atan2(dMy, dMx);
-
-        // correct orientation with dot product
-        if((*M)(i,0)*dMy-dMx*(*M)(i,1)>0.0)
-        {
-          if(phiM[i]>0.0)
-            phiM[i] -= M_PI;
-          else
-            phiM[i] += M_PI;
-        }
-        delete Axes;
-      }
-      else
-        maskMpca[i] = false;
+      phiM[i] = atan2((*N)(i, 1), (*N)(i, 0));
     }
   }
+  else
+  {
+    for(int i=0; i<_pcaSearchRange/2; i++)
+      maskMpca[i] = false;
+    for(int i=pointsInM-_pcaSearchRange/2; i<pointsInM; i++)
+      maskMpca[i] = false;
+    for(int i=_pcaSearchRange/2; i<pointsInM-_pcaSearchRange/2; i++)
+    {
+      if(maskM[i])
+      {
+        unsigned int cnt = 0;
+        for(int j=-_pcaSearchRange/2; j<_pcaSearchRange/2; j++)
+        {
+          if(maskM[i+j]) cnt++;
+        }
+        if(cnt>_pcaMinSamples)
+        {
+          Matrix A(cnt, 2);
+          cnt = 0;
+          for(int j=-_pcaSearchRange/2; j<_pcaSearchRange/2; j++)
+          {
+            if(maskM[i+j])
+            {
+              A(cnt, 0) = (*M)(i+j, 0);
+              A(cnt, 1) = (*M)(i+j, 1);
+              cnt++;
+            }
+          }
+          Matrix* Axes = A.pcaAnalysis();
+          // longer axis
+          double xLong  = (*Axes)(0,1)-(*Axes)(0,0);
+          double yLong  = (*Axes)(0,3)-(*Axes)(0,2);
+          // shorter axis
+          double xShort = (*Axes)(1,1)-(*Axes)(1,0);
+          double yShort = (*Axes)(1,3)-(*Axes)(1,2);
+          // rate axes lengths -> main axis needs to be twice as long as second axis
+          double lenLongSqr  = xLong*xLong + yLong*yLong;
+          double lenShortSqr = xShort*xShort + yShort*yShort;
+          assert(lenLongSqr>lenShortSqr);
+          if(lenShortSqr>1e-6 && (lenLongSqr/lenShortSqr)<4.0) maskMpca[i] = false;
+
+          // shorter axis is normal
+          phiM[i] = atan2(yShort, xShort);
+
+          // correct orientation with cross product
+          if(((*M)(i,0)*xShort+(*M)(i,1)*yShort)>0.0)
+            phiM[i] = -phiM[i];
+
+          delete Axes;
+        }
+        else
+          maskMpca[i] = false;
+      }
+    }
+  }
+
+  /*for(int i=0; i<pointsInM; i++)
+    cout << phiM[i] << ", " << phiM2[i] << ", Mask: " << maskM[i] << endl;*/
 
   vector<unsigned int> idxMValid = extractSamples(M, maskMpca);
   vector<unsigned int> idxSValid = extractSamples(S, maskS);
@@ -308,24 +321,25 @@ double       bestErr = 1e12;
         }
       }
       Matrix* Axes = A.pcaAnalysis();
-      double dSx  = (*Axes)(0,1)-(*Axes)(0,0);
-      double dSy  = (*Axes)(0,3)-(*Axes)(0,2);
-      double dSx2 = (*Axes)(1,1)-(*Axes)(1,0);
-      double dSy2 = (*Axes)(1,3)-(*Axes)(1,2);
+      // longer axis
+      double xLong  = (*Axes)(0,1)-(*Axes)(0,0);
+      double yLong  = (*Axes)(0,3)-(*Axes)(0,2);
+      // shorter axis
+      double xShort = (*Axes)(1,1)-(*Axes)(1,0);
+      double yShort = (*Axes)(1,3)-(*Axes)(1,2);
       // rate axes lengths -> main axis needs to be twice as long as second axis
-      // to make main orientation distinguishable
-      double len  = dSx*dSx + dSy*dSy;
-      double len2 = dSx2*dSx2 + dSy2*dSy2;
-      if(len2>1e-6 && (len/len2)<4.0) continue;
-      double phiS = atan2(dSy, dSx);
-      // correct orientation with dot product
-      if((*S)(idx,0)*dSy-dSx*(*S)(idx,1)>0.0)
-      {
-        if(phiS>0.0)
-          phiS -= M_PI;
-        else
-          phiS += M_PI;
-      }
+      double lenLongSqr  = xLong*xLong + yLong*yLong;
+      double lenShortSqr = xShort*xShort + yShort*yShort;
+      assert(lenLongSqr>lenShortSqr);
+      if(lenShortSqr>1e-6 && (lenLongSqr/lenShortSqr)<4.0) continue;
+
+      // shorter axis is normal
+      double phiS = atan2(yShort, xShort);
+
+      // correct orientation with cross product
+      if(((*S)(idx,0)*xShort+(*S)(idx,1)*yShort)>0.0)
+        phiS = -phiS;
+
       delete Axes;
       // --------------------------------------------------------------
 
