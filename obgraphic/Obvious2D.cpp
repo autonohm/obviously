@@ -130,7 +130,7 @@ void Obvious2D::registerKeyboardCallback(char key, fptrKeyboardCallback callback
    _mCallback[key] = callback;
 }
 
-void Obvious2D::addText(char* text, unsigned int c, unsigned int r)
+void Obvious2D::addText(const char* text, unsigned int c, unsigned int r)
 {
    if(_textCnt >= TEXTMAX)
       return;

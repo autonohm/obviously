@@ -30,12 +30,16 @@ int main(int argc, char** argv)
   bool maskM[DATASETSIZE];
   bool maskS[DATASETSIZE];
 
-  double omega = 100.0;
+  double inc = deg2rad(270.0/DATASETSIZE);
+  double angle = deg2rad(-135.0);
   for(int i = 0; i < DATASETSIZE; i++)
   {
-    double di = (double)i;
-    (*M)(i, 0) = (di / (500.0));
-    (*M)(i, 1) = sin(di / omega)+2.0;
+    double d = sin(2.0*angle)+2.0;
+
+    (*M)(i, 0) = cos(angle)*d;
+    (*M)(i, 1) = sin(angle)*d;
+    angle += inc;
+
     maskM[i] = ((i % 2) != 0);
     maskS[i] = ((i % 2) != 0);
     //maskM[i] = 1;
@@ -84,7 +88,7 @@ int main(int argc, char** argv)
   T.invert();
   T.print();
 
-  unsigned int trials = 50;
+  unsigned int trials = 3;
   double epsThresh = 0.02;
   unsigned int sizeControlSet = 180;
   //RansacMatching matcher(trials, epsThresh, sizeControlSet);

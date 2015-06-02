@@ -19,7 +19,8 @@ PCAMatching::PCAMatching(unsigned int trials, double epsThresh, unsigned int siz
   _model          = NULL;
   _index          = NULL;
   _trace          = NULL;
-  _pcaCnt         = 10;
+  _pcaSearchRange = 20;
+  _pcaMinSamples  = 8;
 }
 
 PCAMatching::~PCAMatching()
@@ -51,7 +52,7 @@ void PCAMatching::deactivateTrace()
 vector<unsigned int> PCAMatching::extractSamples(const obvious::Matrix* M, const bool* mask)
 {
   vector<unsigned int> validIndices;
-  for(unsigned int i=_pcaCnt/2; i<M->getRows()-_pcaCnt/2; i++)
+  for(unsigned int i=_pcaSearchRange/2; i<M->getRows()-_pcaSearchRange/2; i++)
   {
     if(mask[i])
       validIndices.push_back(i);
@@ -110,8 +111,13 @@ obvious::Matrix* PCAMatching::pickControlSet(const obvious::Matrix* M, vector<un
   return C;
 }
 
-#define MIN_VALID_POINTS 10
-obvious::Matrix PCAMatching::match(const obvious::Matrix* M, const bool* maskM, const obvious::Matrix* S, const bool* maskS, double phiMax, const double transMax, const double resolution)
+obvious::Matrix PCAMatching::match(const obvious::Matrix* M,
+                                   const bool* maskM,
+                                   const obvious::Matrix* S,
+                                   const bool* maskS,
+                                   double phiMax,
+                                   const double transMax,
+                                   const double resolution)
 {
   obvious::Matrix TBest(3, 3);
   TBest.setIdentity();
@@ -126,23 +132,28 @@ obvious::Matrix PCAMatching::match(const obvious::Matrix* M, const bool* maskM, 
   }
 
   // Determine orientation in local model neighborhood
+  // Only from these points a valid orientation is computable
   double* phiM = new double[pointsInM];
   bool* maskMpca = new bool[pointsInM];
   memcpy(maskMpca, maskM, pointsInM*sizeof(bool));
-  for(int i=_pcaCnt/2; i<pointsInM-_pcaCnt/2; i++)
+  for(int i=0; i<_pcaSearchRange/2; i++)
+    maskMpca[i] = false;
+  for(int i=pointsInM-_pcaSearchRange/2; i<pointsInM; i++)
+    maskMpca[i] = false;
+  for(int i=_pcaSearchRange/2; i<pointsInM-_pcaSearchRange/2; i++)
   {
     if(maskM[i])
     {
       unsigned int cnt = 0;
-      for(int j=-_pcaCnt/2; j<_pcaCnt/2; j++)
+      for(int j=-_pcaSearchRange/2; j<_pcaSearchRange/2; j++)
       {
         if(maskM[i+j]) cnt++;
       }
-      if(cnt>4)
+      if(cnt>_pcaMinSamples)
       {
         Matrix A(cnt, 2);
         cnt = 0;
-        for(int j=-_pcaCnt/2; j<_pcaCnt/2; j++)
+        for(int j=-_pcaSearchRange/2; j<_pcaSearchRange/2; j++)
         {
           if(maskM[i+j])
           {
@@ -159,6 +170,7 @@ obvious::Matrix PCAMatching::match(const obvious::Matrix* M, const bool* maskM, 
         // rate axes lengths -> main axis needs to be twice as long as second axis
         double len  = dMx*dMx + dMy*dMy;
         double len2 = dMx2*dMx2 + dMy2*dMy2;
+        assert(len>len2);
         if(len2>1e-6 && (len/len2)<4.0) maskMpca[i] = false;
 
         phiM[i] = atan2(dMy, dMx);
@@ -171,7 +183,6 @@ obvious::Matrix PCAMatching::match(const obvious::Matrix* M, const bool* maskM, 
           else
             phiM[i] += M_PI;
         }
-
         delete Axes;
       }
       else
@@ -179,15 +190,25 @@ obvious::Matrix PCAMatching::match(const obvious::Matrix* M, const bool* maskM, 
     }
   }
 
-  vector<unsigned int> idxMValid = extractSamples(M, maskM);
+  vector<unsigned int> idxMValid = extractSamples(M, maskMpca);
   vector<unsigned int> idxSValid = extractSamples(S, maskS);
 
   initKDTree(M, idxMValid);
   vector<unsigned int> idxControl;  //represents the indices of points used for Control in S.
   obvious::Matrix* Control = pickControlSet(S, idxSValid, idxControl);
+  unsigned int sizeControl = Control->getCols();
+  bool* maskControl        = new bool[sizeControl];
 
-  LOGMSG(DBG_DEBUG, "Valid points in scene: " << idxSValid.size() << ", Control set: " << Control->getCols());
+  // Determine frustum, i.e., direction of leftmost and rightmost model point
+  double phiBoundMin = atan2((*M)(idxMValid.front(),1), (*M)(idxMValid.front(),0));
+  double phiBoundMax = atan2((*M)(idxMValid.back(),1),  (*M)(idxMValid.back(),0));
 
+  cout << "Valid points in scene: " << idxSValid.size() << ", points in M: " << pointsInM << ", valid points in model: " << idxMValid.size() << ", Control set: " << sizeControl << endl;
+  cout << "Model frustum: [" << rad2deg(phiBoundMin) << "; " << rad2deg(phiBoundMax) << "]" << endl;
+
+  LOGMSG(DBG_DEBUG, "Valid points in scene: " << idxSValid.size() << ", valid points in model: " << idxMValid.size() << ", Control set: " << Control->getCols());
+
+  LOGMSG(DBG_DEBUG, "Model phi min:: " << rad2deg(phiBoundMin) << ", Model phi max: " << rad2deg(phiBoundMax));
 
   if(_trace)
   {
@@ -213,7 +234,6 @@ obvious::Matrix PCAMatching::match(const obvious::Matrix* M, const bool* maskM, 
     System<double>::deallocate(rawScene);
   }
 
-
   // Calculate search "radius", i.e., maximum difference in polar indices because of rotation
   phiMax = min(phiMax, M_PI * 0.5);
   int span;
@@ -229,20 +249,17 @@ obvious::Matrix PCAMatching::match(const obvious::Matrix* M, const bool* maskM, 
   }
 
   // Determine number of valid samples in local scene neighborhood
+  // only from these points a valid orientation is computable
   unsigned int* localSceneCnt = new unsigned int[pointsInS];
-  for(int i=_pcaCnt/2; i<pointsInS-_pcaCnt/2; i++)
+  for(int i=_pcaSearchRange/2; i<pointsInS-_pcaSearchRange/2; i++)
   {
     unsigned int cnt = 0;
-    for(int j=-_pcaCnt/2; j<_pcaCnt/2; j++)
+    for(int j=-_pcaSearchRange/2; j<_pcaSearchRange/2; j++)
     {
       if(maskS[i+j]) cnt++;
     }
     localSceneCnt[i] = cnt;
   }
-
-  unsigned int cntBest     = 0;
-  double errBest           = 1e12;
-  double cntRateBest       = 0;
 
   srand (time(NULL));
 
@@ -253,25 +270,35 @@ if (_trace)
 }
 #endif
 
+int          bestM;
+int          bestS;
+double       bestRatio = 0.0;
+double       bestScore = M_PI / 2.0;
+unsigned int bestCnt = 0;
+double       bestErr = 1e12;
+
 #pragma omp parallel
 {
   #pragma omp for
   for(unsigned int trial = 0; trial < _trials; trial++)
   {
     int idx;
-//#pragma omp critical
-//{
+#pragma omp critical
+{
     const int randIdx = rand() % (idxSValid.size()-1);
     idx               = idxSValid[randIdx];
+
     // remove chosen element to avoid picking same index a second time
-    //idxSValid.erase(idxSValid.begin() + randIdx);
-//}
-    // Ensure at least a few samples for PCA analysis
-    if(localSceneCnt[idx]>4)
+    idxSValid.erase(idxSValid.begin() + randIdx);
+}
+    // Ensure that scene sample has at least a few valid neighbors for PCA analysis
+    if(localSceneCnt[idx]>_pcaMinSamples)
     {
+
+      // ----------- Determine orientation of scene sample ------------
       Matrix A(localSceneCnt[idx], 2);
       unsigned int cnt = 0;
-      for(int j=-_pcaCnt/2; j<_pcaCnt/2; j++)
+      for(int j=-_pcaSearchRange/2; j<_pcaSearchRange/2; j++)
       {
         if(maskS[idx+j])
         {
@@ -280,19 +307,17 @@ if (_trace)
           cnt++;
         }
       }
-
       Matrix* Axes = A.pcaAnalysis();
       double dSx  = (*Axes)(0,1)-(*Axes)(0,0);
       double dSy  = (*Axes)(0,3)-(*Axes)(0,2);
       double dSx2 = (*Axes)(1,1)-(*Axes)(1,0);
       double dSy2 = (*Axes)(1,3)-(*Axes)(1,2);
       // rate axes lengths -> main axis needs to be twice as long as second axis
+      // to make main orientation distinguishable
       double len  = dSx*dSx + dSy*dSy;
       double len2 = dSx2*dSx2 + dSy2*dSy2;
       if(len2>1e-6 && (len/len2)<4.0) continue;
-
       double phiS = atan2(dSy, dSx);
-
       // correct orientation with dot product
       if((*S)(idx,0)*dSy-dSx*(*S)(idx,1)>0.0)
       {
@@ -301,30 +326,54 @@ if (_trace)
         else
           phiS += M_PI;
       }
-
       delete Axes;
+      // --------------------------------------------------------------
 
       // leftmost scene point belonging to query point idx1
-      const int iMin = max((int) idx-span, _pcaCnt/2);
+      const int iMin = max((int) idx-span, _pcaSearchRange/2);
       // rightmost scene point belonging to query point idx1
-      const int iMax = min(idx+span, pointsInM-_pcaCnt/2);
+      const int iMax = min(idx+span, pointsInM-_pcaSearchRange/2);
 
       for(int i=iMin; i<iMax; i++)
       {
         if(maskMpca[i])
         {
-          double phi  = phiM[i] - phiS;
+          double phi              = phiM[i] - phiS;
+          if(phi>M_PI)       phi -= 2.0*M_PI;
+          else if(phi<-M_PI) phi += 2.0*M_PI;
 
-          //cout << "idx: " << idx << ", i:" << i << ", phiM:" << phiM[i] << ", phiS: " << phiS << ", phi: " << fabs(phi) << endl;
           if(fabs(phi) < phiMax)
           {
             obvious::Matrix T = obvious::MatrixFactory::TransformationMatrix33(phi, 0, 0);
 
             // Calculate translation
-            T(0, 2) = (*M)(i,0) - (T(0, 0) * (*S)(idx,0) + T(0, 1) * (*S)(idx,1));
-            T(1, 2) = (*M)(i,1) - (T(1, 0) * (*S)(idx,0) + T(1, 1) * (*S)(idx,1));
+            const double sx = (*S)(idx,0);
+            const double sy = (*S)(idx,1);
+            T(0, 2) = (*M)(i,0) - (T(0, 0) * sx + T(0, 1) * sy);
+            T(1, 2) = (*M)(i,1) - (T(1, 0) * sx + T(1, 1) * sy);
 
+            //T.print();
+            // Transform control set
             obvious::Matrix STemp = T * (*Control);
+
+            // Determine number of control points in field of view
+            unsigned int maxCntMatch = 0;
+            for(unsigned int j=0; j<STemp.getCols(); j++)
+            {
+              double phiControl = atan2(STemp(1, j), STemp(0, j));
+              if(phiControl>phiBoundMax || phiControl<phiBoundMin)
+              {
+                maskControl[j] = false;
+              }
+              else
+              {
+                maskControl[j] = true;
+                maxCntMatch++;
+              }
+            }
+
+            if(maxCntMatch<sizeControl/3)
+              continue;
 
             // Determine how many nearest neighbors (model <-> scene) are close enough
             double q[2];
@@ -333,76 +382,56 @@ if (_trace)
             flann::Matrix<double> dists(new double[1], 1, 1);
             double err = 0;
 
-            //We can cut off the outer parts of the scene/model as
-            //the rotations tells how much information is not shared by the scans
-            int clippedBeams = (int) (phi / resolution);
-
-            unsigned int clippedPoints = 0;
             for(unsigned int s = 0; s < STemp.getCols(); s++)
             {
-              /* Clip control points according to phi:
-               *------------------------------------------
-               * Cases:
-               * for positive clipped points -> Scene is rotated left
-               *    Scene uses: [0; size-clippedPoints] -> cut of left side
-               *    Model uses: [0+clippedPoints; size] -> cut of right side
-               * for negative clipped points. -> Scene is rotated right
-               *    Scene uses: [0-clippedPoints; size] -> cut of right
-               *    Model uses: [0; scene + clippedPoints] -> cut of left
-               */
-
-              if( idxControl[s] < (unsigned int) max(0, -clippedBeams) || idxControl[s] > min(pointsInS, pointsInS-clippedBeams) )
+              if(maskControl[s])
               {
-                clippedPoints++;
-                continue; // Cut of Scene Points, points that won't have a corresponding point due to rotation are ignored for the metric
-              }
+                //Find nearest neighbor for control point
+                q[0] = STemp(0, s);
+                q[1] = STemp(1, s);
+                flann::Matrix<double> query(q, 1, 2);
+                flann::SearchParams p(-1, 0.0);
+                _index->knnSearch(query, indices, dists, 1, p);
 
-              //Find nearest neighbor for control point
-              q[0] = STemp(0, s);
-              q[1] = STemp(1, s);
-              flann::Matrix<double> query(q, 1, 2);
-              flann::SearchParams p(-1, 0.0);
-              _index->knnSearch(query, indices, dists, 1, p);
-
-              //Check if model point is not clipped
-              unsigned int rawIdx = idxMValid[ indices[0][0] ]; //raw index of closest model point
-              if(rawIdx < (unsigned int) max(0, clippedBeams) || rawIdx > min(pointsInS, pointsInS+clippedBeams))
-              {
-                clippedPoints++;
-                continue; //Cut off point correspondences to Model points that don't have a reasonable corresponding point due to rotation.
-              }
-
-              err += dists[0][0];
-              if(dists[0][0] < _epsSqr)
-              {
-                cntMatch++;
+                err += dists[0][0];
+                if(dists[0][0] < _epsSqr)
+                {
+                  cntMatch++;
+                }
               }
             }
-            //err = sqrt(err);
 
+            //cout << "idx: " << idx << ", i:" << i << ", phiM:" << rad2deg(phiM[i]) << ", phiS: " << rad2deg(phiS) << ", phi: " << rad2deg(fabs(phi)) << ", cntMatch: " << cntMatch << ", maxCntMatch: " << maxCntMatch << endl;
             delete[] indices.ptr();
             delete[] dists.ptr();
 
-            if(cntMatch == 0)
+            if(cntMatch <= sizeControl/3)
               continue;
 
-            // Relative MatchCnt Score
-            unsigned int maxMatchCnt = (STemp.getCols() - clippedPoints);
-            double cntRate = (double)cntMatch / (double) maxMatchCnt;
-            //double cntStepSize = 1.0 / STemp.getCols();
-            double equalThres = 1e-5;//cntStepSize;// 1e-5;
+            // Experimental rating
+            double ratio = (double)cntMatch / (double) maxCntMatch;
+            double errMean = err / (double)cntMatch;
+            double score = atan2(errMean,(double)cntMatch);
+            //bool goodMatch = score<bestScore && cntMatch>bestCnt;
 
-#pragma omp critical
-{
-            bool rateCondition  = ((cntRate-cntRateBest) > equalThres) && (cntMatch > cntBest);
-            bool errorCondition = ((cntRate-cntRateBest) < equalThres) && (cntMatch == cntBest) && err < errBest;
+            // Rating of Markus Kuehn
+            double equalThres = 1e-5;//cntStepSize;// 1e-5;
+            bool rateCondition = ((ratio-bestRatio) > equalThres) && (cntMatch > bestCnt);
+            bool errorCondition = fabs( (ratio-bestRatio) < equalThres ) && (cntMatch == bestCnt) && err < bestErr;
             bool goodMatch = rateCondition || errorCondition;
 
+
+            //cout << errMean << " " << cntMatch << " " << rad2deg(score) << endl;
+#pragma omp critical
+{
             if(goodMatch)
             {
-              errBest = err;
-              cntBest = cntMatch;
-              cntRateBest = cntRate;
+              bestScore = score;
+              bestRatio = ratio;
+              bestCnt = cntMatch;
+              bestErr = err;
+              bestM = i;
+              bestS = idx;
               TBest = T;
             }
 }
@@ -438,9 +467,13 @@ if (_trace)
 
 } // OMP
 
+  cout << "Best match: " << bestM << " " << bestS << " bestRatio: " << bestRatio << " bestCnt: " << bestCnt << " bestScore: " << bestScore << endl;
+  delete [] maskControl;
   delete [] phiM;
   delete [] maskMpca;
   delete [] localSceneCnt;
+  delete Control;
+
   return TBest;
 }
 

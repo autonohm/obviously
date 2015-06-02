@@ -289,11 +289,24 @@ void Trace::serialize(const char* folder)
         for(unsigned int i=0; i<_scores.size(); i++)
         {
           vector<unsigned int> id = _ids[i];
-          char buf[64];
-          file << "set output \"score_";
-          snprintf(buf, 64, "%05d", id[0]);
-          file << buf << ".png\"" << endl;
-          file << "plot \"./score_" << buf << ".dat\" u 2:3 w lp" << endl;
+          bool newfile = false;
+          if(i==0)
+          {
+            newfile = true;
+          }
+          else if(id.size()==3)
+          {
+            newfile = (id[0] != _ids[i-1][0]);
+          }
+
+          if(newfile)
+          {
+            char buf[64];
+            file << "set output \"score_";
+            snprintf(buf, 64, "%05d", id[0]);
+            file << buf << ".png\"" << endl;
+            file << "plot \"./score_" << buf << ".dat\" u 1:3 w lp" << endl;
+          }
         }
       }
       else

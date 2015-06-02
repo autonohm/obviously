@@ -94,8 +94,11 @@ private:
   // Trace module
   Trace* _trace;
 
-  // Number of samples used for PCA in local neighborhood
-  int _pcaCnt;
+  // Number of samples investigated for PCA in local neighborhood
+  int _pcaSearchRange;
+
+  // Min number of valid samples PCA
+  unsigned int _pcaMinSamples;
 };
 
 }

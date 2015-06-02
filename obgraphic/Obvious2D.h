@@ -82,7 +82,7 @@ namespace obvious
      * @param[in] c Column of display position
      * @param[in] r Row of display position
      */
-    void addText(char* text, unsigned int c, unsigned int r);
+    void addText(const char* text, unsigned int c, unsigned int r);
 
     /**
      * Clears the texts to be displayed
