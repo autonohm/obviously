@@ -135,6 +135,7 @@ obvious::Matrix PCAMatching::match(const obvious::Matrix* M,
   // Determine orientation in local model neighborhood
   // Only from these points a valid orientation is computable
   double* phiM = new double[pointsInM];
+  double* phiS = new double[pointsInS];
   bool* maskMpca = new bool[pointsInM];
   memcpy(maskMpca, maskM, pointsInM*sizeof(bool));
   if(N)
@@ -188,7 +189,7 @@ obvious::Matrix PCAMatching::match(const obvious::Matrix* M,
           // shorter axis is normal
           phiM[i] = atan2(yShort, xShort);
 
-          // correct orientation with cross product
+          // correct orientation with dot product
           if(((*M)(i,0)*xShort+(*M)(i,1)*yShort)>0.0)
             phiM[i] = -phiM[i];
 
@@ -199,9 +200,6 @@ obvious::Matrix PCAMatching::match(const obvious::Matrix* M,
       }
     }
   }
-
-  /*for(int i=0; i<pointsInM; i++)
-    cout << phiM[i] << ", " << phiM2[i] << ", Mask: " << maskM[i] << endl;*/
 
   vector<unsigned int> idxMValid = extractSamples(M, maskMpca);
   vector<unsigned int> idxSValid = extractSamples(S, maskS);
@@ -272,6 +270,44 @@ obvious::Matrix PCAMatching::match(const obvious::Matrix* M,
       if(maskS[i+j]) cnt++;
     }
     localSceneCnt[i] = cnt;
+
+    if(localSceneCnt[i]>_pcaMinSamples)
+    {
+      // ----------- Determine orientation of scene sample ------------
+      Matrix A(localSceneCnt[i], 2);
+      unsigned int cnt = 0;
+      for(int j=-_pcaSearchRange/2; j<_pcaSearchRange/2; j++)
+      {
+        if(maskS[i+j])
+        {
+          A(cnt, 0) = (*S)(i+j, 0);
+          A(cnt, 1) = (*S)(i+j, 1);
+          cnt++;
+        }
+      }
+      Matrix* Axes = A.pcaAnalysis();
+      // longer axis
+      double xLong  = (*Axes)(0,1)-(*Axes)(0,0);
+      double yLong  = (*Axes)(0,3)-(*Axes)(0,2);
+      // shorter axis
+      double xShort = (*Axes)(1,1)-(*Axes)(1,0);
+      double yShort = (*Axes)(1,3)-(*Axes)(1,2);
+      // rate axes lengths -> main axis needs to be twice as long as second axis
+      double lenLongSqr  = xLong*xLong + yLong*yLong;
+      double lenShortSqr = xShort*xShort + yShort*yShort;
+      assert(lenLongSqr>lenShortSqr);
+      if(lenShortSqr>1e-6 && (lenLongSqr/lenShortSqr)<4.0) continue;
+
+      // shorter axis is normal
+      phiS[i] = atan2(yShort, xShort);
+
+      // correct orientation with dot product
+      if(((*S)(i,0)*xShort+(*S)(i,1)*yShort)>0.0)
+        phiS[i] = -phiS[i];
+
+      delete Axes;
+    }
+    // --------------------------------------------------------------
   }
 
   srand (time(NULL));
@@ -309,7 +345,7 @@ double       bestErr = 1e12;
     {
 
       // ----------- Determine orientation of scene sample ------------
-      Matrix A(localSceneCnt[idx], 2);
+      /*Matrix A(localSceneCnt[idx], 2);
       unsigned int cnt = 0;
       for(int j=-_pcaSearchRange/2; j<_pcaSearchRange/2; j++)
       {
@@ -336,11 +372,11 @@ double       bestErr = 1e12;
       // shorter axis is normal
       double phiS = atan2(yShort, xShort);
 
-      // correct orientation with cross product
+      // correct orientation with dot product
       if(((*S)(idx,0)*xShort+(*S)(idx,1)*yShort)>0.0)
         phiS = -phiS;
 
-      delete Axes;
+      delete Axes;*/
       // --------------------------------------------------------------
 
       // leftmost scene point belonging to query point idx1
@@ -352,7 +388,7 @@ double       bestErr = 1e12;
       {
         if(maskMpca[i])
         {
-          double phi              = phiM[i] - phiS;
+          double phi              = phiM[i] - phiS[idx];
           if(phi>M_PI)       phi -= 2.0*M_PI;
           else if(phi<-M_PI) phi += 2.0*M_PI;
 
@@ -407,7 +443,23 @@ double       bestErr = 1e12;
                 flann::SearchParams p(-1, 0.0);
                 _index->knnSearch(query, indices, dists, 1, p);
 
-                err += dists[0][0];
+                int idxQuery = indices[0][0];
+
+                // calculate vector from query point to assigned model point
+                double qx = (*M)(idxQuery, 0) - q[0];
+                double qy = (*M)(idxQuery, 1) - q[1];
+                double lq = sqrt(qx*qx + qy*qy);
+                qx /= lq;
+                qy /= lq;
+
+                // check co-linearity with dot product
+                // At the current state, normals are optionally passed. So, we cannot rely on having proper normals
+                //double weight = fabs((*N)(idxQuery,0)*qx+(*N)(idxQuery,1)*qy);
+
+                // this weighting worked with intel data set
+                double weight = fabs(cos(phiM[idxQuery] - phiS[idx]));
+
+                err += (dists[0][0]*weight);
                 if(dists[0][0] < _epsSqr)
                 {
                   cntMatch++;
@@ -427,8 +479,9 @@ double       bestErr = 1e12;
             double errMean = err / (double)cntMatch;
             double score = atan2(errMean,(double)cntMatch);
             //bool goodMatch = score<bestScore && cntMatch>bestCnt;
+            //bool goodMatch = (err<bestErr);
 
-            // Rating of Markus Kuehn
+            // Rating from Markus Kuehn
             double equalThres = 1e-5;//cntStepSize;// 1e-5;
             bool rateCondition = ((ratio-bestRatio) > equalThres) && (cntMatch > bestCnt);
             bool errorCondition = fabs( (ratio-bestRatio) < equalThres ) && (cntMatch == bestCnt) && err < bestErr;
@@ -484,6 +537,7 @@ double       bestErr = 1e12;
   cout << "Best match: " << bestM << " " << bestS << " bestRatio: " << bestRatio << " bestCnt: " << bestCnt << " bestScore: " << bestScore << endl;
   delete [] maskControl;
   delete [] phiM;
+  delete [] phiS;
   delete [] maskMpca;
   delete [] localSceneCnt;
   delete Control;
