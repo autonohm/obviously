@@ -144,5 +144,13 @@ bool Agent::getNextTarget(obvious::Point2D& target)
   return true;
 }
 
+bool Agent::getCurrentTarget(obvious::Point2D& target)
+{
+  if(_targets.size()==0) return false;
+  target = *_targets.begin();
+
+  return true;
+}
+
 } // end namespace
 
