@@ -150,6 +150,13 @@ public:
    */
   bool getNextTarget(obvious::Point2D& target);
 
+  /**
+   * Get current target
+   * @param target current target
+   * @return true in case of success, false in case of empty target list
+   */
+  bool getCurrentTarget(obvious::Point2D& target);
+
 private:
 
   Point _pos;
