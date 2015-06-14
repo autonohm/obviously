@@ -139,16 +139,22 @@ public:
   void clearPath();
 
   /**
-   * Add target
+   * Add target to stack
    * @param target target
    */
-  void addTarget(obvious::Point2D target);
+  void pushTarget(obvious::Point2D target);
 
   /**
-   * Get target
+   * Get target, leave it on stack
    * @return target
    */
   bool getNextTarget(obvious::Point2D& target);
+
+  /**
+   * Get target, remove it from stack
+   * @return target
+   */
+  bool popNextTarget(obvious::Point2D& target);
 
 private:
 

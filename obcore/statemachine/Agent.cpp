@@ -129,12 +129,20 @@ void Agent::clearPath()
   _path.clear();
 }
 
-void Agent::addTarget(obvious::Point2D target)
+void Agent::pushTarget(obvious::Point2D target)
 {
   _targets.push_back(target);
 }
 
 bool Agent::getNextTarget(obvious::Point2D& target)
+{
+  if(_targets.size()==0) return false;
+  target = *_targets.begin();
+
+  return true;
+}
+
+bool Agent::popNextTarget(obvious::Point2D& target)
 {
   if(_targets.size()==0) return false;
 
