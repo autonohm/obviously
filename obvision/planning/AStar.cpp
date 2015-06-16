@@ -30,12 +30,11 @@ std::vector<unsigned int> AStar::pathFind(AStarMap* map, const Point2D coordStar
     xOffset = offset->x / (obfloat)map->getCellSize();
     yOffset = offset->y / (obfloat)map->getCellSize();
   }
-  else
+  else  //no offset given, assuming zero point in center of the map
   {
     xOffset = map->getWidth()/2;
     yOffset = map->getHeight()/2;
   }
-  std::cout << __PRETTY_FUNCTION__ << " offset.x = " << xOffset << " offset.y = " << yOffset << std::endl;
   Pixel start;
   Pixel target;
 	start.u = (unsigned int)((coordStart.x / (obfloat)map->getCellSize()) + xOffset + 0.5);
@@ -87,7 +86,8 @@ std::vector<unsigned int> AStar::pathFind(AStarMap* map, const Pixel start, cons
   {
     if(buffer[start.v][start.u]!=0)
     {
-      cout << "invalid start content in pixel u = " << start.u << " v = " << start.v << " content =  " << buffer[start.v][start.u] << endl;
+      cout << "invalid start content in pixel u = " << start.u << " v = " << start.v << " content =  "
+           << static_cast<int>(buffer[start.v][start.u]) << endl;
       return std::vector<unsigned int>();
     }
   }
@@ -102,7 +102,8 @@ std::vector<unsigned int> AStar::pathFind(AStarMap* map, const Pixel start, cons
   {
     if(buffer[target.v][target.u]!=0)
     {
-      cout << "invalid target content pixel u = " << target.u << " v = " << target.v << " content =  " << buffer[target.v][target.u] << endl;
+      cout << "invalid target content pixel u = " << target.u << " v = " << target.v << " content =  "
+           << static_cast<int>(buffer[target.v][target.u]) << endl;
       return std::vector<unsigned int>();
     }
   }
