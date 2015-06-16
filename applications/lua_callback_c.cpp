@@ -26,7 +26,7 @@ int main(int argc, char* argv[])
 {
   if(argc!=2)
   {
-    cout << "usage: " << argv[0] << " config.lua" << endl;
+    cout << "usage: " << argv[0] << " .../lua/function.lua" << endl;
     return -1;
   }
 
@@ -43,7 +43,7 @@ int main(int argc, char* argv[])
 
     manager.callFunction("aLuaFunctionWithCallback", "d>d", x, &z);
     cout << "Called with parameters x=" << x << endl;
-    cout << " reveived value z=" << z << endl;
+    cout << " returned value z=" << z << endl;
 
     // slow down loop
     usleep(500000);

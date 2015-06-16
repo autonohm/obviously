@@ -14,7 +14,7 @@ int main(int argc, char* argv[])
 {
   if(argc!=2)
   {
-    cout << "usage: " << argv[0] << " lua/config.lua" << endl;
+    cout << "usage: " << argv[0] << " .../lua/config.lua" << endl;
     return -1;
   }
 
