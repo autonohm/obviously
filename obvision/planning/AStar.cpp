@@ -20,14 +20,27 @@ bool operator<(const AStarNode & a, const AStarNode & b)
   return a.getPriority() > b.getPriority();
 }
 
-std::vector<unsigned int> AStar::pathFind(AStarMap* map, const Point2D coordStart, const Point2D coordTarget, const bool penalty)
+std::vector<unsigned int> AStar::pathFind(AStarMap* map, const Point2D coordStart, const Point2D coordTarget, const bool penalty,
+                                          const Point2D* const offset)
 {
+  obfloat xOffset = 0.0;
+  obfloat yOffset = 0.0;
+  if(offset)
+  {
+    xOffset = offset->x / (obfloat)map->getCellSize();
+    yOffset = offset->y / (obfloat)map->getCellSize();
+  }
+  else  //no offset given, assuming zero point in center of the map
+  {
+    xOffset = map->getWidth()/2;
+    yOffset = map->getHeight()/2;
+  }
   Pixel start;
   Pixel target;
-	start.u = (unsigned int)((coordStart.x / (obfloat)map->getCellSize()) + map->getWidth()/2  + 0.5);
-	start.v = (unsigned int)((coordStart.y / (obfloat)map->getCellSize()) + map->getHeight()/2 + 0.5);
-	target.u = (unsigned int)((coordTarget.x / (obfloat)map->getCellSize()) + map->getWidth()/2 + 0.5);
-	target.v = (unsigned int)((coordTarget.y / (obfloat)map->getCellSize()) + map->getHeight()/2 + 0.5);
+	start.u = (unsigned int)((coordStart.x / (obfloat)map->getCellSize()) + xOffset + 0.5);
+	start.v = (unsigned int)((coordStart.y / (obfloat)map->getCellSize()) + yOffset + 0.5);
+	target.u = (unsigned int)((coordTarget.x / (obfloat)map->getCellSize()) + xOffset + 0.5);
+	target.v = (unsigned int)((coordTarget.y / (obfloat)map->getCellSize()) + yOffset + 0.5);
 
 	return pathFind(map, start, target, penalty);
 }
@@ -66,30 +79,31 @@ std::vector<unsigned int> AStar::pathFind(AStarMap* map, const Pixel start, cons
   // check if start is valid
   if(start.u >= width || start.v>=height)
   {
-    cout << "invalid u" << endl;
+    cout << "invalid start pixel u = " << start.u << " v = " << start.v << endl;
     return std::vector<unsigned int>();
   }
   else
   {
     if(buffer[start.v][start.u]!=0)
     {
-      cout << "invalid start" << endl;
+      cout << "invalid start content in pixel u = " << start.u << " v = " << start.v << " content =  "
+           << static_cast<int>(buffer[start.v][start.u]) << endl;
       return std::vector<unsigned int>();
     }
   }
 
-
   // check if target is valid
   if(target.u >= width || target.v>=height)
   {
-    cout << "invalid v" << endl;
+    cout << "invalid target pixel u = " << target.u << " v = " << target.v << endl;
     return std::vector<unsigned int>();
   }
   else
   {
     if(buffer[target.v][target.u]!=0)
     {
-      cout << "invalid target" << endl;
+      cout << "invalid target content pixel u = " << target.u << " v = " << target.v << " content =  "
+           << static_cast<int>(buffer[target.v][target.u]) << endl;
       return std::vector<unsigned int>();
     }
   }
