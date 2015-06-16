@@ -15,6 +15,7 @@ INCLUDE_DIRECTORIES(../..
                     ..
                     .
                     ${EIGEN_INCLUDE_DIRS}
+                    /usr/include/lua5.1
                     )
 
 SET(LIBRARY     base/CartesianCloud.cpp
@@ -41,8 +42,6 @@ SET(LIBRARY     base/CartesianCloud.cpp
                 filter/NormalFilter.cpp
                 filter/BoundingBoxFilter.cpp
                 scripting/LuaScriptManager.cpp
-                scripting/LuaTable.cpp
-                scripting/LuaMethod.cpp
                 )
 
 IF(USE_EIGEN)
