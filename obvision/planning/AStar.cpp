@@ -20,8 +20,7 @@ bool operator<(const AStarNode & a, const AStarNode & b)
   return a.getPriority() > b.getPriority();
 }
 
-std::vector<unsigned int> AStar::pathFind(AStarMap* map, const Point2D coordStart, const Point2D coordTarget, const bool penalty,
-                                          const Point2D* const offset)
+std::vector<unsigned int> AStar::pathFind(AStarMap* map, const Point2D coordStart, const Point2D coordTarget, const bool penalty, const Point2D* const offset)
 {
   obfloat xOffset = 0.0;
   obfloat yOffset = 0.0;

@@ -40,8 +40,7 @@ public:
    * @param penalty use directional change penalty
    * @return path
    */
-  static std::vector<unsigned int> pathFind(AStarMap* map, const Point2D coordStart, const Point2D coordTarget, const bool penalty,
-                                            const Point2D* const offset = NULL);
+  static std::vector<unsigned int> pathFind(AStarMap* map, const Point2D coordStart, const Point2D coordTarget, const bool penalty, const Point2D* const offset = NULL);
 
 private:
 
