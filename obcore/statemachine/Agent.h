@@ -1,7 +1,7 @@
 #ifndef AGENT_H_
 #define AGENT_H_
 
-#include "obcore/statemachine/StateMachine.h"
+#include "obcore/statemachine/states/StateBase.h"
 #include "obcore/base/Point.h"
 #include "obcore/base/Timer.h"
 
@@ -14,7 +14,7 @@ namespace obvious
 
 /**
  * @class   Agent
- * @brief   Generic class for mobile agents (robots) with state machine
+ * @brief   Generic class for statemachine agents
  * @author  Stefan May
  * @date    23.10.2014
  */
@@ -25,15 +25,9 @@ public:
 
   /**
    * Constructor
-   * @param pos 3D position, orientation is set to (0, 0, 0)
+   * @param initState Initial state
    */
-  Agent(Point pos);
-
-  /**
-   * Constructor
-   * @param pos 2D position, orientation is set to (0, 0, 0)
-   */
-  Agent(Point2D pos);
+  Agent(StateBase* initState);
 
   /**
    * Destructor
@@ -41,79 +35,9 @@ public:
   virtual ~Agent();
 
   /**
-   * Main processing method
+   * Awake agent to do his job
    */
-  void process();
-
-  /**
-   * Access agent's state machine
-   * @return state machine
-   */
-  StateMachine* getStateMachine();
-
-  /**
-   * Set state
-   * @param state new state
-   */
-  void setState(StateBase* state);
-
-  /**
-   * Check whether pose was updated within given interval in ms
-   * @param interval time interval in seconds
-   */
-  bool isPoseUpToDate(const double interval);
-
-  /**
-   * Set position
-   * @param pos position (x, y, z)
-   */
-  void setPosition(Point pos);
-
-  /**
-   * Set position
-   * @param pos position (x, y, 0)
-   */
-  void setPosition(Point2D pos);
-
-  /**
-   * Set position
-   * @param x x-coordinate
-   * @param y y-coordinate
-   * @param z z-coordinate
-   */
-  void setPosition(double x, double y, double z);
-
-  /**
-   * Access current position
-   * @param pos position (x, y, z)
-   */
-  void getPosition(Point& pos);
-
-  /**
-   * Access current position
-   * @param pos position (x, y)
-   */
-  void getPosition(Point2D& pos);
-
-  /**
-   * Access current position
-   * @param x x-coordinate
-   * @param y y-coordinate
-   * @param z z-coordinate
-   */
-  void getPosition(double& x, double& y, double& z);
-
-  /**
-   * Set orientation of robot around z-axis (psi and theta will be set to 0)
-   * @param phi
-   */
-  void setOrientation2D(double phi);
-
-  /**
-   * Access orientation vector
-   * @return orientation orientation vector (x, y, z)
-   */
-  void getOrientation(double orientation[3]);
+  void awake();
 
   /**
    * Get unique ID of agent, each instance is assigned a sequential ID
@@ -121,56 +45,15 @@ public:
    */
   unsigned int getID();
 
-  /**
-   * Set path
-   * @param path
-   */
-  void setPath(std::vector<obvious::Point2D> path);
-
-  /**
-   * Get path
-   * @param path
-   */
-  void getPath(std::vector<obvious::Point2D>& path);
-
-  /**
-   * Clear currently assigned path
-   */
-  void clearPath();
-
-  /**
-   * Add target to stack
-   * @param target target
-   */
-  void pushTarget(obvious::Point2D target);
-
-  /**
-   * Get target, leave it on stack
-   * @return target
-   */
-  bool getNextTarget(obvious::Point2D& target);
-
-  /**
-   * Get target, remove it from stack
-   * @return target
-   */
-  bool popNextTarget(obvious::Point2D& target);
-
 private:
-
-  Point _pos;
-
-  std::vector<obvious::Point2D> _path;
-
-  std::vector<obvious::Point2D> _targets;
-
-  double _orientation[3];
 
   unsigned int _ID;
 
-  StateMachine* _machine;
+  StateBase* _currentState;
 
-  Timer _timer;
+  static unsigned int _AgentID;
+
+  bool _initialized;
 };
 
 } // end namespace

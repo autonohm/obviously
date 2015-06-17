@@ -18,14 +18,24 @@ StatePong::~StatePong()
 
 }
 
-void StatePong::process()
+void StatePong::doEntry()
 {
-  std::cout << "Pong" << std::endl;
+  std::cout << "Enter Pong state:" << std::flush;
+}
+
+StateBase* StatePong::doActive()
+{
+  std::cout << " Pong" << std::flush;
+
   if(rand()%100<30)
-  {
-    _agent->setState(new StatePing());
-    delete this;
-  }
+    return new StatePing();
+
+  return NULL;
+}
+
+void StatePong::doExit()
+{
+  std::cout << " ... leaving" << std::endl << std::flush;
 }
 
 } /* namespace obvious */

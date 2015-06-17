@@ -7,7 +7,7 @@
 
 #include "TransformationWatchdog.h"
 #include "obcore/math/geometry.h"
-#include "Eigen/Eigen"
+#include <Eigen/Eigen>
 
 using namespace obvious;
 

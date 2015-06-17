@@ -1,155 +1,44 @@
 #include "Agent.h"
-#include "string.h"
+#include <string.h>
+#include <iostream>
 
-/**
- * @namespace  obvious
- */
 namespace obvious
 {
 
-static unsigned int _AgentID = 0;
+unsigned int Agent::_AgentID = 0;
 
-Agent::Agent(Point pos)
+Agent::Agent(StateBase* initState)
 {
-  _pos = pos;
-  _orientation[0] = 0;
-  _orientation[1] = 0;
-  _orientation[2] = 0;
   _ID = _AgentID++;
-  _machine = new StateMachine();
-}
-
-Agent::Agent(Point2D pos)
-{
-  _pos.x = pos.x;
-  _pos.y = pos.y;
-  _pos.z = 0;
-  _orientation[0] = 0;
-  _orientation[1] = 0;
-  _orientation[2] = 0;
-  _ID = _AgentID++;
-  _machine = new StateMachine();
+  initState->setAgent(this);
+  _currentState = initState;
+  _initialized = false;
 }
 
 Agent::~Agent()
 {
-  delete _machine;
+  if(_currentState) delete _currentState;
 }
 
-void Agent::process()
+void Agent::awake()
 {
-  _machine->process();
-}
+  if(!_initialized)
+  {
+    // doEntry for the initial state cannot be called in constructor, since constructor of child class has not been passed at that time.
+    // Variables set in constructor are not initialized.
+    _currentState->doEntry();
+    _initialized = true;
+  }
 
-StateMachine* Agent::getStateMachine()
-{
-  return _machine;
-}
+  StateBase* nextState = _currentState->doActive();
 
-void Agent::setState(StateBase* state)
-{
-  state->setAgent(this);
-  _machine->setState(state);
-}
-
-bool Agent::isPoseUpToDate(const double interval)
-{
-  return (_timer.elapsed() <= interval);
-}
-
-void Agent::setPosition(Point pos)
-{
-  _timer.reset();
-  _pos = pos;
-}
-
-void Agent::setPosition(Point2D pos)
-{
-  _timer.reset();
-  _pos.x = pos.x;
-  _pos.y = pos.y;
-  _pos.z = 0;
-}
-
-void Agent::setPosition(double x, double y, double z)
-{
-  _timer.reset();
-  _pos.x = x;
-  _pos.y = y;
-  _pos.z = z;
-}
-
-void Agent::getPosition(Point& pos)
-{
-  pos = _pos;
-}
-
-void Agent::getPosition(Point2D& pos)
-{
-  pos.x = _pos.x;
-  pos.y = _pos.y;
-}
-
-void Agent::getPosition(double& x, double& y, double& z)
-{
-  x = _pos.x;
-  y = _pos.y;
-  z = _pos.z;
-}
-
-void Agent::setOrientation2D(double phi)
-{
-  _orientation[0] = 0.0;
-  _orientation[1] = 0.0;
-  _orientation[2] = phi;
-}
-
-void Agent::getOrientation(double orientation[3])
-{
-  memcpy(orientation, _orientation, 3*sizeof(*_orientation));
-}
-
-unsigned int Agent::getID()
-{
-  return _ID;
-}
-
-void Agent::setPath(std::vector<obvious::Point2D> path)
-{
-  _path = path;
-}
-
-void Agent::getPath(std::vector<obvious::Point2D>& path)
-{
-  path = _path;
-}
-
-void Agent::clearPath()
-{
-  _path.clear();
-}
-
-void Agent::pushTarget(obvious::Point2D target)
-{
-  _targets.push_back(target);
-}
-
-bool Agent::getNextTarget(obvious::Point2D& target)
-{
-  if(_targets.size()==0) return false;
-  target = *_targets.begin();
-
-  return true;
-}
-
-bool Agent::popNextTarget(obvious::Point2D& target)
-{
-  if(_targets.size()==0) return false;
-
-  target = _targets[0];
-  _targets.erase(_targets.begin());
-
-  return true;
+  if(nextState)
+  {
+    _currentState->doExit();
+    _currentState->doCleanup();
+    _currentState = nextState;
+    _currentState->doEntry();
+  }
 }
 
 } // end namespace

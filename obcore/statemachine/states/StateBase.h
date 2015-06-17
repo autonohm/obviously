@@ -1,6 +1,8 @@
 #ifndef STATEBASE_H_
 #define STATEBASE_H_
 
+#include <iostream>
+
 /**
  * @namespace  obvious
  */
@@ -22,7 +24,7 @@ public:
   /**
    * Constructor
    */
-  StateBase();
+  StateBase(bool autoCleanup=true);
 
   /**
    * Default destructor
@@ -36,13 +38,30 @@ public:
   void setAgent(Agent* agent);
 
   /**
-   * Processing
+   * Called once when activated
    */
-  virtual void process() = 0;
+  virtual void doEntry() {};
+
+  /**
+   * Called while active
+   */
+  virtual StateBase* doActive() = 0;
+
+  /**
+   * Called once when left
+   */
+  virtual void doExit() { };
+
+  /**
+   * Called once when left
+   */
+  void doCleanup() { if(_autoCleanup) delete this; };
 
 protected:
 
   Agent* _agent;
+
+  bool _autoCleanup;
 
 };
 

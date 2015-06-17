@@ -25,9 +25,19 @@ public:
   virtual ~StatePing();
 
   /**
+   * Called once when activated
+   */
+  void doEntry();
+
+  /**
    * Process method (step-wise, never block this method)
    */
-  void process();
+  StateBase* doActive();
+
+  /**
+   * Called once when left
+   */
+  void doExit();
 
 private:
 

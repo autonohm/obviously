@@ -8,7 +8,6 @@
 
 #include "obcore/grid/Grid2D.h"
 #include <math.h>
-#include "obcore/Point.h"
 #include "obcore/Point3D.h"
 
 using namespace obvious;

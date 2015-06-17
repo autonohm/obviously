@@ -40,7 +40,7 @@ public:
    * @param sig signature of parameter list ("b" for bool, "d" for double, "i" for integer, "s" for string), e.g. "bids" = bool integer double char*
    * @return success flag
    */
-  bool readTable(const char* groupname, std::vector<std::string> varnames, const char* sig, ...);
+  bool readTable(const char* groupname, std::vector<std::string> &varnames, const char* sig, ...);
 
   /**
    * Call function from a Lua script

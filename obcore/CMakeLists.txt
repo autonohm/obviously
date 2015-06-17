@@ -25,9 +25,10 @@ SET(LIBRARY     base/CartesianCloud.cpp
                 base/tools.cpp
                 base/Time.cpp
                 base/PointCloud.cpp
-                statemachine/StateMachine.cpp
                 statemachine/Agent.cpp
+                statemachine/AgentRobot.cpp
                 statemachine/states/StateBase.cpp
+                statemachine/states/StateLua.cpp
                 statemachine/states/StatePing.cpp
                 statemachine/states/StatePong.cpp
                 math/geometry.cpp

@@ -37,7 +37,7 @@ void LuaScriptManager::reload()
   }
 }
 
-bool LuaScriptManager::readTable(const char* groupname, std::vector<std::string> varnames, const char* sig, ...)
+bool LuaScriptManager::readTable(const char* groupname, std::vector<std::string> &varnames, const char* sig, ...)
 {
   if(!_init) return false;
 
@@ -112,7 +112,7 @@ bool LuaScriptManager::readTable(const char* groupname, std::vector<std::string>
   return retval;
 }
 
-bool LuaScriptManager::callFunction (const char *func, const char *sig, ...)
+bool LuaScriptManager::callFunction (const char* func, const char* sig, ...)
 {
   if(!_init) return false;
 

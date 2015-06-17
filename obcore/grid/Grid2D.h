@@ -9,8 +9,6 @@
 #ifndef GRID2D_H_
 #define GRID2D_H_
 
-#include "obcore/math/MatD.h"
-
 /**
  * @namespace obvious
  */

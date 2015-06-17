@@ -10,7 +10,6 @@
 #define GRADIENTGRID_H_
 
 #include "obcore/grid/Grid2D.h"
-#include "obcore/math/MatD.h"
 
 /**
  * @namespace obvious

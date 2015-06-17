@@ -18,14 +18,24 @@ StatePing::~StatePing()
 
 }
 
-void StatePing::process()
+void StatePing::doEntry()
 {
-  std::cout << "Ping" << std::endl;
+  std::cout << "Enter Ping state:";
+}
+
+StateBase* StatePing::doActive()
+{
+  std::cout << " Ping" << std::flush;
+
   if(rand()%100<30)
-  {
-    _agent->setState(new StatePong());
-    delete this;
-  }
+    return new StatePong();
+
+  return NULL;
+}
+
+void StatePing::doExit()
+{
+  std::cout << " ... leaving" << std::endl << std::flush;
 }
 
 } /* namespace obvious */

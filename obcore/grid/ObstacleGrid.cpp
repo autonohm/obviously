@@ -9,7 +9,6 @@
 #include "obcore/grid/ObstacleGrid.h"
 
 #include <math.h>
-#include "obcore/Point.h"
 #include "obcore/Point3D.h"
 
 using namespace obvious;

@@ -2,8 +2,6 @@
 * @file   GradientGrid.cpp
 * @author Christian Pfitzner
 * @date   06.01.2013
-*
-*
 */
 
 #include "obcore/grid/GradientGrid.h"
