@@ -50,7 +50,7 @@ bool LuaScriptManager::readTable(const char* groupname, std::vector<std::string>
   lua_getglobal(_L, groupname);
   if(!lua_istable(_L, -1))
   {
-    luaL_error(_L, "not a valid table");
+    LOGMSG(DBG_ERROR, groupname << " is not a valid table");
     return false;
   }
 
@@ -66,7 +66,7 @@ bool LuaScriptManager::readTable(const char* groupname, std::vector<std::string>
     case 'b':  // bool argument
       if(!lua_isboolean(_L, -1))
       {
-        luaL_error(_L, "invalid component in table: %s", lua_tostring(_L, -1));
+        LOGMSG(DBG_ERROR, "invalid component \"" << key << "\" in table \"" << groupname << "\"");
         retval = false;
       }
       *va_arg(vl, bool *) = lua_toboolean(_L, -1);
@@ -75,7 +75,7 @@ bool LuaScriptManager::readTable(const char* groupname, std::vector<std::string>
     case 'd':  // double argument
       if(!lua_isnumber(_L, -1))
       {
-        luaL_error(_L, "invalid component in table: %s", lua_tostring(_L, -1));
+        LOGMSG(DBG_ERROR, "invalid component \"" << key << "\" in table \"" << groupname << "\"");
         retval = false;
       }
       *va_arg(vl, double *) = lua_tonumber(_L, -1);
@@ -84,7 +84,7 @@ bool LuaScriptManager::readTable(const char* groupname, std::vector<std::string>
     case 'i':  // integer argument
       if(!lua_isnumber(_L, -1))
       {
-        luaL_error(_L, "invalid component in table: %s", lua_tostring(_L, -1));
+        LOGMSG(DBG_ERROR, "invalid component \"" << key << "\" in table \"" << groupname << "\"");
         retval = false;
       }
       *va_arg(vl, int *) = lua_tonumber(_L, -1);
@@ -93,7 +93,7 @@ bool LuaScriptManager::readTable(const char* groupname, std::vector<std::string>
     case 's':  // string argument
       if(!lua_isstring(_L, -1))
       {
-        luaL_error(_L, "invalid component in table: %s", lua_tostring(_L, -1));
+        LOGMSG(DBG_ERROR, "invalid component \"" << key << "\" in table \"" << groupname << "\"");
         retval = false;
       }
       *va_arg(vl, const char **) = lua_tostring(_L, -1);
@@ -158,15 +158,18 @@ bool LuaScriptManager::callFunction (const char *func, const char *sig, ...)
     LOGMSG(DBG_ERROR, "error running function " << func << " " << lua_tostring(_L, -1));
     retval = false;
   }
+
   // retrieve results
   nres = -nres;  // stack index of first result
-  while (*sig) {  // get results
-    switch (*sig++) {
+  while (*sig)
+  {
+    switch (*sig++)
+    {
 
     case 'd':  // double result
       if (!lua_isnumber(_L, nres))
       {
-        LOGMSG(DBG_ERROR, "wrong result type");
+        LOGMSG(DBG_ERROR, "'d' is wrong result type in function " << func);
         retval = false;
       }
       *va_arg(vl, double *) = lua_tonumber(_L, nres);
@@ -175,7 +178,7 @@ bool LuaScriptManager::callFunction (const char *func, const char *sig, ...)
     case 'i':  // int result
       if (!lua_isnumber(_L, nres))
       {
-        LOGMSG(DBG_ERROR, "wrong result type");
+        LOGMSG(DBG_ERROR, "'i' is wrong result type in function " << func);
         retval = false;
       }
       *va_arg(vl, int *) = (int)lua_tonumber(_L, nres);
@@ -184,7 +187,7 @@ bool LuaScriptManager::callFunction (const char *func, const char *sig, ...)
     case 's':  // string result
       if (!lua_isstring(_L, nres))
       {
-        LOGMSG(DBG_ERROR, "wrong result type");
+        LOGMSG(DBG_ERROR, "'s' is wrong result type in function " << func);
         retval = false;
       }
       *va_arg(vl, const char **) = lua_tostring(_L, nres);

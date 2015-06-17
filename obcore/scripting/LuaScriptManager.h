@@ -11,8 +11,9 @@ namespace obvious
 
 /**
  * @class LuaScriptManager
- * @brief
+ * @brief Interface for Lua scription language
  * @author Stefan May
+ * @date 17.6.2015
  */
 class LuaScriptManager
 {
@@ -49,6 +50,11 @@ public:
    */
   bool callFunction (const char* func, const char* sig, ...);
 
+  /**
+   * Register C callback function, available in Lua with specified name
+   * @param func pointer to callback function
+   * @param name function name available in Lua script
+   */
   void registerCallback(lua_CFunction func, char name[]);
 
 private:
