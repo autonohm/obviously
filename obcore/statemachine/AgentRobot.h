@@ -26,17 +26,15 @@ public:
 
   /**
    * Constructor
-   * @param initState Initial state
    * @param pos 3D position, orientation is set to (0, 0, 0)
    */
-  AgentRobot(StateBase* initState, Point pos);
+  AgentRobot(Point pos);
 
   /**
    * Constructor
-   * @param initState Initial state
    * @param pos 2D position, orientation is set to (0, 0, 0)
    */
-  AgentRobot(StateBase* initState, Point2D pos);
+  AgentRobot(Point2D pos);
 
   /**
    * Destructor

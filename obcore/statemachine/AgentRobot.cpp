@@ -4,18 +4,16 @@
 namespace obvious
 {
 
-AgentRobot::AgentRobot(StateBase* initState, Point pos)
+AgentRobot::AgentRobot(Point pos)
 {
-  transitionToVolatileState(initState);
   _pos = pos;
   _orientation[0] = 0;
   _orientation[1] = 0;
   _orientation[2] = 0;
 }
 
-AgentRobot::AgentRobot(StateBase* initState, Point2D pos)
+AgentRobot::AgentRobot(Point2D pos)
 {
-  transitionToVolatileState(initState);
   _pos.x = pos.x;
   _pos.y = pos.y;
   _pos.z = 0;
