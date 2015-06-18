@@ -2,6 +2,7 @@
 #define STATEBASE_H_
 
 #include <iostream>
+#include <map>
 
 /**
  * @namespace  obvious
@@ -24,7 +25,7 @@ public:
   /**
    * Constructor
    */
-  StateBase(bool autoCleanup=true);
+  StateBase(bool persistant=false);
 
   /**
    * Default destructor
@@ -40,28 +41,30 @@ public:
   /**
    * Called once when activated
    */
-  virtual void doEntry() {};
+  virtual void onEntry() {};
 
   /**
    * Called while active
    */
-  virtual StateBase* doActive() = 0;
+  virtual StateBase* onActive() = 0;
 
   /**
    * Called once when left
    */
-  virtual void doExit() { };
+  virtual void onExit() { };
 
   /**
    * Called once when left
    */
-  void doCleanup() { if(_autoCleanup) delete this; };
+  void onCleanup() { if(!_persistant) delete this; };
 
 protected:
 
   Agent* _agent;
 
-  bool _autoCleanup;
+private:
+
+  bool _persistant;
 
 };
 

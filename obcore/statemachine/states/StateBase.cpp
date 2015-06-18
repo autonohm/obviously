@@ -4,10 +4,10 @@
 namespace obvious
 {
 
-StateBase::StateBase(bool autoCleanup)
+StateBase::StateBase(bool persistant)
 {
   _agent = NULL;
-  _autoCleanup = autoCleanup;
+  _persistant = persistant;
 }
 
 void StateBase::setAgent(Agent* agent)

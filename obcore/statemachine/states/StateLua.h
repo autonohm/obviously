@@ -34,17 +34,17 @@ public:
   /**
    * Called once when activated
    */
-  void doEntry();
+  void onEntry();
 
   /**
    * Process method (step-wise, never block this method)
    */
-  StateBase* doActive();
+  StateBase* onActive();
 
   /**
    * Called once when left
    */
-  void doExit();
+  void onExit();
 
 private:
 

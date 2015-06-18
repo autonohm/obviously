@@ -18,12 +18,12 @@ StatePing::~StatePing()
 
 }
 
-void StatePing::doEntry()
+void StatePing::onEntry()
 {
   std::cout << "Enter Ping state:";
 }
 
-StateBase* StatePing::doActive()
+StateBase* StatePing::onActive()
 {
   std::cout << " Ping" << std::flush;
 
@@ -33,7 +33,7 @@ StateBase* StatePing::doActive()
   return NULL;
 }
 
-void StatePing::doExit()
+void StatePing::onExit()
 {
   std::cout << " ... leaving" << std::endl << std::flush;
 }

@@ -17,7 +17,11 @@ Agent::Agent(StateBase* initState)
 
 Agent::~Agent()
 {
-  if(_currentState) delete _currentState;
+  if(_currentState)
+  {
+    _currentState->onExit();
+    delete _currentState;
+  }
 }
 
 void Agent::awake()
@@ -26,18 +30,18 @@ void Agent::awake()
   {
     // doEntry for the initial state cannot be called in constructor, since constructor of child class has not been passed at that time.
     // Variables set in constructor are not initialized.
-    _currentState->doEntry();
+    _currentState->onEntry();
     _initialized = true;
   }
 
-  StateBase* nextState = _currentState->doActive();
+  StateBase* nextState = _currentState->onActive();
 
   if(nextState)
   {
-    _currentState->doExit();
-    _currentState->doCleanup();
+    _currentState->onExit();
+    _currentState->onCleanup();
     _currentState = nextState;
-    _currentState->doEntry();
+    _currentState->onEntry();
   }
 }
 

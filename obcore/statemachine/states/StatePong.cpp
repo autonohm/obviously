@@ -18,12 +18,12 @@ StatePong::~StatePong()
 
 }
 
-void StatePong::doEntry()
+void StatePong::onEntry()
 {
   std::cout << "Enter Pong state:" << std::flush;
 }
 
-StateBase* StatePong::doActive()
+StateBase* StatePong::onActive()
 {
   std::cout << " Pong" << std::flush;
 
@@ -33,7 +33,7 @@ StateBase* StatePong::doActive()
   return NULL;
 }
 
-void StatePong::doExit()
+void StatePong::onExit()
 {
   std::cout << " ... leaving" << std::endl << std::flush;
 }
