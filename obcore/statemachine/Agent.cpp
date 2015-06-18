@@ -7,12 +7,11 @@ namespace obvious
 
 unsigned int Agent::_AgentID = 0;
 
-Agent::Agent(StateBase* initState)
+Agent::Agent()
 {
   _ID = _AgentID++;
-  initState->setAgent(this);
-  _currentState = initState;
-  _initialized = false;
+  _currentState = NULL;
+  _nextState = NULL;
 }
 
 Agent::~Agent()
@@ -20,29 +19,64 @@ Agent::~Agent()
   if(_currentState)
   {
     _currentState->onExit();
-    delete _currentState;
+    if(_volatile) delete _currentState;
   }
 }
 
 void Agent::awake()
 {
-  if(!_initialized)
+  if(_currentState)
   {
-    // doEntry for the initial state cannot be called in constructor, since constructor of child class has not been passed at that time.
-    // Variables set in constructor are not initialized.
-    _currentState->onEntry();
-    _initialized = true;
+    _currentState->onActive();
   }
 
-  StateBase* nextState = _currentState->onActive();
-
-  if(nextState)
+  if(_nextState)
   {
-    _currentState->onExit();
-    _currentState->onCleanup();
-    _currentState = nextState;
+    if(_currentState)
+    {
+      _currentState->onExit();
+      if(_volatile) delete _currentState;
+    }
+    _currentState = _nextState;
     _currentState->onEntry();
+    _nextState = NULL;
   }
+}
+
+void Agent::registerPersistantState(const int stateID, StateBase* state)
+{
+  _persistantStateMap[stateID] = state;
+}
+
+StateBase* Agent::getPersistantState(const int stateID)
+{
+  return _persistantStateMap[stateID];
+}
+
+void Agent::transitionToPersistantState(const int stateID)
+{
+  _nextState = _persistantStateMap[stateID];
+  if(_nextState) _nextState->setAgent(this);
+  _volatile = false;
+}
+
+void Agent::transitionToVolatileState(StateBase* nextState)
+{
+  if(_currentState != nextState)
+  {
+    _nextState = nextState;
+    if(_nextState) _nextState->setAgent(this);
+    _volatile = true;
+  }
+}
+
+void Agent::deletePersistantStates()
+{
+  for(std::map<const int, StateBase*>::iterator it=_persistantStateMap.begin(); it!=_persistantStateMap.end(); ++it)
+  {
+    delete it->second;
+  }
+  _persistantStateMap.clear();
 }
 
 unsigned int Agent::getID()

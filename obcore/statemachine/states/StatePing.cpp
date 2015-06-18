@@ -23,14 +23,12 @@ void StatePing::onEntry()
   std::cout << "Enter Ping state:";
 }
 
-StateBase* StatePing::onActive()
+void StatePing::onActive()
 {
   std::cout << " Ping" << std::flush;
 
   if(rand()%100<30)
-    return new StatePong();
-
-  return NULL;
+    _agent->transitionToVolatileState(new StatePong());
 }
 
 void StatePing::onExit()

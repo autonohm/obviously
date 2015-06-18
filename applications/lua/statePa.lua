@@ -5,7 +5,7 @@ end
 
 function doActive ()
    print " Pa"
-   return 1
+   return 0
 end
 
 function doExit ()

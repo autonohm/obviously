@@ -27,11 +27,6 @@ public:
   virtual ~StateLua();
 
   /**
-   * Set next state for the event, when the transition becomes true
-   */
-  void setNextState(StateBase* state);
-
-  /**
    * Called once when activated
    */
   void onEntry();
@@ -39,7 +34,7 @@ public:
   /**
    * Process method (step-wise, never block this method)
    */
-  StateBase* onActive();
+  void onActive();
 
   /**
    * Called once when left
@@ -49,8 +44,6 @@ public:
 private:
 
   LuaScriptManager* _manager;
-
-  StateBase* _nextState;
 
 };
 

@@ -7,15 +7,14 @@ using namespace obvious;
 
 int main(int argc, char* argv[])
 {
-  Agent* agent = new Agent(new StatePing());
+  Agent agent;
+  agent.transitionToVolatileState(new StatePing());
 
   while(true)
   {
     usleep(100000);
-    agent->awake();
+    agent.awake();
   }
-
-  delete agent;
 
   return 0;
 }

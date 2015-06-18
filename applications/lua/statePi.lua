@@ -5,7 +5,7 @@ end
 
 function doActive ()
    print " Pi"
-   return 1
+   return 0
 end
 
 function doExit ()

@@ -7,10 +7,9 @@
 namespace obvious
 {
 
-StateLua::StateLua(const char* filepath) : StateBase(true)
+StateLua::StateLua(const char* filepath)
 {
   _manager = new LuaScriptManager(filepath);
-  _nextState = NULL;
 }
 
 StateLua::~StateLua()
@@ -18,27 +17,18 @@ StateLua::~StateLua()
   delete _manager;
 }
 
-void StateLua::setNextState(StateBase* state)
-{
-  _nextState = state;
-}
-
 void StateLua::onEntry()
 {
   _manager->callFunction("doEntry", "");
 }
 
-StateBase* StateLua::onActive()
+void StateLua::onActive()
 {
-  int retVal;
-
   _manager->reload();
-  _manager->callFunction("doActive", ">i", &retVal);
-
-  if(retVal)
-    return _nextState;
-
-  return NULL;
+  int id = 0;
+  _manager->callFunction("doActive", ">i", &id);
+  if(id)
+    _agent->transitionToPersistantState(id);
 }
 
 void StateLua::onExit()

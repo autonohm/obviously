@@ -20,16 +20,13 @@ int main(int argc, char* argv[])
     return -1;
   }
 
-  StateLua stateInit(argv[1]);
-  Agent agent(&stateInit);
-  StateLua* stateCurrent = &stateInit;
-  for(int i=2; i<argc; i++)
+  Agent agent;
+  for(int i=1; i<argc; i++)
   {
     StateLua* state = new StateLua(argv[i]);
-    stateCurrent->setNextState(state);
-    stateCurrent = state;
+    agent.registerPersistantState(i, state);
   }
-  stateCurrent->setNextState(&stateInit);
+  agent.transitionToPersistantState(1);
 
   while(1)
   {
@@ -37,6 +34,8 @@ int main(int argc, char* argv[])
     // slow down loop
     usleep(500000);
   }
+
+  agent.deletePersistantStates();
 
   return 0;
 }

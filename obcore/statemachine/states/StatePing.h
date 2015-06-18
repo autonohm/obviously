@@ -32,7 +32,7 @@ public:
   /**
    * Process method (step-wise, never block this method)
    */
-  StateBase* onActive();
+  void onActive();
 
   /**
    * Called once when left

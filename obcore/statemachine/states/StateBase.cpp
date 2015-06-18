@@ -4,10 +4,9 @@
 namespace obvious
 {
 
-StateBase::StateBase(bool persistant)
+StateBase::StateBase()
 {
   _agent = NULL;
-  _persistant = persistant;
 }
 
 void StateBase::setAgent(Agent* agent)

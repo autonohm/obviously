@@ -25,7 +25,7 @@ public:
   /**
    * Constructor
    */
-  StateBase(bool persistant=false);
+  StateBase();
 
   /**
    * Default destructor
@@ -46,25 +46,16 @@ public:
   /**
    * Called while active
    */
-  virtual StateBase* onActive() = 0;
+  virtual void onActive() = 0;
 
   /**
    * Called once when left
    */
   virtual void onExit() { };
 
-  /**
-   * Called once when left
-   */
-  void onCleanup() { if(!_persistant) delete this; };
-
 protected:
 
   Agent* _agent;
-
-private:
-
-  bool _persistant;
 
 };
 
