@@ -45,5 +45,10 @@ void Agent::awake()
   }
 }
 
+unsigned int Agent::getID()
+{
+  return _ID;
+}
+
 } // end namespace
 
