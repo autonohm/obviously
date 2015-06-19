@@ -19,21 +19,21 @@ StateLua::~StateLua()
 
 void StateLua::onEntry()
 {
-  _manager->callFunction("doEntry", "");
+  _manager->callFunction("onEntry", "");
 }
 
 void StateLua::onActive()
 {
   _manager->reload();
   int id = 0;
-  _manager->callFunction("doActive", ">i", &id);
+  _manager->callFunction("onActive", ">i", &id);
   if(id)
     _agent->transitionToPersistantState(id);
 }
 
 void StateLua::onExit()
 {
-  _manager->callFunction("doExit", "");
+  _manager->callFunction("onExit", "");
 }
 
 } /* namespace obvious */

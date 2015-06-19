@@ -1,14 +1,14 @@
 -- This is an example of using Lua statemachines
-function doEntry ()
+function onEntry ()
    print "--> enter Pa state"
 end
 
-function doActive ()
+function onActive ()
    print " Pa"
-   return 0
+   return 3
 end
 
-function doExit ()
+function onExit ()
    print "<-- exit Pa state"
    print ""
 end

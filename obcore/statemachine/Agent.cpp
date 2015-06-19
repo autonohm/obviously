@@ -55,9 +55,13 @@ StateBase* Agent::getPersistantState(const int stateID)
 
 void Agent::transitionToPersistantState(const int stateID)
 {
-  _nextState = _persistantStateMap[stateID];
-  if(_nextState) _nextState->setAgent(this);
-  _volatile = false;
+  StateBase* nextState = _persistantStateMap[stateID];
+  if(_currentState != nextState)
+  {
+    _nextState = _persistantStateMap[stateID];
+    if(_nextState) _nextState->setAgent(this);
+    _volatile = false;
+  }
 }
 
 void Agent::transitionToVolatileState(StateBase* nextState)
