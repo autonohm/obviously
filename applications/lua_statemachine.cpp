@@ -1,7 +1,7 @@
 #include <iostream>
 #include <unistd.h>
 
-#include "obcore/statemachine/Agent.h"
+#include "obcore/statemachine/AgentModel.h"
 #include "obcore/statemachine/states/StateLua.h"
 
 using namespace std;
@@ -21,9 +21,10 @@ int main(int argc, char* argv[])
   }
 
   Agent agent;
+  AgentModel model;
   for(int i=1; i<argc; i++)
   {
-    StateLua* state = new StateLua(argv[i]);
+    StateLua* state = new StateLua(&model, argv[i]);
     agent.registerPersistantState(i, state);
   }
   agent.transitionToPersistantState(1);

@@ -9,6 +9,11 @@ StateBase::StateBase()
   _agent = NULL;
 }
 
+StateBase::~StateBase()
+{
+
+}
+
 void StateBase::setAgent(Agent* agent)
 {
   _agent = agent;

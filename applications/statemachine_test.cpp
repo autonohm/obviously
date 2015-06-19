@@ -1,14 +1,15 @@
 #include <unistd.h>
 
-#include "obcore/statemachine/Agent.h"
+#include "obcore/statemachine/AgentModel.h"
 #include "obcore/statemachine/states/StatePing.h"
 
 using namespace obvious;
 
 int main(int argc, char* argv[])
 {
+  AgentModel model;
   Agent agent;
-  agent.transitionToVolatileState(new StatePing());
+  agent.transitionToVolatileState(new StatePing(&model));
 
   while(true)
   {

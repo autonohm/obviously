@@ -1,7 +1,7 @@
 #ifndef STATEPONG_H_
 #define STATEPONG_H_
 
-#include "obcore/statemachine/states/StateBase.h"
+#include <obcore/statemachine/states/StateBaseModel.h>
 
 namespace obvious
 {
@@ -11,14 +11,14 @@ namespace obvious
  * @brief Example state, transition to ping state
  * @author Stefan May
  */
-class StatePong: public StateBase
+class StatePong: public StateBaseModel
 {
 public:
 
   /**
    * Constructor
    */
-  StatePong();
+  StatePong(AgentModel* model);
 
   /**
    * Destructor

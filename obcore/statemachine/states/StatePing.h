@@ -1,7 +1,7 @@
 #ifndef STATEPING_H_
 #define STATEPING_H_
 
-#include "obcore/statemachine/states/StateBase.h"
+#include <obcore/statemachine/states/StateBaseModel.h>
 
 namespace obvious {
 
@@ -10,14 +10,14 @@ namespace obvious {
  * @brief Example state, transition to pong state
  * @author Stefan May
  */
-class StatePing : public StateBase
+class StatePing : public StateBaseModel
 {
 public:
 
   /**
    * Constructor
    */
-  StatePing();
+  StatePing(AgentModel* model);
 
   /**
    * Destructor

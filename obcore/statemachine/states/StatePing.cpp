@@ -8,9 +8,8 @@
 namespace obvious
 {
 
-StatePing::StatePing()
+StatePing::StatePing(AgentModel* model) : StateBaseModel(model)
 {
-
 }
 
 StatePing::~StatePing()
@@ -28,7 +27,7 @@ void StatePing::onActive()
   std::cout << " Ping" << std::flush;
 
   if(rand()%100<30)
-    _agent->transitionToVolatileState(new StatePong());
+    _agent->transitionToVolatileState(new StatePong(_model));
 }
 
 void StatePing::onExit()

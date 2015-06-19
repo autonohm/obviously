@@ -1,13 +1,13 @@
 #include <stdlib.h>
 #include <iostream>
 
-#include "obcore/statemachine/Agent.h"
+#include "obcore/statemachine/AgentModel.h"
 #include "StateLua.h"
 
 namespace obvious
 {
 
-StateLua::StateLua(const char* filepath)
+StateLua::StateLua(AgentModel* model, const char* filepath) : StateBaseModel(model)
 {
   _manager = new LuaScriptManager(filepath);
 }

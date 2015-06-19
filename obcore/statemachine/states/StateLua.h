@@ -1,7 +1,7 @@
 #ifndef STATELUA_H_
 #define STATELUA_H_
 
-#include "obcore/statemachine/states/StateBase.h"
+#include <obcore/statemachine/states/StateBaseModel.h>
 #include "obcore/scripting/LuaScriptManager.h"
 
 namespace obvious
@@ -12,14 +12,14 @@ namespace obvious
  * @brief Generic state for interfacing Lua scripts
  * @author Stefan May
  */
-class StateLua: public StateBase
+class StateLua: public StateBaseModel
 {
 public:
 
   /**
    * Constructor
    */
-  StateLua(const char* filepath);
+  StateLua(AgentModel* model, const char* filepath);
 
   /**
    * Destructor

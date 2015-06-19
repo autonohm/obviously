@@ -1,7 +1,7 @@
-#ifndef AGENTROBOT_H_
-#define AGENTROBOT_H_
+#ifndef ROBOTMODEL_H_
+#define ROBOTMODEL_H_
 
-#include "obcore/statemachine/Agent.h"
+#include "obcore/statemachine/AgentModel.h"
 #include "obcore/base/Point.h"
 #include "obcore/base/Timer.h"
 
@@ -14,12 +14,12 @@ namespace obvious
 {
 
 /**
- * @class   AgentRobot
+ * @class   RobotModel
  * @brief   Specific class for mobile agents (robots) with state machine
  * @author  Stefan May
  * @date    17.6.2015
  */
-class AgentRobot : public Agent
+class RobotModel : public AgentModel
 {
 
 public:
@@ -28,18 +28,18 @@ public:
    * Constructor
    * @param pos 3D position, orientation is set to (0, 0, 0)
    */
-  AgentRobot(Point pos);
+  RobotModel(Point pos);
 
   /**
    * Constructor
    * @param pos 2D position, orientation is set to (0, 0, 0)
    */
-  AgentRobot(Point2D pos);
+  RobotModel(Point2D pos);
 
   /**
    * Destructor
    */
-  virtual ~AgentRobot();
+  virtual ~RobotModel();
 
   /**
    * Check whether pose was updated within given interval in ms

@@ -8,7 +8,7 @@
 namespace obvious
 {
 
-StatePong::StatePong()
+StatePong::StatePong(AgentModel* model) : StateBaseModel(model)
 {
 
 }
@@ -28,7 +28,7 @@ void StatePong::onActive()
   std::cout << " Pong" << std::flush;
 
   if(rand()%100<30)
-    _agent->transitionToVolatileState(new StatePing());
+    _agent->transitionToVolatileState(new StatePing(_model));
 }
 
 void StatePong::onExit()

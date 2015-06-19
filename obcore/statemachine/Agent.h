@@ -2,8 +2,6 @@
 #define AGENT_H_
 
 #include "obcore/statemachine/states/StateBase.h"
-#include "obcore/base/Point.h"
-#include "obcore/base/Timer.h"
 
 #include <vector>
 /**

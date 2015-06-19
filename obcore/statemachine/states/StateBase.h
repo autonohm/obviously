@@ -30,11 +30,11 @@ public:
   /**
    * Default destructor
    */
-  virtual ~StateBase(){};
+  virtual ~StateBase();
 
   /**
-   * Set agent (needs to be set before call of process method)
-   * @param agent agent instance
+   * Set agent of state. This is called by the agent at state transitions.
+   * @param agent Agent instance
    */
   void setAgent(Agent* agent);
 
