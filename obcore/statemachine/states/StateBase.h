@@ -39,6 +39,17 @@ public:
   void setAgent(Agent* agent);
 
   /**
+   * Get agent of state. Default is NULL, when no agent is assigned.
+   * @return pointer to Agent instance.
+   */
+  Agent* getAgent();
+
+  /**
+   * Called once when registered at Agent
+   */
+  virtual void onSetup() {};
+
+  /**
    * Called once when activated
    */
   virtual void onEntry() {};
@@ -51,7 +62,7 @@ public:
   /**
    * Called once when left
    */
-  virtual void onExit() { };
+  virtual void onExit() {};
 
 protected:
 

@@ -2,14 +2,19 @@
 #include <string.h>
 #include <iostream>
 
+#include "obcore/base/Logger.h"
+
 namespace obvious
 {
 
 unsigned int Agent::_AgentID = 0;
 
+std::map<const unsigned int, Agent*> Agent::_agents;
+
 Agent::Agent()
 {
   _ID = _AgentID++;
+  Agent::_agents[_ID] = this;
   _currentState = NULL;
   _nextState = NULL;
 }
@@ -21,31 +26,63 @@ Agent::~Agent()
     _currentState->onExit();
     if(_volatile) delete _currentState;
   }
+  Agent::_agents[_ID] = NULL;
+}
+
+Agent* Agent::getAgentByID(const unsigned int id)
+{
+  return Agent::_agents[id];
+}
+
+unsigned int Agent::getID()
+{
+  return _ID;
 }
 
 void Agent::awake()
 {
-  if(_currentState)
+  // check 1st time awake
+  if(!_currentState && _nextState)
   {
-    _currentState->onActive();
-  }
-
-  if(_nextState)
-  {
-    if(_currentState)
-    {
-      _currentState->onExit();
-      if(_volatile) delete _currentState;
-    }
     _currentState = _nextState;
     _currentState->onEntry();
     _nextState = NULL;
+  }
+
+  if(_currentState)
+  {
+    _currentState->onActive();
+
+    if(_nextState) // do transition
+    {
+      // do de-initialization of current state
+      _currentState->onExit();
+      if(_volatile) delete _currentState;
+    }
+  }
+
+  if(_nextState) // do transition
+  {
+    // do transition to next state
+    _currentState = _nextState;
+    _nextState = NULL;
+
+    _currentState->onEntry();
   }
 }
 
 void Agent::registerPersistantState(const int stateID, StateBase* state)
 {
-  _persistantStateMap[stateID] = state;
+  if(state->getAgent()==NULL)
+  {
+    _persistantStateMap[stateID] = state;
+    state->setAgent(this);
+    state->onSetup();
+  }
+  else
+  {
+    LOGMSG(DBG_ERROR, "State already registered at another Agent.");
+  }
 }
 
 StateBase* Agent::getPersistantState(const int stateID)
@@ -58,8 +95,7 @@ void Agent::transitionToPersistantState(const int stateID)
   StateBase* nextState = _persistantStateMap[stateID];
   if(_currentState != nextState)
   {
-    _nextState = _persistantStateMap[stateID];
-    if(_nextState) _nextState->setAgent(this);
+    _nextState = nextState;
     _volatile = false;
   }
 }
@@ -68,9 +104,17 @@ void Agent::transitionToVolatileState(StateBase* nextState)
 {
   if(_currentState != nextState)
   {
-    _nextState = nextState;
-    if(_nextState) _nextState->setAgent(this);
-    _volatile = true;
+    if(nextState!=NULL && nextState->getAgent()==NULL)
+    {
+      _nextState = nextState;
+      _nextState->setAgent(this);
+      _volatile = true;
+      _nextState->onSetup();
+    }
+    else
+    {
+      LOGMSG(DBG_ERROR, "Next state instance invalid. Either NULL or already assigned state passed.");
+    }
   }
 }
 
@@ -81,11 +125,6 @@ void Agent::deletePersistantStates()
     delete it->second;
   }
   _persistantStateMap.clear();
-}
-
-unsigned int Agent::getID()
-{
-  return _ID;
 }
 
 } // end namespace

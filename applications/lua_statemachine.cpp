@@ -20,18 +20,28 @@ int main(int argc, char* argv[])
     return -1;
   }
 
-  Agent agent;
+  // The state machine might use a user-defined model. For that purpose use your own model class instances and pass them to your states.
   AgentModel model;
+
+  // Instantiate generic agent. It processes activated states. You can use Lua states as well as pure C++ states (see statemachine_test).
+  Agent agent;
+
+  // Instantiate Lua states from passed file path parameters
   for(int i=1; i<argc; i++)
   {
     StateLua* state = new StateLua(&model, argv[i]);
+
+    // Use variable i as ID. For better readability in real applications use an enum type!
     agent.registerPersistantState(i, state);
   }
+
+  // Apply first transition
   agent.transitionToPersistantState(1);
 
   while(1)
   {
     agent.awake();
+
     // slow down loop
     usleep(500000);
   }

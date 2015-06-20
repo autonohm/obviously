@@ -32,6 +32,13 @@ public:
   virtual ~Agent();
 
   /**
+   * Get Agent instance by passing unique ID. The Agent must be instantiated before, otherwise NULL is returned.
+   * @param id unique agent ID (assigned when Agent is instantiated).
+   * @return agent instance
+   */
+  static Agent* getAgentByID(const unsigned int id);
+
+  /**
    * Get unique ID of agent, each instance is assigned a sequential ID
    * @return ID
    */
@@ -86,6 +93,8 @@ private:
   bool _volatile;
 
   std::map<const int, StateBase*> _persistantStateMap;
+
+  static std::map<const unsigned int, Agent*> _agents;
 };
 
 } // end namespace

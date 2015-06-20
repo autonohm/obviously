@@ -204,7 +204,7 @@ bool LuaScriptManager::callFunction (const char* func, const char* sig, ...)
   return retval;
 }
 
-void LuaScriptManager::registerCallback(lua_CFunction func, char name[])
+void LuaScriptManager::registerCallback(lua_CFunction func, const char name[])
 {
   lua_pushcfunction(_L, func);
   lua_setglobal(_L, name);

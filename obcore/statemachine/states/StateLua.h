@@ -27,6 +27,23 @@ public:
   virtual ~StateLua();
 
   /**
+   * Set automatic reload flag. If true, the lua script is reloaded every cycle.
+   * @param autoReload reload flag
+   */
+  void setAutoReload(bool autoReload);
+
+  /**
+   * Get automatic reload flag. If true, the lua script is reloaded every cycle.
+   * @param return reload flag
+   */
+  bool getAutoReload();
+
+  /**
+   * Called once when registered
+   */
+  void onSetup();
+
+  /**
    * Called once when activated
    */
   void onEntry();
@@ -43,7 +60,13 @@ public:
 
 private:
 
+  void reload();
+
   LuaScriptManager* _manager;
+
+  bool _autoReload;
+
+  bool _loadInThisCycle;
 
 };
 

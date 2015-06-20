@@ -55,7 +55,7 @@ public:
    * @param func pointer to callback function
    * @param name function name available in Lua script
    */
-  void registerCallback(lua_CFunction func, char name[]);
+  void registerCallback(lua_CFunction func, const char name[]);
 
 private:
 

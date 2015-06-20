@@ -19,5 +19,11 @@ void StateBase::setAgent(Agent* agent)
   _agent = agent;
 }
 
+Agent* StateBase::getAgent()
+{
+  return _agent;
+}
+
+
 } /* namespace obvious */
 
