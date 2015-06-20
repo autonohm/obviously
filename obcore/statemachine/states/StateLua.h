@@ -41,22 +41,22 @@ public:
   /**
    * Called once when registered
    */
-  void onSetup();
+  virtual void onSetup();
 
   /**
    * Called once when activated
    */
-  void onEntry();
+  virtual void onEntry();
 
   /**
    * Process method (step-wise, never block this method)
    */
-  void onActive();
+  virtual void onActive();
 
   /**
    * Called once when left
    */
-  void onExit();
+  virtual void onExit();
 
 private:
 
