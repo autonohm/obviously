@@ -71,6 +71,9 @@ public:
 
 private:
 
+  // Calculate normals of point set
+  void calcNormals(const Matrix* M, double* phi, const bool* maskIn, bool* maskOut);
+
   // extract valid sample indices from matrix giving a validity mask
   vector<unsigned int> extractSamples(const obvious::Matrix* M, const bool* mask);
 

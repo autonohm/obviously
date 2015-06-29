@@ -111,54 +111,21 @@ obvious::Matrix* PCAMatching::pickControlSet(const obvious::Matrix* M, vector<un
   return C;
 }
 
-obvious::Matrix PCAMatching::match(const obvious::Matrix* M,
-                                   const bool* maskM,
-                                   const obvious::Matrix* N,
-                                   const obvious::Matrix* S,
-                                   const bool* maskS,
-                                   double phiMax,
-                                   const double transMax,
-                                   const double resolution)
+void PCAMatching::calcNormals(const Matrix* M, double* phi, const bool* maskIn, bool* maskOut)
 {
-  obvious::Matrix TBest(3, 3);
-  TBest.setIdentity();
-
-  const int pointsInS = S->getRows();
-  const int pointsInM = M->getRows();
-
-  if(pointsInM != pointsInS)
-  {
-    LOGMSG(DBG_ERROR, "Model and scene need to be of same size, size of M: " << pointsInM << ", size of S: " << pointsInS);
-    return TBest;
-  }
-
-  // Determine orientation in local model neighborhood
-  // Only from these points a valid orientation is computable
-  double* phiM = new double[pointsInM];
-  double* phiS = new double[pointsInS];
-  bool* maskMpca = new bool[pointsInM];
-  memcpy(maskMpca, maskM, pointsInM*sizeof(bool));
-  if(N)
-  {
-    for(int i=0; i<pointsInM; i++)
+  int points = M->getRows();
+  for(int i=0; i<_pcaSearchRange/2; i++)
+    maskOut[i] = false;
+    for(int i=points-_pcaSearchRange/2; i<points; i++)
+      maskOut[i] = false;
+    for(int i=_pcaSearchRange/2; i<points-_pcaSearchRange/2; i++)
     {
-      phiM[i] = atan2((*N)(i, 1), (*N)(i, 0));
-    }
-  }
-  else
-  {
-    for(int i=0; i<_pcaSearchRange/2; i++)
-      maskMpca[i] = false;
-    for(int i=pointsInM-_pcaSearchRange/2; i<pointsInM; i++)
-      maskMpca[i] = false;
-    for(int i=_pcaSearchRange/2; i<pointsInM-_pcaSearchRange/2; i++)
-    {
-      if(maskM[i])
+      if(maskIn[i])
       {
         unsigned int cnt = 0;
         for(int j=-_pcaSearchRange/2; j<_pcaSearchRange/2; j++)
         {
-          if(maskM[i+j]) cnt++;
+          if(maskIn[i+j]) cnt++;
         }
         if(cnt>_pcaMinSamples)
         {
@@ -166,7 +133,7 @@ obvious::Matrix PCAMatching::match(const obvious::Matrix* M,
           cnt = 0;
           for(int j=-_pcaSearchRange/2; j<_pcaSearchRange/2; j++)
           {
-            if(maskM[i+j])
+            if(maskIn[i+j])
             {
               A(cnt, 0) = (*M)(i+j, 0);
               A(cnt, 1) = (*M)(i+j, 1);
@@ -184,25 +151,71 @@ obvious::Matrix PCAMatching::match(const obvious::Matrix* M,
           double lenLongSqr  = xLong*xLong + yLong*yLong;
           double lenShortSqr = xShort*xShort + yShort*yShort;
           assert(lenLongSqr>lenShortSqr);
-          if(lenShortSqr>1e-6 && (lenLongSqr/lenShortSqr)<4.0) maskMpca[i] = false;
+          if(lenShortSqr>1e-6 && (lenLongSqr/lenShortSqr)<4.0) maskOut[i] = false;
 
           // shorter axis is normal
-          phiM[i] = atan2(yShort, xShort);
+          phi[i] = atan2(yShort, xShort);
 
           // correct orientation with dot product
           if(((*M)(i,0)*xShort+(*M)(i,1)*yShort)>0.0)
-            phiM[i] = -phiM[i];
+            phi[i] = -phi[i];
 
           delete Axes;
         }
         else
-          maskMpca[i] = false;
+          maskOut[i] = false;
       }
     }
+}
+
+obvious::Matrix PCAMatching::match(const obvious::Matrix* M,
+                                   const bool* maskM,
+                                   const obvious::Matrix* N,
+                                   const obvious::Matrix* S,
+                                   const bool* maskS,
+                                   double phiMax,
+                                   const double transMax,
+                                   const double resolution)
+{
+  obvious::Matrix TBest(3, 3);
+  TBest.setIdentity();
+
+  const int pointsInM = M->getRows();
+  const int pointsInS = S->getRows();
+
+  if(pointsInM != pointsInS)
+  {
+    LOGMSG(DBG_ERROR, "Model and scene need to be of same size, size of M: " << pointsInM << ", size of S: " << pointsInS);
+    return TBest;
   }
 
+  // Determine orientation in local model neighborhood
+  // Only from these points a valid orientation is computable
+  double* phiM = new double[pointsInM];
+  double* phiS = new double[pointsInS];
+  bool* maskMpca = new bool[pointsInM];
+  bool* maskSpca = new bool[pointsInS];
+
+  memcpy(maskMpca, maskM, pointsInM*sizeof(bool));
+  if(N)
+  {
+    for(int i=0; i<pointsInM; i++)
+    {
+      phiM[i] = atan2((*N)(i, 1), (*N)(i, 0));
+    }
+  }
+  else
+  {
+    calcNormals(M, phiM, maskM, maskMpca);
+  }
+
+  // Determine number of valid samples in local scene neighborhood
+  // only from these points a valid orientation is computable
+  memcpy(maskSpca, maskS, pointsInS*sizeof(bool));
+  calcNormals(S, phiS, maskS, maskSpca);
+
   vector<unsigned int> idxMValid = extractSamples(M, maskMpca);
-  vector<unsigned int> idxSValid = extractSamples(S, maskS);
+  vector<unsigned int> idxSValid = extractSamples(S, maskSpca);
 
   initKDTree(M, idxMValid);
   vector<unsigned int> idxControl;  //represents the indices of points used for Control in S.
@@ -259,57 +272,6 @@ obvious::Matrix PCAMatching::match(const obvious::Matrix* M,
     return TBest;
   }
 
-  // Determine number of valid samples in local scene neighborhood
-  // only from these points a valid orientation is computable
-  unsigned int* localSceneCnt = new unsigned int[pointsInS];
-  for(int i=_pcaSearchRange/2; i<pointsInS-_pcaSearchRange/2; i++)
-  {
-    unsigned int cnt = 0;
-    for(int j=-_pcaSearchRange/2; j<_pcaSearchRange/2; j++)
-    {
-      if(maskS[i+j]) cnt++;
-    }
-    localSceneCnt[i] = cnt;
-
-    if(localSceneCnt[i]>_pcaMinSamples)
-    {
-      // ----------- Determine orientation of scene sample ------------
-      Matrix A(localSceneCnt[i], 2);
-      unsigned int cnt = 0;
-      for(int j=-_pcaSearchRange/2; j<_pcaSearchRange/2; j++)
-      {
-        if(maskS[i+j])
-        {
-          A(cnt, 0) = (*S)(i+j, 0);
-          A(cnt, 1) = (*S)(i+j, 1);
-          cnt++;
-        }
-      }
-      Matrix* Axes = A.pcaAnalysis();
-      // longer axis
-      double xLong  = (*Axes)(0,1)-(*Axes)(0,0);
-      double yLong  = (*Axes)(0,3)-(*Axes)(0,2);
-      // shorter axis
-      double xShort = (*Axes)(1,1)-(*Axes)(1,0);
-      double yShort = (*Axes)(1,3)-(*Axes)(1,2);
-      // rate axes lengths -> main axis needs to be twice as long as second axis
-      double lenLongSqr  = xLong*xLong + yLong*yLong;
-      double lenShortSqr = xShort*xShort + yShort*yShort;
-      assert(lenLongSqr>lenShortSqr);
-      if(lenShortSqr>1e-6 && (lenLongSqr/lenShortSqr)<4.0) continue;
-
-      // shorter axis is normal
-      phiS[i] = atan2(yShort, xShort);
-
-      // correct orientation with dot product
-      if(((*S)(i,0)*xShort+(*S)(i,1)*yShort)>0.0)
-        phiS[i] = -phiS[i];
-
-      delete Axes;
-    }
-    // --------------------------------------------------------------
-  }
-
   srand (time(NULL));
 
 #ifndef DEBUG
@@ -319,8 +281,8 @@ if (_trace)
 }
 #endif
 
-int          bestM;
-int          bestS;
+int          bestM = -1;
+int          bestS = -1;
 double       bestRatio = 0.0;
 double       bestScore = M_PI / 2.0;
 unsigned int bestCnt = 0;
@@ -340,196 +302,159 @@ double       bestErr = 1e12;
     // remove chosen element to avoid picking same index a second time
     idxSValid.erase(idxSValid.begin() + randIdx);
 }
-    // Ensure that scene sample has at least a few valid neighbors for PCA analysis
-    if(localSceneCnt[idx]>_pcaMinSamples)
+
+    // leftmost scene point belonging to query point idx1
+    const int iMin = max((int) idx-span, _pcaSearchRange/2);
+    // rightmost scene point belonging to query point idx1
+    const int iMax = min(idx+span, pointsInM-_pcaSearchRange/2);
+
+    for(int i=iMin; i<iMax; i++)
     {
-
-      // ----------- Determine orientation of scene sample ------------
-      /*Matrix A(localSceneCnt[idx], 2);
-      unsigned int cnt = 0;
-      for(int j=-_pcaSearchRange/2; j<_pcaSearchRange/2; j++)
+      if(maskMpca[i])
       {
-        if(maskS[idx+j])
+        double phi              = phiM[i] - phiS[idx];
+        if(phi>M_PI)       phi -= 2.0*M_PI;
+        else if(phi<-M_PI) phi += 2.0*M_PI;
+
+        if(fabs(phi) < phiMax)
         {
-          A(cnt, 0) = (*S)(idx+j, 0);
-          A(cnt, 1) = (*S)(idx+j, 1);
-          cnt++;
-        }
-      }
-      Matrix* Axes = A.pcaAnalysis();
-      // longer axis
-      double xLong  = (*Axes)(0,1)-(*Axes)(0,0);
-      double yLong  = (*Axes)(0,3)-(*Axes)(0,2);
-      // shorter axis
-      double xShort = (*Axes)(1,1)-(*Axes)(1,0);
-      double yShort = (*Axes)(1,3)-(*Axes)(1,2);
-      // rate axes lengths -> main axis needs to be twice as long as second axis
-      double lenLongSqr  = xLong*xLong + yLong*yLong;
-      double lenShortSqr = xShort*xShort + yShort*yShort;
-      assert(lenLongSqr>lenShortSqr);
-      if(lenShortSqr>1e-6 && (lenLongSqr/lenShortSqr)<4.0) continue;
+          obvious::Matrix T = obvious::MatrixFactory::TransformationMatrix33(phi, 0, 0);
 
-      // shorter axis is normal
-      double phiS = atan2(yShort, xShort);
+          // Calculate translation
+          const double sx = (*S)(idx,0);
+          const double sy = (*S)(idx,1);
+          T(0, 2) = (*M)(i,0) - (T(0, 0) * sx + T(0, 1) * sy);
+          T(1, 2) = (*M)(i,1) - (T(1, 0) * sx + T(1, 1) * sy);
 
-      // correct orientation with dot product
-      if(((*S)(idx,0)*xShort+(*S)(idx,1)*yShort)>0.0)
-        phiS = -phiS;
+          //T.print();
+          // Transform control set
+          obvious::Matrix STemp = T * (*Control);
 
-      delete Axes;*/
-      // --------------------------------------------------------------
-
-      // leftmost scene point belonging to query point idx1
-      const int iMin = max((int) idx-span, _pcaSearchRange/2);
-      // rightmost scene point belonging to query point idx1
-      const int iMax = min(idx+span, pointsInM-_pcaSearchRange/2);
-
-      for(int i=iMin; i<iMax; i++)
-      {
-        if(maskMpca[i])
-        {
-          double phi              = phiM[i] - phiS[idx];
-          if(phi>M_PI)       phi -= 2.0*M_PI;
-          else if(phi<-M_PI) phi += 2.0*M_PI;
-
-          if(fabs(phi) < phiMax)
+          // Determine number of control points in field of view
+          unsigned int maxCntMatch = 0;
+          for(unsigned int j=0; j<STemp.getCols(); j++)
           {
-            obvious::Matrix T = obvious::MatrixFactory::TransformationMatrix33(phi, 0, 0);
-
-            // Calculate translation
-            const double sx = (*S)(idx,0);
-            const double sy = (*S)(idx,1);
-            T(0, 2) = (*M)(i,0) - (T(0, 0) * sx + T(0, 1) * sy);
-            T(1, 2) = (*M)(i,1) - (T(1, 0) * sx + T(1, 1) * sy);
-
-            //T.print();
-            // Transform control set
-            obvious::Matrix STemp = T * (*Control);
-
-            // Determine number of control points in field of view
-            unsigned int maxCntMatch = 0;
-            for(unsigned int j=0; j<STemp.getCols(); j++)
+            double phiControl = atan2(STemp(1, j), STemp(0, j));
+            if(phiControl>phiBoundMax || phiControl<phiBoundMin)
             {
-              double phiControl = atan2(STemp(1, j), STemp(0, j));
-              if(phiControl>phiBoundMax || phiControl<phiBoundMin)
-              {
-                maskControl[j] = false;
-              }
-              else
-              {
-                maskControl[j] = true;
-                maxCntMatch++;
-              }
+              maskControl[j] = false;
             }
-
-            if(maxCntMatch<sizeControl/3)
-              continue;
-
-            // Determine how many nearest neighbors (model <-> scene) are close enough
-            double q[2];
-            unsigned int cntMatch = 0;
-            flann::Matrix<int> indices(new int[1], 1, 1);
-            flann::Matrix<double> dists(new double[1], 1, 1);
-            double err = 0;
-
-            for(unsigned int s = 0; s < STemp.getCols(); s++)
+            else
             {
-              if(maskControl[s])
-              {
-                //Find nearest neighbor for control point
-                q[0] = STemp(0, s);
-                q[1] = STemp(1, s);
-                flann::Matrix<double> query(q, 1, 2);
-                flann::SearchParams p(-1, 0.0);
-                _index->knnSearch(query, indices, dists, 1, p);
-
-                int idxQuery = indices[0][0];
-
-                // calculate vector from query point to assigned model point
-                double qx = (*M)(idxQuery, 0) - q[0];
-                double qy = (*M)(idxQuery, 1) - q[1];
-                double lq = sqrt(qx*qx + qy*qy);
-                qx /= lq;
-                qy /= lq;
-
-                // check co-linearity with dot product
-                // At the current state, normals are optionally passed. So, we cannot rely on having proper normals
-                //double weight = fabs((*N)(idxQuery,0)*qx+(*N)(idxQuery,1)*qy);
-
-                // this weighting worked with intel data set
-                double weight = fabs(cos(phiM[idxQuery] - phiS[idx]));
-
-                err += (dists[0][0]*weight);
-                if(dists[0][0] < _epsSqr)
-                {
-                  cntMatch++;
-                }
-              }
-            }
-
-            //cout << "idx: " << idx << ", i:" << i << ", phiM:" << rad2deg(phiM[i]) << ", phiS: " << rad2deg(phiS) << ", phi: " << rad2deg(fabs(phi)) << ", cntMatch: " << cntMatch << ", maxCntMatch: " << maxCntMatch << endl;
-            delete[] indices.ptr();
-            delete[] dists.ptr();
-
-            if(cntMatch <= sizeControl/3)
-              continue;
-
-            // Experimental rating
-            double ratio = (double)cntMatch / (double) maxCntMatch;
-            double errMean = err / (double)cntMatch;
-            double score = atan2(errMean,(double)cntMatch);
-            //bool goodMatch = score<bestScore && cntMatch>bestCnt;
-            //bool goodMatch = (err<bestErr);
-
-            // Rating from Markus Kuehn
-            double equalThres = 1e-5;//cntStepSize;// 1e-5;
-            bool rateCondition = ((ratio-bestRatio) > equalThres) && (cntMatch > bestCnt);
-            bool errorCondition = fabs( (ratio-bestRatio) < equalThres ) && (cntMatch == bestCnt) && err < bestErr;
-            bool goodMatch = rateCondition || errorCondition;
-
-
-            //cout << errMean << " " << cntMatch << " " << rad2deg(score) << endl;
-#pragma omp critical
-{
-            if(goodMatch)
-            {
-              bestScore = score;
-              bestRatio = ratio;
-              bestCnt = cntMatch;
-              bestErr = err;
-              bestM = i;
-              bestS = idx;
-              TBest = T;
-            }
-}
-
-            if(_trace)
-            {
-              double** rawScene;
-              System<double>::allocate(STemp.getCols(), 2, rawScene);
-              for(unsigned int j=0; j<STemp.getCols(); j++)
-              {
-                rawScene[j][0] = STemp(0, j);
-                rawScene[j][1] = STemp(1, j);
-              }
-              vector<StrTraceCartesianPair> tracePair;
-              StrTraceCartesianPair p;
-              p.first[0] = (*M)(i, 0);
-              p.first[1] = (*M)(i, 1);
-              p.second[0] = (*S)(idx, 0);
-              p.second[1] = (*S)(idx, 1);
-              tracePair.push_back(p);
-              vector<unsigned int> id;
-              id.push_back(trial);
-              id.push_back(i);
-              id.push_back(idx);
-              _trace->addAssignment(rawScene, STemp.getCols(), tracePair, err, id);
-              System<double>::deallocate(rawScene);
+              maskControl[j] = true;
+              maxCntMatch++;
             }
           }
-        } // if(!isnan(phiM[i]))
-      } // for(int i=_pcaCnt/2; i<pointsInM-_pcaCnt/2; i++)
-    } //if(localSceneCnt[idx]>4)
+
+          if(maxCntMatch<sizeControl/3)
+            continue;
+
+          // Determine how many nearest neighbors (model <-> scene) are close enough
+          double q[2];
+          unsigned int cntMatch = 0;
+          flann::Matrix<int> indices(new int[1], 1, 1);
+          flann::Matrix<double> dists(new double[1], 1, 1);
+          double err = 0;
+
+          for(unsigned int s = 0; s < STemp.getCols(); s++)
+          {
+            if(maskControl[s])
+            {
+              //Find nearest neighbor for control point
+              q[0] = STemp(0, s);
+              q[1] = STemp(1, s);
+              flann::Matrix<double> query(q, 1, 2);
+              flann::SearchParams p(-1, 0.0);
+              _index->knnSearch(query, indices, dists, 1, p);
+
+              int idxQuery = indices[0][0];
+
+              // calculate vector from query point to assigned model point
+              /*
+              double qx = (*M)(idxQuery, 0) - q[0];
+              double qy = (*M)(idxQuery, 1) - q[1];
+              double lq = sqrt(qx*qx + qy*qy);
+              qx /= lq;
+              qy /= lq;
+
+              // check co-linearity with dot product
+              // At the current state, normals are optionally passed. So, we cannot rely on having proper normals
+              double weight = fabs((*N)(idxQuery,0)*qx+(*N)(idxQuery,1)*qy);
+              */
+
+              // this weighting worked with intel data set
+              double weight = fabs(cos(phiM[idxQuery] - phiS[idx]));
+
+              err += (dists[0][0]*weight);
+              if(dists[0][0] < _epsSqr)
+              {
+                cntMatch++;
+              }
+            }
+          }
+
+          //cout << "idx: " << idx << ", i:" << i << ", phiM:" << rad2deg(phiM[i]) << ", phiS: " << rad2deg(phiS) << ", phi: " << rad2deg(fabs(phi)) << ", cntMatch: " << cntMatch << ", maxCntMatch: " << maxCntMatch << endl;
+          delete[] indices.ptr();
+          delete[] dists.ptr();
+
+          if(cntMatch <= sizeControl/3)
+            continue;
+
+          // Experimental rating
+          double ratio = (double)cntMatch / (double) maxCntMatch;
+          double errMean = err / (double)cntMatch;
+          double score = atan2(errMean,(double)cntMatch);
+          //bool goodMatch = score<bestScore && cntMatch>bestCnt;
+          //bool goodMatch = (err<bestErr);
+
+          // Rating from Markus Kuehn
+          double equalThres = 1e-5;//cntStepSize;// 1e-5;
+          bool rateCondition = ((ratio-bestRatio) > equalThres) && (cntMatch > bestCnt);
+          bool errorCondition = fabs( (ratio-bestRatio) < equalThres ) && (cntMatch == bestCnt) && err < bestErr;
+          bool goodMatch = rateCondition || errorCondition;
+
+
+          //cout << errMean << " " << cntMatch << " " << rad2deg(score) << endl;
+#pragma omp critical
+{
+          if(goodMatch)
+          {
+            bestScore = score;
+            bestRatio = ratio;
+            bestCnt = cntMatch;
+            bestErr = err;
+            bestM = i;
+            bestS = idx;
+            TBest = T;
+          }
+}
+
+          if(_trace)
+          {
+            double** rawScene;
+            System<double>::allocate(STemp.getCols(), 2, rawScene);
+            for(unsigned int j=0; j<STemp.getCols(); j++)
+            {
+              rawScene[j][0] = STemp(0, j);
+              rawScene[j][1] = STemp(1, j);
+            }
+            vector<StrTraceCartesianPair> tracePair;
+            StrTraceCartesianPair p;
+            p.first[0] = (*M)(i, 0);
+            p.first[1] = (*M)(i, 1);
+            p.second[0] = (*S)(idx, 0);
+            p.second[1] = (*S)(idx, 1);
+            tracePair.push_back(p);
+            vector<unsigned int> id;
+            id.push_back(trial);
+            id.push_back(i);
+            id.push_back(idx);
+            _trace->addAssignment(rawScene, STemp.getCols(), tracePair, err, id);
+            System<double>::deallocate(rawScene);
+          }
+        }
+      } // if(!isnan(phiM[i]))
+    } // for(int i=_pcaCnt/2; i<pointsInM-_pcaCnt/2; i++)
   } // for _trials
 
 } // OMP
@@ -539,7 +464,7 @@ double       bestErr = 1e12;
   delete [] phiM;
   delete [] phiS;
   delete [] maskMpca;
-  delete [] localSceneCnt;
+  delete [] maskSpca;
   delete Control;
 
   return TBest;
