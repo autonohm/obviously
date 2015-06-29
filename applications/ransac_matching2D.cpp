@@ -88,14 +88,19 @@ int main(int argc, char** argv)
   T.invert();
   T.print();
 
-  unsigned int trials = 3;
+  unsigned int trials = 20;
   double epsThresh = 0.02;
   unsigned int sizeControlSet = 180;
+
   //RansacMatching matcher(trials, epsThresh, sizeControlSet);
   PCAMatching matcher(trials, epsThresh, sizeControlSet);
   matcher.activateTrace();
+
+  //Matrix F = matcher.match(M, maskM, &S, maskS, deg2rad(45.0), 1.5 , deg2rad(0.25));
   Matrix F = matcher.match(M, maskM, NULL, &S, maskS, deg2rad(45.0), 1.5 , deg2rad(0.25));
+
   matcher.serializeTrace("/tmp/trace");
+
   F.invert();
   cout << endl << "Estimated transformation:" << endl;
   F.print();

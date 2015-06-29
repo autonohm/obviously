@@ -54,11 +54,25 @@ public:
 	void setModel(double** model, unsigned int sizeM);
 
 	/**
+	 * Set model of trace record
+	 * @param M model matrix
+	 * @param validPoints valid indices in model M
+	 */
+	void setModel(const Matrix* M, vector<unsigned int> validPoints);
+
+	/**
    * Set scene of trace record
    * @param scene scene data
    * @param sizeS size of scene
    */
 	void setScene(double** scene, unsigned int sizeS);
+
+	/**
+   * Set scene of trace record
+   * @param S scene matrix
+   * @param validPoints valid indices in model S
+   */
+	void setScene(const Matrix* S, vector<unsigned int> validPoints);
 
 	/**
 	 * Add scene assignment to trace record
@@ -70,6 +84,8 @@ public:
 	 */
 	void addAssignment(double** scene, unsigned int sizeS, vector<StrTraceCartesianPair> pairs, const double score, vector<unsigned int> id = vector<unsigned int>());
 	
+	void addAssignment(const Matrix* M, unsigned int idxM, const Matrix* S, unsigned int idxS, const Matrix* STrans, const double score, const unsigned int trial);
+
 	/**
 	 * Serialize assignment to trace folder
 	 * @param folder trace folder (must not be existent)

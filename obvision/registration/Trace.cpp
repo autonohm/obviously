@@ -59,6 +59,20 @@ void Trace::setModel(double** model, unsigned int sizeM)
   }
 }
 
+void Trace::setModel(const Matrix* M, vector<unsigned int> validPoints)
+{
+  double** rawModel;
+  System<double>::allocate(validPoints.size(), 2, rawModel);
+  for(unsigned int i=0; i<validPoints.size(); i++)
+  {
+    rawModel[i][0] = (*M)(validPoints[i], 0);
+    rawModel[i][1] = (*M)(validPoints[i], 1);
+  }
+  setModel(rawModel, validPoints.size());
+
+  System<double>::deallocate(rawModel);
+}
+
 void Trace::setScene(double** scene, unsigned int sizeS)
 {
   if(scene)
@@ -72,6 +86,20 @@ void Trace::setScene(double** scene, unsigned int sizeS)
   }
 }
 
+void Trace::setScene(const Matrix* S, vector<unsigned int> validPoints)
+{
+  double** rawScene;
+  System<double>::allocate(validPoints.size(), 2, rawScene);
+  for(unsigned int i=0; i<validPoints.size(); i++)
+  {
+    rawScene[i][0] = (*S)(validPoints[i], 0);
+    rawScene[i][1] = (*S)(validPoints[i], 1);
+  }
+  setScene(rawScene, validPoints.size());
+
+  System<double>::deallocate(rawScene);
+}
+
 void Trace::addAssignment(double** scene, unsigned int sizeS, vector<StrTraceCartesianPair> pairs, const double score, vector<unsigned int> id)
 {
   obvious::Matrix* sceneCopy = new obvious::Matrix(sizeS, _dim, *scene);
@@ -79,6 +107,30 @@ void Trace::addAssignment(double** scene, unsigned int sizeS, vector<StrTraceCar
   _ids.push_back(id);
   _pairs.push_back(pairs);
   _scores.push_back(score);
+}
+
+void Trace::addAssignment(const Matrix* M, unsigned int idxM, const Matrix* S, unsigned int idxS, const Matrix* STrans, const double score, const unsigned int trial)
+{
+  double** rawScene;
+  System<double>::allocate((*STrans).getCols(), 2, rawScene);
+  for(unsigned int j=0; j<(*STrans).getCols(); j++)
+  {
+    rawScene[j][0] = (*STrans)(0, j);
+    rawScene[j][1] = (*STrans)(1, j);
+  }
+  vector<StrTraceCartesianPair> tracePair;
+  StrTraceCartesianPair p;
+  p.first[0] = (*M)(idxM, 0);
+  p.first[1] = (*M)(idxM, 1);
+  p.second[0] = (*S)(idxS, 0);
+  p.second[1] = (*S)(idxS, 1);
+  tracePair.push_back(p);
+  vector<unsigned int> id;
+  id.push_back(trial);
+  id.push_back(idxM);
+  id.push_back(idxS);
+  addAssignment(rawScene, STrans->getCols(), tracePair, score, id);
+  System<double>::deallocate(rawScene);
 }
 
 void Trace::serialize(const char* folder)
