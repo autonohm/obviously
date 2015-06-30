@@ -194,7 +194,7 @@ void PCAMatching::calcPhi(const Matrix* N,  const bool* mask, double* phi)
 
 obvious::Matrix PCAMatching::match(const obvious::Matrix* M,
     const bool* maskM,
-    const obvious::Matrix* N,
+    const obvious::Matrix* NM,
     const obvious::Matrix* S,
     const bool* maskS,
     double phiMax,
@@ -214,7 +214,7 @@ obvious::Matrix PCAMatching::match(const obvious::Matrix* M,
   }
 
   // Determine orientation in local neighborhood
-  // Only from these points a valid orientation is computable
+  // Only from these points a valid orientation is computable -> use a mask
   obvious::Matrix* NMpca = new Matrix(pointsInM, 2);
   obvious::Matrix* NSpca = new Matrix(pointsInS, 2);
   double* phiM = new double[pointsInM];
@@ -224,9 +224,9 @@ obvious::Matrix PCAMatching::match(const obvious::Matrix* M,
 
   memcpy(maskMpca, maskM, pointsInM*sizeof(bool));
 
-  if(N)
+  if(NM)
   {
-    calcPhi(N, maskM, phiM);
+    calcPhi(NM, maskM, phiM);
   }
   else
   {
@@ -252,9 +252,6 @@ obvious::Matrix PCAMatching::match(const obvious::Matrix* M,
   // Determine frustum, i.e., direction of leftmost and rightmost model point
   double phiBoundMin = atan2((*M)(idxMValid.front(),1), (*M)(idxMValid.front(),0));
   double phiBoundMax = atan2((*M)(idxMValid.back(),1),  (*M)(idxMValid.back(),0));
-
-  //cout << "Valid points in scene: " << idxSValid.size() << ", points in M: " << pointsInM << ", valid points in model: " << idxMValid.size() << ", Control set: " << sizeControl << endl;
-  //cout << "Model frustum: [" << rad2deg(phiBoundMin) << "; " << rad2deg(phiBoundMax) << "]" << endl;
 
   LOGMSG(DBG_DEBUG, "Valid points in scene: " << idxSValid.size() << ", valid points in model: " << idxMValid.size() << ", Control set: " << Control->getCols());
   LOGMSG(DBG_DEBUG, "Model phi min:: " << rad2deg(phiBoundMin) << ", Model phi max: " << rad2deg(phiBoundMax));
@@ -289,10 +286,11 @@ obvious::Matrix PCAMatching::match(const obvious::Matrix* M,
   }
 #endif
 
-  int          bestM = -1;
-  int          bestS = -1;
+  //int          bestM = -1;
+  //int          bestS = -1;
+  //double       bestScore = M_PI / 2.0;
+
   double       bestRatio = 0.0;
-  double       bestScore = M_PI / 2.0;
   unsigned int bestCnt = 0;
   double       bestErr = 1e12;
 
@@ -304,23 +302,23 @@ obvious::Matrix PCAMatching::match(const obvious::Matrix* M,
       int idx;
 #pragma omp critical
       {
-        const int randIdx = rand() % (idxSValid.size()-1);
-        idx               = idxSValid[randIdx];
+        const int randIdx = rand() % (idxMValid.size()-1);
+        idx               = idxMValid[randIdx];
 
         // remove chosen element to avoid picking same index a second time
-        idxSValid.erase(idxSValid.begin() + randIdx);
+        idxMValid.erase(idxMValid.begin() + randIdx);
       }
 
       // leftmost scene point belonging to query point idx1
       const int iMin = max((int) idx-span, _pcaSearchRange/2);
       // rightmost scene point belonging to query point idx1
-      const int iMax = min(idx+span, pointsInM-_pcaSearchRange/2);
+      const int iMax = min(idx+span, pointsInS-_pcaSearchRange/2);
 
       for(int i=iMin; i<iMax; i++)
       {
-        if(maskMpca[i])
+        if(maskSpca[i])
         {
-          double phi              = phiM[i] - phiS[idx];
+          double phi              = phiM[idx] - phiS[i];
           if(phi>M_PI)       phi -= 2.0*M_PI;
           else if(phi<-M_PI) phi += 2.0*M_PI;
 
@@ -329,10 +327,10 @@ obvious::Matrix PCAMatching::match(const obvious::Matrix* M,
             obvious::Matrix T = obvious::MatrixFactory::TransformationMatrix33(phi, 0, 0);
 
             // Calculate translation
-            const double sx = (*S)(idx,0);
-            const double sy = (*S)(idx,1);
-            T(0, 2) = (*M)(i,0) - (T(0, 0) * sx + T(0, 1) * sy);
-            T(1, 2) = (*M)(i,1) - (T(1, 0) * sx + T(1, 1) * sy);
+            const double sx = (*S)(i,0);
+            const double sy = (*S)(i,1);
+            T(0, 2) = (*M)(idx,0) - (T(0, 0) * sx + T(0, 1) * sy);
+            T(1, 2) = (*M)(idx,1) - (T(1, 0) * sx + T(1, 1) * sy);
 
             //T.print();
             // Transform control set
@@ -379,19 +377,19 @@ obvious::Matrix PCAMatching::match(const obvious::Matrix* M,
 
                 // calculate vector from query point to assigned model point
                 /*
-              double qx = (*M)(idxQuery, 0) - q[0];
-              double qy = (*M)(idxQuery, 1) - q[1];
-              double lq = sqrt(qx*qx + qy*qy);
-              qx /= lq;
-              qy /= lq;
+                double qx = (*M)(idxQuery, 0) - q[0];
+                double qy = (*M)(idxQuery, 1) - q[1];
+                double lq = sqrt(qx*qx + qy*qy);
+                qx /= lq;
+                qy /= lq;
 
-              // check co-linearity with dot product
-              // At the current state, normals are optionally passed. So, we cannot rely on having proper normals
-              double weight = fabs((*N)(idxQuery,0)*qx+(*N)(idxQuery,1)*qy);
+                // check co-linearity with dot product
+                // At the current state, normals are optionally passed. So, we cannot rely on having proper normals
+                double weight = fabs((*N)(idxQuery,0)*qx+(*N)(idxQuery,1)*qy);
                  */
 
                 // this weighting worked with intel data set
-                double weight = fabs(cos(phiM[idxQuery] - phiS[idx]));
+                double weight = fabs(cos(phiM[idxQuery] - phiS[i]));
 
                 err += (dists[0][0]*weight);
                 if(dists[0][0] < _epsSqr)
@@ -399,7 +397,6 @@ obvious::Matrix PCAMatching::match(const obvious::Matrix* M,
               }
             }
 
-            //cout << "idx: " << idx << ", i:" << i << ", phiM:" << rad2deg(phiM[i]) << ", phiS: " << rad2deg(phiS) << ", phi: " << rad2deg(fabs(phi)) << ", cntMatch: " << cntMatch << ", maxCntMatch: " << maxCntMatch << endl;
             delete[] indices.ptr();
             delete[] dists.ptr();
 
@@ -408,8 +405,9 @@ obvious::Matrix PCAMatching::match(const obvious::Matrix* M,
 
             // Experimental rating
             double ratio = (double)cntMatch / (double) maxCntMatch;
-            double errMean = err / (double)cntMatch;
-            double score = atan2(errMean,(double)cntMatch);
+
+            //double errMean = err / (double)cntMatch;
+            //double score = atan2(errMean,(double)cntMatch);
             //bool goodMatch = score<bestScore && cntMatch>bestCnt;
             //bool goodMatch = (err<bestErr);
 
@@ -419,24 +417,29 @@ obvious::Matrix PCAMatching::match(const obvious::Matrix* M,
             bool errorCondition = fabs( (ratio-bestRatio) < equalThres ) && (cntMatch == bestCnt) && err < bestErr;
             bool goodMatch = rateCondition || errorCondition;
 
-
-            //cout << errMean << " " << cntMatch << " " << rad2deg(score) << endl;
 #pragma omp critical
             {
               if(goodMatch)
               {
-                bestScore = score;
                 bestRatio = ratio;
                 bestCnt = cntMatch;
                 bestErr = err;
-                bestM = i;
-                bestS = idx;
                 TBest = T;
+
+                //bestScore = score;
+                //bestM = idx;
+                //bestS = i;
               }
             }
 
             if(_trace)
-              _trace->addAssignment(M, i, S, idx, &STemp, err, trial);
+            {
+              vector<unsigned int> idxM;
+              idxM.push_back(idx);
+              vector<unsigned int> idxS;
+              idxS.push_back(i);
+              _trace->addAssignment(M, idxM, S, idxS, &STemp, err, trial);
+            }
           }
         } // if(!isnan(phiM[i]))
       } // for(int i=_pcaCnt/2; i<pointsInM-_pcaCnt/2; i++)

@@ -109,8 +109,13 @@ void Trace::addAssignment(double** scene, unsigned int sizeS, vector<StrTraceCar
   _scores.push_back(score);
 }
 
-void Trace::addAssignment(const Matrix* M, unsigned int idxM, const Matrix* S, unsigned int idxS, const Matrix* STrans, const double score, const unsigned int trial)
+void Trace::addAssignment(const Matrix* M, vector<unsigned int> idxM, const Matrix* S, vector<unsigned int> idxS, const Matrix* STrans, const double score, const unsigned int iterationID)
 {
+  if(idxM.size() != idxS.size())
+  {
+    LOGMSG(DBG_ERROR, "Size of model and scene assignment vectors must be equal");
+    return;
+  }
   double** rawScene;
   System<double>::allocate((*STrans).getCols(), 2, rawScene);
   for(unsigned int j=0; j<(*STrans).getCols(); j++)
@@ -119,16 +124,19 @@ void Trace::addAssignment(const Matrix* M, unsigned int idxM, const Matrix* S, u
     rawScene[j][1] = (*STrans)(1, j);
   }
   vector<StrTraceCartesianPair> tracePair;
-  StrTraceCartesianPair p;
-  p.first[0] = (*M)(idxM, 0);
-  p.first[1] = (*M)(idxM, 1);
-  p.second[0] = (*S)(idxS, 0);
-  p.second[1] = (*S)(idxS, 1);
-  tracePair.push_back(p);
+  for(int i=0; i<idxM.size(); i++)
+  {
+    StrTraceCartesianPair p;
+    p.first[0] = (*M)(idxM[i], 0);
+    p.first[1] = (*M)(idxM[i], 1);
+    p.second[0] = (*S)(idxS[i], 0);
+    p.second[1] = (*S)(idxS[i], 1);
+    tracePair.push_back(p);
+  }
   vector<unsigned int> id;
-  id.push_back(trial);
-  id.push_back(idxM);
-  id.push_back(idxS);
+  id.push_back(iterationID);
+  id.push_back(idxM[0]);
+  id.push_back(idxS[0]);
   addAssignment(rawScene, STrans->getCols(), tracePair, score, id);
   System<double>::deallocate(rawScene);
 }
@@ -357,7 +365,7 @@ void Trace::serialize(const char* folder)
             file << "set output \"score_";
             snprintf(buf, 64, "%05d", id[0]);
             file << buf << ".png\"" << endl;
-            file << "plot \"./score_" << buf << ".dat\" u 1:3 w lp" << endl;
+            file << "plot \"./score_" << buf << ".dat\" u 2:3 w lp" << endl;
           }
         }
       }

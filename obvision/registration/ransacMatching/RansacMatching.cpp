@@ -174,26 +174,9 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const bool* mask
 
   if(_trace)
   {
-    double** rawModel;
-    double** rawScene;
-    System<double>::allocate(idxMValid.size(), 2, rawModel);
-    System<double>::allocate(idxSValid.size(), 2, rawScene);
-    for(unsigned int i=0; i<idxMValid.size(); i++)
-    {
-      rawModel[i][0] = (*M)(idxMValid[i], 0);
-      rawModel[i][1] = (*M)(idxMValid[i], 1);
-    }
-    for(unsigned int i=0; i<idxSValid.size(); i++)
-    {
-      rawScene[i][0] = (*S)(idxSValid[i], 0);
-      rawScene[i][1] = (*S)(idxSValid[i], 1);
-    }
     _trace->reset();
-    _trace->setModel(rawModel, idxMValid.size());
-    _trace->setScene(rawScene, idxSValid.size());
-
-    System<double>::deallocate(rawModel);
-    System<double>::deallocate(rawScene);
+    _trace->setModel(M, idxMValid);
+    _trace->setScene(S, idxSValid);
   }
 
   // Calculate search "radius", i.e., maximum difference in polar indices because of rotation
@@ -431,31 +414,13 @@ if (_trace)
 }
         if(_trace)
         {
-          double** rawScene;
-          System<double>::allocate(STemp.getCols(), 2, rawScene);
-          for(unsigned int j=0; j<STemp.getCols(); j++)
-          {
-            rawScene[j][0] = STemp(0, j);
-            rawScene[j][1] = STemp(1, j);
-          }
-          vector<StrTraceCartesianPair> tracePair;
-          StrTraceCartesianPair p;
-          p.first[0] = (*M)(idx1, 0);
-          p.first[1] = (*M)(idx1, 1);
-          p.second[0] = (*S)(i, 0);
-          p.second[1] = (*S)(i, 1);
-          tracePair.push_back(p);
-          p.first[0] = (*M)(idx2, 0);
-          p.first[1] = (*M)(idx2, 1);
-          p.second[0] = (*S)(iMinDist, 0);
-          p.second[1] = (*S)(iMinDist, 1);
-          tracePair.push_back(p);
-          vector<unsigned int> id;
-          id.push_back(trial);
-          id.push_back(idx1);
-          id.push_back(i);
-          _trace->addAssignment(rawScene, STemp.getCols(), tracePair, err, id);
-          System<double>::deallocate(rawScene);
+          vector<unsigned int> idxM;
+          idxM.push_back(idx1);
+          idxM.push_back(idx2);
+          vector<unsigned int> idxS;
+          idxS.push_back(i);
+          idxS.push_back(iMinDist);
+          _trace->addAssignment(M, idxM, S, idxS, &STemp, err, trial);
         }
       }  // if(fabs(phi) < _phiMax)
     }  // for all points in scene

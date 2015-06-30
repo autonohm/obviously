@@ -84,7 +84,17 @@ public:
 	 */
 	void addAssignment(double** scene, unsigned int sizeS, vector<StrTraceCartesianPair> pairs, const double score, vector<unsigned int> id = vector<unsigned int>());
 	
-	void addAssignment(const Matrix* M, unsigned int idxM, const Matrix* S, unsigned int idxS, const Matrix* STrans, const double score, const unsigned int trial);
+	/**
+	 * Add assignment to trace record, if single point assignment is the basis for the underlying approach
+	 * @param M model matrix
+	 * @param idxM indices of model assignments
+	 * @param S scene matrix
+	 * @param idxS indices of scene assignments
+	 * @param STrans scene of current iteration (transformed with temporary transformation estimation)
+	 * @param score score of matching
+	 * @param iterationID ID of iteration or trial
+	 */
+	void addAssignment(const Matrix* M, vector<unsigned int> idxM, const Matrix* S, vector<unsigned int> idxS, const Matrix* STrans, const double score, const unsigned int iterationID);
 
 	/**
 	 * Serialize assignment to trace folder

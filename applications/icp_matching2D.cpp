@@ -91,7 +91,7 @@ int main(int argc, char** argv)
   cout << endl << "Error: " << estimator->getRMS() << endl;
   cout << "Iterations: " << it << endl;
 
-  char folder[6] = "trace";
+  char folder[] = "/tmp/trace";
   icp->serializeTrace(folder);
 
 
