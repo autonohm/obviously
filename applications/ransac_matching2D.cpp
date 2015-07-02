@@ -13,7 +13,7 @@
 #include "obcore/base/Timer.h"
 
 #include "obvision/registration/ransacMatching/RansacMatching.h"
-#include "obvision/registration/ransacMatching/PCAMatching.h"
+#include "obvision/registration/ransacMatching/RandomNormalMatching.h"
 
 using namespace std;
 using namespace obvious;
@@ -93,7 +93,7 @@ int main(int argc, char** argv)
   unsigned int sizeControlSet = 100;
 
   //RansacMatching matcher(trials, epsThresh, sizeControlSet);
-  PCAMatching matcher(trials, epsThresh, sizeControlSet);
+  RandomNormalMatching matcher(trials, epsThresh, sizeControlSet);
   matcher.activateTrace();
 
   //Matrix F = matcher.match(M, maskM, &S, maskS, deg2rad(45.0), 1.5 , deg2rad(0.25));

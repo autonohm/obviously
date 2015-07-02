@@ -15,7 +15,7 @@ namespace obvious
  * @brief Matching algorithm with PCA alignment and RANSAC scheme
  * @author Stefan May
  **/
-class PCAMatching
+class RandomNormalMatching
 {
 public:
   /**
@@ -25,12 +25,12 @@ public:
    * @param phiMax maximum rotation
    * @param sizeControlSet approximate set of control set
    */
-  PCAMatching(unsigned int trials = 50, double epsThresh = 0.15, unsigned int sizeControlSet = 180);
+  RandomNormalMatching(unsigned int trials = 50, double epsThresh = 0.15, unsigned int sizeControlSet = 180);
 
   /**
    * Destructor
    */
-  virtual ~PCAMatching();
+  virtual ~RandomNormalMatching();
 
   /**
    * Activate internal trace writing. While the method iterate is executed, all states are traced.
@@ -76,6 +76,9 @@ private:
 
   // Calculate angle of normals
   void calcPhi(const Matrix* N, const bool* mask, double* phi);
+
+  // Subsample mask for better performance
+  void subsampleMask(bool* mask, unsigned int size, double probability);
 
   // extract valid sample indices from matrix giving a validity mask
   vector<unsigned int> extractSamples(const obvious::Matrix* M, const bool* mask);

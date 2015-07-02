@@ -1,4 +1,4 @@
-#include "PCAMatching.h"
+#include "RandomNormalMatching.h"
 
 #include <math.h>
 #include "obcore/base/System.h"
@@ -13,7 +13,7 @@ using namespace std;
 namespace obvious
 {
 
-PCAMatching::PCAMatching(unsigned int trials, double epsThresh, unsigned int sizeControlSet)
+RandomNormalMatching::RandomNormalMatching(unsigned int trials, double epsThresh, unsigned int sizeControlSet)
 {
   _epsSqr         = epsThresh * epsThresh;
   _trials         = trials;
@@ -25,7 +25,7 @@ PCAMatching::PCAMatching(unsigned int trials, double epsThresh, unsigned int siz
   _pcaMinSamples  = 3;
 }
 
-PCAMatching::~PCAMatching()
+RandomNormalMatching::~RandomNormalMatching()
 {
   if(_model)
   {
@@ -39,19 +39,19 @@ PCAMatching::~PCAMatching()
   _trace = NULL;
 }
 
-void PCAMatching::activateTrace()
+void RandomNormalMatching::activateTrace()
 {
   if(!_trace)
     _trace = new Trace(2);
 }
 
-void PCAMatching::deactivateTrace()
+void RandomNormalMatching::deactivateTrace()
 {
   if(_trace) delete _trace;
   _trace = NULL;
 }
 
-vector<unsigned int> PCAMatching::extractSamples(const obvious::Matrix* M, const bool* mask)
+vector<unsigned int> RandomNormalMatching::extractSamples(const obvious::Matrix* M, const bool* mask)
 {
   vector<unsigned int> validIndices;
   for(unsigned int i=_pcaSearchRange/2; i<M->getRows()-_pcaSearchRange/2; i++)
@@ -62,7 +62,7 @@ vector<unsigned int> PCAMatching::extractSamples(const obvious::Matrix* M, const
   return validIndices;
 }
 
-void PCAMatching::initKDTree(const obvious::Matrix* M, vector<unsigned int> idxValid)
+void RandomNormalMatching::initKDTree(const obvious::Matrix* M, vector<unsigned int> idxValid)
 {
   // Build FLANN tree for fast access to nearest neighbors
   unsigned int cols = M->getCols();
@@ -88,7 +88,7 @@ void PCAMatching::initKDTree(const obvious::Matrix* M, vector<unsigned int> idxV
   obvious::System<double>::deallocate(mData);
 }
 
-obvious::Matrix* PCAMatching::pickControlSet(const obvious::Matrix* M, vector<unsigned int> idxValid, vector<unsigned int> &idxControl)
+obvious::Matrix* RandomNormalMatching::pickControlSet(const obvious::Matrix* M, vector<unsigned int> idxValid, vector<unsigned int> &idxControl)
 {
   unsigned int sizeControlSet = _sizeControlSet;
   if((idxValid.size()) < sizeControlSet)
@@ -113,7 +113,7 @@ obvious::Matrix* PCAMatching::pickControlSet(const obvious::Matrix* M, vector<un
   return C;
 }
 
-void PCAMatching::calcNormals(const Matrix* M, Matrix* N, const bool* maskIn, bool* maskOut)
+void RandomNormalMatching::calcNormals(const Matrix* M, Matrix* N, const bool* maskIn, bool* maskOut)
 {
   int points = M->getRows();
 
@@ -183,7 +183,7 @@ void PCAMatching::calcNormals(const Matrix* M, Matrix* N, const bool* maskIn, bo
   }
 }
 
-void PCAMatching::calcPhi(const Matrix* N,  const bool* mask, double* phi)
+void RandomNormalMatching::calcPhi(const Matrix* N,  const bool* mask, double* phi)
 {
   for(unsigned int i=0; i<N->getRows(); i++)
   {
@@ -194,7 +194,26 @@ void PCAMatching::calcPhi(const Matrix* N,  const bool* mask, double* phi)
   }
 }
 
-obvious::Matrix PCAMatching::match(const obvious::Matrix* M,
+void RandomNormalMatching::subsampleMask(bool* mask, unsigned int size, double probability)
+{
+  unsigned int sizeOut = 0;
+  if(probability>1.0) probability = 1.0;
+  if(probability<0.0) probability = 0.0;
+  int probability_thresh = (int)(1000.0 - probability * 1000.0 + 0.5);
+  for(unsigned int i=0; i<size; i++)
+  {
+    if(mask[i])
+    {
+      if((rand()%1000)<probability_thresh)
+      {
+        mask[i] = 0;
+        sizeOut++;
+      }
+    }
+  }
+}
+
+obvious::Matrix RandomNormalMatching::match(const obvious::Matrix* M,
     const bool* maskM,
     const obvious::Matrix* NM,
     const obvious::Matrix* S,
@@ -240,8 +259,18 @@ obvious::Matrix PCAMatching::match(const obvious::Matrix* M,
   // Determine number of valid samples in local scene neighborhood
   // only from these points a valid orientation is computable
   memcpy(maskSpca, maskS, pointsInS*sizeof(bool));
+
+  // Calculate probability of point masking
+  unsigned int validPoints = 0;
+  for(int i=0; i<pointsInS; i++)
+    if(maskSpca[i]) validPoints++;
+
+  double probability = 180.0/(double)pointsInS;
+  if(probability<0.99)
+    subsampleMask(maskSpca, pointsInS, probability);
+
   calcNormals(S, NSpca, maskS, maskSpca);
-  calcPhi(NSpca, maskS, phiS);
+  calcPhi(NSpca, maskSpca, phiS);
 
   vector<unsigned int> idxMValid = extractSamples(M, maskMpca);
   vector<unsigned int> idxSValid = extractSamples(S, maskSpca);
@@ -458,7 +487,7 @@ obvious::Matrix PCAMatching::match(const obvious::Matrix* M,
   return TBest;
 }
 
-void PCAMatching::serializeTrace(const char* folder)
+void RandomNormalMatching::serializeTrace(const char* folder)
 {
   if(_trace)
     _trace->serialize(folder);
