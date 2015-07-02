@@ -90,7 +90,7 @@ int main(int argc, char** argv)
 
   unsigned int trials = 20;
   double epsThresh = 0.02;
-  unsigned int sizeControlSet = 180;
+  unsigned int sizeControlSet = 100;
 
   //RansacMatching matcher(trials, epsThresh, sizeControlSet);
   PCAMatching matcher(trials, epsThresh, sizeControlSet);

@@ -6,6 +6,8 @@
 #include "obcore/math/mathbase.h"
 #include <limits>
 
+#include "obcore/base/Timer.h"
+
 using namespace std;
 
 namespace obvious
@@ -215,12 +217,13 @@ obvious::Matrix PCAMatching::match(const obvious::Matrix* M,
 
   // Determine orientation in local neighborhood
   // Only from these points a valid orientation is computable -> use a mask
-  obvious::Matrix* NMpca = new Matrix(pointsInM, 2);
-  obvious::Matrix* NSpca = new Matrix(pointsInS, 2);
-  double* phiM = new double[pointsInM];
-  double* phiS = new double[pointsInS];
-  bool* maskMpca = new bool[pointsInM];
-  bool* maskSpca = new bool[pointsInS];
+  obvious::Matrix* NMpca = new Matrix(pointsInM, 2); // Normals for model
+  obvious::Matrix* NSpca = new Matrix(pointsInS, 2); // Normals for scene
+  double* phiM = new double[pointsInM]; // Orientation of model points
+  double* phiS = new double[pointsInS]; // Orientation of scene points
+  bool* maskMpca = new bool[pointsInM]; // Validity mask of model points
+  bool* maskSpca = new bool[pointsInS]; // Validity mask of scene points
+  // TODO: Array of structs (cache friendliness)
 
   memcpy(maskMpca, maskM, pointsInM*sizeof(bool));
 
@@ -228,7 +231,7 @@ obvious::Matrix PCAMatching::match(const obvious::Matrix* M,
   {
     calcPhi(NM, maskM, phiM);
   }
-  else
+  else // if normals are not supplied
   {
     calcNormals(M, NMpca, maskM, maskMpca);
     calcPhi(NMpca, maskM, phiM);
@@ -268,7 +271,7 @@ obvious::Matrix PCAMatching::match(const obvious::Matrix* M,
   int span;
   if(resolution > 1e-6)
   {
-    span = (int)(phiMax / resolution);
+    span = floor(phiMax / resolution);
     if(span > (int)pointsInM) span = (int)pointsInM;
   }
   else
@@ -279,13 +282,6 @@ obvious::Matrix PCAMatching::match(const obvious::Matrix* M,
 
   srand (time(NULL));
 
-#ifndef DEBUG
-  if (_trace)
-  {
-    omp_set_num_threads(1);
-  }
-#endif
-
   //int          bestM = -1;
   //int          bestS = -1;
   //double       bestScore = M_PI / 2.0;
@@ -293,7 +289,10 @@ obvious::Matrix PCAMatching::match(const obvious::Matrix* M,
   double       bestRatio = 0.0;
   unsigned int bestCnt = 0;
   double       bestErr = 1e12;
+  // double       bestScore = 0.0;
 
+  Timer t;
+  t.start();
 #pragma omp parallel
   {
 #pragma omp for
@@ -302,7 +301,7 @@ obvious::Matrix PCAMatching::match(const obvious::Matrix* M,
       int idx;
 #pragma omp critical
       {
-        const int randIdx = rand() % (idxMValid.size()-1);
+        const int randIdx = rand() % (idxMValid.size()-1); //TODO: rand_r
         idx               = idxMValid[randIdx];
 
         // remove chosen element to avoid picking same index a second time
@@ -310,7 +309,7 @@ obvious::Matrix PCAMatching::match(const obvious::Matrix* M,
       }
 
       // leftmost scene point belonging to query point idx1
-      const int iMin = max((int) idx-span, _pcaSearchRange/2);
+      const int iMin = max(idx-span, _pcaSearchRange/2);
       // rightmost scene point belonging to query point idx1
       const int iMax = min(idx+span, pointsInS-_pcaSearchRange/2);
 
@@ -332,7 +331,6 @@ obvious::Matrix PCAMatching::match(const obvious::Matrix* M,
             T(0, 2) = (*M)(idx,0) - (T(0, 0) * sx + T(0, 1) * sy);
             T(1, 2) = (*M)(idx,1) - (T(1, 0) * sx + T(1, 1) * sy);
 
-            //T.print();
             // Transform control set
             obvious::Matrix STemp = T * (*Control);
 
@@ -352,7 +350,7 @@ obvious::Matrix PCAMatching::match(const obvious::Matrix* M,
               }
             }
 
-            if(maxCntMatch<sizeControl/3)
+            if(maxCntMatch<sizeControl/3) // TODO: Determine meaningful parameter
               continue;
 
             // Determine how many nearest neighbors (model <-> scene) are close enough
@@ -360,40 +358,40 @@ obvious::Matrix PCAMatching::match(const obvious::Matrix* M,
             unsigned int cntMatch = 0;
             flann::Matrix<int> indices(new int[1], 1, 1);
             flann::Matrix<double> dists(new double[1], 1, 1);
-            double err = 0;
+            double errSum = 0;
+            //double scoreSum = 0.0;
 
             for(unsigned int s = 0; s < STemp.getCols(); s++)
             {
+              // clip points outside of model frustum
               if(maskControl[s])
               {
-                //Find nearest neighbor for control point
+                // find nearest neighbor of control point
                 q[0] = STemp(0, s);
                 q[1] = STemp(1, s);
                 flann::Matrix<double> query(q, 1, 2);
                 flann::SearchParams p(-1, 0.0);
                 _index->knnSearch(query, indices, dists, 1, p);
 
-                int idxQuery = indices[0][0];
+                int idxQuery = idxMValid[indices[0][0]];
 
-                // calculate vector from query point to assigned model point
-                /*
-                double qx = (*M)(idxQuery, 0) - q[0];
-                double qy = (*M)(idxQuery, 1) - q[1];
-                double lq = sqrt(qx*qx + qy*qy);
-                qx /= lq;
-                qy /= lq;
+                // should never happen
+                // assert(maskM[idxQuery]);
 
-                // check co-linearity with dot product
-                // At the current state, normals are optionally passed. So, we cannot rely on having proper normals
-                double weight = fabs((*N)(idxQuery,0)*qx+(*N)(idxQuery,1)*qy);
-                 */
+                // some experimental ideas
+                // 1) weight matching results with normal consensus
+                //double weight = fabs(phiM[idxQuery] - phiS[i]);
+                // 2) calculate score, and give penalty to matches with wrong orientation
+                //double score = cos(phiM[idxQuery] - phiS[i]);
 
-                // this weighting worked with intel data set
-                double weight = fabs(cos(phiM[idxQuery] - phiS[i]));
+                double err = (dists[0][0]);
 
-                err += (dists[0][0]*weight);
-                if(dists[0][0] < _epsSqr)
+                if(err < _epsSqr)
+                {
                   cntMatch++;
+                  //scoreSum += score;
+                }
+                errSum += err;
               }
             }
 
@@ -406,46 +404,47 @@ obvious::Matrix PCAMatching::match(const obvious::Matrix* M,
             // Experimental rating
             double ratio = (double)cntMatch / (double) maxCntMatch;
 
-            //double errMean = err / (double)cntMatch;
-            //double score = atan2(errMean,(double)cntMatch);
-            //bool goodMatch = score<bestScore && cntMatch>bestCnt;
-            //bool goodMatch = (err<bestErr);
-
             // Rating from Markus Kuehn
             double equalThres = 1e-5;//cntStepSize;// 1e-5;
             bool rateCondition = ((ratio-bestRatio) > equalThres) && (cntMatch > bestCnt);
-            bool errorCondition = fabs( (ratio-bestRatio) < equalThres ) && (cntMatch == bestCnt) && err < bestErr;
+            bool errorCondition = fabs( (ratio-bestRatio) < equalThres ) && (cntMatch == bestCnt) && errSum < bestErr;
             bool goodMatch = rateCondition || errorCondition;
 
-#pragma omp critical
+            //bool goodMatch = (ratio>0.66) && (scoreSum > bestScore);
+
+            if(goodMatch)
             {
-              if(goodMatch)
+#pragma omp critical
               {
                 bestRatio = ratio;
                 bestCnt = cntMatch;
-                bestErr = err;
+                bestErr = errSum;
                 TBest = T;
-
-                //bestScore = score;
-                //bestM = idx;
-                //bestS = i;
+                //bestScore = scoreSum;
               }
             }
 
             if(_trace)
             {
-              vector<unsigned int> idxM;
-              idxM.push_back(idx);
-              vector<unsigned int> idxS;
-              idxS.push_back(i);
-              _trace->addAssignment(M, idxM, S, idxS, &STemp, err, trial);
+#pragma omp critical
+              {
+                vector<unsigned int> idxM;
+                idxM.push_back(idx);
+                vector<unsigned int> idxS;
+                idxS.push_back(i);
+                _trace->addAssignment(M, idxM, S, idxS, &STemp, errSum, trial);
+              }
             }
+
           }
         } // if(!isnan(phiM[i]))
       } // for(int i=_pcaCnt/2; i<pointsInM-_pcaCnt/2; i++)
     } // for _trials
 
   } // OMP
+
+  cout << "elapsed: " << t.elapsed() << endl;
+  t.reset();
 
   // cout << "Best match: " << bestM << " " << bestS << " bestRatio: " << bestRatio << " bestCnt: " << bestCnt << " bestScore: " << bestScore << endl;
   delete [] maskControl;
