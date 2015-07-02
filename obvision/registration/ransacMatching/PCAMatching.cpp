@@ -373,8 +373,7 @@ obvious::Matrix PCAMatching::match(const obvious::Matrix* M,
                 flann::SearchParams p(-1, 0.0);
                 _index->knnSearch(query, indices, dists, 1, p);
 
-                int idxQuery = idxMValid[indices[0][0]];
-
+                //int idxQuery = idxMValid[indices[0][0]];
                 // should never happen
                 // assert(maskM[idxQuery]);
 
@@ -383,15 +382,15 @@ obvious::Matrix PCAMatching::match(const obvious::Matrix* M,
                 //double weight = fabs(phiM[idxQuery] - phiS[i]);
                 // 2) calculate score, and give penalty to matches with wrong orientation
                 //double score = cos(phiM[idxQuery] - phiS[i]);
+                //errSum += weight*dists[0][0];
 
-                double err = (dists[0][0]);
+                errSum += dists[0][0];
 
-                if(err < _epsSqr)
+                if(dists[0][0] < _epsSqr)
                 {
                   cntMatch++;
                   //scoreSum += score;
                 }
-                errSum += err;
               }
             }
 
