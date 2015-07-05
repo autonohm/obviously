@@ -33,7 +33,7 @@ TsdGrid::TsdGrid(const std::string& data, const EnumTsdGridLoadSource source)
   std::ifstream inFile;
   std::stringstream ss;
 
-  if(source == FILE)
+  if(source == FILE_SOURCE)
   {
     inFile.open(data.c_str(), std::fstream::in);
     if(!inFile.is_open())
@@ -43,7 +43,7 @@ TsdGrid::TsdGrid(const std::string& data, const EnumTsdGridLoadSource source)
     }
     istream = &inFile;
   }
-  else if(source == STRING)
+  else if(source == STRING_SOURCE)
   {
     ss << data;
     LOGMSG(DBG_DEBUG, "loaded " << ss.str().size() << " characters into stringstream\n");
@@ -56,7 +56,7 @@ TsdGrid::TsdGrid(const std::string& data, const EnumTsdGridLoadSource source)
   if( (layoutGrid < 0) || (layoutPartition < 0) || (layoutGrid > 15) || (layoutPartition > 15) )
   {
     LOGMSG(DBG_ERROR, " error! Partition or Gridlayout invalid!\n");
-    if(source == FILE)
+    if(source == FILE_SOURCE)
       inFile.close();
     std::exit(3);
   }
@@ -101,7 +101,7 @@ TsdGrid::TsdGrid(const std::string& data, const EnumTsdGridLoadSource source)
       }
     }
   }
-  if(source == FILE)
+  if(source == FILE_SOURCE)
   {
   inFile.close();
   if(inFile.is_open())
