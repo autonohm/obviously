@@ -34,8 +34,8 @@ enum EnumTsdGridPartitionIdentifier{ UNINITIALIZED = 0,
   EMPTY = 1,
   CONTENT = 2};
 
-enum EnumTsdGridLoadSource{ FILE = 0,
-  STRING = 1
+enum EnumTsdGridLoadSource{ FILE_SOURCE = 0,
+  STRING_SOURCE = 1
 };
 
 /**
@@ -61,7 +61,7 @@ public:
    * Loads the grid data out of a given file. File has to be correct it is not being checked.
    * @param[in] path path to the data file
    */
-  TsdGrid(const std::string& data, const EnumTsdGridLoadSource source = FILE);
+  TsdGrid(const std::string& data, const EnumTsdGridLoadSource source = FILE_SOURCE);
 
   /**
    * Destructor
