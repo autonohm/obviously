@@ -238,6 +238,8 @@ public:
 	 */
 	void print();
 
+	void print() const;
+
   static Matrix multiply(const Matrix &M1, const Matrix &M2, bool transposeArg1, bool transposeArg2);
 
   static Vector multiply(const Matrix &M, const Vector &V, bool transpose);

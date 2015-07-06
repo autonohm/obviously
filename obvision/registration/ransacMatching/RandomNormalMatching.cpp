@@ -279,7 +279,6 @@ obvious::Matrix RandomNormalMatching::match(const obvious::Matrix* M,
   vector<unsigned int> idxControl;  //represents the indices of points used for Control in S.
   obvious::Matrix* Control = pickControlSet(S, idxSValid, idxControl);
   unsigned int sizeControl = Control->getCols();
-  bool* maskControl        = new bool[sizeControl];
 
   // Determine frustum, i.e., direction of leftmost and rightmost model point
   double phiBoundMin = atan2((*M)(idxMValid.front(),1), (*M)(idxMValid.front(),0));
@@ -311,19 +310,25 @@ obvious::Matrix RandomNormalMatching::match(const obvious::Matrix* M,
 
   srand (time(NULL));
 
-  //int          bestM = -1;
-  //int          bestS = -1;
-  //double       bestScore = M_PI / 2.0;
-
   double       bestRatio = 0.0;
   unsigned int bestCnt = 0;
   double       bestErr = 1e12;
-  // double       bestScore = 0.0;
+  //double       bestScore = 0.0;
 
-  Timer t;
-  t.start();
+#ifndef DEBUG
+  // trace is only possible for single threaded execution
+  if(_trace)
+  {
+    omp_set_num_threads(1);
+    LOGMSG(DBG_WARN, "Configured single-threaded execution due to application of trace module");
+  }
+#endif
+
+  //Timer t;
+  //t.start();
 #pragma omp parallel
   {
+    bool* maskControl        = new bool[sizeControl];
 #pragma omp for
     for(unsigned int trial = 0; trial < _trials; trial++)
     {
@@ -341,6 +346,7 @@ obvious::Matrix RandomNormalMatching::match(const obvious::Matrix* M,
       const int iMin = max(idx-span, _pcaSearchRange/2);
       // rightmost scene point belonging to query point idx1
       const int iMax = min(idx+span, pointsInS-_pcaSearchRange/2);
+
 
       for(int i=iMin; i<iMax; i++)
       {
@@ -362,10 +368,12 @@ obvious::Matrix RandomNormalMatching::match(const obvious::Matrix* M,
 
             // Transform control set
             obvious::Matrix STemp = T * (*Control);
+            unsigned int pointsInControl = STemp.getCols();
+            assert(pointsInControl<sizeControl);
 
             // Determine number of control points in field of view
             unsigned int maxCntMatch = 0;
-            for(unsigned int j=0; j<STemp.getCols(); j++)
+            for(unsigned int j=0; j<pointsInControl; j++)
             {
               double phiControl = atan2(STemp(1, j), STemp(0, j));
               if(phiControl>phiBoundMax || phiControl<phiBoundMin)
@@ -390,7 +398,7 @@ obvious::Matrix RandomNormalMatching::match(const obvious::Matrix* M,
             double errSum = 0;
             //double scoreSum = 0.0;
 
-            for(unsigned int s = 0; s < STemp.getCols(); s++)
+            for(unsigned int s = 0; s < pointsInControl; s++)
             {
               // clip points outside of model frustum
               if(maskControl[s])
@@ -402,18 +410,18 @@ obvious::Matrix RandomNormalMatching::match(const obvious::Matrix* M,
                 flann::SearchParams p(-1, 0.0);
                 _index->knnSearch(query, indices, dists, 1, p);
 
-                //int idxQuery = idxMValid[indices[0][0]];
+                int idxQuery = idxMValid[indices[0][0]];
                 // should never happen
                 // assert(maskM[idxQuery]);
 
                 // some experimental ideas
                 // 1) weight matching results with normal consensus
-                //double weight = fabs(phiM[idxQuery] - phiS[i]);
+                double weight = fabs(phiM[idxQuery] - phiS[i]);
                 // 2) calculate score, and give penalty to matches with wrong orientation
                 //double score = cos(phiM[idxQuery] - phiS[i]);
                 //errSum += weight*dists[0][0];
 
-                errSum += dists[0][0];
+                errSum += dists[0][0] * weight;
 
                 if(dists[0][0] < _epsSqr)
                 {
@@ -432,17 +440,17 @@ obvious::Matrix RandomNormalMatching::match(const obvious::Matrix* M,
             // Experimental rating
             double ratio = (double)cntMatch / (double) maxCntMatch;
 
-            // Rating from Markus Kuehn
-            double equalThres = 1e-5;//cntStepSize;// 1e-5;
-            bool rateCondition = ((ratio-bestRatio) > equalThres) && (cntMatch > bestCnt);
-            bool errorCondition = fabs( (ratio-bestRatio) < equalThres ) && (cntMatch == bestCnt) && errSum < bestErr;
-            bool goodMatch = rateCondition || errorCondition;
-
-            //bool goodMatch = (ratio>0.66) && (scoreSum > bestScore);
-
-            if(goodMatch)
-            {
 #pragma omp critical
+{
+              // Rating from Markus Kuehn
+              double equalThres = 1e-5;//cntStepSize;// 1e-5;
+              bool rateCondition = ((ratio-bestRatio) > equalThres) && (cntMatch > bestCnt);
+              bool errorCondition = fabs( (ratio-bestRatio) < equalThres ) && (cntMatch == bestCnt) && errSum < bestErr;
+              bool goodMatch = rateCondition || errorCondition;
+
+              //bool goodMatch = (ratio>0.66) && (scoreSum > bestScore);
+
+              if(goodMatch)
               {
                 bestRatio = ratio;
                 bestCnt = cntMatch;
@@ -450,18 +458,17 @@ obvious::Matrix RandomNormalMatching::match(const obvious::Matrix* M,
                 TBest = T;
                 //bestScore = scoreSum;
               }
-            }
+
+}
 
             if(_trace)
             {
-#pragma omp critical
-              {
-                vector<unsigned int> idxM;
-                idxM.push_back(idx);
-                vector<unsigned int> idxS;
-                idxS.push_back(i);
-                _trace->addAssignment(M, idxM, S, idxS, &STemp, errSum, trial);
-              }
+              //trace is only possible for single threaded execution
+              vector<unsigned int> idxM;
+              idxM.push_back(idx);
+              vector<unsigned int> idxS;
+              idxS.push_back(i);
+              _trace->addAssignment(M, idxM, S, idxS, &STemp, errSum, trial);
             }
 
           }
@@ -469,13 +476,13 @@ obvious::Matrix RandomNormalMatching::match(const obvious::Matrix* M,
       } // for(int i=_pcaCnt/2; i<pointsInM-_pcaCnt/2; i++)
     } // for _trials
 
+    delete [] maskControl;
+
   } // OMP
 
-  cout << "elapsed: " << t.elapsed() << endl;
-  t.reset();
+  //cout << "elapsed: " << t.elapsed() << endl;
+  //t.reset();
 
-  // cout << "Best match: " << bestM << " " << bestS << " bestRatio: " << bestRatio << " bestCnt: " << bestCnt << " bestScore: " << bestScore << endl;
-  delete [] maskControl;
   delete NMpca;
   delete NSpca;
   delete [] phiM;

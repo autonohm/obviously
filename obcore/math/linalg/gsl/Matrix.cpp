@@ -441,6 +441,16 @@ void Matrix::print()
   }
 }
 
+void Matrix::print() const
+{
+  for(size_t r=0; r<_M->size1; r++)
+  {
+    for(size_t c=0; c<_M->size2; c++)
+      cout << (*this)(r,c) << " ";
+    cout << endl;
+  }
+}
+
 Matrix Matrix::multiply(const Matrix &M1, const Matrix &M2, bool transposeArg1, bool transposeArg2)
 {
   enum CBLAS_TRANSPOSE t1 = CblasNoTrans;
