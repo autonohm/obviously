@@ -268,18 +268,18 @@ obvious::Matrix RandomNormalMatching::match(const obvious::Matrix* M,
   else // if normals are not supplied
   {
     calcNormals(M, NMpca, maskM, maskMpca);
-    calcPhi(NMpca, maskM, phiM);
+    calcPhi(NMpca, maskMpca, phiM);
   }
+
+  memcpy(maskSpca, maskS, pointsInS*sizeof(bool));
 
   // Determine number of valid samples in local scene neighborhood
   // only from these points a valid orientation is computable
-  memcpy(maskSpca, maskS, pointsInS*sizeof(bool));
-
-  // Calculate probability of point masking
   unsigned int validPoints = 0;
   for(int i=0; i<pointsInS; i++)
     if(maskSpca[i]) validPoints++;
 
+  // Probability of point masking
   double probability = 180.0/(double)pointsInS;
   if(probability<0.99)
     subsampleMask(maskSpca, pointsInS, probability);
@@ -302,7 +302,7 @@ obvious::Matrix RandomNormalMatching::match(const obvious::Matrix* M,
     (*NControl)(i, 1) = (*NSpca)(idxControl[i], 1);
   }
   unsigned int sizeControl = Control->getCols();
-  unsigned int cntMatchThresh = sizeControl / 3;
+  unsigned int cntMatchThresh = sizeControl / 3; // TODO: Determine meaningful parameter
   double* phiControl = new double[sizeControl];  // Orientation of control points
   calcPhi(NControl, NULL, phiControl);
   // -------------------------------------------//
@@ -363,16 +363,16 @@ obvious::Matrix RandomNormalMatching::match(const obvious::Matrix* M,
       int idx;
 #pragma omp critical
       {
-        const int randIdx = rand() % (idxMValid.size()-1); //TODO: rand_r
+        const int randIdx = rand() % (idxMValid.size()-1);
         idx               = idxMValid[randIdx];
 
         // remove chosen element to avoid picking same index a second time
         idxMValid.erase(idxMValid.begin() + randIdx);
       }
 
-      // leftmost scene point belonging to query point idx1
+      // leftmost scene point
       const int iMin = max(idx-span, _pcaSearchRange/2);
-      // rightmost scene point belonging to query point idx1
+      // rightmost scene point
       const int iMax = min(idx+span, pointsInS-_pcaSearchRange/2);
 
 
@@ -415,9 +415,6 @@ obvious::Matrix RandomNormalMatching::match(const obvious::Matrix* M,
               }
             }
 
-            if(maxCntMatch<cntMatchThresh) // TODO: Determine meaningful parameter
-              continue;
-
             // Determine how many nearest neighbors (model <-> scene) are close enough
             double q[2];
             unsigned int cntMatch = 0;
@@ -439,7 +436,7 @@ obvious::Matrix RandomNormalMatching::match(const obvious::Matrix* M,
                 _index->knnSearch(query, indices, dists, 1, p);
 
 #if NORMALCONSENSUS
-                int idxQuery = idxMValid[indices[0][0]];
+                const int idxQuery = idxMValid[indices[0][0]];
                 // should never happen
                 // assert(maskM[idxQuery]);
 
@@ -454,9 +451,7 @@ obvious::Matrix RandomNormalMatching::match(const obvious::Matrix* M,
 #endif
                 errSum += err;
                 if(err<1.0)
-                {
                   cntMatch++;
-                }
               }
             }
 
@@ -472,7 +467,7 @@ obvious::Matrix RandomNormalMatching::match(const obvious::Matrix* M,
 #pragma omp critical
 {
               // Rating from Markus Kuehn
-              double equalThres = 1e-5;//cntStepSize;// 1e-5;
+              double equalThres = 1e-5;
               bool rateCondition = ((ratio-bestRatio) > equalThres) && (cntMatch > bestCnt);
               bool similarityCondition = fabs( (ratio-bestRatio) < equalThres ) && (cntMatch == bestCnt) && errSum < bestErr;
               bool goodMatch = rateCondition ||similarityCondition;
@@ -497,10 +492,10 @@ obvious::Matrix RandomNormalMatching::match(const obvious::Matrix* M,
               _trace->addAssignment(M, idxM, S, idxS, &STemp, errSum, trial);
             }
 
-          }
-        } // if(!isnan(phiM[i]))
-      } // for(int i=_pcaCnt/2; i<pointsInM-_pcaCnt/2; i++)
-    } // for _trials
+          }// if phiMax
+        } // if maskS
+      } // for i
+    } // for trials
 
     delete [] maskControl;
 
