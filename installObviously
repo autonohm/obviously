@@ -13,6 +13,7 @@ apt-get install libgsl0-dev
 apt-get install libudev-dev 
 apt-get install libxml++2.6-dev 
 apt-get install liblua5.1-0-dev
+apt-get install libeigen3-dev 
 
 #packages for obdevice
 apt-get install ps-engine 
@@ -27,6 +28,6 @@ apt-get install freeglut3-dev
 #packages for obvision
 add-apt-repository ppa:v-launchpad-jochen-sprickerhof-de/pcl
 apt-get update
-apt-get install libpcl-1.1-dev
-apt-get install libann-dev libflann-dev
+apt-get install libann-dev 
+apt-get install libflann-dev
 

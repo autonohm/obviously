@@ -13,16 +13,19 @@ using namespace std;
 namespace obvious
 {
 
+#define NORMALCONSENSUS 1
+
 RandomNormalMatching::RandomNormalMatching(unsigned int trials, double epsThresh, unsigned int sizeControlSet)
 {
-  _epsSqr         = epsThresh * epsThresh;
-  _trials         = trials;
-  _sizeControlSet = sizeControlSet;
-  _model          = NULL;
-  _index          = NULL;
-  _trace          = NULL;
-  _pcaSearchRange = 10;
-  _pcaMinSamples  = 3;
+  _scaleDistance    = 1.0/(epsThresh * epsThresh);
+  _scaleOrientation = 0.33;
+  _trials           = trials;
+  _sizeControlSet   = sizeControlSet;
+  _model            = NULL;
+  _index            = NULL;
+  _trace            = NULL;
+  _pcaSearchRange   = 10;
+  _pcaMinSamples    = 3;
 }
 
 RandomNormalMatching::~RandomNormalMatching()
@@ -93,7 +96,7 @@ obvious::Matrix* RandomNormalMatching::pickControlSet(const obvious::Matrix* M, 
   unsigned int sizeControlSet = _sizeControlSet;
   if((idxValid.size()) < sizeControlSet)
   {
-    LOGMSG(DBG_DEBUG, "Size of scene smaller than control set ... reducing size");
+    LOGMSG(DBG_DEBUG, "Size of scene smaller than control set ... reducing size to " << idxValid.size());
     sizeControlSet = idxValid.size();
   }
   obvious::Matrix* C = new obvious::Matrix(3, sizeControlSet);
@@ -185,11 +188,23 @@ void RandomNormalMatching::calcNormals(const Matrix* M, Matrix* N, const bool* m
 
 void RandomNormalMatching::calcPhi(const Matrix* N,  const bool* mask, double* phi)
 {
-  for(unsigned int i=0; i<N->getRows(); i++)
+  if(mask==NULL)
   {
-    if(mask[i])
-    {
+    for(unsigned int i=0; i<N->getRows(); i++)
       phi[i] = atan2((*N)(i,1), (*N)(i, 0));
+  }
+  else
+  {
+    for(unsigned int i=0; i<N->getRows(); i++)
+    {
+      if(mask[i])
+      {
+        phi[i] = atan2((*N)(i,1), (*N)(i, 0));
+      }
+      else
+      {
+        phi[i] = -1e6;
+      }
     }
   }
 }
@@ -238,10 +253,10 @@ obvious::Matrix RandomNormalMatching::match(const obvious::Matrix* M,
   // Only from these points a valid orientation is computable -> use a mask
   obvious::Matrix* NMpca = new Matrix(pointsInM, 2); // Normals for model
   obvious::Matrix* NSpca = new Matrix(pointsInS, 2); // Normals for scene
-  double* phiM = new double[pointsInM]; // Orientation of model points
-  double* phiS = new double[pointsInS]; // Orientation of scene points
-  bool* maskMpca = new bool[pointsInM]; // Validity mask of model points
-  bool* maskSpca = new bool[pointsInS]; // Validity mask of scene points
+  double* phiM           = new double[pointsInM];    // Orientation of model points
+  double* phiS           = new double[pointsInS];    // Orientation of scene points
+  bool* maskMpca         = new bool[pointsInM];      // Validity mask of model points
+  bool* maskSpca         = new bool[pointsInS];      // Validity mask of scene points
   // TODO: Array of structs (cache friendliness)
 
   memcpy(maskMpca, maskM, pointsInM*sizeof(bool));
@@ -276,16 +291,28 @@ obvious::Matrix RandomNormalMatching::match(const obvious::Matrix* M,
   vector<unsigned int> idxSValid = extractSamples(S, maskSpca);
 
   initKDTree(M, idxMValid);
+
+  // --------------- Control set ---------------//
   vector<unsigned int> idxControl;  //represents the indices of points used for Control in S.
   obvious::Matrix* Control = pickControlSet(S, idxSValid, idxControl);
+  obvious::Matrix* NControl = new obvious::Matrix(idxControl.size(), 2);
+  for(unsigned int i=0; i<Control->getCols(); i++)
+  {
+    (*NControl)(i, 0) = (*NSpca)(idxControl[i], 0);
+    (*NControl)(i, 1) = (*NSpca)(idxControl[i], 1);
+  }
   unsigned int sizeControl = Control->getCols();
+  unsigned int cntMatchThresh = sizeControl / 3;
+  double* phiControl = new double[sizeControl];  // Orientation of control points
+  calcPhi(NControl, NULL, phiControl);
+  // -------------------------------------------//
 
   // Determine frustum, i.e., direction of leftmost and rightmost model point
-  double phiBoundMin = atan2((*M)(idxMValid.front(),1), (*M)(idxMValid.front(),0));
-  double phiBoundMax = atan2((*M)(idxMValid.back(),1),  (*M)(idxMValid.back(),0));
+  double thetaBoundMin = atan2((*M)(idxMValid.front(),1), (*M)(idxMValid.front(),0));
+  double thetaBoundMax = atan2((*M)(idxMValid.back(),1),  (*M)(idxMValid.back(),0));
 
   LOGMSG(DBG_DEBUG, "Valid points in scene: " << idxSValid.size() << ", valid points in model: " << idxMValid.size() << ", Control set: " << Control->getCols());
-  LOGMSG(DBG_DEBUG, "Model phi min:: " << rad2deg(phiBoundMin) << ", Model phi max: " << rad2deg(phiBoundMax));
+  LOGMSG(DBG_DEBUG, "Model phi min:: " << rad2deg(thetaBoundMin) << ", Model phi max: " << rad2deg(thetaBoundMax));
 
   if(_trace)
   {
@@ -311,9 +338,8 @@ obvious::Matrix RandomNormalMatching::match(const obvious::Matrix* M,
   srand (time(NULL));
 
   double       bestRatio = 0.0;
-  unsigned int bestCnt = 0;
-  double       bestErr = 1e12;
-  //double       bestScore = 0.0;
+  unsigned int bestCnt   = 0;
+  double       bestErr   = 1e12;
 
 #ifndef DEBUG
   // trace is only possible for single threaded execution
@@ -329,9 +355,11 @@ obvious::Matrix RandomNormalMatching::match(const obvious::Matrix* M,
 #pragma omp parallel
   {
     bool* maskControl        = new bool[sizeControl];
+
 #pragma omp for
     for(unsigned int trial = 0; trial < _trials; trial++)
     {
+
       int idx;
 #pragma omp critical
       {
@@ -375,8 +403,8 @@ obvious::Matrix RandomNormalMatching::match(const obvious::Matrix* M,
             unsigned int maxCntMatch = 0;
             for(unsigned int j=0; j<pointsInControl; j++)
             {
-              double phiControl = atan2(STemp(1, j), STemp(0, j));
-              if(phiControl>phiBoundMax || phiControl<phiBoundMin)
+              double thetaControl = atan2(STemp(1, j), STemp(0, j));
+              if(thetaControl>thetaBoundMax || thetaControl<thetaBoundMin)
               {
                 maskControl[j] = false;
               }
@@ -387,7 +415,7 @@ obvious::Matrix RandomNormalMatching::match(const obvious::Matrix* M,
               }
             }
 
-            if(maxCntMatch<sizeControl/3) // TODO: Determine meaningful parameter
+            if(maxCntMatch<cntMatchThresh) // TODO: Determine meaningful parameter
               continue;
 
             // Determine how many nearest neighbors (model <-> scene) are close enough
@@ -410,23 +438,24 @@ obvious::Matrix RandomNormalMatching::match(const obvious::Matrix* M,
                 flann::SearchParams p(-1, 0.0);
                 _index->knnSearch(query, indices, dists, 1, p);
 
+#if NORMALCONSENSUS
                 int idxQuery = idxMValid[indices[0][0]];
                 // should never happen
                 // assert(maskM[idxQuery]);
 
-                // some experimental ideas
-                // 1) weight matching results with normal consensus
-                double weight = fabs(phiM[idxQuery] - phiS[i]);
-                // 2) calculate score, and give penalty to matches with wrong orientation
-                //double score = cos(phiM[idxQuery] - phiS[i]);
-                //errSum += weight*dists[0][0];
+                // Experimental idea: rate matching results additionally with normal consensus
+                // consensus score is in range [0, 1] -> perfect match = 0
+                double normalConsensus = (1.0 - cos(phiM[idxQuery] - phiControl[s] - phi))/2.0;
 
-                errSum += dists[0][0] * weight;
-
-                if(dists[0][0] < _epsSqr)
+                // Normalized error (weight distance and normal consensus)
+                double err = dists[0][0]*_scaleDistance + normalConsensus*_scaleOrientation;
+#else
+                double err = dists[0][0]*_scaleDistance;
+#endif
+                errSum += err;
+                if(err<1.0)
                 {
                   cntMatch++;
-                  //scoreSum += score;
                 }
               }
             }
@@ -434,7 +463,7 @@ obvious::Matrix RandomNormalMatching::match(const obvious::Matrix* M,
             delete[] indices.ptr();
             delete[] dists.ptr();
 
-            if(cntMatch <= sizeControl/3)
+            if(cntMatch <= cntMatchThresh)
               continue;
 
             // Experimental rating
@@ -445,10 +474,8 @@ obvious::Matrix RandomNormalMatching::match(const obvious::Matrix* M,
               // Rating from Markus Kuehn
               double equalThres = 1e-5;//cntStepSize;// 1e-5;
               bool rateCondition = ((ratio-bestRatio) > equalThres) && (cntMatch > bestCnt);
-              bool errorCondition = fabs( (ratio-bestRatio) < equalThres ) && (cntMatch == bestCnt) && errSum < bestErr;
-              bool goodMatch = rateCondition || errorCondition;
-
-              //bool goodMatch = (ratio>0.66) && (scoreSum > bestScore);
+              bool similarityCondition = fabs( (ratio-bestRatio) < equalThres ) && (cntMatch == bestCnt) && errSum < bestErr;
+              bool goodMatch = rateCondition ||similarityCondition;
 
               if(goodMatch)
               {
@@ -456,7 +483,6 @@ obvious::Matrix RandomNormalMatching::match(const obvious::Matrix* M,
                 bestCnt = cntMatch;
                 bestErr = errSum;
                 TBest = T;
-                //bestScore = scoreSum;
               }
 
 }
@@ -487,6 +513,7 @@ obvious::Matrix RandomNormalMatching::match(const obvious::Matrix* M,
   delete NSpca;
   delete [] phiM;
   delete [] phiS;
+  delete [] phiControl;
   delete [] maskMpca;
   delete [] maskSpca;
   delete Control;

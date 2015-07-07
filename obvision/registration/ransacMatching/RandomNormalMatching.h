@@ -96,7 +96,10 @@ private:
   int _samples;
 
   // squared distance threshold
-  double _epsSqr;
+  double _scaleDistance;
+
+  // normalization weight for orientation rating
+  double _scaleOrientation;
 
   // number of trials
   unsigned int _trials;
