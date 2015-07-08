@@ -96,12 +96,6 @@ private:
   // pick control set for RANSAC in-/outlier detection
   obvious::Matrix* pickControlSet(const obvious::Matrix* M, vector<unsigned int> idxValid, vector<unsigned int> &idxControl);
 
-  // opening angle of laser scanner (absolute value)
-  double _fov;
-
-  // number of measurements included in a single scan
-  int _samples;
-
   // squared distance threshold
   double _scaleDistance;
 
