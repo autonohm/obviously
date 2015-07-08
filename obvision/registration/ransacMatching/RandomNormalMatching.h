@@ -1,5 +1,5 @@
-#ifndef PCAMATCHING_H_
-#define PCAMATCHING_H_
+#ifndef RANDOMNORMALMATCHING_H_
+#define RANDOMNORMALMATCHING_H_
 
 #include <flann/flann.hpp>
 #include "obcore/math/linalg/linalg.h"
@@ -10,8 +10,15 @@
 namespace obvious
 {
 
+struct SampleOrientationMetaData
+{
+  double normal[2];
+  bool valid;
+  double orientation;
+};
+
 /**
- * @class PCAMatching
+ * @class RandomNormalMatching
  * @brief Matching algorithm with PCA alignment and RANSAC scheme
  * @author Stefan May
  **/
@@ -123,4 +130,4 @@ private:
 
 }
 
-#endif /* PCAMATCHING_H_ */
+#endif /* RANDOMNORMALMATCHING_H_ */
