@@ -10,13 +10,6 @@
 namespace obvious
 {
 
-struct SampleOrientationMetaData
-{
-  double normal[2];
-  bool valid;
-  double orientation;
-};
-
 /**
  * @class RandomNormalMatching
  * @brief Matching algorithm with PCA alignment and RANSAC scheme

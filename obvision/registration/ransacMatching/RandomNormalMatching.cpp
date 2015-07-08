@@ -14,6 +14,7 @@ namespace obvious
 {
 
 #define NORMALCONSENSUS 1
+#define USEKNN 1
 
 RandomNormalMatching::RandomNormalMatching(unsigned int trials, double epsThresh, unsigned int sizeControlSet)
 {
@@ -261,7 +262,10 @@ obvious::Matrix RandomNormalMatching::match(const obvious::Matrix* M,
     calcPhi(NMpca, maskMpca, phiM);
   }
   vector<unsigned int> idxMValid = extractSamples(M, maskMpca);
+
+#if USEKNN
   initKDTree(M, idxMValid);
+#endif
   // -------------------------------------------
 
 
@@ -306,8 +310,9 @@ obvious::Matrix RandomNormalMatching::match(const obvious::Matrix* M,
 
 
   // Determine frustum, i.e., direction of leftmost and rightmost model point
-  double thetaBoundMin = atan2((*M)(idxMValid.front(),1), (*M)(idxMValid.front(),0));
-  double thetaBoundMax = atan2((*M)(idxMValid.back(),1),  (*M)(idxMValid.back(),0));
+  double thetaMin = -((double)pointsInM-1.0)/2.0*resolution;                          // theoretical bounding
+  double thetaBoundMin = atan2((*M)(idxMValid.front(),1), (*M)(idxMValid.front(),0)); // real bounding
+  double thetaBoundMax = atan2((*M)(idxMValid.back(),1),  (*M)(idxMValid.back(),0));  // real bounding
 
   LOGMSG(DBG_DEBUG, "Valid points in scene: " << idxSValid.size() << ", valid points in model: " << idxMValid.size() << ", Control set: " << Control->getCols());
   LOGMSG(DBG_DEBUG, "Model phi min:: " << rad2deg(thetaBoundMin) << ", Model phi max: " << rad2deg(thetaBoundMax));
@@ -353,6 +358,7 @@ obvious::Matrix RandomNormalMatching::match(const obvious::Matrix* M,
 #pragma omp parallel
   {
     bool* maskControl        = new bool[pointsInC];
+    double* thetaControl     = new double[pointsInC];
 
 #pragma omp for
     for(unsigned int trial = 0; trial < _trials; trial++)
@@ -409,8 +415,8 @@ obvious::Matrix RandomNormalMatching::match(const obvious::Matrix* M,
             unsigned int maxCntMatch = 0;
             for(unsigned int j=0; j<pointsInControl; j++)
             {
-              double thetaControl = atan2(STemp(1, j), STemp(0, j));
-              if(thetaControl>thetaBoundMax || thetaControl<thetaBoundMin)
+              thetaControl[j] = atan2(STemp(1, j), STemp(0, j));
+              if(thetaControl[j]>thetaBoundMax || thetaControl[j]<thetaBoundMin)
               {
                 maskControl[j] = false;
               }
@@ -422,7 +428,6 @@ obvious::Matrix RandomNormalMatching::match(const obvious::Matrix* M,
             }
 
             // Determine how many nearest neighbors (model <-> scene) are close enough
-            double q[2];
             unsigned int cntMatch = 0;
             flann::Matrix<int> indices(new int[1], 1, 1);
             flann::Matrix<double> dists(new double[1], 1, 1);
@@ -434,30 +439,38 @@ obvious::Matrix RandomNormalMatching::match(const obvious::Matrix* M,
               // clip points outside of model frustum
               if(maskControl[s])
               {
+
+#if USEKNN
                 // find nearest neighbor of control point
+                double q[2];
                 q[0] = STemp(0, s);
                 q[1] = STemp(1, s);
                 flann::Matrix<double> query(q, 1, 2);
                 flann::SearchParams p(-1, 0.0);
                 _index->knnSearch(query, indices, dists, 1, p);
+                const int idxQuery = idxMValid[indices[0][0]];
+                double distConsensus   = dists[0][0];
+#else
+                // speeded-up NN search through back projection
+                const int idxQuery = round((thetaControl[s]-thetaMin) / resolution);
+
+                if(!maskM[idxQuery]) continue;
+
+                double distX = (*M)(idxQuery, 0) - STemp(0, s);
+                double distY = (*M)(idxQuery, 1) - STemp(1, s);
+                double distConsensus  = distX*distX + distY*distY;
+#endif
 
 #if NORMALCONSENSUS
-                const int idxQuery = idxMValid[indices[0][0]];
-                // should never happen
-                // assert(maskM[idxQuery]);
-
                 // Experimental idea: rate matching results additionally with normal consensus
                 // consensus score is in range [0, 1] -> perfect match = 0
-#if STRUCTAPPROACH
-                double normalConsensus = (1.0 - cos(samplesM[idxQuery].orientation - samplesC[s].orientation - phi))/2.0;
-#else
                 double normalConsensus = (1.0 - cos(phiM[idxQuery] - phiControl[s] - phi))/2.0;
-#endif
                 // Normalized error (weight distance and normal consensus)
-                double err = dists[0][0]*_scaleDistance + normalConsensus*_scaleOrientation;
+                double err = distConsensus*_scaleDistance + normalConsensus*_scaleOrientation;
 #else
-                double err = dists[0][0]*_scaleDistance;
+                double err = distConsensus*_scaleDistance;
 #endif
+
                 errSum += err;
                 if(err<1.0)
                   cntMatch++;

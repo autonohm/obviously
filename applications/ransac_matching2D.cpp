@@ -30,7 +30,7 @@ int main(int argc, char** argv)
   bool maskM[DATASETSIZE];
   bool maskS[DATASETSIZE];
 
-  double inc = deg2rad(270.0/DATASETSIZE);
+  double inc = deg2rad(270.0/(DATASETSIZE-1));
   double angle = deg2rad(-135.0);
   for(int i = 0; i < DATASETSIZE; i++)
   {
