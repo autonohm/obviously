@@ -155,7 +155,6 @@ public:
     */
   static unsigned int removeInvalidPoints(double* inPoints, bool* mask, unsigned int sizeMask, double* outPoints);
 
-
   /**
    * Convert distance measurements to Cartesian coordinates represented as matrix
    * @return Cartesian coordinate matrix
@@ -231,6 +230,18 @@ public:
   virtual unsigned char* getRealMeasurementRGB();
 
   /**
+   * Set user-defined metadata, e.g., point classifier
+   * @param typeID user-defined type identified
+   */
+  void setRealMeasurementTypeID(int* typeID);
+
+  /**
+   * Get user-defined metadata, e.g., point classifier
+   * @return user-defined type identified
+   */
+  int* getRealMeasurementTypeID();
+
+  /**
    * Project coordinate back to sensor index
    * @param[in] M matrix of coordinates (homogeneous)
    * @param[out] indices vector of projection results (must be allocated outside)
@@ -240,30 +251,46 @@ public:
 
 protected:
 
+  // Pose
   Matrix* _T;
 
+  // Dimensionality
   unsigned int _dim;
 
-  double _maxRange;
-
+  // The sensor's minimal range
   double _minRange;
 
+  // The sensor's maximal range
+  double _maxRange;
+
+  // The sensor's minimal range measuring against objects of low reflectivity
   double _lowReflectivityRange;
 
+  // Number of measurement samples, i.e. _width x _height
   unsigned int _size;
 
+  // Measurement data
   double* _data;
 
+  // Accuracy of measurement samples (if determinable)
   double* _accuracy;
 
+  // Validity of measurement samples
   bool* _mask;
 
+  // RGB data (if available)
   unsigned char* _rgb;
 
+  // Type identifier
+  int* _typeID;
+
+  // Size of first dimension, i.e., # of samples of a 2D scan or width of image sensor
   unsigned int _width;
 
+  // Size of second dimension, i.e., 1 for a 2D scan or height of image sensor
   unsigned int _height;
 
+  // Normalizing factor for normal vectors
   double _rayNorm;
 
   // Ray matrix in world coordinate frame
