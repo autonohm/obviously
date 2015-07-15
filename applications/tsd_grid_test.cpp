@@ -31,7 +31,7 @@ int main(void)
   grid->getCentroid(t);
 
   // Rotation about z-axis of sensor
-  double phi = 0.0 * M_PI / 180.0;
+  double phi = deg2rad(0.0);
   double tf[9] = {cos(phi), -sin(phi), t[0],
       sin(phi),  cos(phi), t[1],
       0,         0,        1};
@@ -42,7 +42,7 @@ int main(void)
   // Sensor initialization
   int beams = 1081;
   double angularRes = deg2rad(0.25);
-  double minPhi     = deg2rad(-95.0);
+  double minPhi     = deg2rad(-135.0);
   double maxRange   = 30.0;
   double minRange   = 0.3;
 
