@@ -120,7 +120,7 @@ public:
    * @param sdf SDF
    * @param weight measurement weight
    */
-  void addTsd(const unsigned int x, const unsigned int y, const obfloat sdf, const obfloat invMaxTruncation, const obfloat weight);
+  void addTsd(const unsigned int x, const unsigned int y, const obfloat sdf, const obfloat weight);
 
   /**
    * Increase emptiness of whole partition, i.e., every measurement ray passes through partition
@@ -161,35 +161,43 @@ private:
 
   obfloat _maxTruncation;
 
+  obfloat _invMaxTruncation;
+
   obfloat _eps;
 
-  obfloat _sigma;
 };
 
-inline void TsdGridPartition::addTsd(const unsigned int x, const unsigned int y, const obfloat sd, const obfloat invMaxTruncation, const obfloat weight)
+inline void TsdGridPartition::addTsd(const unsigned int x, const unsigned int y, const obfloat sd, const obfloat weight)
 {
   // Factor avoids thin objects to be removed when seen from two sides
   // Todo: Find better solution
-  if(sd >= -1.1*_maxTruncation)
+  if(sd >= -_maxTruncation)
   {
     TsdCell* cell = &_grid[y][x];
 
-    obfloat tsd = min(sd * invMaxTruncation, TSDINC);
+    obfloat tsd = min(sd * _invMaxTruncation, TSDINC);
 
-    /** The following weighting were proposed by:
+    /**
+     *  The following weighting were proposed by:
      *  E. Bylow, J. Sturm, C. Kerl, F. Kahl, and D. Cremers.
      *  Real-time camera tracking and 3d reconstruction using signed distance functions.
      *  In Robotics: Science and Systems Conference (RSS), June 2013.
-     *  Todo: Verify this
+     *  SM: ... we did not achieve a noticeable effect with this.
      */
-    obfloat w = 1.0;
-    if(sd <= _eps) w = exp(-_sigma*(sd-_eps)*(sd-_eps));
+    // obfloat span = -_maxTruncation - _eps;
+    // obfloat sigma = 3.0/(span*span);
+    // obfloat w = 1.0;
+    // if(sd <= _eps) w = exp(-_sigma*(sd-_eps)*(sd-_eps));
+
+    // Experimental: Increase weight for cells close to the surface
+    // If we see a thin surface from both sides, this might prevent temporal removement
+    obfloat w = 0.01;
+    if(fabs(sd)<_eps) w = 1.0;
     w *= weight;
 
     if(isnan(cell->tsd))
     {
       cell->tsd = tsd;
-      //cell->weight += TSDINC;
       cell->weight += w;
     }
     else
