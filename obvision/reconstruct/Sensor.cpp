@@ -15,8 +15,9 @@ Sensor::Sensor(unsigned int dim, double maxRange, double minRange, double lowRef
   _minRange = minRange;
   _lowReflectivityRange = lowReflectivityRange;
 
-  _rgb = NULL;
+  _rgb      = NULL;
   _accuracy = NULL;
+  _typeID   = NULL;
 
   _rayNorm = 1.0;
 
@@ -27,8 +28,9 @@ Sensor::Sensor(unsigned int dim, double maxRange, double minRange, double lowRef
 Sensor::~Sensor()
 {
   delete _T;
-  if(_rgb) delete [] _rgb;
+  if(_rgb)      delete [] _rgb;
   if(_accuracy) delete [] _accuracy;
+  if(_typeID)   delete [] _typeID;
 }
 
 Matrix* Sensor::getNormalizedRayMap(double norm)
@@ -278,6 +280,17 @@ void Sensor::setRealMeasurementRGB(unsigned char* rgb)
 unsigned char* Sensor::getRealMeasurementRGB()
 {
   return _rgb;
+}
+
+void Sensor::setRealMeasurementTypeID(int* typeID)
+{
+  if(!_typeID) _typeID = new int[_size];
+  memcpy(_typeID, typeID, _size*sizeof(*typeID));
+}
+
+int* Sensor::getRealMeasurementTypeID()
+{
+  return _typeID;
 }
 
 }

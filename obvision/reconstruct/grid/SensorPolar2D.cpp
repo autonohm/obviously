@@ -10,7 +10,10 @@ namespace obvious
 
 SensorPolar2D::SensorPolar2D(unsigned int size, double angularRes, double phiMin, double maxRange, double minRange, double lowReflectivityRange) : Sensor(2, maxRange, minRange, lowReflectivityRange)
 {
+  _width = size;
+  _height = 1;
   _size = size;
+
   _data = new double[_size];
   _mask = new bool[_size];
   for(unsigned int i=0; i<_size; i++)

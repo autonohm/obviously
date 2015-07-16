@@ -85,9 +85,15 @@ TsdGridPartition::~TsdGridPartition()
   }
 }
 
-void TsdGridPartition::init()
+void TsdGridPartition::init(obfloat maxTruncation)
 {
   if(_initialized) return;
+
+  // Weighting variables
+  _maxTruncation = maxTruncation;
+  _eps = -_maxTruncation/4.0;
+  obfloat span = -_maxTruncation - _eps;
+  _sigma = 3.0/(span*span);
 
   System<TsdCell>::allocate(_cellsY+1, _cellsX+1, _grid);
   if(_initWeight>0.0)

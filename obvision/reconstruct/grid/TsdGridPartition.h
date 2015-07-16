@@ -57,7 +57,7 @@ public:
   /**
    * Initialize partitions
    */
-  void init();
+  void init(obfloat maxTruncation);
 
   /**
    * Initialization indication
@@ -118,10 +118,9 @@ public:
    * @param x cell x-index
    * @param y cell y-index
    * @param sdf SDF
-   * @param maxTruncation maximum truncation radius
    * @param weight measurement weight
    */
-  void addTsd(const unsigned int x, const unsigned int y, const obfloat sdf, const obfloat maxTruncation, const obfloat invMaxTruncation, const obfloat weight);
+  void addTsd(const unsigned int x, const unsigned int y, const obfloat sdf, const obfloat invMaxTruncation, const obfloat weight);
 
   /**
    * Increase emptiness of whole partition, i.e., every measurement ray passes through partition
@@ -159,48 +158,47 @@ private:
   obfloat _initWeight;
 
   bool _initialized;
+
+  obfloat _maxTruncation;
+
+  obfloat _eps;
+
+  obfloat _sigma;
 };
 
-inline void TsdGridPartition::addTsd(const unsigned int x, const unsigned int y, const obfloat sd, const obfloat maxTruncation, const obfloat invMaxTruncation, const obfloat weight)
+inline void TsdGridPartition::addTsd(const unsigned int x, const unsigned int y, const obfloat sd, const obfloat invMaxTruncation, const obfloat weight)
 {
   // Factor avoids thin objects to be removed when seen from two sides
-  if(sd >= -1.1*maxTruncation)
+  // Todo: Find better solution
+  if(sd >= -1.1*_maxTruncation)
   {
     TsdCell* cell = &_grid[y][x];
 
     obfloat tsd = min(sd * invMaxTruncation, TSDINC);
 
-    /** The following lines were proposed by
+    /** The following weighting were proposed by:
      *  E. Bylow, J. Sturm, C. Kerl, F. Kahl, and D. Cremers.
      *  Real-time camera tracking and 3d reconstruction using signed distance functions.
      *  In Robotics: Science and Systems Conference (RSS), June 2013.
-     *
-     *  SM: Improvements in tracking need to be verified, for the moment this is commented due to runtime improvements
+     *  Todo: Verify this
      */
-    /*
     obfloat w = 1.0;
-    const obfloat eps = -_maxTruncation/4.0;
-    if(sd <= eps)
-    {
-      const obfloat span = -_maxTruncation - eps;
-      const obfloat sigma = 3.0/(span*span);
-      w = exp(-sigma*(sd-eps)*(sd-eps));
-    }
-    weight *= w;*/
+    if(sd <= _eps) w = exp(-_sigma*(sd-_eps)*(sd-_eps));
+    w *= weight;
 
     if(isnan(cell->tsd))
     {
       cell->tsd = tsd;
       //cell->weight += TSDINC;
-      cell->weight += weight;
+      cell->weight += w;
     }
     else
     {
       //cell->weight = min(cell->weight+TSDINC, TSDGRIDMAXWEIGHT);
       //cell->tsd   = (cell->tsd * (cell->weight - TSDINC) + tsd) / cell->weight;
 
-      cell->tsd   = (cell->tsd * cell->weight + tsd * weight) / (cell->weight + weight);
-      cell->weight = min(cell->weight+weight, TSDGRIDMAXWEIGHT);
+      cell->tsd   = (cell->tsd * cell->weight + tsd * w) / (cell->weight + w);
+      cell->weight = min(cell->weight+w, TSDGRIDMAXWEIGHT);
     }
   }
 }
