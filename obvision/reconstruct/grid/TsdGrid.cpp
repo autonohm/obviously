@@ -83,7 +83,7 @@ TsdGrid::TsdGrid(const std::string& data, const EnumTsdGridLoadSource source)
       }
       else if(id == CONTENT)
       {
-        curPart->init();
+        curPart->init(_maxTruncation);
         for(unsigned int py=0; py < curPart->getHeight(); py++)
         {
           for(unsigned int px = 0; px < curPart->getWidth(); px++)
@@ -212,7 +212,7 @@ void TsdGrid::push(SensorPolar2D* sensor)
       TsdGridPartition* part = _partitions[0][i];
       if(!part->isInRange(tr, sensor, _maxTruncation)) continue;
 
-      part->init();
+      part->init(_maxTruncation);
 
       const obfloat* partCentroid = part->getCentroid();
       obfloat distCentroid = sqrt((partCentroid[0]-tr[0])*(partCentroid[0]-tr[0])+(partCentroid[1]-tr[1])*(partCentroid[1]-tr[1]));
@@ -239,13 +239,13 @@ void TsdGrid::push(SensorPolar2D* sensor)
               // calculate signed distance, i.e., measurement minus distance of current cell to sensor
               const double sd = data[index] - sqrt( ((*cellCoordsHom)(c,0)-tr[0]) * ((*cellCoordsHom)(c,0)-tr[0]) + ((*cellCoordsHom)(c,1)-tr[1]) * ((*cellCoordsHom)(c,1)-tr[1]));
 
-              part->addTsd((*partCoords)(c, 0), (*partCoords)(c, 1), sd, _maxTruncation, invMaxTruncation, partWeight);
+              part->addTsd((*partCoords)(c, 0), (*partCoords)(c, 1), sd, invMaxTruncation, partWeight);
             }
             else
             {
               const double dist = sqrt( ((*cellCoordsHom)(c,0)-tr[0]) * ((*cellCoordsHom)(c,0)-tr[0]) + ((*cellCoordsHom)(c,1)-tr[1]) * ((*cellCoordsHom)(c,1)-tr[1]));
               if(dist<lowReflectivityRange)
-                part->addTsd((*partCoords)(c, 0), (*partCoords)(c, 1), _maxTruncation, _maxTruncation, invMaxTruncation, partWeight);
+                part->addTsd((*partCoords)(c, 0), (*partCoords)(c, 1), _maxTruncation, invMaxTruncation, partWeight);
             }
           }
         }
@@ -286,7 +286,7 @@ void TsdGrid::pushTree(SensorPolar2D* sensor)
     for(unsigned int i=0; i<partitionsToCheck.size(); i++)
     {
       TsdGridPartition* part = partitionsToCheck[i];
-      part->init();
+      part->init(_maxTruncation);
 
       obfloat* partCentroid = part->getCentroid();
       obfloat distCentroid = sqrt((partCentroid[0]-tr[0])*(partCentroid[0]-tr[0])+(partCentroid[1]-tr[1])*(partCentroid[1]-tr[1]));
@@ -310,13 +310,13 @@ void TsdGrid::pushTree(SensorPolar2D* sensor)
             // calculate signed distance, i.e. measurement minus distance of current cell to sensor
             double sd = data[index] - sqrt( ((*cellCoordsHom)(c,0)-tr[0]) * ((*cellCoordsHom)(c,0)-tr[0]) + ((*cellCoordsHom)(c,1)-tr[1]) * ((*cellCoordsHom)(c,1)-tr[1]));
 
-            part->addTsd((*partCoords)(c, 0), (*partCoords)(c, 1), sd, _maxTruncation, invMaxTruncation, partWeight);
+            part->addTsd((*partCoords)(c, 0), (*partCoords)(c, 1), sd, invMaxTruncation, partWeight);
           }
           else
           {
             double dist = sqrt( ((*cellCoordsHom)(c,0)-tr[0]) * ((*cellCoordsHom)(c,0)-tr[0]) + ((*cellCoordsHom)(c,1)-tr[1]) * ((*cellCoordsHom)(c,1)-tr[1]));
             if(dist<sensor->getLowReflectivityRange())
-              part->addTsd((*partCoords)(c, 0), (*partCoords)(c, 1), _maxTruncation, _maxTruncation, invMaxTruncation, partWeight);
+              part->addTsd((*partCoords)(c, 0), (*partCoords)(c, 1), _maxTruncation, invMaxTruncation, partWeight);
           }
         }
       }
@@ -436,17 +436,11 @@ void TsdGrid::grid2ColorImage(unsigned char* image, unsigned int width, unsigned
         isEmpty = _partitions[0][p]->isEmpty();
       }
 
-      if((tsd>0.0) && (tsd<0.999999))
+      if(tsd>0.0)
       {
-        rgb[0] = static_cast<unsigned char>(tsd * 150.0);
+        rgb[0] = static_cast<unsigned char>(tsd * 255.0);
         rgb[1] = 255;
-        rgb[2] = static_cast<unsigned char>(tsd * 150.0);
-      }
-      else if(tsd >= 0.999999)
-      {
-        rgb[0] = 255;
-        rgb[1] = 255;
-        rgb[2] = 255;
+        rgb[2] = static_cast<unsigned char>(tsd * 255.0);
       }
       else if(tsd<0.0)
       {
@@ -614,7 +608,7 @@ bool TsdGrid::freeFootprint(const obfloat centerCoords[2], const obfloat width, 
       unsigned int py = rows / dimPartition;
       unsigned int px = cols / dimPartition;
       if(!_partitions[py][px]->isInitialized())   //partition uninitialized -> initialize
-        _partitions[py][px]->init();
+        _partitions[py][px]->init(_maxTruncation);
       unsigned int cy = rows % dimPartition;
       unsigned int cx = cols % dimPartition;
       (*_partitions[py][px])(cy, cx) = TSDINC;
