@@ -40,41 +40,42 @@ int main(void)
 
 
   // Sensor initialization
-  int beams = 1081;
-  double angularRes = deg2rad(0.25);
-  double minPhi     = deg2rad(-135.0);
-  double maxRange   = 30.0;
-  double minRange   = 0.3;
+  int beams                   = 1081;
+  double angularRes           = deg2rad(0.25);
+  double minPhi               = deg2rad(-135.0);
+  double maxRange             = 30.0;
+  double minRange             = 0.3;
+  double lowReflectivityRange = 10.0;
 
-  SensorPolar2D sensor(beams, angularRes, minPhi, maxRange, minRange);
+  SensorPolar2D sensor(beams, angularRes, minPhi, maxRange, minRange, lowReflectivityRange);
 
   // Sample data, to be replaced with real measurements
   double* data = new double[beams];
-  bool* mask = new bool[beams];
   for(int i=0; i<beams; i++)
   {
 #if 1
     // circular structure
     data[i] = maxRange * 0.5;
-    mask[i] = true;
+
+    // test INFINITY, i.e., no object is in range -> consider low-reflectivity range
+    if(i>beams/4 && i<beams/3)
+      data[i] = INFINITY;
 #else
-    // plain wall
-    mask[i] = false;
+    // plain wall, test NAN, i.e., no object is in range -> consider low-reflectivity range
     data[i] = NAN;
     double theta = angularRes*((double)i)+minPhi;
     if(theta<0)
     {
       double dist = abs(maxRange * 0.5 / sin(theta));
       if(dist<maxRange)
-      {
         data[i] = dist;
-        mask[i] = true;
-      }
+      if(theta>deg2rad(-90.0) && theta<deg2rad(-60.0))
+        data[i] = NAN;
     }
 #endif
   }
   sensor.setRealMeasurementData(data);
-  sensor.setRealMeasurementMask(mask);
+  sensor.setStandardMask();
 
   RayCastPolar2D rayCaster;
   double* coords = new double[beams*2];
@@ -99,6 +100,7 @@ int main(void)
   grid->grid2ColorImage(image, w, h);
 
   // Debug output
+  bool* mask = sensor.getRealMeasurementMask();
   for(int i=0; i<beams; i+=100)
   {
 	  if(mask[i])
@@ -114,7 +116,6 @@ int main(void)
   //serializePPM("/tmp/tsd_grid.pgm", image, w, h, true);
 
   delete[] data;
-  delete[] mask;
 
   delete [] image;
   delete [] coords;

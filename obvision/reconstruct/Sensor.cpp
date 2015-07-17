@@ -258,7 +258,17 @@ void Sensor::maskZeroDepth()
 void Sensor::maskInvalidDepth()
 {
   for(unsigned int i=0; i<_size; i++)
-    _mask[i] =  _mask[i] && (!(isinf(_data[i]) || isnan(_data[i]) || _data[i]>_maxRange));
+  {
+    if(_data[i]>_maxRange) _data[i] = INFINITY;
+
+    if(isnan(_data[i]))
+    {
+      _mask[i] = false;
+      _data[i] = INFINITY;
+    }
+
+    //_mask[i] =  _mask[i] && (!isinf(_data[i]));
+  }
 }
 
 bool* Sensor::getRealMeasurementMask()

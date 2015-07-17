@@ -246,7 +246,7 @@ bool RayCastPolar2D::rayCastFromCurrentView(TsdGrid* grid, obfloat tr[2], obfloa
     position[0] += ray[0];
     position[1] += ray[1];
 
-    obfloat tsd;
+    obfloat tsd = NAN;
     if (grid->interpolateBilinear(position, &tsd)!=INTERPOLATE_SUCCESS)
     {
       tsd_prev = tsd;

@@ -31,6 +31,12 @@ public:
   ~SensorPolar2D();
 
   /**
+   * Set standard measurement mask (measurement data need to be set before)
+   * Parameter for depth discontinuity is 1/60*M_PI
+   */
+  void setStandardMask();
+
+  /**
    * Mask measurements with acute angles to neighbors
    * @param[in] thresh threshold in rad (meaningful values < 1/36*M_PI)
    */

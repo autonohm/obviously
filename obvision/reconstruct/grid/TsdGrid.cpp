@@ -199,8 +199,6 @@ void TsdGrid::push(SensorPolar2D* sensor)
   obfloat tr[2];
   sensor->getPosition(tr);
 
-  const double invMaxTruncation = 1.0 / _maxTruncation;
-
   unsigned int partSize = (_partitions[0][0])->getSize();
 
 #pragma omp parallel
@@ -239,13 +237,13 @@ void TsdGrid::push(SensorPolar2D* sensor)
               // calculate signed distance, i.e., measurement minus distance of current cell to sensor
               const double sd = data[index] - sqrt( ((*cellCoordsHom)(c,0)-tr[0]) * ((*cellCoordsHom)(c,0)-tr[0]) + ((*cellCoordsHom)(c,1)-tr[1]) * ((*cellCoordsHom)(c,1)-tr[1]));
 
-              part->addTsd((*partCoords)(c, 0), (*partCoords)(c, 1), sd, invMaxTruncation, partWeight);
+              part->addTsd((*partCoords)(c, 0), (*partCoords)(c, 1), sd, partWeight);
             }
             else
             {
               const double dist = sqrt( ((*cellCoordsHom)(c,0)-tr[0]) * ((*cellCoordsHom)(c,0)-tr[0]) + ((*cellCoordsHom)(c,1)-tr[1]) * ((*cellCoordsHom)(c,1)-tr[1]));
               if(dist<lowReflectivityRange)
-                part->addTsd((*partCoords)(c, 0), (*partCoords)(c, 1), _maxTruncation, invMaxTruncation, partWeight);
+                part->addTsd((*partCoords)(c, 0), (*partCoords)(c, 1), _maxTruncation, partWeight);
             }
           }
         }
@@ -269,8 +267,6 @@ void TsdGrid::pushTree(SensorPolar2D* sensor)
 
   obfloat tr[2];
   sensor->getPosition(tr);
-
-  const double invMaxTruncation = 1.0 / _maxTruncation;
 
   TsdGridComponent* comp = _tree;
   vector<TsdGridPartition*> partitionsToCheck;
@@ -310,13 +306,13 @@ void TsdGrid::pushTree(SensorPolar2D* sensor)
             // calculate signed distance, i.e. measurement minus distance of current cell to sensor
             double sd = data[index] - sqrt( ((*cellCoordsHom)(c,0)-tr[0]) * ((*cellCoordsHom)(c,0)-tr[0]) + ((*cellCoordsHom)(c,1)-tr[1]) * ((*cellCoordsHom)(c,1)-tr[1]));
 
-            part->addTsd((*partCoords)(c, 0), (*partCoords)(c, 1), sd, invMaxTruncation, partWeight);
+            part->addTsd((*partCoords)(c, 0), (*partCoords)(c, 1), sd, partWeight);
           }
           else
           {
             double dist = sqrt( ((*cellCoordsHom)(c,0)-tr[0]) * ((*cellCoordsHom)(c,0)-tr[0]) + ((*cellCoordsHom)(c,1)-tr[1]) * ((*cellCoordsHom)(c,1)-tr[1]));
             if(dist<sensor->getLowReflectivityRange())
-              part->addTsd((*partCoords)(c, 0), (*partCoords)(c, 1), _maxTruncation, invMaxTruncation, partWeight);
+              part->addTsd((*partCoords)(c, 0), (*partCoords)(c, 1), _maxTruncation, partWeight);
           }
         }
       }
@@ -444,9 +440,9 @@ void TsdGrid::grid2ColorImage(unsigned char* image, unsigned int width, unsigned
       }
       else if(tsd<0.0)
       {
-        rgb[0] = static_cast<unsigned char>(tsd * 255.0);
-        rgb[1] = 0;
-        rgb[2] = 0;
+        rgb[0] = static_cast<unsigned char>((1.0+tsd) * 255.0);
+        rgb[1] = 0.0;
+        rgb[2] = 0.0;
       }
       else if(isEmpty)
       {
