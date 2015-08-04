@@ -102,6 +102,14 @@ bool* createSubsamplingMask(unsigned int* size, double probability)
 
 void Icp::setModel(double* coords, double* normals, const unsigned int size, double probability)
 {
+  _sizeModel = 0;
+
+  if(size==0)
+  {
+    LOGMSG(DBG_DEBUG, "Model of size 0 passed ... ignoring");
+    return;
+  }
+
   _sizeModel = size;
   bool* mask = createSubsamplingMask(&_sizeModel, probability);
 
@@ -141,6 +149,8 @@ void Icp::setModel(double* coords, double* normals, const unsigned int size, dou
 
 void Icp::setModel(Matrix* coords, Matrix* normals, double probability)
 {
+  _sizeModel = 0;
+
   if(coords->getCols()!=(size_t)_dim)
   {
     LOGMSG(DBG_DEBUG, "Model is not of correct dimensionality. Needed: " << _dim);
@@ -148,6 +158,13 @@ void Icp::setModel(Matrix* coords, Matrix* normals, double probability)
   }
 
   unsigned int sizeSource = coords->getRows();
+
+  if(sizeSource==0)
+  {
+    LOGMSG(DBG_DEBUG, "Model of size 0 passed ... ignoring");
+    return;
+  }
+
   _sizeModel = sizeSource;
   bool* mask = createSubsamplingMask(&_sizeModel, probability);
 
@@ -189,6 +206,8 @@ void Icp::setModel(Matrix* coords, Matrix* normals, double probability)
 
 void Icp::setScene(double* coords, double* normals, const unsigned int size, double probability)
 {
+  _sizeScene = 0;
+
   if(size==0)
   {
     LOGMSG(DBG_DEBUG, "Scene of size 0 passed ... ignoring");
@@ -237,12 +256,22 @@ void Icp::setScene(double* coords, double* normals, const unsigned int size, dou
 
 void Icp::setScene(Matrix* coords, Matrix* normals, double probability)
 {
-  if(coords->getCols()!=(size_t)_dim) {
+  _sizeScene = 0;
+
+  if(coords->getCols()!=(size_t)_dim)
+  {
     LOGMSG(DBG_DEBUG, "Scene is not of correct dimensionality " << _dim);
     return;
   }
 
   unsigned int sizeSource = coords->getRows();
+
+  if(sizeSource==0)
+  {
+    LOGMSG(DBG_DEBUG, "Scene of size 0 passed ... ignoring");
+    return;
+  }
+
   _sizeScene = sizeSource;
   bool* mask = createSubsamplingMask(&_sizeScene, probability);
 
@@ -437,6 +466,13 @@ EnumIcpState Icp::step(double* rms, unsigned int* pairs)
 
 EnumIcpState Icp::iterate(double* rms, unsigned int* pairs, unsigned int* iterations, Matrix* Tinit)
 {
+
+  if(_sizeModel==0 || _sizeScene==0)
+  {
+    LOGMSG(DBG_ERROR, "ICP matching not possible, size(Model): " << _sizeModel << ", size(Scene): " << _sizeScene);
+    return ICP_NOTMATCHABLE;
+  }
+
   if(_trace)
   {
     _trace->reset();

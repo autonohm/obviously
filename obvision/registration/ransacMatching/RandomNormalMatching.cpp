@@ -245,6 +245,12 @@ obvious::Matrix RandomNormalMatching::match(const obvious::Matrix* M,
     return TBest;
   }
 
+  if(pointsInM < 3)
+  {
+    LOGMSG(DBG_ERROR, "Model and scene contain too less points, size of M: " << pointsInM << ", size of S: " << pointsInS);
+    return TBest;
+  }
+
   // ----------------- Model ------------------
   obvious::Matrix* NMpca = new Matrix(pointsInM, 2); // Normals for model
   double* phiM           = new double[pointsInM];    // Orientation of model points
@@ -317,6 +323,23 @@ obvious::Matrix RandomNormalMatching::match(const obvious::Matrix* M,
   LOGMSG(DBG_DEBUG, "Valid points in scene: " << idxSValid.size() << ", valid points in model: " << idxMValid.size() << ", Control set: " << Control->getCols());
   LOGMSG(DBG_DEBUG, "Model phi min:: " << rad2deg(thetaBoundMin) << ", Model phi max: " << rad2deg(thetaBoundMax));
 
+  if(idxSValid.size() < 3)
+  {
+    LOGMSG(DBG_ERROR, "Too less valid points in scene, matchable size: " << idxSValid.size());
+    return TBest;
+  }
+
+  if(idxMValid.size() < 3)
+  {
+    LOGMSG(DBG_ERROR, "Too less valid points in model, matchable size: " << idxMValid.size());
+    return TBest;
+  }
+
+  // Check for maximum meaningful trials
+  unsigned int trials = _trials;
+  if(idxMValid.size()<_trials)
+    trials = idxMValid.size();
+
   if(_trace)
   {
     _trace->reset();
@@ -361,7 +384,7 @@ obvious::Matrix RandomNormalMatching::match(const obvious::Matrix* M,
     double* thetaControl     = new double[pointsInC];
 
 #pragma omp for
-    for(unsigned int trial = 0; trial < _trials; trial++)
+    for(unsigned int trial = 0; trial < trials; trial++)
     {
 
       int idx;
