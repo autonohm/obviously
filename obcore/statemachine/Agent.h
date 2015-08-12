@@ -92,6 +92,8 @@ private:
 
   bool _volatile;
 
+  bool _volatileNext;
+
   std::map<const int, StateBase*> _persistantStateMap;
 
   static std::map<const unsigned int, Agent*> _agents;
