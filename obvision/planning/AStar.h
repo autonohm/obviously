@@ -42,6 +42,17 @@ public:
    */
   static std::vector<unsigned int> pathFind(AStarMap* map, const Point2D coordStart, const Point2D coordTarget, const bool penalty, const Point2D* const offset = NULL);
 
+  /**
+   * Convert row/col indices to cell index
+   * @param x column
+   * @param y row
+   * @param width width of grid, i.e., number of columns
+   */
+  static inline unsigned int toId(unsigned int x, unsigned int y, unsigned int width)
+  {
+     return y*width+x;
+  }
+
 private:
 
 };

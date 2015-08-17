@@ -18,6 +18,7 @@ AStarNode::AStarNode(int xp, int yp, int d, int p, int currentDir)
   _level      = d;
   _priority   = p;
   _currentDir = currentDir;
+  _isOverwritten = false;
 }
 
 AStarNode::~AStarNode()

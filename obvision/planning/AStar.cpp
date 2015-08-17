@@ -1,5 +1,7 @@
 #include "AStar.h"
 
+#include <stdexcept>
+#include <map>
 #include <queue>
 #include <stdlib.h>
 #include <iostream>
@@ -15,10 +17,19 @@ namespace obvious
 
 using namespace std;
 
-bool operator<(const AStarNode & a, const AStarNode & b)
-{
-  return a.getPriority() > b.getPriority();
-}
+//bool operator<(const AStarNode* a, const AStarNode* b)
+//{
+//  return a->getPriority() > b->getPriority();
+//}
+
+class Comp{
+public:
+   bool operator()(const AStarNode* a, const AStarNode* b)
+   {
+      return a->getPriority() > b->getPriority();
+   }
+};
+
 
 std::vector<unsigned int> AStar::pathFind(AStarMap* map, const Point2D coordStart, const Point2D coordTarget, const bool penalty, const Point2D* const offset)
 {
@@ -47,8 +58,9 @@ std::vector<unsigned int> AStar::pathFind(AStarMap* map, const Point2D coordStar
 std::vector<unsigned int> AStar::pathFind(AStarMap* map, const Pixel start, const Pixel target, const bool penalty)
 {
   cout << __PRETTY_FUNCTION__ << endl;
-  priority_queue<AStarNode> pq[2]; // list of open (not-yet-tried) MapNodes
-  int pqi; // pq index
+  priority_queue<AStarNode*, std::vector<AStarNode*>, Comp> pq;//[2]; // list of open (not-yet-tried) MapNodes
+  std::map<unsigned int, AStarNode*> openList_map;
+  //int pqi; // pq index
   AStarNode* n0;
   AStarNode* m0;
   unsigned int i, j, x, y;
@@ -66,7 +78,7 @@ std::vector<unsigned int> AStar::pathFind(AStarMap* map, const Pixel start, cons
   dx[6]=0;  dy[6]=-1; // 6
   dx[7]=1;  dy[7]=-1; // 7
 
-  pqi=0;
+  //pqi=0;
 
   unsigned int height  = map->getHeight();
   unsigned int width   = map->getWidth();
@@ -128,21 +140,34 @@ std::vector<unsigned int> AStar::pathFind(AStarMap* map, const Pixel start, cons
   // create the start Node and push into list of open Nodes
   n0 = new AStarNode(start.u, start.v, 0, 0, -1);
   n0->updatePriority(target.u, target.v);
-  pq[pqi].push(*n0);
+  pq.push(n0);
+  openList_map.insert( std::make_pair( AStar::toId(n0->getxPos(), n0->getyPos(), map->getWidth()), n0) );
 
   openNodesMap[start.v][start.u]=n0->getPriority(); // mark it on the open Nodes map
 
   // A* search
-  while(!pq[pqi].empty())
+  while(!pq.empty())
   {
     // get the current Node w/ the highest priority from the list of open Nodes
-    AStarNode prevNode = pq[pqi].top();
-    n0 = new AStarNode( prevNode.getxPos(), prevNode.getyPos(), prevNode.getLevel(), prevNode.getPriority(), prevNode.getCurrentDir());
+    AStarNode* prevNode;
+
+    //std::cout << "before top" << std::endl;
+    do{
+       prevNode = pq.top();
+       if(prevNode->_isOverwritten)
+          pq.pop();
+    }while(prevNode->_isOverwritten);
+
+    //std::cout << "after top" << std::endl;
+
+    n0 = new AStarNode( prevNode->getxPos(), prevNode->getyPos(), prevNode->getLevel(), prevNode->getPriority(), prevNode->getCurrentDir());
 
     x = n0->getxPos();
     y = n0->getyPos();
 
-    pq[pqi].pop(); // remove the Node from the open list
+    pq.pop(); // remove the Node from the open list
+    openList_map.erase(AStar::toId(prevNode->getxPos(), prevNode->getyPos(), map->getWidth()));
+
     openNodesMap[y][x]   = 0;
     // mark it on the closed Nodes map
     closedNodesMap[y][x] = 1;
@@ -166,8 +191,12 @@ std::vector<unsigned int> AStar::pathFind(AStarMap* map, const Pixel start, cons
       obvious::System<int>::deallocate(dirMap);
       obvious::System<char>::deallocate(buffer);
       delete n0;
+
       // empty the leftover Nodes
-      while(!pq[pqi].empty()) pq[pqi].pop();
+      while(!pq.empty())
+         pq.pop();
+
+      openList_map.clear();
 
       std::reverse(path.begin(), path.end());
       return path;
@@ -191,7 +220,8 @@ std::vector<unsigned int> AStar::pathFind(AStarMap* map, const Pixel start, cons
         {
           openNodesMap[ydy][xdx] = m0->getPriority();
           m0->setCurrentDir((i+4)%8);
-          pq[pqi].push(*m0);
+          pq.push(m0);
+          openList_map.insert( std::make_pair(AStar::toId(m0->getxPos(), m0->getyPos(), map->getWidth()), m0) );
           // mark its parent Node direction
           dirMap[ydy][xdx]=(i+4)%8;
         }
@@ -203,23 +233,34 @@ std::vector<unsigned int> AStar::pathFind(AStarMap* map, const Pixel start, cons
           // update the parent direction info
           dirMap[ydy][xdx]=(i+4)%8;
 
-          // replace the node by emptying one pq to the other one except the node to be replaced will be ignored and the new node will be pushed in instead
-          while(!(pq[pqi].top().getxPos()==xdx && pq[pqi].top().getyPos()==ydy))
-          {
-            pq[1-pqi].push(pq[pqi].top());
-            pq[pqi].pop();
-          }
-          pq[pqi].pop(); // remove the wanted Node
+          //set to old node overwritten flag
+          try{
+             openList_map.at(AStar::toId(m0->getxPos(), m0->getyPos(), map->getWidth()))->_isOverwritten = true;
+          }catch (std::out_of_range& e) {
+             std::cout << "Waring... try to use Node whitch is not existing" << std::endl;
+         }
 
-          // empty the larger size pq to the smaller one
-          if(pq[pqi].size()>pq[1-pqi].size()) pqi=1-pqi;
-          while(!pq[pqi].empty())
-          {
-            pq[1-pqi].push(pq[pqi].top());
-            pq[pqi].pop();
-          }
-          pqi=1-pqi;
-          pq[pqi].push(*m0); // add the better Node instead
+         // SM: Code below can be removed, since overwritten flag was added in version pushed at 17.8.2015, TODO: Delete commented code after verification
+//          //replace the node by emptying one pq to the other one except the node to be replaced will be ignored and the new node will be pushed in instead
+//          while(!(pq[pqi].top()->getxPos()==xdx && pq[pqi].top()->getyPos()==ydy))
+//          {
+//            pq[1-pqi].push(pq[pqi].top());
+//            pq[pqi].pop();
+//          }
+//          pq[pqi].pop(); // remove the wanted Node
+//
+//          // empty the larger size pq to the smaller one
+//          if(pq[pqi].size()>pq[1-pqi].size()) pqi=1-pqi;
+//          while(!pq[pqi].empty())
+//          {
+//            pq[1-pqi].push(pq[pqi].top());
+//            pq[pqi].pop();
+//          }
+//          //pqi=1-pqi;
+
+
+          pq.push(m0); // add the better Node instead
+          openList_map.insert( std::make_pair(AStar::toId(m0->getxPos(), m0->getyPos(), map->getWidth()), m0) );
         }
         else delete m0;
       }
