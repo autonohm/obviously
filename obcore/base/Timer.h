@@ -61,7 +61,7 @@ public:
 
     /**
      * Function resets the timer and returns the elapsed time.
-     * @return elapsed time in ms.µs since construction of timer or last reset call
+     * @return elapsed time in [s] since construction of timer or last reset call
      */
     double reset(void);
 
