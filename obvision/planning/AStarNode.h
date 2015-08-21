@@ -13,6 +13,9 @@ namespace obvious
 
 class AStarNode
 {
+
+  friend class AStar;
+
 public:
 
   /**
@@ -92,6 +95,11 @@ public:
   const int estimate(const int & xDest, const int & yDest) const;
 
 private:
+
+  /**
+   * Priority queues overwritten flag
+   */
+  bool _isOverwritten;
 
   /**
    * current position
