@@ -59,6 +59,7 @@ add_library(obvision
 	planning/AStar.cpp
 	planning/AStarMap.cpp
 	planning/AStarNode.cpp
+	ransac/RansacPrimitives.cpp
 	)
 
 ####################

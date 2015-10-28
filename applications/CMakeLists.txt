@@ -100,6 +100,7 @@ ADD_EXECUTABLE(tsd_grid_test              tsd_grid_test.cpp)
 ADD_EXECUTABLE(tsd_kinect                 tsd_kinect.cpp)
 ADD_EXECUTABLE(astar_test                 astar_test.cpp)
 ADD_EXECUTABLE(statemachine_test          statemachine_test.cpp)
+ADD_EXECUTABLE(ransac_cirle               ransac_circle.cpp)
 
 SET_TARGET_PROPERTIES(tsd_kinect PROPERTIES COMPILE_FLAGS "-Wno-unknown-pragmas -Wno-reorder")
 ADD_EXECUTABLE(tsd_raycast_visualize      tsd_raycast_visualize.cpp)
@@ -133,5 +134,6 @@ TARGET_LINK_LIBRARIES(tsd_kinect               ${VISIONLIBS}  ${DEVICELIBS}  ${G
 TARGET_LINK_LIBRARIES(tsd_raycast_visualize    ${VISIONLIBS}  ${GRAPHICLIBS} ${CORELIBS})
 TARGET_LINK_LIBRARIES(showCloud                ${GRAPHICLIBS} ${CORELIBS})
 TARGET_LINK_LIBRARIES(astar_test               ${VISIONLIBS}  ${CORELIBS})
-TARGET_LINK_LIBRARIES(statemachine_test               ${VISIONLIBS}  ${CORELIBS})
+TARGET_LINK_LIBRARIES(statemachine_test        ${VISIONLIBS}  ${CORELIBS})
+TARGET_LINK_LIBRARIES(ransac_cirle             ${VISIONLIBS}  ${CORELIBS})
 
