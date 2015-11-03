@@ -43,7 +43,7 @@ INCLUDE_DIRECTORIES(..
                     ${EIGEN_INCLUDE_DIRS}
                     )
 
-add_library(obgraphic
+add_library(obgraphic STATIC
             ${SOURCE}
             )
 
