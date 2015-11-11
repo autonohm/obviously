@@ -11,7 +11,7 @@ SET(OBVISION_VERSION_MINOR 1)
 INCLUDE_DIRECTORIES(..
 					/usr/include/eigen3)
 
-add_library(obvision
+add_library(obvision STATIC
 	registration/icp/assign/PairAssignment.cpp
 	registration/icp/assign/AnnPairAssignment.cpp
 	registration/icp/assign/FlannPairAssignment.cpp
@@ -59,6 +59,7 @@ add_library(obvision
 	planning/AStar.cpp
 	planning/AStarMap.cpp
 	planning/AStarNode.cpp
+	ransac/RansacPrimitives.cpp
 	)
 
 ####################

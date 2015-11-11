@@ -63,7 +63,7 @@ ENDIF()
 # Disabled unknown pragmas and reordering due to OpenNI wrapper. Remove option, if wrapper is not used anymore
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__OBVIOUSLY__ -Wno-unknown-pragmas -Wno-reorder")
 
-ADD_LIBRARY(obdevice ${SOURCES})
+ADD_LIBRARY(obdevice STATIC ${SOURCES})
 
 ####################
 ##### Packaging ####

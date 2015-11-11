@@ -378,6 +378,7 @@ obvious::Matrix RandomNormalMatching::match(const obvious::Matrix* M,
 
   //Timer t;
   //t.start();
+  vector<unsigned int> idxTrials = idxMValid;
 #pragma omp parallel
   {
     bool* maskControl        = new bool[pointsInC];
@@ -390,11 +391,11 @@ obvious::Matrix RandomNormalMatching::match(const obvious::Matrix* M,
       int idx;
 #pragma omp critical
       {
-        const int randIdx = rand() % (idxMValid.size()-1);
-        idx               = idxMValid[randIdx];
+        const int randIdx = rand() % (idxTrials.size());
+        idx               = idxTrials[randIdx];
 
         // remove chosen element to avoid picking same index a second time
-        idxMValid.erase(idxMValid.begin() + randIdx);
+        idxTrials.erase(idxTrials.begin() + randIdx);
       }
 
       // leftmost scene point

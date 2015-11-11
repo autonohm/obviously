@@ -18,7 +18,8 @@ INCLUDE_DIRECTORIES(../..
                     /usr/include/lua5.1
                     )
 
-SET(LIBRARY     base/CartesianCloud.cpp
+SET(LIBRARY STATIC
+                base/CartesianCloud.cpp
                 base/CartesianCloudFactory.cpp
                 base/Timer.cpp
                 base/Logger.cpp
