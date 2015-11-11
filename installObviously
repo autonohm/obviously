@@ -8,7 +8,7 @@ echo "export OBVIOUSLY_ROOT=$HERE" >> ~/.bashrc
 echo "source ~/.bashrc"
 
 #packages for obcore
-apt-get install gls-bin 
+apt-get install gsl-bin 
 apt-get install libgsl0-dev 
 apt-get install libudev-dev 
 apt-get install libxml++2.6-dev 
