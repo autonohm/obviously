@@ -16,12 +16,11 @@ namespace obvious
 #define NORMALCONSENSUS 1
 #define USEKNN 1
 
-RandomNormalMatching::RandomNormalMatching(unsigned int trials, double epsThresh, unsigned int sizeControlSet)
+RandomNormalMatching::RandomNormalMatching(unsigned int trials, double epsThresh, unsigned int sizeControlSet) : RandomMatching(sizeControlSet)
 {
   _scaleDistance    = 1.0/(epsThresh * epsThresh);
   _scaleOrientation = 0.33;
   _trials           = trials;
-  _sizeControlSet   = sizeControlSet;
   _model            = NULL;
   _index            = NULL;
   _trace            = NULL;
@@ -38,32 +37,6 @@ RandomNormalMatching::~RandomNormalMatching()
     delete _index;
     _index = NULL;
   }
-  if(_trace)
-    delete _trace;
-  _trace = NULL;
-}
-
-void RandomNormalMatching::activateTrace()
-{
-  if(!_trace)
-    _trace = new Trace(2);
-}
-
-void RandomNormalMatching::deactivateTrace()
-{
-  if(_trace) delete _trace;
-  _trace = NULL;
-}
-
-vector<unsigned int> RandomNormalMatching::extractSamples(const obvious::Matrix* M, const bool* mask)
-{
-  vector<unsigned int> validIndices;
-  for(unsigned int i=_pcaSearchRange/2; i<M->getRows()-_pcaSearchRange/2; i++)
-  {
-    if(mask[i])
-      validIndices.push_back(i);
-  }
-  return validIndices;
 }
 
 void RandomNormalMatching::initKDTree(const obvious::Matrix* M, vector<unsigned int> idxValid)
@@ -90,31 +63,6 @@ void RandomNormalMatching::initKDTree(const obvious::Matrix* M, vector<unsigned 
   _index = new flann::Index<flann::L2<double> >(*_model, p);
   _index->buildIndex();
   obvious::System<double>::deallocate(mData);
-}
-
-obvious::Matrix* RandomNormalMatching::pickControlSet(const obvious::Matrix* M, vector<unsigned int> idxValid, vector<unsigned int> &idxControl)
-{
-  unsigned int sizeControlSet = _sizeControlSet;
-  if((idxValid.size()) < sizeControlSet)
-  {
-    LOGMSG(DBG_DEBUG, "Size of scene smaller than control set ... reducing size to " << idxValid.size());
-    sizeControlSet = idxValid.size();
-  }
-  obvious::Matrix* C = new obvious::Matrix(3, sizeControlSet);
-  vector<unsigned int> idxTemp = idxValid;
-  unsigned int ctr = 0;
-  while(idxControl.size() < sizeControlSet)
-  {
-    unsigned int r = rand() % idxTemp.size();
-    unsigned int idx = idxTemp[r];
-    idxControl.push_back(idx);
-    idxTemp.erase(idxTemp.begin() + r);
-
-    (*C)(0, ctr)   = (*M)(idx, 0);
-    (*C)(1, ctr)   = (*M)(idx, 1);
-    (*C)(2, ctr++) = 1.0;
-  }
-  return C;
 }
 
 void RandomNormalMatching::calcNormals(const Matrix* M, Matrix* N, const bool* maskIn, bool* maskOut)
@@ -267,7 +215,7 @@ obvious::Matrix RandomNormalMatching::match(const obvious::Matrix* M,
     calcNormals(M, NMpca, maskM, maskMpca);
     calcPhi(NMpca, maskMpca, phiM);
   }
-  vector<unsigned int> idxMValid = extractSamples(M, maskMpca);
+  vector<unsigned int> idxMValid = extractSamples(M, maskMpca, _pcaSearchRange/2);
 
 #if USEKNN
   initKDTree(M, idxMValid);
@@ -295,7 +243,7 @@ obvious::Matrix RandomNormalMatching::match(const obvious::Matrix* M,
   calcNormals(S, NSpca, maskS, maskSpca);
   calcPhi(NSpca, maskSpca, phiS);
 
-  vector<unsigned int> idxSValid = extractSamples(S, maskSpca);
+  vector<unsigned int> idxSValid = extractSamples(S, maskSpca, _pcaSearchRange/2);
   // -------------------------------------------
 
 
@@ -316,7 +264,6 @@ obvious::Matrix RandomNormalMatching::match(const obvious::Matrix* M,
 
 
   // Determine frustum, i.e., direction of leftmost and rightmost model point
-  double thetaMin = -((double)pointsInM-1.0)/2.0*resolution;                          // theoretical bounding
   double thetaBoundMin = atan2((*M)(idxMValid.front(),1), (*M)(idxMValid.front(),0)); // real bounding
   double thetaBoundMax = atan2((*M)(idxMValid.back(),1),  (*M)(idxMValid.back(),0));  // real bounding
 
@@ -561,14 +508,6 @@ obvious::Matrix RandomNormalMatching::match(const obvious::Matrix* M,
   delete Control;
 
   return TBest;
-}
-
-void RandomNormalMatching::serializeTrace(const char* folder)
-{
-  if(_trace)
-    _trace->serialize(folder);
-  else
-    LOGMSG(DBG_ERROR, "Trace not activated");
 }
 
 }

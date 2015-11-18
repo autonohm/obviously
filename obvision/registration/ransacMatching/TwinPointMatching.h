@@ -1,9 +1,8 @@
-#ifndef RANSACMATCHING_H_
-#define RANSACMATCHING_H_
+#ifndef TWINPOINTMATCHING_H_
+#define TWINPOINTMATCHING_H_
 
 #include <flann/flann.hpp>
-#include "obcore/math/linalg/linalg.h"
-#include "obvision/registration/Trace.h"
+#include "obvision/registration/ransacMatching/RandomMatching.h"
 #include "obvision/registration/icp/PointToLineEstimator2D.h"
 #include "omp.h"
 
@@ -11,11 +10,11 @@ namespace obvious
 {
 
 /**
- * @class RansacMatching
- * @brief Matching algorithm with RANSAC scheme
+ * @class TwinPointMatching
+ * @brief Matching algorithm with RANSAC scheme based on two randomly selected point pairs
  * @author Stefan May
  **/
-class RansacMatching
+class TwinPointMatching : public RandomMatching
 {
 public:
   /**
@@ -25,22 +24,12 @@ public:
    * @param phiMax maximum rotation
    * @param sizeControlSet approximate set of control set
    */
-  RansacMatching(unsigned int trials = 50, double epsThresh = 0.15, unsigned int sizeControlSet = 180);
+  TwinPointMatching(unsigned int trials = 50, double epsThresh = 0.15, unsigned int sizeControlSet = 180);
 
   /**
    * Destructor
    */
-  virtual ~RansacMatching();
-
-  /**
-   * Activate internal trace writing. While the method iterate is executed, all states are traced.
-   */
-  void activateTrace();
-
-  /**
-   * Deactivate internal trace writing.
-   */
-  void deactivateTrace();
+  virtual ~TwinPointMatching();
 
   /**
    * Matching method
@@ -63,14 +52,8 @@ public:
 
 private:
 
-  // extract valid indices from matrix giving a validity mask
-  vector<unsigned int> extractValidIndices(const obvious::Matrix* M, const bool* mask);
-
   // init kd-tree for fast NN search in model
   void initKDTree(const obvious::Matrix* M, vector<unsigned int> valid);
-
-  // pick control set for RANSAC in-/outlier detection
-  obvious::Matrix* pickControlSet(const obvious::Matrix* M, vector<unsigned int> idxValid, vector<unsigned int> &idxControl);
 
   // create look-up table for point to point intra-distance of a point set
   double** createLutIntraDistance(const obvious::Matrix* M, const bool* mask, const int maxDist);
@@ -87,17 +70,12 @@ private:
   // number of trials
   unsigned int _trials;
 
-  // approximate control set
-  unsigned int _sizeControlSet;
-
   // tree for accelerating NN search
   flann::Index<flann::L2<double> >* _index;
   flann::Matrix<double>* _model;
 
-  // Trace module
-  Trace* _trace;
 };
 
 }
 
-#endif /* RANSACMATCHING_H_ */
+#endif /* TWINPOINTMATCHING_H_ */
