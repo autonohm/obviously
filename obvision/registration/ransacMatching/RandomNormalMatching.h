@@ -54,15 +54,6 @@ public:
 
 private:
 
-  // Calculate normals of point set
-  void calcNormals(const Matrix* M, Matrix* N, const bool* maskIn, bool* maskOut);
-
-  // Calculate angle of normals
-  void calcPhi(const Matrix* N, const bool* mask, double* phi);
-
-  // Subsample mask for better performance
-  void subsampleMask(bool* mask, unsigned int size, double probability);
-
   // init kd-tree for fast NN search in model
   void initKDTree(const obvious::Matrix* M, vector<unsigned int> valid);
 
@@ -82,8 +73,6 @@ private:
   // Number of samples investigated for PCA in local neighborhood
   int _pcaSearchRange;
 
-  // Min number of valid samples PCA
-  unsigned int _pcaMinSamples;
 };
 
 }

@@ -30,7 +30,6 @@ TwinPointMatching::~TwinPointMatching()
   }
 }
 
-
 void TwinPointMatching::initKDTree(const obvious::Matrix* M, vector<unsigned int> valid)
 {
   // Build FLANN tree for fast access to nearest neighbors

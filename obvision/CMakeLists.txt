@@ -35,6 +35,7 @@ add_library(obvision STATIC
 	registration/ransacMatching/RandomMatching.cpp
 	registration/ransacMatching/TwinPointMatching.cpp
 	registration/ransacMatching/RandomNormalMatching.cpp
+	registration/ransacMatching/PDFMatching.cpp
 	registration/Trace.cpp
 	normals/NormalsEstimator.cpp
 	mesh/TriangleMesh.cpp

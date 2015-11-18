@@ -29,6 +29,12 @@ protected:
   // pick control set for RANSAC in-/outlier detection
   obvious::Matrix* pickControlSet(const obvious::Matrix* M, std::vector<unsigned int> idxValid, std::vector<unsigned int> &idxControl);
 
+  void calcNormals(const Matrix* M, Matrix* N, const bool* maskIn, bool* maskOut, int searchRadius);
+
+  void calcPhi(const Matrix* N,  const bool* mask, double* phi);
+
+  void subsampleMask(bool* mask, unsigned int size, double probability);
+
   unsigned int _sizeControlSet;
 
   // Trace module
