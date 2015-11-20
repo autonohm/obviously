@@ -1,8 +1,7 @@
 #include "PDFMatching.h"
-#include "obcore/base/Logger.h"
-#include "obcore/math/mathbase.h"
-#include <omp.h>
-#include <cmath>
+
+#define MATCH_SCENE_ON_MODEL 1
+#define STRUCTAPPROACH 0
 
 namespace obvious
 {

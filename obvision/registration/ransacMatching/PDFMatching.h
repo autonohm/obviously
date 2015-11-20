@@ -2,6 +2,10 @@
 #define _PDFMATCHING_H_
 
 #include <math.h>
+#include "obcore/base/Logger.h"
+#include "obcore/math/mathbase.h"
+#include <omp.h>
+#include <cmath>
 
 #include "obvision/registration/ransacMatching/RandomMatching.h"
 
