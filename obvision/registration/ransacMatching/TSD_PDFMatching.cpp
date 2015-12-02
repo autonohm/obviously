@@ -274,38 +274,41 @@ obvious::Matrix TSD_PDFMatching::match(
           //    distArray.push_back( sqrt( pow(((*M)(idxMValid[i], 0)), 2) + pow(((*M)(idxMValid[i],1)), 2) ) );// store distances to angles
 
 
+          //---------------------------------------------------------------------
 
-          obvious::Matrix pointInSensor(3,1);
-          pointInSensor(0,0) = (double) ( (*M)(idxMValid[10], 0) );
-          pointInSensor(1,0) = (double) ( (*M)(idxMValid[10], 1) );
-          pointInSensor(2,0) = 1.0;
+//          obvious::Matrix pointInSensor(3,1);
+//          pointInSensor(0,0) = (double) ( (*M)(idxMValid[10], 0) );
+//          pointInSensor(1,0) = (double) ( (*M)(idxMValid[10], 1) );
+//          pointInSensor(2,0) = 1.0;
+//
+//          obvious::Matrix pointInMap(sensorTrans * pointInSensor);
+//
+//          obfloat coord[2];
+//          coord[0] = pointInMap(0,0);
+//          coord[1] = pointInMap(1,0);
+//
+//          obvious::Matrix tmp(3,1);
+//          tmp(0,0) = 0;
+//          tmp(1,0) = 0;
+//          tmp(2,0) = 1;
+//
+//          obvious::Matrix pa(sensorTrans * tmp);
+//
+//          double p1[2];
+//          p1[0] = pa(0,0);
+//          p1[1] = pa(1,0);
+//          double p2[2];
+//          p2[0] = pointInMap(0,0);
+//          p2[1] = pointInMap(1,0);
+//          double window = 0.2;
+//          double resolution = 10;
+//
+//          if(trial == 0 && i == iMin)
+//          analyzeTSD(p1, p2, window, resolution);
 
-          obvious::Matrix pointInMap(sensorTrans * pointInSensor);
 
-          obfloat coord[2];
-          coord[0] = pointInMap(0,0);
-          coord[1] = pointInMap(1,0);
+          //---------------------------------------------------------------------
 
-          obvious::Matrix tmp(3,1);
-          tmp(0,0) = 0;
-          tmp(1,0) = 0;
-          tmp(2,0) = 1;
-
-          obvious::Matrix pa(sensorTrans * tmp);
-
-          double p1[2];
-          p1[0] = pa(0,0);
-          p1[1] = pa(1,0);
-          double p2[2];
-          p2[0] = pointInMap(0,0);
-          p2[1] = pointInMap(1,0);
-          double window = 0.2;
-          double resolution = 10;
-
-          if(trial == 0 && i == iMin)
-          analyzeTSD(p1, p2, window, resolution);
-
-    //interpolateBilinear(obfloat coord[2], obfloat* tsd) ''
 
           //          if (_trace) {
           //            //trace is only possible for single threaded execution
@@ -375,31 +378,80 @@ obvious::Matrix TSD_PDFMatching::match(
                 double distance = sqrt(pow(((*M)(idxMValid[j], 0)), 2) + pow(((*M)(idxMValid[j], 1)), 2));
 #endif
 
-                double minAngleDiff = 2 * M_PI;
-                int idxMinAngleDiff = 0;
-                double diff;
+//                double minAngleDiff = 2 * M_PI;
+//                int idxMinAngleDiff = 0;
+//                double diff;
+//
+//                // find right model point to actual control point using angle difference
+//                for(unsigned int k = 0; k < anglesArray.size(); k++)
+//                {
+//                  diff = abs(angle - anglesArray[k]);
+//                  if(diff < minAngleDiff)
+//                  {  // find min angle
+//                    minAngleDiff = diff;
+//                    idxMinAngleDiff = k;
+//                  }
+//                }
 
-                // find right model point to actual control point using angle difference
-                for(unsigned int k = 0; k < anglesArray.size(); k++)
-                {
-                  diff = abs(angle - anglesArray[k]);
-                  if(diff < minAngleDiff)
-                  {  // find min angle
-                    minAngleDiff = diff;
-                    idxMinAngleDiff = k;
-                  }
-                }
+//                if(minAngleDiff < (M_PI / 180.0) * _maxAngleDiff)
+//                {
+//                  fieldOfViewCount++;
+//                }
 
-                if(minAngleDiff < (M_PI / 180.0) * _maxAngleDiff)
-                {
-                  fieldOfViewCount++;
-                }
+                obvious::Matrix pointInSensor(3, 1);
+                pointInSensor(0, 0) = (double)((STemp)(0, s));
+                pointInSensor(1, 0) = (double)((STemp)(1, s));
+                pointInSensor(2, 0) = 1.0;
 
-                //cout <<  "min angle " << minAngleDiff << endl;
+                obvious::Matrix pointInMap(sensorTrans * pointInSensor);
+
+                obfloat coord[2];
+                coord[0] = pointInMap(0, 0);
+                coord[1] = pointInMap(1, 0);
+
+
+
+                //obvious::Matrix tmp(3, 1);
+                //          tmp(0,0) = 0;
+                //          tmp(1,0) = 0;
+                //          tmp(2,0) = 1;
+                //
+                //          obvious::Matrix pa(sensorTrans * tmp);
+                //
+                //          double p1[2];
+                //          p1[0] = pa(0,0);
+                //          p1[1] = pa(1,0);
+                //          double p2[2];
+                //          p2[0] = pointInMap(0,0);
+                //          p2[1] = pointInMap(1,0);
+                //          double window = 0.2;
+                //          double resolution = 10;
+                //
+                //          if(trial == 0 && i == iMin)
+                //          analyzeTSD(p1, p2, window, resolution);
 
                 double probOfActualScan;
-                probOfActualScan = probabilityOfTwoSingleScans(distArray[idxMinAngleDiff], distance, minAngleDiff);
+                obfloat tsd;
+                _grid.interpolateBilinear(coord, &tsd);
+                probOfActualScan = (double)tsd;
+
+                //cout << probOfActualScan << ";" << coord[0] << ";" << coord[1] << endl;
+
+
+                if(isnan(probOfActualScan))
+                  probOfActualScan = 1.0;
+
+
+
+                probOfActualScan = 1.0-fabs(probOfActualScan);
+
+                probOfActualScan = 0.5 + 0.5*probOfActualScan;
+
+
+//                probOfActualScan = probabilityOfTwoSingleScans(distArray[idxMinAngleDiff], distance, minAngleDiff);
                 probOfAllScans.push_back(probOfActualScan);
+
+
 
                 //cout << "angle model|scene: " << anglesArray[idxMinAngleDiff] * 180.0 / M_PI << " | " <<  angle * 180.0 / M_PI  <<
                 //    "; dist model|scene: " << distArray[idxMinAngleDiff] << " | " << distance << " prob: "<< probOfActualScan << endl;
@@ -424,7 +476,7 @@ obvious::Matrix TSD_PDFMatching::match(
             }
 
             // update T and bestProb if better than last iteration
-            if((probOfActualMeasurement > bestProb) && (fieldOfViewCount > pointsInControl * _percentagePointsInC))
+            if(probOfActualMeasurement > bestProb)
             {
               TBest = T;
               bestProb = probOfActualMeasurement;
