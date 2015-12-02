@@ -66,6 +66,7 @@ public:
               const double transMax = 1.5,
               const double resolution = 0.0);
 
+
   /**
   * get probability of two single rangefinder scans (of two rays)
   * @param m distance of model point
@@ -110,6 +111,9 @@ private:
 
   // tsd grid representation
   TsdGrid& _grid;
+
+  //debug
+  void analyzeTSD(double p1[2], double p2[2], double window, double resolution);
 
 };
 

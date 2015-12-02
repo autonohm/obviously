@@ -286,9 +286,24 @@ obvious::Matrix TSD_PDFMatching::match(
           coord[0] = pointInMap(0,0);
           coord[1] = pointInMap(1,0);
 
-          obfloat tsd;
-          _grid.interpolateBilinear(coord, &tsd);
-          cout << tsd << endl;
+          obvious::Matrix tmp(3,1);
+          tmp(0,0) = 0;
+          tmp(1,0) = 0;
+          tmp(2,0) = 1;
+
+          obvious::Matrix pa(sensorTrans * tmp);
+
+          double p1[2];
+          p1[0] = pa(0,0);
+          p1[1] = pa(1,0);
+          double p2[2];
+          p2[0] = pointInMap(0,0);
+          p2[1] = pointInMap(1,0);
+          double window = 0.2;
+          double resolution = 10;
+
+          if(trial == 0 && i == iMin)
+          analyzeTSD(p1, p2, window, resolution);
 
     //interpolateBilinear(obfloat coord[2], obfloat* tsd) ''
 
@@ -468,6 +483,59 @@ obvious::Matrix TSD_PDFMatching::match(
   delete Control;
 
   return TBest;
+}
+
+
+void TSD_PDFMatching::analyzeTSD(double p1[2], double p2[2], double window, double resolution)
+{
+  obvious::Matrix v(1,2);
+  obvious::Matrix pa(1,2);
+  double lengthV;
+
+  pa(0,0) = p1[0];
+  pa(0,1) = p1[1];
+
+  v(0,0) = p2[0] - p1[0];
+  v(0,1) = p2[1] - p1[1];
+
+  lengthV = sqrt(pow(v(0,0), 2) + pow(v(0,1), 2));
+
+  // normalize v
+  v(0,0) = v(0,0)/lengthV;
+  v(0,1) = v(0,1)/lengthV;
+
+  double increment;
+  increment = 2.0 / resolution;
+
+  for(double x = -1.0; x <= +1.0; x += increment)
+  {
+    obvious::Matrix pos(1,2);
+    obvious::Matrix pb(1,2);
+    obvious::Matrix pc(1,2);
+
+    pb(0,0) = v(0,0) * lengthV;
+    pb(0,1) = v(0,1) * lengthV;
+
+    pc(0,0) = v(0,0) * window * x;
+    pc(0,1) = v(0,1) * window * x;
+
+    pos(0,0) = pa(0,0) + pb(0,0) + pc(0,0);
+    pos(0,1) = pa(0,1) + pb(0,1) + pc(0,1);
+
+
+    obfloat coord[2];
+    coord[0] = pos(0,0);
+    coord[1] = pos(0,1);
+
+    obfloat tsd;
+    _grid.interpolateBilinear(coord, &tsd);
+    cout << ";" << coord[0] << "|" << coord[1] << "|" << tsd << endl;
+  }
+
+  cout << ";" << p2[0] << ";" << p2[1] << endl;
+
+  cout << ";" << "+++" << endl;
+
 }
 
 double TSD_PDFMatching::probabilityOfTwoSingleScans(double m, double s, double phiDiff)
