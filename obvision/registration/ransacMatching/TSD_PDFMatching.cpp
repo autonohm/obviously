@@ -1,6 +1,5 @@
 #include "TSD_PDFMatching.h"
 
-#define MATCH_SCENE_ON_MODEL 1
 #define STRUCTAPPROACH 0
 
 namespace obvious
@@ -53,7 +52,10 @@ obvious::Matrix TSD_PDFMatching::match(
     const double transMax,
     const double resolution)
 {
-
+  double probOfActualScan;
+  obfloat tsd;
+  obfloat coord[2];
+  obvious::Matrix pointInSensor(3, 1);
   obvious::Matrix TBest(3, 3);
   TBest.setIdentity();
 
@@ -199,21 +201,7 @@ obvious::Matrix TSD_PDFMatching::match(
   bool* maskControl = new bool[pointsInC];
   double* thetaControl = new double[pointsInC];
 
-  // ToDo: create angle array from model
-
-  std::vector<double> anglesArray;
-  std::vector<double> distArray;
-
-#if MATCH_SCENE_ON_MODEL
-  for(unsigned int i = 0; i < idxMValid.size(); i++)
-  {
-    anglesArray.push_back(atan2((*M)(idxMValid[i], 1), (*M)(idxMValid[i], 0)));  // store all available model angles
-    distArray.push_back( sqrt( pow(((*M)(idxMValid[i], 0)), 2) + pow(((*M)(idxMValid[i],1)), 2) ) );// store distances to angles
-  }
-#else
-
-#endif
-
+//#pragma omp parallel for
   for(unsigned int trial = 0; trial < trials; trial++)
   {
 
@@ -309,154 +297,41 @@ obvious::Matrix TSD_PDFMatching::match(
 
           //---------------------------------------------------------------------
 
-
-          //          if (_trace) {
-          //            //trace is only possible for single threaded execution
-          //            vector<unsigned int> idxM;
-          //            idxM.push_back(idx);
-          //            vector<unsigned int> idxS;
-          //            idxS.push_back(i);
-          //            _trace->addAssignment(M, idxM, S, idxS, &STemp, 0,
-          //                trial);
-          //          }
-
-#if MATCH_SCENE_ON_MODEL
-
-#else
-          anglesArray.clear();
-          distArray.clear();
-          for(unsigned int s = 0; s < pointsInControl; s++)
-          {
-            anglesArray.push_back(atan2((STemp)(1, s), (STemp)(0, s)));  // store all available model angles
-            distArray.push_back(sqrt(pow(((STemp)(0, s)), 2) + pow(((STemp)(1, s)), 2)));  // store distances to angles
-          }
-#endif
-
-          // Determine number of control points in field of view
-          unsigned int maxCntMatch = 0;
-          for(unsigned int j = 0; j < pointsInControl; j++)
-          {
-            thetaControl[j] = atan2(STemp(1, j), STemp(0, j));
-            if(thetaControl[j] > thetaBoundMax || thetaControl[j] < thetaBoundMin)
-            {
-              maskControl[j] = false;
-            }
-            else
-            {
-              maskControl[j] = true;
-              maxCntMatch++;
-            }
-          }
-
           std::vector<double> probOfAllScans;  // vector for probabilities of single scans in one measurement
-          int fieldOfViewCount = 0;
-          // scan = a ray of a measurement
-          // measurement = one range finder measurement (e.g. 180 scans)
-
-          if(1)
-          {            //maxCntMatch > cntMatchThresh){ // if enough values in field of view
-
-#if MATCH_SCENE_ON_MODEL
             // Rating dan_tob
             for (unsigned int s = 0; s < pointsInControl; s++)
             {  // whole control set
-              if (1)
-              {  //maskControl[s]) { // if point is in field of view
 
-                // get angle and distance of control point
-                double angle = atan2((STemp)(1, s), (STemp)(0, s));
-                double distance = sqrt( pow(((STemp)(0, s)), 2) + pow(((STemp)(1, s)), 2) );
-#else
-            // Rating dan_tob
-            for(unsigned int j = 0; j < idxMValid.size(); j++)
-            {  // whole control set
-              if(1)
-              {  //maskControl[s]) { // if point is in field of view
+				pointInSensor(0, 0) = (double)((STemp)(0, s));
+				pointInSensor(1, 0) = (double)((STemp)(1, s));
+				pointInSensor(2, 0) = 1.0;
 
-                // get angle and distance of control point
-                double angle = atan2((*M)(idxMValid[j], 1), (*M)(idxMValid[j], 0));
-                double distance = sqrt(pow(((*M)(idxMValid[j], 0)), 2) + pow(((*M)(idxMValid[j], 1)), 2));
-#endif
-
-//                double minAngleDiff = 2 * M_PI;
-//                int idxMinAngleDiff = 0;
-//                double diff;
-//
-//                // find right model point to actual control point using angle difference
-//                for(unsigned int k = 0; k < anglesArray.size(); k++)
-//                {
-//                  diff = abs(angle - anglesArray[k]);
-//                  if(diff < minAngleDiff)
-//                  {  // find min angle
-//                    minAngleDiff = diff;
-//                    idxMinAngleDiff = k;
-//                  }
-//                }
-
-//                if(minAngleDiff < (M_PI / 180.0) * _maxAngleDiff)
-//                {
-//                  fieldOfViewCount++;
-//                }
-
-                obvious::Matrix pointInSensor(3, 1);
-                pointInSensor(0, 0) = (double)((STemp)(0, s));
-                pointInSensor(1, 0) = (double)((STemp)(1, s));
-                pointInSensor(2, 0) = 1.0;
-
-                obvious::Matrix pointInMap(sensorTrans * pointInSensor);
-
-                obfloat coord[2];
-                coord[0] = pointInMap(0, 0);
-                coord[1] = pointInMap(1, 0);
+				obvious::Matrix pointInMap(sensorTrans * pointInSensor);
 
 
-
-                //obvious::Matrix tmp(3, 1);
-                //          tmp(0,0) = 0;
-                //          tmp(1,0) = 0;
-                //          tmp(2,0) = 1;
-                //
-                //          obvious::Matrix pa(sensorTrans * tmp);
-                //
-                //          double p1[2];
-                //          p1[0] = pa(0,0);
-                //          p1[1] = pa(1,0);
-                //          double p2[2];
-                //          p2[0] = pointInMap(0,0);
-                //          p2[1] = pointInMap(1,0);
-                //          double window = 0.2;
-                //          double resolution = 10;
-                //
-                //          if(trial == 0 && i == iMin)
-                //          analyzeTSD(p1, p2, window, resolution);
-
-                double probOfActualScan;
-                obfloat tsd;
-                _grid.interpolateBilinear(coord, &tsd);
-                probOfActualScan = (double)tsd;
-
-                //cout << probOfActualScan << ";" << coord[0] << ";" << coord[1] << endl;
+				coord[0] = pointInMap(0, 0);
+				coord[1] = pointInMap(1, 0);
 
 
-                if(isnan(probOfActualScan))
-                  probOfActualScan = 1.0;
+				if( !_grid.interpolateBilinear(coord, &tsd) ){
+					probOfActualScan = (double)tsd;
+					if(!isfinite(probOfActualScan)){
+						probOfActualScan = 1.0;
+					}
+				} else{
+					probOfActualScan = 1.0;
+				}
 
+				probOfActualScan = 1.0-fabs(probOfActualScan);
 
+				probOfActualScan = 0.05 + 0.95*probOfActualScan;
 
-                probOfActualScan = 1.0-fabs(probOfActualScan);
+				probOfAllScans.push_back(probOfActualScan);
 
-                probOfActualScan = 0.5 + 0.5*probOfActualScan;
+				// debug
+				if(probOfActualScan > 1.0 || probOfActualScan <= 0.0)
+					cout << "probOfActualScan > 1.0 || probOfActualScan <= 0.0" << endl;
 
-
-//                probOfActualScan = probabilityOfTwoSingleScans(distArray[idxMinAngleDiff], distance, minAngleDiff);
-                probOfAllScans.push_back(probOfActualScan);
-
-
-
-                //cout << "angle model|scene: " << anglesArray[idxMinAngleDiff] * 180.0 / M_PI << " | " <<  angle * 180.0 / M_PI  <<
-                //    "; dist model|scene: " << distArray[idxMinAngleDiff] << " | " << distance << " prob: "<< probOfActualScan << endl;
-
-              }                      // if point is in field of view
             }  // whole control set
 
             // multiply all probabilities for probability of whole scan
@@ -475,12 +350,12 @@ obvious::Matrix TSD_PDFMatching::match(
               }
             }
 
+
             // update T and bestProb if better than last iteration
             if(probOfActualMeasurement > bestProb)
             {
               TBest = T;
               bestProb = probOfActualMeasurement;
-              //cout << "new errSum: " << probOfActualScan << " trial: " << trial << endl;
 
               if(_trace)
               {
@@ -489,7 +364,7 @@ obvious::Matrix TSD_PDFMatching::match(
                 idxM.push_back(idx);
                 vector<unsigned int> idxS;
                 idxS.push_back(i);
-                _trace->addAssignment(M, idxM, S, idxS, &STemp, 10e100 * probOfActualMeasurement, trial);
+                _trace->addAssignment(M, idxM, S, idxS, &STemp, 10 * probOfActualMeasurement, trial);
               }
             }
 
@@ -514,7 +389,6 @@ obvious::Matrix TSD_PDFMatching::match(
                              //            _trace->addAssignment(M, idxM, S, idxS, &STemp, bestProb * 10e100,
                              //                trial);
                              //          }
-        }  // if maskS
       }  // STRUCTAPPROACH ???
     }  // for i
   }  // for trials
