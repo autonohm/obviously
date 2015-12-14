@@ -66,15 +66,6 @@ public:
               const double transMax = 1.5,
               const double resolution = 0.0);
 
-
-  /**
-  * get probability of two single rangefinder scans (of two rays)
-  * @param m distance of model point
-  * @param s distance of scene/control point
-  * @param phiDiff difference of the two angles
-  */
-  double probabilityOfTwoSingleScans(double m, double s, double phiDiff);
-
 private:
 
   // probability model variables
@@ -112,7 +103,8 @@ private:
   // tsd grid representation
   TsdGrid& _grid;
 
-  //debug
+  // (debug) function to analyse TSD-Grid values in a line from p1 to p2
+  // todo: remove debug function
   void analyzeTSD(double p1[2], double p2[2], double window, double resolution);
 
 };

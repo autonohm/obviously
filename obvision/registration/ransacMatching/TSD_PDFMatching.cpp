@@ -199,7 +199,6 @@ obvious::Matrix TSD_PDFMatching::match(
   vector<unsigned int> idxTrials = idxMValid;
 
   bool* maskControl = new bool[pointsInC];
-  double* thetaControl = new double[pointsInC];
 
 //#pragma omp parallel for
   for(unsigned int trial = 0; trial < trials; trial++)
@@ -255,140 +254,56 @@ obvious::Matrix TSD_PDFMatching::match(
           obvious::Matrix STemp = T * (*Control);
           unsigned int pointsInControl = STemp.getCols();
 
-          // at this position we have STemp -> transformed scene with following notation
-          //    atan2(STemp(1, j), STemp(0, j));
-          // and we have M -> raycast from the last position with following notation
-          //    anglesArray.push_back(atan2((*M)(idxMValid[i], 1), (*M)(idxMValid[i], 0)));  // store all available model angles
-          //    distArray.push_back( sqrt( pow(((*M)(idxMValid[i], 0)), 2) + pow(((*M)(idxMValid[i],1)), 2) ) );// store distances to angles
-
-
-          //---------------------------------------------------------------------
-
-//          obvious::Matrix pointInSensor(3,1);
-//          pointInSensor(0,0) = (double) ( (*M)(idxMValid[10], 0) );
-//          pointInSensor(1,0) = (double) ( (*M)(idxMValid[10], 1) );
-//          pointInSensor(2,0) = 1.0;
-//
-//          obvious::Matrix pointInMap(sensorTrans * pointInSensor);
-//
-//          obfloat coord[2];
-//          coord[0] = pointInMap(0,0);
-//          coord[1] = pointInMap(1,0);
-//
-//          obvious::Matrix tmp(3,1);
-//          tmp(0,0) = 0;
-//          tmp(1,0) = 0;
-//          tmp(2,0) = 1;
-//
-//          obvious::Matrix pa(sensorTrans * tmp);
-//
-//          double p1[2];
-//          p1[0] = pa(0,0);
-//          p1[1] = pa(1,0);
-//          double p2[2];
-//          p2[0] = pointInMap(0,0);
-//          p2[1] = pointInMap(1,0);
-//          double window = 0.2;
-//          double resolution = 10;
-//
-//          if(trial == 0 && i == iMin)
-//          analyzeTSD(p1, p2, window, resolution);
-
-
-          //---------------------------------------------------------------------
-
+          // Rating Daniel Ammon & Tobias Fink
           std::vector<double> probOfAllScans;  // vector for probabilities of single scans in one measurement
-            // Rating dan_tob
-            for (unsigned int s = 0; s < pointsInControl; s++)
-            {  // whole control set
+          double probOfActualMeasurement = 1;
 
-				pointInSensor(0, 0) = (double)((STemp)(0, s));
-				pointInSensor(1, 0) = (double)((STemp)(1, s));
-				pointInSensor(2, 0) = 1.0;
+          for (unsigned int s = 0; s < pointsInControl; s++)	// whole control set
+          {
+            pointInSensor(0, 0) = (double)((STemp)(0, s));
+            pointInSensor(1, 0) = (double)((STemp)(1, s));
+            pointInSensor(2, 0) = 1.0;
 
-				obvious::Matrix pointInMap(sensorTrans * pointInSensor);
+            obvious::Matrix pointInMap(sensorTrans * pointInSensor); // transform from sensor in map system
 
+            coord[0] = pointInMap(0, 0);
+            coord[1] = pointInMap(1, 0);
 
-				coord[0] = pointInMap(0, 0);
-				coord[1] = pointInMap(1, 0);
-
-
-				if( !_grid.interpolateBilinear(coord, &tsd) ){
-					probOfActualScan = (double)tsd;
-					if(!isfinite(probOfActualScan)){
-						probOfActualScan = 1.0;
-					}
-				} else{
-					probOfActualScan = 1.0;
-				}
-
-				probOfActualScan = 1.0-fabs(probOfActualScan);
-
-				probOfActualScan = 0.05 + 0.95*probOfActualScan;
-
-				probOfAllScans.push_back(probOfActualScan);
-
-				// debug
-				if(probOfActualScan > 1.0 || probOfActualScan <= 0.0)
-					cout << "probOfActualScan > 1.0 || probOfActualScan <= 0.0" << endl;
-
-            }  // whole control set
-
-            // multiply all probabilities for probability of whole scan
-            double probOfActualMeasurement = 1;
-
-            if(probOfAllScans.size() == 0)
+            if( !_grid.interpolateBilinear(coord, &tsd) )
             {
-              probOfActualMeasurement = 0;
-              cout << "probOfAllScans.size() == 0" << endl;
+              probOfActualScan = (double)tsd;
             }
             else
             {
-              for(unsigned int j = 0; j < probOfAllScans.size(); j++)
-              {
-                probOfActualMeasurement *= probOfAllScans[j];
-              }
+              probOfActualScan = 1.0;
             }
 
+            probOfActualScan = 1.0-fabs(probOfActualScan);	// rating function
 
-            // update T and bestProb if better than last iteration
-            if(probOfActualMeasurement > bestProb)
+            // todo: magic numbers 0.05 + 0.95
+            probOfActualScan = 0.05 + 0.95*probOfActualScan;  // random probability --> avoid prob of 0
+
+            probOfActualMeasurement *= probOfActualScan; // multiply all probabilities for probability of whole scan
+
+          }  // whole control set
+
+          // update T and bestProb if better than last iteration
+          if(probOfActualMeasurement > bestProb)
+          {
+            TBest = T;
+            bestProb = probOfActualMeasurement;
+
+            if(_trace)
             {
-              TBest = T;
-              bestProb = probOfActualMeasurement;
-
-              if(_trace)
-              {
-                //trace is only possible for single threaded execution
-                vector<unsigned int> idxM;
-                idxM.push_back(idx);
-                vector<unsigned int> idxS;
-                idxS.push_back(i);
-                _trace->addAssignment(M, idxM, S, idxS, &STemp, 10 * probOfActualMeasurement, trial);
-              }
+              //trace is only possible for single threaded execution
+              vector<unsigned int> idxM;
+              idxM.push_back(idx);
+              vector<unsigned int> idxS;
+              idxS.push_back(i);
+              _trace->addAssignment(M, idxM, S, idxS, &STemp, 10 * probOfActualMeasurement, trial);
             }
-
-            //            if (_trace) {
-            //              //trace is only possible for single threaded execution
-            //              vector<unsigned int> idxM;
-            //              idxM.push_back(idx);
-            //              vector<unsigned int> idxS;
-            //              idxS.push_back(i);
-            //              _trace->addAssignment(M, idxM, S, idxS, &STemp, 10e100 * probOfActualScan,
-            //                  trial);
-            //            }
-
-          }                  // if cntMatch
-
-                             //          if (_trace) {
-                             //            //trace is only possible for single threaded execution
-                             //            vector<unsigned int> idxM;
-                             //            idxM.push_back(idx);
-                             //            vector<unsigned int> idxS;
-                             //            idxS.push_back(i);
-                             //            _trace->addAssignment(M, idxM, S, idxS, &STemp, bestProb * 10e100,
-                             //                trial);
-                             //          }
+          }
+        } // if cntMatch
       }  // STRUCTAPPROACH ???
     }  // for i
   }  // for trials
@@ -461,62 +376,6 @@ void TSD_PDFMatching::analyzeTSD(double p1[2], double p2[2], double window, doub
   cout << ";" << p2[0] << ";" << p2[1] << endl;
 
   cout << ";" << "+++" << endl;
-
-}
-
-double TSD_PDFMatching::probabilityOfTwoSingleScans(double m, double s, double phiDiff)
-{
-  // probability model vgl. Book: Probablistic Robotics
-
-  double phit = 0;
-  double pphi = 0;
-  double pshort = 0;
-  double pmax = 0;
-  double prand = 0;
-
-  // hit
-  if(s < _rangemax)
-  {
-    phit = (1) / (sqrt(2 * M_PI * pow(_sighit, 2))) * pow(M_E, ((-0.5 * pow((m - s), 2)) / (pow(_sighit, 2))));
-  }
-
-  // phi
-  pphi = (1) / (sqrt(2 * M_PI * pow(_sigphi, 2))) * pow(M_E, ((-0.5 * pow(s, 2)) / (pow(_sigphi, 2))));
-
-  // short
-  if(s < m)
-  {
-    double n = (1) / (1 - pow(M_E, (-_lamshort * m)));
-    pshort = n * _lamshort * pow(M_E, (-_lamshort * s));
-  }
-
-  // max
-  if(s >= _rangemax)
-  {
-    pmax = 1;
-  }
-
-  // rand
-  if(s < _rangemax)
-  {
-    prand = 1 / _rangemax;
-  }
-
-  double ptemp = _zhit * phit + _zshort * pshort + _zmax * pmax + _zrand * prand + _zphi * pphi;
-
-  if(ptemp == 0)
-    cout << "ptemp = 0" << endl;
-
-  //  ptemp = ptemp * (1-_zphi) + _zphi * _pphi;
-  //
-  //  if (phiDiff > ( (M_PI / 180.0) * _maxAngleDiff) ){
-  //    return 1.0;
-  //    //return _maxAnglePenalty * ptemp;
-  //  } else {
-  //    return ptemp;
-  //  }
-
-  return ptemp;
 
 }
 
