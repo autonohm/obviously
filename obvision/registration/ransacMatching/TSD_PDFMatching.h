@@ -103,10 +103,6 @@ private:
   // tsd grid representation
   TsdGrid& _grid;
 
-  // (debug) function to analyse TSD-Grid values in a line from p1 to p2
-  // todo: remove debug function
-  void analyzeTSD(double p1[2], double p2[2], double window, double resolution);
-
 };
 
 } /* namespace obvious */

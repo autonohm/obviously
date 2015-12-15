@@ -82,7 +82,9 @@ private:
 
   double _rangemax;
   double _sigphi;
+  double _sigpphi; // factor for multiplication in probability function
   double _sighit;
+  double _sigphit; // factor for multiplication in probability function
   double _lamshort;
 
   double _maxAngleDiff;

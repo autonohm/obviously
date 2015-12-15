@@ -245,18 +245,10 @@ obvious::Matrix RandomNormalMatching::match(const obvious::Matrix* M,
 
       for(int i=iMin; i<iMax; i++)
       {
-#if STRUCTAPPROACH
-        if(samplesS[i].valid)
-#else
         if(maskSpca[i])
-#endif
         {
 
-#if STRUCTAPPROACH
-          double phi              = samplesM[idx].orientation - samplesS[i].orientation;
-#else
           double phi              = phiM[idx] - phiS[i];
-#endif
           if(phi>M_PI)       phi -= 2.0*M_PI;
           else if(phi<-M_PI) phi += 2.0*M_PI;
 

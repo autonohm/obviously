@@ -30,7 +30,9 @@ PDFMatching::PDFMatching(unsigned int trials, double epsThresh, unsigned int siz
 
   _rangemax = rangemax;
   _sighit = sighit;
+  _sigphit = 1.0 / (sqrt(2.0*M_PI) * _sighit);
   _sigphi = sigphi;  // additional parameter for phi error; not used at the moment
+  _sigpphi = 1.0 / (sqrt(2.0*M_PI) * _sigphi);
   _lamshort = lamshort;
 
   _maxAngleDiff = maxAngleDiff;
@@ -222,21 +224,16 @@ obvious::Matrix PDFMatching::match(const obvious::Matrix* M, const bool* maskM, 
     // rightmost scene point
     const int iMax = min(idx + span, pointsInS - _pcaSearchRange / 2);
 
+    const double angleThresh = (M_PI / 180.0) * _maxAngleDiff;
+
     for(int i = iMin; i < iMax; i++)
     {
 
-#if STRUCTAPPROACH
-      if(samplesS[i].valid)
-#else
       if(maskSpca[i])
-#endif
       {
 
-#if STRUCTAPPROACH
-        double phi = samplesM[idx].orientation - samplesS[i].orientation;
-#else
         double phi = phiM[idx] - phiS[i];
-#endif
+
         if(phi > M_PI)
           phi -= 2.0 * M_PI;
         else if(phi < -M_PI)
@@ -311,7 +308,7 @@ obvious::Matrix PDFMatching::match(const obvious::Matrix* M, const bool* maskM, 
               {  //maskControl[s]) { // if point is in field of view
 
                 // get angle and distance of control point
-                double angle = atan2((STemp)(1, s), (STemp)(0, s));
+                double angle    = atan2((STemp)(1, s), (STemp)(0, s));
                 double distance = sqrt( pow(((STemp)(0, s)), 2) + pow(((STemp)(1, s)), 2) );
 #else
             // Rating dan_tob
@@ -340,7 +337,7 @@ obvious::Matrix PDFMatching::match(const obvious::Matrix* M, const bool* maskM, 
                   }
                 }
 
-                if(minAngleDiff < (M_PI / 180.0) * _maxAngleDiff)
+                if(minAngleDiff < angleThresh)
                 {
                   fieldOfViewCount++;
                 }
@@ -435,48 +432,47 @@ obvious::Matrix PDFMatching::match(const obvious::Matrix* M, const bool* maskM, 
   return TBest;
 }
 
+#define SQRT2PI 2.5066
 double PDFMatching::probabilityOfTwoSingleScans(double m, double s, double phiDiff)
 {
   // probability model vgl. Book: Probablistic Robotics
 
-  double phit = 0;
-  double pphi = 0;
+  double phit   = 0;
+  double pphi   = 0;
   double pshort = 0;
-  double pmax = 0;
-  double prand = 0;
+  double pmax   = 0;
+  double prand  = 0;
 
   // hit
   if(s < _rangemax)
   {
-    phit = (1) / (sqrt(2 * M_PI * pow(_sighit, 2))) * pow(M_E, ((-0.5 * pow((m - s), 2)) / (pow(_sighit, 2))));
+    phit = _sigphit * pow(M_E, ((-0.5 * pow((m - s), 2)) / (_sighit * _sighit)));
   }
 
   // phi
-  pphi = (1) / (sqrt(2 * M_PI * pow(_sigphi, 2))) * pow(M_E, ((-0.5 * pow(s, 2)) / (pow(_sigphi, 2))));
+  pphi = _sigphi * pow(M_E, ((-0.5 * s*s) / (_sigphi * _sigphi)));
 
   // short
   if(s < m)
   {
-    double n = (1) / (1 - pow(M_E, (-_lamshort * m)));
-    pshort = n * _lamshort * pow(M_E, (-_lamshort * s));
+    double n = 1.0 / (1.0 - pow(M_E, (-_lamshort * m)));
+    pshort   = n * _lamshort * pow(M_E, (-_lamshort * s));
   }
 
   // max
   if(s >= _rangemax)
-  {
-    pmax = 1;
-  }
+    pmax = 1.0;
 
   // rand
   if(s < _rangemax)
-  {
-    prand = 1 / _rangemax;
-  }
+    prand = 1.0 / _rangemax;
 
   double ptemp = _zhit * phit + _zshort * pshort + _zmax * pmax + _zrand * prand + _zphi * pphi;
 
+#ifdef DEBUG
   if(ptemp == 0)
     cout << "ptemp = 0" << endl;
+#endif
 
   //  ptemp = ptemp * (1-_zphi) + _zphi * _pphi;
   //
