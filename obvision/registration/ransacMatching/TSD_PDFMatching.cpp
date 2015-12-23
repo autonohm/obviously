@@ -3,35 +3,50 @@
 namespace obvious
 {
 
-TSD_PDFMatching::TSD_PDFMatching(TsdGrid& grid, unsigned int trials, double epsThresh, unsigned int sizeControlSet, double zhit, double zphi, double zshort, double zmax, double zrand, double percentagePointsInC, double rangemax, double sigphi, double sighit, double lamshort, double maxAngleDiff, double maxAnglePenalty) :
-    RandomMatching(sizeControlSet), _grid(grid)
+TSD_PDFMatching::TSD_PDFMatching( TsdGrid& grid,
+                                  unsigned int trials,
+                                  double epsThresh,
+                                  unsigned int sizeControlSet,
+                                  double zhit,
+                                  double zphi,
+                                  double zshort,
+                                  double zmax,
+                                  double zrand,
+                                  double percentagePointsInC,
+                                  double rangemax,
+                                  double sigphi,
+                                  double sighit,
+                                  double lamshort,
+                                  double maxAngleDiff,
+                                  double maxAnglePenalty) : RandomMatching(sizeControlSet), _grid(grid)
 {
 
-  _scaleDistance = 1.0 / (epsThresh * epsThresh);
-  _scaleOrientation = 0.33;
+  _scaleDistance       = 1.0 / (epsThresh * epsThresh);
+  _scaleOrientation    = 0.33;
 
-  _trace = NULL;
-  _pcaSearchRange = 10;
+  _trace               = NULL;
+  _pcaSearchRange      = 10;
 
-  _trials = trials;
-  _sizeControlSet = sizeControlSet;
+  _trials              = trials;
+  _sizeControlSet      = sizeControlSet;
 
-  _percentagePointsInC = percentagePointsInC;  // how many percent of control set have to be in field of view
+  // percentage of control set that have to be in field of view
+  _percentagePointsInC = percentagePointsInC;
 
-  // probability parameters vgl. Book: Probabistic Robotics
-  _zhit = zhit;
-  _zmax = zmax;
-  _zshort = zshort;
-  _zrand = zrand;
-  _zphi = zphi;  // additional parameter for phi error; not used at the moment
+  // probability parameters, cf. Book: Probabilistic Robotics
+  _zhit                = zhit;
+  _zmax                = zmax;
+  _zshort              = zshort;
+  _zrand               = zrand;
+  _zphi                = zphi;    // additional parameter for phi error; not used at the moment
 
-  _rangemax = rangemax;
-  _sighit = sighit;
-  _sigphi = sigphi;  // additional parameter for phi error; not used at the moment
-  _lamshort = lamshort;
+  _rangemax            = rangemax;
+  _sighit              = sighit;
+  _sigphi              = sigphi;  // additional parameter for phi error; not used at the moment
+  _lamshort            = lamshort;
 
-  _maxAngleDiff = maxAngleDiff;
-  _maxAnglePenalty = maxAnglePenalty;
+  _maxAngleDiff        = maxAngleDiff;
+  _maxAnglePenalty     = maxAnglePenalty;
 }
 
 TSD_PDFMatching::~TSD_PDFMatching()
@@ -39,21 +54,16 @@ TSD_PDFMatching::~TSD_PDFMatching()
 
 }
 
-obvious::Matrix TSD_PDFMatching::match(
-    const obvious::Matrix sensorTrans,
-    const obvious::Matrix* M,
-    const bool* maskM,
-    const obvious::Matrix* NM,
-    const obvious::Matrix* S,
-    const bool* maskS,
-    double phiMax,
-    const double transMax,
-    const double resolution)
+obvious::Matrix TSD_PDFMatching::match( const obvious::Matrix TSensor,
+                                        const obvious::Matrix* M,
+                                        const bool* maskM,
+                                        const obvious::Matrix* NM,
+                                        const obvious::Matrix* S,
+                                        const bool* maskS,
+                                        double phiMax,
+                                        const double transMax,
+                                        const double resolution)
 {
-  double probOfActualScan;
-  obfloat tsd;
-  obfloat coord[2];
-  obvious::Matrix pointInSensor(3, 1);
   obvious::Matrix TBest(3, 3);
   TBest.setIdentity();
 
@@ -180,7 +190,6 @@ obvious::Matrix TSD_PDFMatching::match(
 
   srand(time(NULL));
 
-  //double bestRatio = 0.0;
   double bestProb = 0.0;
 
 #ifndef DEBUG
@@ -198,7 +207,7 @@ obvious::Matrix TSD_PDFMatching::match(
 
   bool* maskControl = new bool[pointsInC];
 
-//#pragma omp parallel for
+#pragma omp parallel for
   for(unsigned int trial = 0; trial < trials; trial++)
   {
 
@@ -239,49 +248,45 @@ obvious::Matrix TSD_PDFMatching::match(
           T(0, 2) = (*M)(idx, 0) - (T(0, 0) * sx + T(0, 1) * sy);
           T(1, 2) = (*M)(idx, 1) - (T(1, 0) * sx + T(1, 1) * sy);
 
+          obvious::Matrix TMap = TSensor * T;
+
           // Transform control set
-          obvious::Matrix STemp = T * (*Control);
+          obvious::Matrix STemp = TMap * (*Control);
           unsigned int pointsInControl = STemp.getCols();
 
           // Rating Daniel Ammon & Tobias Fink
           std::vector<double> probOfAllScans;  // vector for probabilities of single scans in one measurement
-          double probOfActualMeasurement = 1;
+          double probOfActualMeasurement = 1.0;
 
           for (unsigned int s = 0; s < pointsInControl; s++)	// whole control set
           {
-            pointInSensor(0, 0) = (double)((STemp)(0, s));
-            pointInSensor(1, 0) = (double)((STemp)(1, s));
-            pointInSensor(2, 0) = 1.0;
+            obfloat coord[2];
+            coord[0] = STemp(0, s);
+            coord[1] = STemp(1, s);
 
-            obvious::Matrix pointInMap(sensorTrans * pointInSensor); // transform from sensor in map system
-
-            coord[0] = pointInMap(0, 0);
-            coord[1] = pointInMap(1, 0);
-
+            // todo: magic numbers 0.05 / 0.95
+            obfloat tsd;
             if( !_grid.interpolateBilinear(coord, &tsd) )
             {
-              probOfActualScan = (double)tsd;
+              // rating function: clipped probability --> avoid prob of 0
+              // multiply all probabilities for probability of whole scan
+              probOfActualMeasurement *= (1.0 - 0.95*fabs(tsd));
             }
             else
             {
-              probOfActualScan = 1.0;
+              probOfActualMeasurement *= 0.05;
             }
-
-            probOfActualScan = 1.0-fabs(probOfActualScan);	// rating function
-
-            // todo: magic numbers 0.05 + 0.95
-            probOfActualScan = 0.05 + 0.95*probOfActualScan;  // random probability --> avoid prob of 0
-
-            probOfActualMeasurement *= probOfActualScan; // multiply all probabilities for probability of whole scan
-
           }  // whole control set
 
+#pragma omp critical
+{
           // update T and bestProb if better than last iteration
           if(probOfActualMeasurement > bestProb)
           {
             TBest = T;
             bestProb = probOfActualMeasurement;
 
+#ifndef DEBUG
             if(_trace)
             {
               //trace is only possible for single threaded execution
@@ -291,24 +296,25 @@ obvious::Matrix TSD_PDFMatching::match(
               idxS.push_back(i);
               _trace->addAssignment(M, idxM, S, idxS, &STemp, 10 * probOfActualMeasurement, trial);
             }
+#endif
           }
+}
         } // if(fabs(phi) < phiMax)
       } // if(maskSpca[i])
     }  // for i
   }  // for trials
 
-  delete[] maskControl;
-
   //cout << "elapsed: " << t.elapsed() << endl;
   //t.reset();
 
-  delete NMpca;
-  delete NSpca;
-  delete[] phiM;
-  delete[] phiS;
-  delete[] phiControl;
-  delete[] maskMpca;
-  delete[] maskSpca;
+  delete [] maskControl;
+  delete    NMpca;
+  delete    NSpca;
+  delete [] phiM;
+  delete [] phiS;
+  delete [] phiControl;
+  delete [] maskMpca;
+  delete [] maskSpca;
 
   delete Control;
 

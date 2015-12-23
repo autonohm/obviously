@@ -17,34 +17,35 @@ namespace obvious
 /**
  * @class TSD_PDFMatching
  * @brief Matching algorithm with rating based on probability density function (PDF)
- * @author Daniel Ammon, Tobias Fink
+ * @author Daniel Ammon, Tobias Fink, Stefan May
+ * @date 23.12.2015
  **/
 class TSD_PDFMatching : public RandomMatching
 {
 public:
 
-  TSD_PDFMatching(
-      TsdGrid& grid,
-      unsigned int trials = 100,
-      double epsThresh = 0.15,
-      unsigned int sizeControlSet = 140,
-      double zhit = 0.45,
-      double zphi = 0.0,
-      double zshort = 0.25,
-      double zmax = 0.05,
-      double zrand = 0.25,
-      double percentagePointsInC = 0.9,
-      double rangemax = 20,
-      double sigphi = M_PI / 180.0 * 3,
-      double sighit = 0.2,
-      double lamshort = 0.08,
-      double maxAngleDiff = 3.0,
-      double maxAnglePenalty = 0.5);
+  TSD_PDFMatching( TsdGrid& grid,
+                   unsigned int trials = 100,
+                   double epsThresh = 0.15,
+                   unsigned int sizeControlSet = 140,
+                   double zhit = 0.45,
+                   double zphi = 0.0,
+                   double zshort = 0.25,
+                   double zmax = 0.05,
+                   double zrand = 0.25,
+                   double percentagePointsInC = 0.9,
+                   double rangemax = 20,
+                   double sigphi = M_PI / 180.0 * 3,
+                   double sighit = 0.2,
+                   double lamshort = 0.08,
+                   double maxAngleDiff = 3.0,
+                   double maxAnglePenalty = 0.5);
 
   virtual ~TSD_PDFMatching();
 
   /**
    * Matching method
+   * @param TSensor sensor pose as transformation matrix
    * @param M Matrix for model points. Points are accessed by rows. e.g. x = M(p, 0) y= M(p,1)
    * @param maskM Mask for matrix M. Valid points are identified with true-value. It has the same size as M.getCols()
    * @param NM Matrix with normals for model data set
@@ -55,16 +56,15 @@ public:
    * @param resolution Angular resolution of the laser scan
    * @return 3x3 registration matrix
    */
-  obvious::Matrix match(
-              const obvious::Matrix sensorTrans,
-              const obvious::Matrix* M,
-              const bool* maskM,
-              const obvious::Matrix* NM,
-              const obvious::Matrix* S,
-              const bool* maskS,
-              double phiMax = M_PI / 4.0,
-              const double transMax = 1.5,
-              const double resolution = 0.0);
+  obvious::Matrix match( const obvious::Matrix TSensor,
+                         const obvious::Matrix* M,
+                         const bool* maskM,
+                         const obvious::Matrix* NM,
+                         const obvious::Matrix* S,
+                         const bool* maskS,
+                         double phiMax = M_PI / 4.0,
+                         const double transMax = 1.5,
+                         const double resolution = 0.0);
 
 private:
 
