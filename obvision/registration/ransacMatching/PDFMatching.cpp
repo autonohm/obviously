@@ -26,7 +26,7 @@ PDFMatching::PDFMatching(unsigned int trials, double epsThresh, unsigned int siz
   _zmax = zmax;
   _zshort = zshort;
   _zrand = zrand;
-  _zphi = zphi;  // additional parameter for phi error; not used at the moment
+  _zphi = zphi;
 
   _rangemax = rangemax;
   _sighit = sighit;
@@ -244,7 +244,6 @@ obvious::Matrix PDFMatching::match(const obvious::Matrix* M, const bool* maskM, 
           obvious::Matrix T = obvious::MatrixFactory::TransformationMatrix33(phi, 0, 0);
 
           // Calculate translation
-          // todo: dan: trying to use phi + dx, dy directly for transformation via rightsided multiplication!?
           const double sx = (*S)(i, 0);
           const double sy = (*S)(i, 1);
           T(0, 2) = (*M)(idx, 0) - (T(0, 0) * sx + T(0, 1) * sy);
