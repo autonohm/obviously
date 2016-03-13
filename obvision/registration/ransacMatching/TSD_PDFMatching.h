@@ -25,21 +25,10 @@ class TSD_PDFMatching : public RandomMatching
 public:
 
   TSD_PDFMatching( TsdGrid& grid,
-                   unsigned int trials = 100,
+                   unsigned int trials = 30,
                    double epsThresh = 0.15,
-                   unsigned int sizeControlSet = 140,
-                   double zhit = 0.45,
-                   double zphi = 0.0,
-                   double zshort = 0.25,
-                   double zmax = 0.05,
-                   double zrand = 0.25,
-                   double percentagePointsInC = 0.9,
-                   double rangemax = 20,
-                   double sigphi = M_PI / 180.0 * 3,
-                   double sighit = 0.2,
-                   double lamshort = 0.08,
-                   double maxAngleDiff = 3.0,
-                   double maxAnglePenalty = 0.5);
+                   unsigned int sizeControlSet = 360,
+                   double zrand = 0.05);
 
   virtual ~TSD_PDFMatching();
 
@@ -68,22 +57,8 @@ public:
 
 private:
 
-  // probability model variables
-  double _zhit;
-  double _zphi;
-  double _zshort;
-  double _zmax;
+  // probability model variable
   double _zrand;
-
-  double _percentagePointsInC;
-
-  double _rangemax;
-  double _sigphi;
-  double _sighit;
-  double _lamshort;
-
-  double _maxAngleDiff;
-  double _maxAnglePenalty;
 
   // squared distance threshold
   double _scaleDistance;
@@ -93,9 +68,6 @@ private:
 
   // number of trials
   unsigned int _trials;
-
-  // approximate control set
-  unsigned int _sizeControlSet;
 
   // Number of samples investigated for PCA in local neighborhood
   int _pcaSearchRange;

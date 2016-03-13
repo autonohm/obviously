@@ -7,18 +7,7 @@ TSD_PDFMatching::TSD_PDFMatching( TsdGrid& grid,
                                   unsigned int trials,
                                   double epsThresh,
                                   unsigned int sizeControlSet,
-                                  double zhit,
-                                  double zphi,
-                                  double zshort,
-                                  double zmax,
-                                  double zrand,
-                                  double percentagePointsInC,
-                                  double rangemax,
-                                  double sigphi,
-                                  double sighit,
-                                  double lamshort,
-                                  double maxAngleDiff,
-                                  double maxAnglePenalty) : RandomMatching(sizeControlSet), _grid(grid)
+                                  double zrand) : RandomMatching(sizeControlSet), _grid(grid)
 {
 
   _scaleDistance       = 1.0 / (epsThresh * epsThresh);
@@ -28,25 +17,10 @@ TSD_PDFMatching::TSD_PDFMatching( TsdGrid& grid,
   _pcaSearchRange      = 10;
 
   _trials              = trials;
-  _sizeControlSet      = sizeControlSet;
 
-  // percentage of control set that have to be in field of view
-  _percentagePointsInC = percentagePointsInC;
-
-  // probability parameters, cf. Book: Probabilistic Robotics
-  _zhit                = zhit;
-  _zmax                = zmax;
-  _zshort              = zshort;
+  // additional random probability to model uncertainty and avoid prob of 0.0
   _zrand               = zrand;
-  _zphi                = zphi;    // additional parameter for phi error; not used at the moment
 
-  _rangemax            = rangemax;
-  _sighit              = sighit;
-  _sigphi              = sigphi;  // additional parameter for phi error; not used at the moment
-  _lamshort            = lamshort;
-
-  _maxAngleDiff        = maxAngleDiff;
-  _maxAnglePenalty     = maxAnglePenalty;
 }
 
 TSD_PDFMatching::~TSD_PDFMatching()
@@ -136,7 +110,6 @@ obvious::Matrix TSD_PDFMatching::match( obvious::Matrix TSensor,
     (*NControl)(i, 1) = (*NSpca)(idxControl[i], 1);
   }
   unsigned int pointsInC = Control->getCols();
-  //unsigned int cntMatchThresh = pointsInC * _percentagePointsInC;  // TODO: Determine meaningful parameter
   double* phiControl = new double[pointsInC];  // Orientation of control points
   calcPhi(NControl, NULL, phiControl);
   // -------------------------------------------//
@@ -242,7 +215,6 @@ obvious::Matrix TSD_PDFMatching::match( obvious::Matrix TSensor,
           obvious::Matrix T = obvious::MatrixFactory::TransformationMatrix33(phi, 0, 0);
 
           // Calculate translation
-          // todo: dan: trying to use phi + dx, dy directly for transformation via rightsided multiplication!?
           const double sx = (*S)(i, 0);
           const double sy = (*S)(i, 1);
           T(0, 2) = (*M)(idx, 0) - (T(0, 0) * sx + T(0, 1) * sy);
@@ -270,11 +242,11 @@ obvious::Matrix TSD_PDFMatching::match( obvious::Matrix TSensor,
             {
               // rating function: clipped probability --> avoid prob of 0
               // multiply all probabilities for probability of whole scan
-              probOfActualMeasurement *= (1.0 - 0.95*fabs(tsd));
+              probOfActualMeasurement *= (1.0 - (1.0 - _zrand) * fabs(tsd));
             }
             else
             {
-              probOfActualMeasurement *= 0.05;
+              probOfActualMeasurement *= _zrand;
             }
           }  // whole control set
 
