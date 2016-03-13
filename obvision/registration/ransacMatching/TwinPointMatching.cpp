@@ -30,7 +30,7 @@ TwinPointMatching::~TwinPointMatching()
   }
 }
 
-void TwinPointMatching::initKDTree(const obvious::Matrix* M, vector<unsigned int> valid)
+void TwinPointMatching::initKDTree(obvious::Matrix* M, vector<unsigned int> valid)
 {
   // Build FLANN tree for fast access to nearest neighbors
   unsigned int cols = M->getCols();
@@ -56,7 +56,7 @@ void TwinPointMatching::initKDTree(const obvious::Matrix* M, vector<unsigned int
   obvious::System<double>::deallocate(mData);
 }
 
-double** TwinPointMatching::createLutIntraDistance(const obvious::Matrix* M, const bool* mask, const int maxDist)
+double** TwinPointMatching::createLutIntraDistance(obvious::Matrix* M, const bool* mask, const int maxDist)
 {
   int points = (int)M->getRows();
   double** dists;
@@ -86,7 +86,7 @@ double** TwinPointMatching::createLutIntraDistance(const obvious::Matrix* M, con
 }
 
 #define MIN_VALID_POINTS 10
-obvious::Matrix TwinPointMatching::match(const obvious::Matrix* M, const bool* maskM, const obvious::Matrix* S,  const bool* maskS, double phiMax, const double transMax, const double resolution)
+obvious::Matrix TwinPointMatching::match(obvious::Matrix* M, const bool* maskM, obvious::Matrix* S,  const bool* maskS, double phiMax, const double transMax, const double resolution)
 {
   obvious::Matrix TBest(3, 3);
   TBest.setIdentity();

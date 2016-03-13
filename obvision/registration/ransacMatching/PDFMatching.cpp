@@ -44,7 +44,7 @@ PDFMatching::~PDFMatching()
 
 }
 
-obvious::Matrix PDFMatching::match(const obvious::Matrix* M, const bool* maskM, const obvious::Matrix* NM, const obvious::Matrix* S, const bool* maskS, double phiMax, const double transMax, const double resolution)
+obvious::Matrix PDFMatching::match(obvious::Matrix* M, const bool* maskM, obvious::Matrix* NM, obvious::Matrix* S, const bool* maskS, double phiMax, const double transMax, const double resolution)
 {
   obvious::Matrix TBest(3, 3);
   TBest.setIdentity();

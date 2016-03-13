@@ -1,8 +1,10 @@
 cmake_minimum_required(VERSION 2.6)
 project(math_test)
 
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -Wall -O2 -DNDEBUG -pipe -march=native") 
+
 # Setup testing
-add_subdirectory(../gtest-1.7.0 ../gtest-1.7.0/bin)
+add_subdirectory(./gtest-1.7.0 ./gtest-1.7.0/bin)
 enable_testing()
 include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR} $ENV{OBVIOUSLY_ROOT})
 link_directories($ENV{OBVIOUSLY_ROOT}/build/release/obcore

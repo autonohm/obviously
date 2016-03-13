@@ -42,7 +42,7 @@ public:
    * @param resolution Angular resolution of the laser scan
    * @return 3x3 registration matrix
    */
-  obvious::Matrix match(const obvious::Matrix* M, const bool* maskM, const obvious::Matrix* S, const bool* maskS, double phiMax = M_PI / 4.0, const double transMax = 1.5, const double resolution = 0.0);
+  obvious::Matrix match(obvious::Matrix* M, const bool* maskM, obvious::Matrix* S, const bool* maskS, double phiMax = M_PI / 4.0, const double transMax = 1.5, const double resolution = 0.0);
 
   /**
    * Serialize assignment to trace folder
@@ -53,10 +53,10 @@ public:
 private:
 
   // init kd-tree for fast NN search in model
-  void initKDTree(const obvious::Matrix* M, vector<unsigned int> valid);
+  void initKDTree(obvious::Matrix* M, vector<unsigned int> valid);
 
   // create look-up table for point to point intra-distance of a point set
-  double** createLutIntraDistance(const obvious::Matrix* M, const bool* mask, const int maxDist);
+  double** createLutIntraDistance(obvious::Matrix* M, const bool* mask, const int maxDist);
 
   // opening angle of laser scanner (absolute value)
   double _fov;

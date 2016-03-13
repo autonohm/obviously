@@ -31,7 +31,7 @@ public:
    * @param params output vector of found circular parameters (centroid x,y and radius)
    * @param mask assignment mask (true=point belongs to circular structure)
    */
-  bool findCircle(const obvious::Matrix* D, double params[3], bool* mask);
+  bool findCircle(obvious::Matrix* D, double params[3], bool* mask);
 
 private:
 

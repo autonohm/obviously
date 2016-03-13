@@ -15,7 +15,7 @@ RansacPrimitives::~RansacPrimitives()
 }
 
 #define SQR(x) (x*x)
-bool RansacPrimitives::findCircle(const obvious::Matrix* D, double params[3], bool* mask)
+bool RansacPrimitives::findCircle(obvious::Matrix* D, double params[3], bool* mask)
 {
   unsigned int consensus_max = 0;
   double p_best[3] = {0, 0, -1};

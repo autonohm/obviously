@@ -38,7 +38,7 @@ void RandomMatching::serializeTrace(const char* folder)
     LOGMSG(DBG_ERROR, "Trace not activated");
 }
 
-std::vector<unsigned int> RandomMatching::extractSamples(const obvious::Matrix* M, const bool* mask, unsigned int searchRange)
+std::vector<unsigned int> RandomMatching::extractSamples(obvious::Matrix* M, const bool* mask, unsigned int searchRange)
 {
   std::vector<unsigned int> validIndices;
   for(unsigned int i=searchRange; i<M->getRows()-searchRange; i++)
@@ -49,7 +49,7 @@ std::vector<unsigned int> RandomMatching::extractSamples(const obvious::Matrix* 
   return validIndices;
 }
 
-obvious::Matrix* RandomMatching::pickControlSet(const obvious::Matrix* M, std::vector<unsigned int> idxValid, std::vector<unsigned int> &idxControl)
+obvious::Matrix* RandomMatching::pickControlSet(obvious::Matrix* M, std::vector<unsigned int> idxValid, std::vector<unsigned int> &idxControl)
 {
   unsigned int sizeControlSet = _sizeControlSet;
   if((idxValid.size()) < sizeControlSet)
@@ -74,7 +74,7 @@ obvious::Matrix* RandomMatching::pickControlSet(const obvious::Matrix* M, std::v
   return C;
 }
 
-void RandomMatching::calcNormals(const Matrix* M, Matrix* N, const bool* maskIn, bool* maskOut, int searchRadius)
+void RandomMatching::calcNormals(Matrix* M, Matrix* N, const bool* maskIn, bool* maskOut, int searchRadius)
 {
   int points = M->getRows();
 
@@ -145,7 +145,7 @@ void RandomMatching::calcNormals(const Matrix* M, Matrix* N, const bool* maskIn,
   }
 }
 
-void RandomMatching::calcPhi(const Matrix* N,  const bool* mask, double* phi)
+void RandomMatching::calcPhi(Matrix* N,  const bool* mask, double* phi)
 {
   if(mask==NULL)
   {

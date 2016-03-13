@@ -54,11 +54,11 @@ TSD_PDFMatching::~TSD_PDFMatching()
 
 }
 
-obvious::Matrix TSD_PDFMatching::match( const obvious::Matrix TSensor,
-                                        const obvious::Matrix* M,
+obvious::Matrix TSD_PDFMatching::match( obvious::Matrix TSensor,
+                                        obvious::Matrix* M,
                                         const bool* maskM,
-                                        const obvious::Matrix* NM,
-                                        const obvious::Matrix* S,
+                                        obvious::Matrix* NM,
+                                        obvious::Matrix* S,
                                         const bool* maskS,
                                         double phiMax,
                                         const double transMax,

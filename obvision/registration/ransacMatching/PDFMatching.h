@@ -52,10 +52,10 @@ public:
    * @param resolution Angular resolution of the laser scan
    * @return 3x3 registration matrix
    */
-  obvious::Matrix match(const obvious::Matrix* M,
+  obvious::Matrix match(obvious::Matrix* M,
               const bool* maskM,
-              const obvious::Matrix* NM,
-              const obvious::Matrix* S,
+              obvious::Matrix* NM,
+              obvious::Matrix* S,
               const bool* maskS,
               double phiMax = M_PI / 4.0,
               const double transMax = 1.5,

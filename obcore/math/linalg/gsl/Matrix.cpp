@@ -82,7 +82,7 @@ void Matrix::addToRow(unsigned int row, const double scalar)
   gsl_vector_add_constant(&V.vector, scalar);
 }
 
-double& Matrix::operator () (unsigned int row, unsigned int col) const
+double& Matrix::operator () (unsigned int row, unsigned int col)
 {
   return *gsl_matrix_ptr(_M, row, col);
 }
@@ -188,7 +188,7 @@ void Matrix::transpose()
   gsl_matrix_transpose(_M);
 }
 
-Matrix Matrix::getTranspose() const
+Matrix Matrix::getTranspose()
 {
   if(_M->size1 != _M->size2)
   {
@@ -204,7 +204,7 @@ Matrix Matrix::getTranspose() const
   }
 }
 
-double Matrix::trace() const
+double Matrix::trace()
 {
   int rows = _M->size1;
   int cols = _M->size2;
@@ -441,7 +441,7 @@ void Matrix::print()
   }
 }
 
-void Matrix::print() const
+/*void Matrix::print() const
 {
   for(size_t r=0; r<_M->size1; r++)
   {
@@ -449,7 +449,7 @@ void Matrix::print() const
       cout << (*this)(r,c) << " ";
     cout << endl;
   }
-}
+}*/
 
 Matrix Matrix::multiply(const Matrix &M1, const Matrix &M2, bool transposeArg1, bool transposeArg2)
 {

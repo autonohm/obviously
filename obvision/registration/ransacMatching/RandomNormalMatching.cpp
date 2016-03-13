@@ -38,7 +38,7 @@ RandomNormalMatching::~RandomNormalMatching()
   }
 }
 
-void RandomNormalMatching::initKDTree(const obvious::Matrix* M, vector<unsigned int> idxValid)
+void RandomNormalMatching::initKDTree(obvious::Matrix* M, vector<unsigned int> idxValid)
 {
   // Build FLANN tree for fast access to nearest neighbors
   unsigned int cols = M->getCols();
@@ -64,10 +64,10 @@ void RandomNormalMatching::initKDTree(const obvious::Matrix* M, vector<unsigned 
   obvious::System<double>::deallocate(mData);
 }
 
-obvious::Matrix RandomNormalMatching::match(const obvious::Matrix* M,
+obvious::Matrix RandomNormalMatching::match(obvious::Matrix* M,
     const bool* maskM,
-    const obvious::Matrix* NM,
-    const obvious::Matrix* S,
+    obvious::Matrix* NM,
+    obvious::Matrix* S,
     const bool* maskS,
     double phiMax,
     const double transMax,

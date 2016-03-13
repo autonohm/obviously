@@ -58,7 +58,7 @@ public:
 	 * @param M model matrix
 	 * @param validPoints valid indices in model M
 	 */
-	void setModel(const Matrix* M, vector<unsigned int> validPoints);
+	void setModel(Matrix* M, vector<unsigned int> validPoints);
 
 	/**
    * Set scene of trace record
@@ -72,7 +72,7 @@ public:
    * @param S scene matrix
    * @param validPoints valid indices in model S
    */
-	void setScene(const Matrix* S, vector<unsigned int> validPoints);
+	void setScene(Matrix* S, vector<unsigned int> validPoints);
 
 	/**
 	 * Add scene assignment to trace record
@@ -94,7 +94,7 @@ public:
 	 * @param score score of matching
 	 * @param iterationID ID of iteration or trial
 	 */
-	void addAssignment(const Matrix* M, vector<unsigned int> idxM, const Matrix* S, vector<unsigned int> idxS, const Matrix* STrans, const double score, const unsigned int iterationID);
+	void addAssignment(Matrix* M, vector<unsigned int> idxM, Matrix* S, vector<unsigned int> idxS, Matrix* STrans, const double score, const unsigned int iterationID);
 
 	/**
 	 * Serialize assignment to trace folder

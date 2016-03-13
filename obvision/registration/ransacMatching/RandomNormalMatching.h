@@ -43,10 +43,10 @@ public:
    * @param resolution Angular resolution of the laser scan
    * @return 3x3 registration matrix
    */
-  obvious::Matrix match(const obvious::Matrix* M,
+  obvious::Matrix match(obvious::Matrix* M,
                         const bool* maskM,
-                        const obvious::Matrix* NM,
-                        const obvious::Matrix* S,
+                        obvious::Matrix* NM,
+                        obvious::Matrix* S,
                         const bool* maskS,
                         double phiMax = M_PI / 4.0,
                         const double transMax = 1.5,
@@ -55,7 +55,7 @@ public:
 private:
 
   // init kd-tree for fast NN search in model
-  void initKDTree(const obvious::Matrix* M, vector<unsigned int> valid);
+  void initKDTree(obvious::Matrix* M, vector<unsigned int> valid);
 
   // squared distance threshold
   double _scaleDistance;
