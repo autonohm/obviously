@@ -124,7 +124,7 @@ void Trace::addAssignment(Matrix* M, vector<unsigned int> idxM, Matrix* S, vecto
     rawScene[j][1] = (*STrans)(1, j);
   }
   vector<StrTraceCartesianPair> tracePair;
-  for(int i=0; i<idxM.size(); i++)
+  for(unsigned int i=0; i<idxM.size(); i++)
   {
     StrTraceCartesianPair p;
     p.first[0] = (*M)(idxM[i], 0);

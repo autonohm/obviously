@@ -5,6 +5,12 @@ SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS} -fopenmp -Wall -O2 -
 
 SET(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../../cmake)
 
+if (DEFINED ENV{OBVIOUSLY_ROOT})
+  message("OBVIOUSLY_ROOT variable is set to " $ENV{OBVIOUSLY_ROOT})
+else()
+  message( FATAL_ERROR "OBVIOUSLY_ROOT variable is set")
+endif()
+
 ####################
 # Debian Packaging #
 ####################

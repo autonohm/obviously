@@ -233,7 +233,7 @@ bool OpenNiDevice::grab(void)
         const openni::RGB888Pixel* data = reinterpret_cast<const openni::RGB888Pixel*>(_frameColor.getData());
         const int size = _width * _height;
 
-        for(unsigned int i=0; i<size; i++, data++)
+        for(int i=0; i<size; i++, data++)
         {
           _imgRgb[3*i]   = data->r;
           _imgRgb[3*i+1] = data->g;
@@ -249,7 +249,7 @@ bool OpenNiDevice::grab(void)
         const uint16_t* data = reinterpret_cast<const uint16_t*>(_frameIr.getData());
         const int size = _width * _height;
 
-        for(unsigned int i=0; i<size; i++, data++)
+        for(int i=0; i<size; i++, data++)
         {
           _imgIr[3*i] = *data >> 2;
           _imgIr[3*i+1] = *data >> 2;

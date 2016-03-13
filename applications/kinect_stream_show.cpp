@@ -77,7 +77,8 @@ void serializeXML()
   //for(int i=0; i<640*480; i++)
   //  if(fabs((*(cloud->getCoords()))(i,2))<1e-6) (cloud->getAttributes())[i] &= ~ePointAttrValid;
   //cloud->removeInvalidPoints();
-  CartesianCloudFactory::serialize("/tmp/serialize.txt", cloud, eFormatAscii);
+  char path[] = "/tmp/serialize.txt";
+  CartesianCloudFactory::serialize(path, cloud, eFormatAscii);
 }
 
 void recordCallback()
