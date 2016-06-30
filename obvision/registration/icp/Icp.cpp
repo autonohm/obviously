@@ -409,20 +409,19 @@ void Icp::applyTransformation(double** data, unsigned int size, unsigned int dim
 
 EnumIcpState Icp::step(double* rms, unsigned int* pairs)
 {
-  Timer t;
   if(_model==NULL || _sceneTmp == NULL) return ICP_ERROR;
 
   EnumIcpState retval = ICP_PROCESSING;
 
   vector<StrCartesianIndexPair>* pvPairs;
-  _estimator->setScene(_sceneTmp, _sizeScene, _normalsSTmp);
   _assigner->determinePairs(_sceneTmp, _sizeScene);
   pvPairs = _assigner->getPairs();
   *pairs = pvPairs->size();
 
-  if(pvPairs->size()>2)
+  if(*pairs>2)
   {
     // Estimate transformation
+    _estimator->setScene(_sceneTmp, _sizeScene, _normalsSTmp);
     _estimator->setPairs(pvPairs);
 
     // get mapping error
@@ -450,8 +449,6 @@ EnumIcpState Icp::step(double* rms, unsigned int* pairs)
     applyTransformation(_sceneTmp, _sizeScene, _dim, _Tlast);
     if(_normalsS)
       applyTransformation(_normalsSTmp, _sizeScene, _dim, _Tlast);
-
-
 
     // update overall transformation
     (*_Tfinal4x4) = (*_Tlast) * (*_Tfinal4x4);
