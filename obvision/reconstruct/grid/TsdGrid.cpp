@@ -111,6 +111,7 @@ TsdGrid::TsdGrid(const std::string& data, const EnumTsdGridLoadSource source)
 
 void TsdGrid::init(const double cellSize, const EnumTsdGridLayout layoutPartition, const EnumTsdGridLayout layoutGrid)
 {
+  cout << "init" << endl;
   _initialPushAccomplished = false;
   _cellSize = cellSize;
   _invCellSize = 1.0 / _cellSize;
@@ -169,8 +170,31 @@ void TsdGrid::init(const double cellSize, const EnumTsdGridLayout layoutPartitio
 
 TsdGrid::~TsdGrid(void)
 {
-  delete _tree;
+  deinit();
+}
+
+void TsdGrid::deinit()
+{
+  for(int py=0; py<_partitionsInY; py++)
+  {
+    for(int px=0; px<_partitionsInX; px++)
+    {
+      delete _partitions[py][px];
+    }
+  }
   System<TsdGridPartition*>::deallocate(_partitions);
+  int depthTree = _layoutGrid-_layoutPartitions;
+  if(depthTree != 0)
+  {
+    delete _tree;
+    _tree = NULL;
+  }
+}
+
+void TsdGrid::reset()
+{
+  deinit();
+  init(_cellSize, _layoutPartitions, _layoutGrid);
 }
 
 void TsdGrid::getCentroid(double centroid[2])

@@ -25,6 +25,7 @@ TsdGridBranch::TsdGridBranch(TsdGridComponent*** leafs, int x, int y, int level)
   }
   else
   {
+    _isLeaf = true;
     level--;
     int step = 1 << level;
     branch          = new TsdGridBranch(leafs, x,      y, level);
@@ -73,7 +74,9 @@ TsdGridBranch::~TsdGridBranch()
   if(!_children[0]->isLeaf())
   {
     for(int i=0; i<4; i++)
+    {
       delete _children[i];
+    }
   }
 
   _children.clear();

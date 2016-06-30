@@ -77,10 +77,10 @@ TsdGridPartition::~TsdGridPartition()
 {
   if(_grid) System<TsdCell>::deallocate(_grid);
   if(_cellCoordsHom) delete [] _cellCoordsHom;
-  delete [] _edgeCoordsHom;
+  delete _edgeCoordsHom;
   if(_partCoords)
   {
-    delete [] _partCoords;
+    delete _partCoords;
     _partCoords = NULL;
   }
 }

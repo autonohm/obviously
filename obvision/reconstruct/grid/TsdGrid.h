@@ -68,6 +68,10 @@ public:
    */
   virtual ~TsdGrid();
 
+  void deinit();
+
+  void reset();
+
   /**
    * Access truncated signed distance at specific cell. This method does not check validity of indices.
    * The specific cell might not be instantiated.
