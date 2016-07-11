@@ -90,14 +90,22 @@ void CloudWidget::setCloud(const PointCloud<Point>& cloud)
     polyData->GetPointData()->SetScalars(colours);
 
     vtkSmartPointer<vtkVertexGlyphFilter> glyphFilter =  vtkSmartPointer<vtkVertexGlyphFilter>::New();
+#if VTK_MAJOR_VERSION <= 5
     glyphFilter->SetInputConnection(polyData->GetProducerPort());
+#else
+    glyphFilter->SetInputData(polyData);
+#endif
     glyphFilter->Update();
 
     polyData->ShallowCopy(glyphFilter->GetOutput());
     points->Modified();
 
     vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+#if VTK_MAJOR_VERSION <= 5
     mapper->SetInputConnection(polyData->GetProducerPort());
+#else
+    mapper->SetInputData(polyData);
+#endif
 
     _actorCloud->SetMapper(mapper);
 
@@ -125,14 +133,23 @@ void CloudWidget::setCloud(const PointCloud<PointRgb>& cloud)
     polyData->GetPointData()->SetScalars(colours);
 
     vtkSmartPointer<vtkVertexGlyphFilter> glyphFilter =  vtkSmartPointer<vtkVertexGlyphFilter>::New();
+
+#if VTK_MAJOR_VERSION <= 5
     glyphFilter->SetInputConnection(polyData->GetProducerPort());
+#else
+    glyphFilter->SetInputData(polyData);
+#endif
     glyphFilter->Update();
 
     polyData->ShallowCopy(glyphFilter->GetOutput());
     points->Modified();
 
     vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+#if VTK_MAJOR_VERSION <= 5
     mapper->SetInputConnection(polyData->GetProducerPort());
+#else
+    mapper->SetInputData(polyData);
+#endif
 
     _actorCloud->SetMapper(mapper);
 

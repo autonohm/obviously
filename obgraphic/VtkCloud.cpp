@@ -82,7 +82,11 @@ void VtkCloud::setCoords(double* coords, int size, int tda, double* ndata)
   _polyData->SetPoints(_points);
 
   vtkSmartPointer<vtkVertexGlyphFilter> glyphFilter =  vtkSmartPointer<vtkVertexGlyphFilter>::New();
+#if VTK_MAJOR_VERSION <= 5
   glyphFilter->SetInputConnection(_polyData->GetProducerPort());
+#else
+  glyphFilter->SetInputData(_polyData);
+#endif
   glyphFilter->Update();
 
   _polyData->ShallowCopy(glyphFilter->GetOutput());
@@ -164,7 +168,11 @@ void VtkCloud::addCoords(double* coords, unsigned char* rgb, int size, int tda)
   }
 
   vtkSmartPointer<vtkVertexGlyphFilter> glyphFilter =  vtkSmartPointer<vtkVertexGlyphFilter>::New();
+#if VTK_MAJOR_VERSION <= 5
   glyphFilter->SetInputConnection(_polyData->GetProducerPort());
+#else
+  glyphFilter->SetInputData(_polyData);
+#endif
   glyphFilter->Update();
 
   _polyData->ShallowCopy(glyphFilter->GetOutput());
@@ -237,7 +245,11 @@ void VtkCloud::removeInvalidPoints()
   normals->DeepCopy(newNormals);
 
   vtkSmartPointer<vtkVertexGlyphFilter> glyphFilter =  vtkSmartPointer<vtkVertexGlyphFilter>::New();
+#if VTK_MAJOR_VERSION <= 5
   glyphFilter->SetInputConnection(_polyData->GetProducerPort());
+#else
+  glyphFilter->SetInputData(_polyData);
+#endif
   glyphFilter->Update();
 
   _polyData->ShallowCopy(glyphFilter->GetOutput());
@@ -319,7 +331,11 @@ void VtkCloud::transform(double* T)
   vtkSmartPointer<vtkTransform> trans    = vtkSmartPointer<vtkTransform>::New();
   trans->SetMatrix(T);
   transf->SetTransform(trans);
+#if VTK_MAJOR_VERSION <= 5
   transf->SetInputConnection(_polyData->GetProducerPort());
+#else
+  transf->SetInputData(_polyData);
+#endif
   transf->Update();
   _polyData->DeepCopy(transf->GetOutput());
   _polyData->Modified();
@@ -368,7 +384,11 @@ void VtkCloud::serialize(char* filename, EnumVtkCloudFileFormat format)
   {
     vtkSmartPointer<vtkXMLPolyDataWriter> w = vtkSmartPointer<vtkXMLPolyDataWriter>::New();
     w->SetFileName(filename);
+#if VTK_MAJOR_VERSION <= 5
     w->SetInput(_polyData);
+#else
+  w->SetInputData(_polyData);
+#endif
     w->Write();
     break;
   }
@@ -378,7 +398,11 @@ void VtkCloud::serialize(char* filename, EnumVtkCloudFileFormat format)
     w->SetColorModeToDefault();
     w->SetArrayName("Colors");
     w->SetFileName(filename);
+#if VTK_MAJOR_VERSION <= 5
     w->SetInput(_polyData);
+#else
+  w->SetInputData(_polyData);
+#endif
     w->Write();
     break;
   }
@@ -444,7 +468,11 @@ VtkCloud* VtkCloud::load(char* filename, EnumVtkCloudFileFormat format)
   VtkCloud* cloud = new VtkCloud();//NULL, polyData->GetPoints()->GetNumberOfPoints(), 3);
 
   vtkSmartPointer<vtkVertexGlyphFilter> glyphFilter =  vtkSmartPointer<vtkVertexGlyphFilter>::New();
+#if VTK_MAJOR_VERSION <= 5
   glyphFilter->SetInputConnection(polyData->GetProducerPort());
+#else
+  glyphFilter->SetInputData(polyData);
+#endif
   glyphFilter->Update();
 
   cloud->getPolyData()->ShallowCopy(glyphFilter->GetOutput());
@@ -484,7 +512,11 @@ void VtkCloud::applyActorTransformation()
   vtkSmartPointer<vtkTransform> t        = vtkSmartPointer<vtkTransform>::New();
   t->SetMatrix(_actor->GetMatrix());
   tf->SetTransform(t);
+#if VTK_MAJOR_VERSION <= 5
   tf->SetInputConnection(_polyData->GetProducerPort());
+#else
+  tf->SetInputData(_polyData);
+#endif
   tf->Update();
   _polyData->DeepCopy(tf->GetOutput());
   _polyData->Modified();
@@ -553,7 +585,11 @@ VtkCloud* VtkCloud::createRandom(unsigned int nrPoints, double radius)
   pointSource->Update();
 
   vtkSmartPointer<vtkVertexGlyphFilter> glyphFilter =  vtkSmartPointer<vtkVertexGlyphFilter>::New();
+#if VTK_MAJOR_VERSION <= 5
   glyphFilter->SetInputConnection(pointSource->GetOutput()->GetProducerPort());
+#else
+  glyphFilter->SetInputData(pointSource->GetOutput());
+#endif
   glyphFilter->Update();
 
   cloud->getPolyData()->ShallowCopy(glyphFilter->GetOutput());

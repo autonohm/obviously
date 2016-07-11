@@ -120,7 +120,11 @@ int main(int argc, char* argv[])
   _renderWindow->AddRenderer(renderer);
 
   vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+#if VTK_MAJOR_VERSION <= 5
   mapper->SetInput(_polyData);
+#else
+  mapper->SetInputData(_polyData);
+#endif
   vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
   actor->SetMapper(mapper);
 

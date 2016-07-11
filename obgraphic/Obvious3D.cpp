@@ -188,7 +188,12 @@ void Obvious3D::addCloud(VtkCloud* cloud, bool pickable, unsigned int pointsize,
   _renderWindowInteractor->AddObserver (vtkCommand::KeyPressEvent, cb);
 
   vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+#if VTK_MAJOR_VERSION <= 5
   mapper->SetInputConnection(polyData->GetProducerPort());
+#else
+  mapper->SetInputData(polyData);
+#endif
+
 
   vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
   if(!pickable)actor->PickableOff();
@@ -222,7 +227,11 @@ void Obvious3D::addLines(double** coordsStart, double** coordsEnd, unsigned int 
   polydata->SetLines(lines);
 
   vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+#if VTK_MAJOR_VERSION <= 5
   mapper->SetInput(polydata);
+#else
+  mapper->SetInputData(polydata);
+#endif
 
   vtkActor* actor = vtkActor::New();
   actor->SetMapper(mapper);
@@ -367,7 +376,11 @@ void Obvious3D::addAxisAlignedCube(double xmin, double xmax, double ymin, double
   for(int i=0; i<12; i++)
   {
     vtkSmartPointer<vtkPolyDataMapper> map = vtkSmartPointer<vtkPolyDataMapper>::New();
+#if VTK_MAJOR_VERSION <= 5
     map->SetInput(cube[i]->GetOutput());
+#else
+    map->SetInputData(cube[i]->GetOutput());
+#endif
     vtkActor* actor = vtkActor::New();
     actor->SetMapper(map);
     actor->GetProperty()->SetColor(255, 255, 255);
@@ -511,42 +524,46 @@ void Obvious3D::showSensorPose(Matrix& T)
 
 void Obvious3D::showTrajectory(std::vector<Matrix> trajectory)
 {
-	std::vector<Matrix>::iterator it = trajectory.begin();
-	for (/*it = trajectory.begin() */; it != trajectory.end() ; ++it)
-	{
-		// Create an arrow.
-		vtkSmartPointer<vtkArrowSource> 	 pose 	= vtkSmartPointer<vtkArrowSource>::New();
-		pose->SetShaftRadius(0.1);
-		pose->SetTipLength(0.2);
-	  vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
-	  mapper->SetInputConnection(pose->GetOutputPort());
+  std::vector<Matrix>::iterator it = trajectory.begin();
+  for (/*it = trajectory.begin() */; it != trajectory.end() ; ++it)
+  {
+    // Create an arrow.
+    vtkSmartPointer<vtkArrowSource> 	 pose 	= vtkSmartPointer<vtkArrowSource>::New();
+    pose->SetShaftRadius(0.1);
+    pose->SetTipLength(0.2);
+    vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+    mapper->SetInputConnection(pose->GetOutputPort());
 
-	  vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
-	  actor->SetMapper(mapper);
-	  vtkSmartPointer<vtkTransform>   transform = vtkSmartPointer<vtkTransform>::New();
+    vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
+    actor->SetMapper(mapper);
+    vtkSmartPointer<vtkTransform>   transform = vtkSmartPointer<vtkTransform>::New();
 
-	  vtkSmartPointer<vtkMatrix4x4> m =
-	    vtkSmartPointer<vtkMatrix4x4>::New();
-	  for(unsigned int i=0 ; i<=3 ; i++) {
-	  	for(unsigned int j=0 ; j<=3 ; j++) {
-	  		m->SetElement(i,j, it->operator ()(i,j));
-	  	}
-	  }
-	  transform->Scale(0.02, 0.02, 0.02);
-	  transform->SetMatrix(m);
-	  for(unsigned int i=0 ; i<=3 ; i++) {
-	  	for(unsigned int j=0 ; j<=3 ; j++) {
-	  		m->SetElement(i,j, 0.0);
-	  	}
-	  }
+    vtkSmartPointer<vtkMatrix4x4> m =
+      vtkSmartPointer<vtkMatrix4x4>::New();
+    for(unsigned int i=0 ; i<=3 ; i++)
+    {
+      for(unsigned int j=0 ; j<=3 ; j++)
+      {
+        m->SetElement(i,j, it->operator ()(i,j));
+      }
+    }
+    transform->Scale(0.02, 0.02, 0.02);
+    transform->SetMatrix(m);
+    for(unsigned int i=0 ; i<=3 ; i++)
+    {
+      for(unsigned int j=0 ; j<=3 ; j++)
+      {
+        m->SetElement(i,j, 0.0);
+      }
+    }
 
-	  actor->SetUserTransform(transform);
-	  actor->RotateY(-90);
-	  actor->SetUserTransform(transform);
-	  actor->GetProperty()->SetColor(1,0,0); //(R,G,B)
-	  transform->Scale(0.02, 0.02, 0.02);
-	  _renderer->AddActor(actor);
-	}
+    actor->SetUserTransform(transform);
+    actor->RotateY(-90);
+    actor->SetUserTransform(transform);
+    actor->GetProperty()->SetColor(1,0,0); //(R,G,B)
+    transform->Scale(0.02, 0.02, 0.02);
+    _renderer->AddActor(actor);
+  }
 }
 
 void Obvious3D::screenshot()

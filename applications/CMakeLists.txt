@@ -30,7 +30,7 @@ INCLUDE_DIRECTORIES(/usr/include/openni2
 
 SET(CORELIBS    obcore    gsl gslcblas lua5.1)
 SET(DEVICELIBS  obdevice  OpenNI v4l2 udev )
-SET(GRAPHICLIBS obgraphic vtkHybrid glut GL jpeg)
+SET(GRAPHICLIBS obgraphic ${VTK_LIBRARIES} glut GL jpeg)
 SET(VISIONLIBS  obvision  ann flann)
 
 # check if necessary files for PMD are installed
