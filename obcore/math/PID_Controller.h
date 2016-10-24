@@ -128,14 +128,14 @@ public:
   /**
    * Function to calculate the next output of the controller
    * @param[in]       isValue
-   * @return output value of contoller
+   * @return output value of controller
    */
   double control(const double& isValue);
 
 private:
   IntegratorSimpson      _integrator;
   double _p;               ///< proportional value of pid controller
-  double _i;               ///< integrational value of pid controller
+  double _i;               ///< integration value of pid controller
   double _d;               ///< derivation value of pid controller
   double _awu;             ///< anti wind up value
 

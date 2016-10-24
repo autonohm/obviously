@@ -36,7 +36,15 @@ void FlannPairAssignment::setModel(double** model, int size)
     _dataset = NULL;
     delete _index;
     _index = NULL;
+    _model = NULL;
   }
+
+  if(size<1)
+  {
+    cout << "Error: Model of size 0 passed" << endl;
+    return;
+  }
+
   _model = model;
 
   _dataset = new flann::Matrix<double>(&model[0][0], size, _dimension);
@@ -55,6 +63,12 @@ void FlannPairAssignment::determinePairs(double** scene, bool* mask, int size)
 
 void FlannPairAssignment::determinePairsSequential(double** scene, bool* mask, int size)
 {
+  if(size<1)
+  {
+    cout << "Error: Scene of size 0 passed" << endl;
+    return;
+  }
+
   flann::Matrix<int> indices(new int[1], 1, 1);
   flann::Matrix<double> dists(new double[1], 1, 1);
   flann::SearchParams p(-1, _eps);

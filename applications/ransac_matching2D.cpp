@@ -8,11 +8,11 @@
 #include <iostream>
 #include <math.h>
 
+#include "../obvision/registration/ransacMatching/TwinPointMatching.h"
 #include "obcore/math/mathbase.h"
 #include "obcore/math/linalg/linalg.h"
 #include "obcore/base/Timer.h"
 
-#include "obvision/registration/ransacMatching/RansacMatching.h"
 #include "obvision/registration/ransacMatching/RandomNormalMatching.h"
 
 using namespace std;

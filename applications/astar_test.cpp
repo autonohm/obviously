@@ -39,7 +39,7 @@ int main(int argc, char* argv[])
   map->addObstacle(obstacle);
   timer.reset();
   map->inflate(robotRadius);
-  cout << "elapsed for inflation: " << timer.reset() << " ms" << endl;
+  cout << "elapsed for inflation: " << timer.reset() << " s" << endl;
   map->convertToImage(buffer);
   obvious::serializePPM("/tmp/map_inflated.ppm", buffer, width, height, false);
 
@@ -57,7 +57,7 @@ int main(int argc, char* argv[])
   map->translatePixelToCoord(target, &coordTarget);
   timer.reset();
   vector<unsigned int> path = AStar::pathFind(map, coordStart, coordTarget, penalty);
-  cout << "elapsed for planning: " << timer.reset() << " ms" << endl;
+  cout << "elapsed for planning: " << timer.reset() << " s" << endl;
 
   int cont_route = 0;
 

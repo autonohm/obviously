@@ -234,7 +234,7 @@ namespace obvious {
    */
   static inline double getPiCorrectedAngle(const double angle) {
     double correctedAngle = angle;
-    if (correctedAngle < M_PI)
+    if (correctedAngle < -M_PI)
       correctedAngle += 2*M_PI;
     else if (correctedAngle > M_PI)
       correctedAngle -= 2*M_PI;

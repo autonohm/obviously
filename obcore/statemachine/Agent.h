@@ -50,7 +50,7 @@ public:
   void awake();
 
   /**
-   * Register persistant state with give ID
+   * Register persistent state with given ID
    * @param stateID state ID
    * @param state state instance
    */
@@ -76,7 +76,7 @@ public:
   void transitionToVolatileState(StateBase* nextState);
 
   /**
-   * Clean up persistant state map
+   * Clean up persistent state map
    */
   void deletePersistantStates();
 
@@ -91,6 +91,8 @@ private:
   static unsigned int _AgentID;
 
   bool _volatile;
+
+  bool _volatileNext;
 
   std::map<const int, StateBase*> _persistantStateMap;
 

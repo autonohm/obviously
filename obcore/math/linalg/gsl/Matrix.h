@@ -110,7 +110,7 @@ public:
 	 */
 	//double* operator [] (unsigned int i);
 
-  double& operator () (unsigned int row, unsigned int col) const;
+  double& operator () (unsigned int row, unsigned int col);
 
 	/**
 	 * Multiplication operator
@@ -184,7 +184,7 @@ public:
 	 * Instantiate the transpose matrix of present matrix
 	 * @return transposed matrix as new instance
 	 */
-	Matrix getTranspose() const;
+	Matrix getTranspose();
 
 	/**
 	 * Transpose current matrix
@@ -195,7 +195,7 @@ public:
 	 * Calculate trace of matrix
 	 * @return trace
 	 */
-	double trace() const;
+	double trace();
 
 	/**
 	 * perform principle component analysis
@@ -238,7 +238,7 @@ public:
 	 */
 	void print();
 
-	void print() const;
+	//void print() const;
 
   static Matrix multiply(const Matrix &M1, const Matrix &M2, bool transposeArg1, bool transposeArg2);
 

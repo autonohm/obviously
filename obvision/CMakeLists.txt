@@ -11,7 +11,7 @@ SET(OBVISION_VERSION_MINOR 1)
 INCLUDE_DIRECTORIES(..
 					/usr/include/eigen3)
 
-add_library(obvision
+add_library(obvision STATIC
 	registration/icp/assign/PairAssignment.cpp
 	registration/icp/assign/AnnPairAssignment.cpp
 	registration/icp/assign/FlannPairAssignment.cpp
@@ -32,8 +32,11 @@ add_library(obvision
 	registration/icp/Icp.cpp
 	registration/icp/IcpMultiInitIterator.cpp
 	registration/ndt/Ndt.cpp
-	registration/ransacMatching/RansacMatching.cpp
+	registration/ransacMatching/RandomMatching.cpp
+	registration/ransacMatching/TwinPointMatching.cpp
 	registration/ransacMatching/RandomNormalMatching.cpp
+	registration/ransacMatching/PDFMatching.cpp
+	registration/ransacMatching/TSD_PDFMatching.cpp
 	registration/Trace.cpp
 	normals/NormalsEstimator.cpp
 	mesh/TriangleMesh.cpp
@@ -59,6 +62,7 @@ add_library(obvision
 	planning/AStar.cpp
 	planning/AStarMap.cpp
 	planning/AStarNode.cpp
+	ransac/RansacPrimitives.cpp
 	)
 
 ####################

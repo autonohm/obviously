@@ -1,4 +1,4 @@
-#include "RansacMatching.h"
+#include "TwinPointMatching.h"
 
 #include <math.h>
 #include "obcore/base/System.h"
@@ -10,17 +10,16 @@ using namespace std;
 namespace obvious
 {
 
-RansacMatching::RansacMatching(unsigned int trials, double epsThresh, unsigned int sizeControlSet)
+TwinPointMatching::TwinPointMatching(unsigned int trials, double epsThresh, unsigned int sizeControlSet) : RandomMatching(sizeControlSet)
 {
   _epsSqr = epsThresh * epsThresh;
   _trials = trials;
-  _sizeControlSet = sizeControlSet;
   _model = NULL;
   _index = NULL;
   _trace = NULL;
 }
 
-RansacMatching::~RansacMatching()
+TwinPointMatching::~TwinPointMatching()
 {
   if(_model)
   {
@@ -29,35 +28,9 @@ RansacMatching::~RansacMatching()
     delete _index;
     _index = NULL;
   }
-  if(_trace)
-    delete _trace;
-  _trace = NULL;
 }
 
-void RansacMatching::activateTrace()
-{
-  if(!_trace)
-    _trace = new Trace(2);
-}
-
-void RansacMatching::deactivateTrace()
-{
-  if(_trace) delete _trace;
-  _trace = NULL;
-}
-
-vector<unsigned int> RansacMatching::extractValidIndices(const obvious::Matrix* M, const bool* mask)
-{
-  vector<unsigned int> validIndices;
-  for(unsigned int i=0; i<M->getRows(); i++)
-  {
-    if(mask[i])
-      validIndices.push_back(i);
-  }
-  return validIndices;
-}
-
-void RansacMatching::initKDTree(const obvious::Matrix* M, vector<unsigned int> valid)
+void TwinPointMatching::initKDTree(obvious::Matrix* M, vector<unsigned int> valid)
 {
   // Build FLANN tree for fast access to nearest neighbors
   unsigned int cols = M->getCols();
@@ -83,32 +56,7 @@ void RansacMatching::initKDTree(const obvious::Matrix* M, vector<unsigned int> v
   obvious::System<double>::deallocate(mData);
 }
 
-obvious::Matrix* RansacMatching::pickControlSet(const obvious::Matrix* M, vector<unsigned int> idxValid, vector<unsigned int> &idxControl)
-{
-  unsigned int sizeControlSet = _sizeControlSet;
-  if((idxValid.size()) < sizeControlSet)
-  {
-    LOGMSG(DBG_DEBUG, "Size of scene smaller than control set ... reducing size");
-    sizeControlSet = idxValid.size();
-  }
-  obvious::Matrix* C = new obvious::Matrix(3, sizeControlSet);
-  vector<unsigned int> idxTemp = idxValid;
-  unsigned int ctr = 0;
-  while(idxControl.size() < sizeControlSet)
-  {
-    unsigned int r = rand() % idxTemp.size();
-    unsigned int idx = idxTemp[r];
-    idxControl.push_back(idx);
-    idxTemp.erase(idxTemp.begin() + r);
-
-    (*C)(0, ctr)   = (*M)(idx, 0);
-    (*C)(1, ctr)   = (*M)(idx, 1);
-    (*C)(2, ctr++) = 1.0;
-  }
-  return C;
-}
-
-double** RansacMatching::createLutIntraDistance(const obvious::Matrix* M, const bool* mask, const int maxDist)
+double** TwinPointMatching::createLutIntraDistance(obvious::Matrix* M, const bool* mask, const int maxDist)
 {
   int points = (int)M->getRows();
   double** dists;
@@ -138,7 +86,7 @@ double** RansacMatching::createLutIntraDistance(const obvious::Matrix* M, const 
 }
 
 #define MIN_VALID_POINTS 10
-obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const bool* maskM, const obvious::Matrix* S,  const bool* maskS, double phiMax, const double transMax, const double resolution)
+obvious::Matrix TwinPointMatching::match(obvious::Matrix* M, const bool* maskM, obvious::Matrix* S,  const bool* maskS, double phiMax, const double transMax, const double resolution)
 {
   obvious::Matrix TBest(3, 3);
   TBest.setIdentity();
@@ -154,8 +102,8 @@ obvious::Matrix RansacMatching::match(const obvious::Matrix* M, const bool* mask
     return TBest;
   }
 
-  vector<unsigned int> idxMValid = extractValidIndices(M, maskM);
-  vector<unsigned int> idxSValid = extractValidIndices(S, maskS);
+  vector<unsigned int> idxMValid = extractSamples(M, maskM, 0);
+  vector<unsigned int> idxSValid = extractSamples(S, maskS, 0);
   vector<unsigned int> mapMRawToValid;
   unsigned int cnt = 0;
   for(unsigned int i=0; i<M->getRows(); i++)
@@ -434,14 +382,6 @@ if (_trace)
   delete Control;
 
   return TBest;
-}
-
-void RansacMatching::serializeTrace(const char* folder)
-{
-  if(_trace)
-    _trace->serialize(folder);
-  else
-    LOGMSG(DBG_ERROR, "Trace not activated");
 }
 
 }

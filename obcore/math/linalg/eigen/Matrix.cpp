@@ -21,7 +21,7 @@ Matrix::Matrix(unsigned int rows, unsigned int cols, double* data)
 
 Matrix::Matrix(const Matrix &M)
 {
-  _M = M._M;
+  _M = Eigen::MatrixXd(M._M);
 }
 
 Matrix::Matrix(Matrix M, unsigned int i, unsigned int j, unsigned int rows, unsigned int cols)
@@ -121,12 +121,12 @@ void Matrix::setData(double* array)
   _M = M;
 }
 
-unsigned int Matrix::getRows()
+unsigned int Matrix::getRows() const
 {
   return _M.rows();
 }
 
-unsigned int Matrix::getCols()
+unsigned int Matrix::getCols() const
 {
   return _M.cols();
 }
@@ -172,8 +172,75 @@ double Matrix::trace()
 
 Matrix* Matrix::pcaAnalysis()
 {
-  cout << "WARNING: Matrix::pcaAnalysis Not implemented yet" << endl;
-  abort();
+  Eigen::MatrixXd M = _M;
+  Eigen::VectorXd centroid =  M.colwise().mean();
+  Eigen::MatrixXd centered = M.rowwise() - M.colwise().mean();
+  Eigen::MatrixXd cov = centered.adjoint() * centered;
+  Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> eig(cov);
+
+  unsigned int dim = M.cols();
+  Matrix* axes = new Matrix(dim, 2*dim);
+
+  //cout << "eigenvalues" << endl;
+  //cout << eig.eigenvalues() << endl;
+
+  //cout << "V" << endl;
+  //cout << eig.eigenvectors().rightCols(3) << endl;
+
+  Eigen::MatrixXd Vtmp = eig.eigenvectors();
+  for(unsigned int i=0; i<Vtmp.cols(); i++)
+    if(eig.eigenvalues()(i) < 0) Vtmp.col(i) *= -1;
+
+  Eigen::MatrixXd V = Vtmp;
+  for(unsigned int i=0; i<V.cols(); i++)
+    V.col(i) = Vtmp.col(V.cols()-i-1);
+
+  //cout << "V2" << endl;
+  //cout << V << endl;
+
+  Eigen::MatrixXd P = V.transpose() * centered.transpose();
+
+  //cout << "P" << endl;
+  //cout << P << endl;
+
+  for(unsigned int i=0; i<dim; i++)
+  {
+    // corresponding eigenvector in original coordinate system
+    double max = P.row(i).maxCoeff();
+    double min = P.row(i).minCoeff();
+    double ext = max - min;
+    double align = 0.0;
+    if(ext > 1e-6)
+    {
+      align = (max + min)/2.0;
+    }
+
+    for(size_t j=0; j<dim; j++)
+    {
+      double e = V(j, i)*align;
+      centroid(j) += e;
+    }
+
+    //cout << "max/min/ext/align: " << max << " " << min << " " << ext << " " << align << endl;
+  }
+
+  for(unsigned int i=0; i<dim; i++)
+  {
+    //cout << "cent: " << centroid(i) << endl;
+    // extends of axis in orientation of eigenvector i
+    double ext = P.row(i).maxCoeff() - P.row(i).minCoeff();
+
+    // coordinates of axis j
+    for(size_t j=0; j<dim; j++)
+    {
+      double e = V.col(i)(j)*ext/2.0;
+      // axis coordinates with respect to center of original coordinate system
+      (*axes)(i, 2*j) = centroid(j) - e;
+      (*axes)(i, 2*j+1) = centroid(j) + e;
+    }
+  }
+
+  return axes;
 }
 
 void Matrix::svd(Matrix* U, double* s, Matrix* V)

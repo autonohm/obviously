@@ -29,7 +29,7 @@ public:
     	std::vector<float> coords =  _xtion->coords();
     	double* coordsD = new double[_xtion->width()* _xtion->height() * 3];
 
-    	for(unsigned int i=0 ; i<_xtion->width()*_xtion->height()*3 ; i++)
+    	for(int i=0 ; i<_xtion->width()*_xtion->height()*3 ; i++)
     		coordsD[i] = coords[i];
 
         _cloud->setCoords(coordsD, _xtion->width()*_xtion->height(), 3);

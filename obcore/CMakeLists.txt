@@ -8,7 +8,8 @@ include(FindPkgConfig)
 PROJECT(OBCORE)
 
 SET(USE_EIGEN 0)
-
+CONFIGURE_FILE( math/linalg/linalg.h.in ${CMAKE_CURRENT_SOURCE_DIR}/math/linalg/linalg.h )
+  
 FIND_PACKAGE(Eigen REQUIRED)
 
 INCLUDE_DIRECTORIES(../..
@@ -18,7 +19,8 @@ INCLUDE_DIRECTORIES(../..
                     /usr/include/lua5.1
                     )
 
-SET(LIBRARY     base/CartesianCloud.cpp
+SET(LIBRARY STATIC
+                base/CartesianCloud.cpp
                 base/CartesianCloudFactory.cpp
                 base/Timer.cpp
                 base/Logger.cpp
@@ -48,15 +50,12 @@ SET(LIBRARY     base/CartesianCloud.cpp
 
 IF(USE_EIGEN)
   message("Using libeigen for obcore")
-  add_definitions(-DEIGENUSED)
-  #SET(EIGENUSED 1)
-  #set(VAR ${VAR} PARENT_SCOPE);
-  SET(EIGENUSED 1 CACHE INTEGER "Eigen Used")
   SET(LIBRARY ${LIBRARY} math/linalg/eigen/Matrix.cpp
                          math/linalg/eigen/Vector.cpp
-                         )
+                         )                 
 ELSE()
   message("Using gsl for obcore")
+  
   SET(LIBRARY ${LIBRARY} math/linalg/gsl/Matrix.cpp
                          math/linalg/gsl/Vector.cpp
                          )

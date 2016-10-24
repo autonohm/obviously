@@ -46,6 +46,7 @@ void Agent::awake()
   {
     _currentState = _nextState;
     _currentState->onEntry();
+    _volatile = _volatileNext;
     _nextState = NULL;
   }
 
@@ -65,6 +66,7 @@ void Agent::awake()
   {
     // do transition to next state
     _currentState = _nextState;
+    _volatile = _volatileNext;
     _nextState = NULL;
 
     _currentState->onEntry();
@@ -96,7 +98,7 @@ void Agent::transitionToPersistantState(const int stateID)
   if(_currentState != nextState)
   {
     _nextState = nextState;
-    _volatile = false;
+    _volatileNext = false;
   }
 }
 
@@ -108,7 +110,7 @@ void Agent::transitionToVolatileState(StateBase* nextState)
     {
       _nextState = nextState;
       _nextState->setAgent(this);
-      _volatile = true;
+      _volatileNext = true;
       _nextState->onSetup();
     }
     else

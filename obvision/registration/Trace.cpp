@@ -59,7 +59,7 @@ void Trace::setModel(double** model, unsigned int sizeM)
   }
 }
 
-void Trace::setModel(const Matrix* M, vector<unsigned int> validPoints)
+void Trace::setModel(Matrix* M, vector<unsigned int> validPoints)
 {
   double** rawModel;
   System<double>::allocate(validPoints.size(), 2, rawModel);
@@ -86,7 +86,7 @@ void Trace::setScene(double** scene, unsigned int sizeS)
   }
 }
 
-void Trace::setScene(const Matrix* S, vector<unsigned int> validPoints)
+void Trace::setScene(Matrix* S, vector<unsigned int> validPoints)
 {
   double** rawScene;
   System<double>::allocate(validPoints.size(), 2, rawScene);
@@ -109,7 +109,7 @@ void Trace::addAssignment(double** scene, unsigned int sizeS, vector<StrTraceCar
   _scores.push_back(score);
 }
 
-void Trace::addAssignment(const Matrix* M, vector<unsigned int> idxM, const Matrix* S, vector<unsigned int> idxS, const Matrix* STrans, const double score, const unsigned int iterationID)
+void Trace::addAssignment(Matrix* M, vector<unsigned int> idxM, Matrix* S, vector<unsigned int> idxS, Matrix* STrans, const double score, const unsigned int iterationID)
 {
   if(idxM.size() != idxS.size())
   {
@@ -124,7 +124,7 @@ void Trace::addAssignment(const Matrix* M, vector<unsigned int> idxM, const Matr
     rawScene[j][1] = (*STrans)(1, j);
   }
   vector<StrTraceCartesianPair> tracePair;
-  for(int i=0; i<idxM.size(); i++)
+  for(unsigned int i=0; i<idxM.size(); i++)
   {
     StrTraceCartesianPair p;
     p.first[0] = (*M)(idxM[i], 0);

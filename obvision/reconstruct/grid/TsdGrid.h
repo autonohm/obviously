@@ -69,6 +69,11 @@ public:
   virtual ~TsdGrid();
 
   /**
+   * Reset TSD grid (delete and re-instantiate cells)
+   */
+  void reset();
+
+  /**
    * Access truncated signed distance at specific cell. This method does not check validity of indices.
    * The specific cell might not be instantiated.
    * @param y y coordinate
@@ -228,6 +233,11 @@ public:
 private:
 
   void init(const double cellSize, const EnumTsdGridLayout layoutPartition, const EnumTsdGridLayout layoutGrid);
+
+  /**
+   * De-Initialization
+   */
+  void deinit();
 
   void pushRecursion(SensorPolar2D* sensor, obfloat pos[2], TsdGridComponent* comp, vector<TsdGridPartition*> &partitionsToCheck);
 
