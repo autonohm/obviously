@@ -116,8 +116,8 @@ int main(void)
   raycaster.calcCoordsFromCurrentPose(&space, &sensor, coords, normals, rgb, &cnt);
 #else
   unsigned int cells = space.getXDimension()*space.getYDimension()*space.getZDimension();
-  double* coords = new double[cells];
-  double* normals = new double[cells];
+  double* coords = new double[cells*3];
+  double* normals = new double[cells*3];
   unsigned char* rgb = new unsigned char[rows*cols*3];
   RayCastAxisAligned3D raycaster;
   raycaster.calcCoords(&space, coords, normals, rgb, &cnt);
