@@ -11,7 +11,7 @@
 using namespace std;
 using namespace obvious;
 
-#define SENSORRAYCAST 1
+#define SENSORRAYCAST 0
 
 int main(void)
 {
@@ -39,7 +39,6 @@ int main(void)
   int rows = 480;
   int cols = 640;
 
-
   // Setup synthetic perspective projection
   double su = 500;
   double sv = 500;
@@ -56,7 +55,7 @@ int main(void)
   for(int u=0; u<cols; u++)
     for(int v=0; v<rows; v++)
     {
-      double s = 3.0;
+      double s = 3.0 - ((double)u)/cols - ((double)v)/rows;
       double x = s*(((double)u) - tu) / su;
       double y = s*(((double)v) - tv) / sv;
       double z = s;
@@ -109,15 +108,15 @@ int main(void)
   unsigned int cnt;
 
 #if SENSORRAYCAST
-  double* coords = new double[rows*cols*3];
-  double* normals = new double[rows*cols*3];
+  double* coords     = new double[rows*cols*3];
+  double* normals    = new double[rows*cols*3];
   unsigned char* rgb = new unsigned char[rows*cols*3];
   RayCast3D raycaster;
   raycaster.calcCoordsFromCurrentPose(&space, &sensor, coords, normals, rgb, &cnt);
 #else
   unsigned int cells = space.getXDimension()*space.getYDimension()*space.getZDimension();
-  double* coords = new double[cells*3];
-  double* normals = new double[cells*3];
+  double* coords     = new double[cells*3];
+  double* normals    = new double[cells*3];
   unsigned char* rgb = new unsigned char[rows*cols*3];
   RayCastAxisAligned3D raycaster;
   raycaster.calcCoords(&space, coords, normals, rgb, &cnt);

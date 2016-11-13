@@ -1,6 +1,9 @@
 #ifndef SYSTEM_H_
 #define SYSTEM_H_
 
+#include <cstring>
+
+
 /**
  * @namespace obvious
  */
@@ -40,6 +43,14 @@ public:
     static void copy (unsigned int rows, unsigned int cols, T** &src, T** &dst);
 
     /**
+     * Initialize array with zero values
+     * @param rows number of rows
+     * @param cols number of columns
+     * @param buf array
+     */
+    static void initZero(unsigned int rows, unsigned int cols, T** buf);
+
+    /**
      * Allocation of 3D arrays
      * @param rows number of rows
      * @param cols number of columns
@@ -63,6 +74,15 @@ public:
      * @param dst destination array
      */
     static void copy (unsigned int rows, unsigned int cols, unsigned int slices,  T*** &src, T*** &dst);
+
+    /**
+     * Initialize array with zero values
+     * @param rows number of rows
+     * @param cols number of columns
+     * @param slices number of slices
+     * @param buf array
+     */
+    static void initZero(unsigned int rows, unsigned int cols, unsigned int slices, T*** buf);
 };
 
 #include "System.inl"

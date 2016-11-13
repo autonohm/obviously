@@ -28,11 +28,14 @@ void RayCastAxisAligned3D::calcCoords(TsdSpace* space, obfloat* coords, obfloat*
 
   TsdSpacePartition**** partitions = space->getPartitions();
 
+
+#pragma omp parallel
+{
   // buffer for registration of zero crossings: in each cell, only one zero crossing should be detected
   bool*** zeroCrossing;
   System<bool>::allocate(partitionSize, partitionSize, partitionSize, zeroCrossing);
 
-#pragma omp parallel for
+#pragma omp for
   // Leave out outmost partitions, since the triangulation of normals needs access to neighboring partitions
   for(unsigned int z=1; z<partitionsInZ-1; z++)
   {
@@ -45,11 +48,12 @@ void RayCastAxisAligned3D::calcCoords(TsdSpace* space, obfloat* coords, obfloat*
         {
           if(!(p->isEmpty()))
           {
+            System<bool>::initZero(partitionSize, partitionSize, partitionSize, zeroCrossing);
+
             // Traverse in x-direction
             TsdSpacePartition* p_prev = partitions[z][y][x-1];
             for(unsigned int pz=0; pz<p->getDepth(); pz++)
             {
-              memset(zeroCrossing[pz][0], 0, (partitionSize)*(partitionSize)*sizeof(bool));
               for(unsigned int py=0; py<p->getHeight(); py++)
               {
                 obfloat tsd_prev = NAN;
@@ -61,18 +65,23 @@ void RayCastAxisAligned3D::calcCoords(TsdSpace* space, obfloat* coords, obfloat*
                   // Check sign change
                   if(tsd_prev * tsd < 0)
                   {
-                    interp = tsd_prev / (tsd_prev - tsd);
 #pragma omp critical
 {
+                    interp = tsd_prev / (tsd_prev - tsd);
                     coords[*cnt]     = px*cellSize + (x * p->getWidth()) * cellSize + cellSize * (interp-1.0) ;
                     coords[(*cnt)+1] = py*cellSize + (y * p->getHeight()) * cellSize;
                     coords[(*cnt)+2] = pz*cellSize + (z * p->getDepth()) * cellSize;
+                    bool retval = true;
                     if(normals)
-                      space->interpolateNormal(&coords[*cnt], &(normals[*cnt]));
+                      retval  = space->interpolateNormal(&coords[*cnt], &(normals[*cnt]));
                     if(rgb)
-                      space->interpolateTrilinearRGB(&coords[*cnt], &(rgb[*cnt]));
-                    (*cnt)+=3;
-                    zeroCrossing[pz][py][px] = true;
+                      retval &= (space->interpolateTrilinearRGB(&coords[*cnt], &(rgb[*cnt]))==INTERPOLATE_SUCCESS);
+                    if(retval)
+                    {
+                      zeroCrossing[pz][py][px] = true;
+                      if(px>0) zeroCrossing[pz][py][px-1] = true;
+                      (*cnt)+=3;
+                    }
 }
                   }
                   tsd_prev = tsd;
@@ -93,20 +102,25 @@ void RayCastAxisAligned3D::calcCoords(TsdSpace* space, obfloat* coords, obfloat*
                 {
                   obfloat tsd = (*p)(pz, py, px);
                   // Check sign change
-                  if((!zeroCrossing[pz][py][px]) && (tsd_prev * tsd < 0))
+                  if(!(zeroCrossing[pz][py][px]) && (tsd_prev * tsd < 0))
                   {
-                    interp = tsd_prev / (tsd_prev - tsd);
 #pragma omp critical
 {
+                    interp = tsd_prev / (tsd_prev - tsd);
                     coords[*cnt]     = px*cellSize + (x * p->getWidth()) * cellSize;
                     coords[(*cnt)+1] = py*cellSize + (y * p->getHeight()) * cellSize + cellSize * (interp-1.0);
                     coords[(*cnt)+2] = pz*cellSize + (z * p->getDepth()) * cellSize;
+                    bool retval = true;
                     if(normals)
-                      space->interpolateNormal(&coords[*cnt], &(normals[*cnt]));
+                      retval  = space->interpolateNormal(&coords[*cnt], &(normals[*cnt]));
                     if(rgb)
-                      space->interpolateTrilinearRGB(&coords[*cnt], &(rgb[*cnt]));
-                    (*cnt)+=3;
-                    zeroCrossing[pz][py][px] = true;
+                      retval &= (space->interpolateTrilinearRGB(&coords[*cnt], &(rgb[*cnt]))==INTERPOLATE_SUCCESS);
+                    if(retval)
+                    {
+                      zeroCrossing[pz][py][px] = true;
+                      if(py>0) zeroCrossing[pz][py-1][px] = true;
+                      (*cnt)+=3;
+                    }
 }
                   }
                   tsd_prev = tsd;
@@ -129,17 +143,19 @@ void RayCastAxisAligned3D::calcCoords(TsdSpace* space, obfloat* coords, obfloat*
                   // Check sign change
                   if((!zeroCrossing[pz][py][px]) && (tsd_prev * tsd < 0))
                   {
-                    interp = tsd_prev / (tsd_prev - tsd);
 #pragma omp critical
 {
+                    interp = tsd_prev / (tsd_prev - tsd);
                     coords[*cnt]     = px*cellSize + (x * p->getWidth()) * cellSize;
                     coords[(*cnt)+1] = py*cellSize + (y * p->getHeight()) * cellSize;
                     coords[(*cnt)+2] = pz*cellSize + (z * p->getDepth()) * cellSize + cellSize * (interp-1.0);
+                    bool retval = true;
                     if(normals)
-                      space->interpolateNormal(&coords[*cnt], &(normals[*cnt]));
+                      retval = space->interpolateNormal(&coords[*cnt], &(normals[*cnt]));
                     if(rgb)
-                      space->interpolateTrilinearRGB(&coords[*cnt], &(rgb[*cnt]));
-                    (*cnt)+=3;
+                      retval &= (space->interpolateTrilinearRGB(&coords[*cnt], &(rgb[*cnt]))==INTERPOLATE_SUCCESS);
+                    if(retval)
+                      (*cnt)+=3;
 }
                   }
                   tsd_prev = tsd;
@@ -151,8 +167,8 @@ void RayCastAxisAligned3D::calcCoords(TsdSpace* space, obfloat* coords, obfloat*
       }
     }
   }
-
   System<bool>::deallocate(zeroCrossing);
+}
 
   LOGMSG(DBG_DEBUG, "Elapsed TSDF projection: " << t.elapsed() << "ms");
   LOGMSG(DBG_DEBUG, "Raycasting finished! Found " << *cnt << " coordinates");

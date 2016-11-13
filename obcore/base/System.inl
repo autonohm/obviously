@@ -24,6 +24,12 @@ void System<T>::copy (unsigned int rows, unsigned int cols, T** &src, T** &dst)
 }
 
 template <class T>
+void System<T>::initZero(unsigned int rows, unsigned int cols, T** buf)
+{
+    memset(buf[0], 0, rows*cols*sizeof(T));
+}
+
+template <class T>
 void System<T>::allocate (unsigned int rows, unsigned int cols, unsigned int slices, T*** &array3D)
 {
     array3D = new T**[rows];
@@ -45,4 +51,11 @@ void System<T>::copy (unsigned int rows, unsigned int cols, unsigned int slices,
 {
     for (unsigned int row = 0; row < rows; row++)
     	System<T>::memcpy(cols, slices, src[row], dst[row]);
+}
+
+template <class T>
+void System<T>::initZero(unsigned int rows, unsigned int cols, unsigned int slices, T*** buf)
+{
+    for(unsigned int i=0; i<slices; i++)
+       initZero(rows, cols, buf[i]);
 }
