@@ -120,6 +120,8 @@ int main(void)
   delete [] image;
   delete [] coords;
   delete [] normals;
+
+  delete grid;
 }
 
 

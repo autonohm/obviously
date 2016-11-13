@@ -134,7 +134,7 @@ TsdSpacePartition::~TsdSpacePartition()
 {
   reset();
 
-  delete [] _edgeCoordsHom; _edgeCoordsHom = NULL;
+  delete _edgeCoordsHom; _edgeCoordsHom = NULL;
 }
 
 int TsdSpacePartition::getInitializedPartitionSize()

@@ -76,7 +76,7 @@ TsdGridPartition::TsdGridPartition(const unsigned int x,
 TsdGridPartition::~TsdGridPartition()
 {
   if(_grid) System<TsdCell>::deallocate(_grid);
-  if(_cellCoordsHom) delete [] _cellCoordsHom;
+  if(_cellCoordsHom) delete _cellCoordsHom;
   delete _edgeCoordsHom;
   if(_partCoords)
   {
