@@ -2,6 +2,7 @@
 #include "obcore/base/Logger.h"
 #include "obcore/base/Timer.h"
 #include "obcore/math/mathbase.h"
+#include "obcore/base/tools.h"
 #include "TsdSpace.h"
 #include "TsdSpaceBranch.h"
 #include "SensorProjective3D.h"
@@ -872,6 +873,163 @@ TsdSpace* TsdSpace::load(const char* filename)
   f.close();
 
   return space;
+}
+
+bool TsdSpace::sliceImage(const unsigned int idx, const EnumSpaceAxis& axis, std::vector<unsigned char>* const rgb)
+{
+  rgb->clear();
+  const unsigned int sizePartition = this->getPartitionSize();
+  if(axis == Z)
+  {
+    const unsigned int partIdxZ  = idx / sizePartition;
+    const unsigned int voxelIdxZ = idx - partIdxZ * sizePartition;
+    rgb->resize(_cellsX * _cellsY * 3, 255);
+    for(unsigned int i = 0; i < _cellsY; i++)
+    {
+      for(unsigned int j = 0; j < _cellsX; j++)
+      {
+        const unsigned int partIdxX = j / sizePartition;
+        const unsigned int partIdxY = i / sizePartition;
+
+        TsdSpacePartition* partCur  = _partitions[partIdxZ][partIdxY][partIdxX];
+
+        if(!partCur->isInitialized())
+          continue;
+
+        const unsigned int  voxelIdxX = j - partIdxX * sizePartition;
+        const unsigned int  voxelIdxY = i - partIdxY * sizePartition;
+        const double        tsdCur = partCur->_space[voxelIdxZ][voxelIdxY][voxelIdxX].tsd;
+        const unsigned char color = static_cast<unsigned char>(255.0 * std::abs(tsdCur));
+        if(tsdCur < 0.0)   //behind voxel RED
+        {
+          (*rgb)[(i * _cellsX + j) * 3    ] = color;
+          (*rgb)[(i * _cellsX + j) * 3 + 1] = 0;
+          (*rgb)[(i * _cellsX + j) * 3 + 2] = 0;
+        }
+        else   //in front of voxel BLUE
+        {
+          (*rgb)[(i * _cellsX + j) * 3    ] = 0;
+          (*rgb)[(i * _cellsX + j) * 3 + 1] = 0;
+          (*rgb)[(i * _cellsX + j) * 3 + 2] = color;
+        }
+      }
+    }
+  }
+  else if(axis == Y)
+  {
+    const unsigned int partIdxY  = idx / sizePartition;
+    const unsigned int voxelIdxY = idx - partIdxY * sizePartition;
+    rgb->resize(_cellsX * _cellsZ * 3, 255);
+    for(unsigned int i = 0; i < _cellsZ; i++)
+    {
+      for(unsigned int j = 0; j < _cellsX; j++)
+      {
+        const unsigned int partIdxX = j / sizePartition;
+        const unsigned int partIdxZ = i / sizePartition;
+
+        TsdSpacePartition* partCur  = _partitions[partIdxZ][partIdxY][partIdxX];
+
+        if(!partCur->isInitialized())
+          continue;
+
+        const unsigned int  voxelIdxX = j - partIdxX * sizePartition;
+        const unsigned int  voxelIdxZ = i - partIdxZ * sizePartition;
+        const double        tsdCur = partCur->_space[voxelIdxZ][voxelIdxY][voxelIdxX].tsd;
+        const unsigned char color = static_cast<unsigned char>(255.0 * std::abs(tsdCur));
+        if(tsdCur < 0.0)   //behind voxel RED
+        {
+          (*rgb)[(i * _cellsX + j) * 3    ] = color;
+          (*rgb)[(i * _cellsX + j) * 3 + 1] = 0;
+          (*rgb)[(i * _cellsX + j) * 3 + 2] = 0;
+        }
+        else   //in front of voxel BLUE
+        {
+          (*rgb)[(i * _cellsX + j) * 3    ] = 0;
+          (*rgb)[(i * _cellsX + j) * 3 + 1] = 0;
+          (*rgb)[(i * _cellsX + j) * 3 + 2] = color;
+        }
+      }
+    }
+  }
+  else if(axis == X)
+  {
+    const unsigned int partIdxX  = idx / sizePartition;
+    const unsigned int voxelIdxX = idx - partIdxX * sizePartition;
+    rgb->resize(_cellsY * _cellsZ * 3, 255);
+    for(unsigned int i = 0; i < _cellsZ; i++)
+    {
+      for(unsigned int j = 0; j < _cellsY; j++)
+      {
+        const unsigned int partIdxY = j / sizePartition;
+        const unsigned int partIdxZ = i / sizePartition;
+
+        TsdSpacePartition* partCur  = _partitions[partIdxZ][partIdxY][partIdxX];
+
+        if(!partCur->isInitialized())
+          continue;
+
+        const unsigned int  voxelIdxY = j - partIdxY * sizePartition;
+        const unsigned int  voxelIdxZ = i - partIdxZ * sizePartition;
+        const double        tsdCur = partCur->_space[voxelIdxZ][voxelIdxY][voxelIdxX].tsd;
+        const unsigned char color = static_cast<unsigned char>(255.0 * std::abs(tsdCur));
+        if(tsdCur < 0.0)   //behind voxel RED
+        {
+          (*rgb)[(i * _cellsY + j) * 3    ] = color;
+          (*rgb)[(i * _cellsY + j) * 3 + 1] = 0;
+          (*rgb)[(i * _cellsY + j) * 3 + 2] = 0;
+        }
+        else   //in front of voxel BLUE
+        {
+          (*rgb)[(i * _cellsY + j) * 3    ] = 0;
+          (*rgb)[(i * _cellsY + j) * 3 + 1] = 0;
+          (*rgb)[(i * _cellsY + j) * 3 + 2] = color;
+        }
+      }
+    }
+  }
+  return true;
+}
+
+void TsdSpace::serializeSliceImages(const EnumSpaceAxis& axis, const std::string& path)
+{
+  std::string storePath;
+  if(path.size())
+    storePath = path;
+  else
+    storePath = "/tmp";
+  std::vector<unsigned char> imageBuf;
+  if(axis == Z)
+  {
+    for(unsigned int i = 0; i < _cellsZ; i++)
+    {
+      this->sliceImage(i, axis, &imageBuf);
+      std::stringstream ss;
+      ss << storePath << "/z_axis_" << i << ".ppm";
+      serializePPM(ss.str().c_str(), imageBuf.data(), _cellsX, _cellsY);
+    }
+  }
+  else if(axis == Y)
+  {
+    for(unsigned int i = 0; i < _cellsY; i++)
+    {
+      this->sliceImage(i, axis, &imageBuf);
+      std::stringstream ss;
+      ss << storePath << "/y_axis_" << i << ".ppm";
+      serializePPM(ss.str().c_str(), imageBuf.data(), _cellsX, _cellsZ);
+    }
+  }
+  else if(axis == X)
+  {
+    for(unsigned int i = 0; i < _cellsX; i++)
+    {
+      this->sliceImage(i, axis, &imageBuf);
+      std::stringstream ss;
+      ss << storePath << "/x_axis_" << i << ".ppm";
+      serializePPM(ss.str().c_str(), imageBuf.data(), _cellsY, _cellsZ);
+    }
+  }
+  else
+    return;
 }
 
 }

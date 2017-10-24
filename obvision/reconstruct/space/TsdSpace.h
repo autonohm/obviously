@@ -6,6 +6,8 @@
 #include "obvision/reconstruct/Sensor.h"
 #include "TsdSpacePartition.h"
 
+#include <string>
+
 namespace obvious
 {
 
@@ -26,6 +28,14 @@ enum EnumTsdSpaceInterpolate { INTERPOLATE_SUCCESS=0,
 	INTERPOLATE_INVALIDINDEX=1,
 	INTERPOLATE_EMPTYPARTITION=2,
 	INTERPOLATE_ISNAN=3};
+
+enum EnumSpaceAxis
+{
+  X = 0,
+  Y,
+  Z
+};
+
 
 /**
  * @class TsdSpace
@@ -218,6 +228,10 @@ enum EnumTsdSpaceInterpolate { INTERPOLATE_SUCCESS=0,
 	 * @param filename
 	 */
 	static TsdSpace* load(const char* filename);
+
+	bool sliceImage(const unsigned int idx, const EnumSpaceAxis& axis, std::vector<unsigned char>* const rgb);
+
+	void serializeSliceImages(const EnumSpaceAxis& axis, const std::string& path = "");
 
  private:
 
