@@ -1,5 +1,5 @@
-#ifndef SENSOR_POLAR_2D_H
-#define SENSOR_POLAR_2D_H
+#ifndef SENSOR_POLAR_2D_WITH_3D_POSE_H
+#define SENSOR_POLAR_2D_WITH_3D_POSE_H
 
 #include "obvision/reconstruct/Sensor.h"
 
@@ -7,11 +7,11 @@ namespace obvious
 {
 
 /**
- * @class SensorPolar2D
+ * @class SensorPolar2DWith3DPose
  * @brief Generic class for 2D measurement units using polar sampling
  * @author Stefan May
  */
-class SensorPolar2D : public Sensor
+class SensorPolar2DWith3DPose : public Sensor
 {
 public:
 
@@ -23,12 +23,12 @@ public:
    * @param[in] maxRange maximum range
    * @param[in] minRange minimum range
    */
-  SensorPolar2D(unsigned int beams, double angularRes, double phiMin, double maxRange=INFINITY, double minRange=0.0, double lowReflectivityRange=INFINITY);
+  SensorPolar2DWith3DPose(unsigned int beams, double angularRes, double phiMin, double maxRange=INFINITY, double minRange=0.0, double lowReflectivityRange=INFINITY);
 
   /**
    * Destructor
    */
-  ~SensorPolar2D();
+  ~SensorPolar2DWith3DPose();
 
   /**
    * Set standard measurement mask (measurement data need to be set before)

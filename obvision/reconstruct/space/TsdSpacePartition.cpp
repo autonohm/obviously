@@ -265,7 +265,7 @@ void TsdSpacePartition::increaseEmptiness()
 
           if(isnan(voxel->tsd))
           {
-            voxel->tsd = 1.0;
+            //voxel->tsd = 1.0;
           }
           else
           {

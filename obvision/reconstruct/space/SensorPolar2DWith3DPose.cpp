@@ -1,4 +1,4 @@
-#include "SensorPolar2D.h"
+#include "SensorPolar2DWith3DPose.h"
 #include "obcore/math/mathbase.h"
 #include "obcore/base/Logger.h"
 
@@ -8,7 +8,7 @@
 namespace obvious
 {
 
-SensorPolar2D::SensorPolar2D(unsigned int size, double angularRes, double phiMin, double maxRange, double minRange, double lowReflectivityRange) : Sensor(2, maxRange, minRange, lowReflectivityRange)
+SensorPolar2DWith3DPose::SensorPolar2DWith3DPose(unsigned int size, double angularRes, double phiMin, double maxRange, double minRange, double lowReflectivityRange) : Sensor(3, maxRange, minRange, lowReflectivityRange)
 {
   _width = size;
   _height = 1;
@@ -34,20 +34,21 @@ SensorPolar2D::SensorPolar2D(unsigned int size, double angularRes, double phiMin
     LOGMSG(DBG_ERROR, "Valid minimal angle < 180 degree");
   }
 
-  _rays = new Matrix(2, _size);
+  _rays = new Matrix(_dim, _size);
 
   for(unsigned int i=0; i<_size; i++)
   {
     const double phi = _phiMin + ((double)i) * _angularRes;
     (*_rays)(0, i) = cos(phi);
     (*_rays)(1, i) = sin(phi);
+    (*_rays)(2, i) = 0;
   }
 
-  _raysLocal = new Matrix(2, size);
+  _raysLocal = new Matrix(_dim, size);
   *_raysLocal = *_rays;
 }
 
-SensorPolar2D::~SensorPolar2D()
+SensorPolar2DWith3DPose::~SensorPolar2DWith3DPose()
 {
   delete [] _data;
   delete [] _mask;
@@ -56,7 +57,7 @@ SensorPolar2D::~SensorPolar2D()
   delete _raysLocal;
 }
 
-void SensorPolar2D::setStandardMask()
+void SensorPolar2DWith3DPose::setStandardMask()
 {
   resetMask();
   maskZeroDepth();
@@ -64,7 +65,7 @@ void SensorPolar2D::setStandardMask()
   maskDepthDiscontinuity(deg2rad(3.0));
 }
 
-void SensorPolar2D::maskDepthDiscontinuity(double thresh)
+void SensorPolar2DWith3DPose::maskDepthDiscontinuity(double thresh)
 {
   int radius = 1;
   double cosphi;
@@ -97,7 +98,7 @@ void SensorPolar2D::maskDepthDiscontinuity(double thresh)
   }
 }
 
-int SensorPolar2D::backProject(double data[2])
+int SensorPolar2DWith3DPose::backProject(double data[2])
 {
   Matrix xh(3, 1);
   xh(0,0) = data[0];
@@ -114,7 +115,7 @@ int SensorPolar2D::backProject(double data[2])
   return round((phi-_phiMin) /_angularRes);
 }
 
-void SensorPolar2D::backProject(Matrix* M, int* indices, Matrix* T)
+void SensorPolar2DWith3DPose::backProject(Matrix* M, int* indices, Matrix* T)
 {
   Timer t;
   Matrix PoseInv = getTransformation();
