@@ -1,2 +1,3 @@
 raycasters in raca3d are not normalized from the beginning on
 check the partition->increase emptyness method
+sensor->set transform apply also to rays.
