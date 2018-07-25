@@ -103,6 +103,9 @@ Matrix Sensor::getTransformation()
 
 void Sensor::setTransformation(Matrix T)
 {
+  *_rays = *_raysLocal;
+  Matrix R(T, 0, 0, _dim, _dim);
+  (*_rays) = R * (*_rays);
   *_T = T;
 }
 
