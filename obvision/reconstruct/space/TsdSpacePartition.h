@@ -50,6 +50,7 @@ public:
   void reset();
 
   obfloat& operator () (unsigned int z, unsigned int y, unsigned int x) const { return _space[z][y][x].tsd; }
+  obfloat& getTsd(unsigned int z, unsigned int y, unsigned int x) const { return _space[z][y][x].tsd; }
 
   void getRGB(unsigned int z, unsigned int y, unsigned int x, unsigned char rgb[3]);
 
