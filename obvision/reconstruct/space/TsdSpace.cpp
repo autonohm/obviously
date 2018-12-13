@@ -1739,6 +1739,22 @@ bool compareAngle(const PointWithAngle& var1, const PointWithAngle& var2)
   return var1.angle < var2.angle;
 }
 
-
+unsigned int TsdSpace::getInitializedVxls(void)
+{
+  unsigned int nb = 0;
+  for(int pz = 0; pz < this->getPartitionsInZ(); pz++)
+  {
+    for(int py = 0; py < this->getPartitionsInY(); py++)
+    {
+      for(int px = 0; px < this->getPartitionsInX(); px++)
+      {
+        obvious::TsdSpacePartition* part = this->getPartitions()[pz][py][px];
+        if(part->isInitialized() && !part->isEmpty())
+          nb += (this->getPartitionSize() * this->getPartitionSize() * this->getPartitionSize());
+      }
+    }
+  }
+  return nb;
+}
 
 }

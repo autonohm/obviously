@@ -267,6 +267,8 @@ public:
 
   void serializeSliceImages(const EnumSpaceAxis& axis, const std::string& path = "");
 
+  unsigned int getInitializedVxls(void);
+
 private:
 
   void pushRecursion(Sensor* sensor, obfloat pos[3], TsdSpaceComponent* comp, vector<TsdSpacePartition*> &partitionsToCheck);
