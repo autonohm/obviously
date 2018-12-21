@@ -261,13 +261,15 @@ public:
    * Method to load values out of a file into the grid
    * @param filename
    */
-  TsdSpace* load(const char* filename);
+  static TsdSpace* load(const char* filename);
 
   bool sliceImage(const unsigned int idx, const EnumSpaceAxis& axis, std::vector<unsigned char>* const rgb);
 
   void serializeSliceImages(const EnumSpaceAxis& axis, const std::string& path = "");
 
   unsigned int getInitializedVxls(void);
+
+  friend std::ostream& operator<< (std::ostream &out, TsdSpace& space);
 
 private:
 

@@ -1537,12 +1537,12 @@ TsdSpace* TsdSpace::load(const char* filename)
       }
     }
   }
-  _minX = 0.0;
-  _minY = 0.0;
-  _minZ = 0.0;
-  _maxX = static_cast<obfloat>(_cellsX) * _voxelSize;
-  _maxY = static_cast<obfloat>(_cellsY) * _voxelSize;
-  _maxZ = static_cast<obfloat>(_cellsZ) * _voxelSize;
+//  _minX = 0.0;
+//  _minY = 0.0;
+//  _minZ = 0.0;
+//  _maxX = static_cast<obfloat>(_cellsX) * _voxelSize;
+//  _maxY = static_cast<obfloat>(_cellsY) * _voxelSize;
+//  _maxZ = static_cast<obfloat>(_cellsZ) * _voxelSize;
   f.close();
 
   return space;
@@ -1755,6 +1755,12 @@ unsigned int TsdSpace::getInitializedVxls(void)
     }
   }
   return nb;
+}
+
+std::ostream& operator<< (std::ostream &out, TsdSpace& space)
+{
+  out << "voxelsize " << space._voxelSize << " cellsX Y Z " << space._cellsX << " " << space._cellsY << " " << space._cellsZ;
+  return out;
 }
 
 }
