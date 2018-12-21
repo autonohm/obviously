@@ -127,6 +127,10 @@ TsdSpace::TsdSpace(const double voxelSize, const EnumTsdSpaceLayout layoutPartit
   _cellsY = cellsY;
   _cellsZ = cellsZ;
 
+  _tree = NULL;
+  _lutIndex2Cell = NULL;
+  _lutIndex2Partition = NULL;
+
   unsigned int dimPartition = 1u << layoutPartition;
 
   if(dimPartition > _cellsX)
