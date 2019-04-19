@@ -78,6 +78,8 @@ public:
    */
   void reset();
 
+  TsdSpace* substract(TsdSpace* substractor);
+
   /**
    * Get number of voxels in x-direction
    */
@@ -270,6 +272,10 @@ public:
   unsigned int getInitializedVxls(void);
 
   friend std::ostream& operator<< (std::ostream &out, TsdSpace& space);
+
+  const EnumTsdSpaceLayout& getLayOutPartition(void)const{return _layoutPartition;}
+
+  const EnumTsdSpaceLayout& getLayOutSpace(void)const{return _layoutSpace;}
 
 private:
 

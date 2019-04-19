@@ -45,7 +45,7 @@ public:
 	 * @param rgb
 	 * @param size
 	 */
-	virtual void calcCoordsFromCurrentPose(TsdSpace* space, Sensor* sensor, double* coords, double* normals, unsigned char* rgb, unsigned int* size);
+	virtual void calcCoordsFromCurrentPose(TsdSpace* space, Sensor* sensor, double* coords, double* normals, unsigned char* rgb, unsigned int* size, const unsigned int subs = 1);
 	virtual void callCoordsFromCurrentPose(TsdSpace* space, const Eigen::Vector3f& pos, const stdVecEig3f& rays, stdVecEig3f* const coords, Eigen::Vector3f* const normal);
 	/**
 	 *

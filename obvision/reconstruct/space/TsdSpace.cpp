@@ -1733,6 +1733,11 @@ void TsdSpace::serializeSliceImages(const EnumSpaceAxis& axis, const std::string
     return;
 }
 
+TsdSpace* TsdSpace::substract(TsdSpace* substractor)
+{
+
+}
+
 bool compareZ(const Eigen::Vector3f& var1, const Eigen::Vector3f& var2)
 {
   return var1(2) < var2(2);

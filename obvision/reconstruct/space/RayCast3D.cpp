@@ -36,7 +36,7 @@ RayCast3D::~RayCast3D()
 
 }
 
-void RayCast3D::calcCoordsFromCurrentPose(TsdSpace* space, Sensor* sensor, double* coords, double* normals, unsigned char* rgb, unsigned int* size)
+void RayCast3D::calcCoordsFromCurrentPose(TsdSpace* space, Sensor* sensor, double* coords, double* normals, unsigned char* rgb, unsigned int* size, const unsigned int subs)
 {
   Timer t;
   t.start();
@@ -101,6 +101,8 @@ void RayCast3D::calcCoordsFromCurrentPose(TsdSpace* space, Sensor* sensor, doubl
 #pragma omp for schedule(dynamic)
     for(unsigned int i=0; i<count; i++)
     {
+      if(i % subs)
+        continue;
       obfloat ray[3];
       ray[0] = (*R)(0, i);
       ray[1] = (*R)(1, i);
