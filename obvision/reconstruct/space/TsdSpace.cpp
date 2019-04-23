@@ -1541,12 +1541,12 @@ TsdSpace* TsdSpace::load(const char* filename)
       }
     }
   }
-//  _minX = 0.0;
-//  _minY = 0.0;
-//  _minZ = 0.0;
-//  _maxX = static_cast<obfloat>(_cellsX) * _voxelSize;
-//  _maxY = static_cast<obfloat>(_cellsY) * _voxelSize;
-//  _maxZ = static_cast<obfloat>(_cellsZ) * _voxelSize;
+  //  _minX = 0.0;
+  //  _minY = 0.0;
+  //  _minZ = 0.0;
+  //  _maxX = static_cast<obfloat>(_cellsX) * _voxelSize;
+  //  _maxY = static_cast<obfloat>(_cellsY) * _voxelSize;
+  //  _maxZ = static_cast<obfloat>(_cellsZ) * _voxelSize;
   f.close();
 
   return space;
@@ -1735,7 +1735,71 @@ void TsdSpace::serializeSliceImages(const EnumSpaceAxis& axis, const std::string
 
 TsdSpace* TsdSpace::substract(TsdSpace* substractor)
 {
+  obvious::TsdSpace* diff = new obvious::TsdSpace(this->getVoxelSize(), this->getLayOutPartition(), this->getXDimension(), this->getYDimension(), this->getZDimension());
+  unsigned int ctr = 0;
+  for(int pz = 0; pz < this->getPartitionsInZ(); pz++)
+  {
+    for(int py = 0; py < this->getPartitionsInY(); py++)
+    {
+      for(int px = 0; px < this->getPartitionsInX(); px++)
+      {
+        //std::cout << __PRETTY_FUNCTION__ << "part idx" << px << " " << py << " " << pz << std::endl;
+        obvious::TsdSpacePartition* part0 = this->getPartitions()[pz][py][px];
+        obvious::TsdSpacePartition* part1 = substractor->getPartitions()[pz][py][px];
+        obvious::TsdSpacePartition* diffPart = diff->getPartitions()[pz][py][px];
+        if(0)//part0->isEmpty() && !part1->isEmpty())       //dont really know what to do in this case...is weird
+        {
+          std::cout << __PRETTY_FUNCTION__ << " huge difference..this is not supposed to happen" << std::endl;
+          continue;
+        }
+        else if(!part0->isInitialized())// || part0->isEmpty())// && part1->isEmpty())
+        {
+          std::cout << __PRETTY_FUNCTION__ << "part 0 empty" << std::endl;
+          continue;  //toDo: work!!!
+        }
+        else if(!part1->isInitialized())// || part1->isEmpty())// && !part0->isEmpty())       //dont really know what to do in this case...is weird
+        {
+          std::cout << __PRETTY_FUNCTION__ << " part1 is empty" << std::endl;
+          continue;
+        }
+        ctr++;
+        diffPart->init();
+        for(unsigned int z = 0; z < part0->getDepth(); z++)
+        {
+          for(unsigned int y = 0; y < part0->getHeight(); y++)
+          {
+            for(unsigned int x = 0; x < part0->getWidth(); x++)
+            {
+     //         std::cout << __PRETTY_FUNCTION__ << "vxl idx" << x << " " << y << " " << z << std::endl;
+//              const double tsd0 = part0->getTsd(x, y, z);
+//              const double tsd1 = part1->getTsd(x, y, z);
+       //       std::cout << __PRETTY_FUNCTION__ << "got tsds " << tsd0 << " tsd1" << std::endl;
+              const double tsdDiff = part0->getTsd(x, y, z) - part1->getTsd(x, y, z);
+         //     std::cout << __PRETTY_FUNCTION__ << "init diff space part" << std::endl;
 
+
+              if(std::abs(tsdDiff > 0.01))
+              {
+                diffPart->_space[z][y][x].tsd = tsdDiff;
+                std::cout << __PRETTY_FUNCTION__ << tsdDiff << " = " << part0->getTsd(x, y, z) << " - " << part1->getTsd(x, y, z) <<std::endl;
+              }
+              else
+              {
+                diffPart->_space[z][y][x].tsd = NAN;
+                diffPart->_space[z][y][x].weight = MAXWEIGHT;
+
+              }
+
+              //if(tsdDiff > 0.01)
+              //std::cout << __PRETTY_FUNCTION__ << "tsdDiff " << tsdDiff << std::endl;
+            }
+          }
+        }
+      }
+    }
+  }
+  std::cout << __PRETTY_FUNCTION__ << "found " << ctr << " non empty partitions" << std::endl;
+  return diff;
 }
 
 bool compareZ(const Eigen::Vector3f& var1, const Eigen::Vector3f& var2)
