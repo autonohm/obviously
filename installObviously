@@ -9,7 +9,7 @@ echo "source ~/.bashrc"
 
 #packages for obcore
 apt-get install gsl-bin 
-apt-get install libgsl0-dev 
+apt-get install libgsl-dev 
 apt-get install libudev-dev 
 apt-get install libxml++2.6-dev 
 apt-get install liblua5.1-0-dev
@@ -17,17 +17,15 @@ apt-get install libeigen3-dev
 
 #packages for obdevice
 apt-get install ps-engine 
-apt-get install openni-dev 
+apt-get install libopenni-dev 
 apt-get install libv4l-dev
 
 #packages for obgraphic
-apt-get install libvtk5-dev 
-apt-get install libvtk5.8 
+apt-get install libvtk6-dev 
+apt-get install libvtk6-qt-dev
 apt-get install freeglut3-dev
 
 #packages for obvision
-add-apt-repository ppa:v-launchpad-jochen-sprickerhof-de/pcl
-apt-get update
 apt-get install libann-dev 
 apt-get install libflann-dev
 
