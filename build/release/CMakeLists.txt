@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 2.6)
 
 
 SET(CMAKE_BUILD_TYPE Release)
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS} -fopenmp -Wall -O2 -DNDEBUG -pipe -march=native") 
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS} -fopenmp -Wall -O2 -DNDEBUG -pipe -std=c++17 -march=native") 
 
 
 
