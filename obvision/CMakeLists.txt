@@ -8,7 +8,7 @@ PROJECT(OBVISION)
 SET(OBVISION_VERSION_MAJOR 0)
 SET(OBVISION_VERSION_MINOR 1)
 
-add_compile_options(-std=c++11)
+add_compile_options(-std=c++17)
 
 INCLUDE_DIRECTORIES(..
 					/usr/include/eigen3)
