@@ -1,1 +1,6 @@
 build/
+.cproject
+.settings
+test/
+obcore/math/linalg/linalg.h
+test/gtest-1.7.0.zip test/obcore test/README.md

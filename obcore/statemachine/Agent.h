@@ -80,6 +80,8 @@ public:
    */
   void deletePersistantStates();
 
+  StateBase* getCurrentState(void){return _currentState;}
+
 private:
 
   unsigned int _ID;

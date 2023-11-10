@@ -12,7 +12,7 @@ using namespace std;
 using namespace obvious;
 
 #define SENSORRAYCAST 0
-
+#define SLICE_IMAGES 0
 int main(void)
 {
   LOGMSG_CONF("tsd_test.log", Logger::file_off|Logger::screen_on, DBG_DEBUG, DBG_DEBUG);
@@ -126,6 +126,10 @@ int main(void)
   vcloud.setCoords(coords, cnt/3, 3, normals);
   Matrix P = sensor.getTransformation();
   if(sensor.hasRealMeasurementRGB()) vcloud.setColors(rgb, cnt/3, 3);
+
+#if SLICE_IMAGES
+  space.serializeSliceImages(Z);
+#endif
 
   Obvious3D viewer("TSD Cloud");
 

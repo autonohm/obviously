@@ -8,8 +8,15 @@ PROJECT(OBVISION)
 SET(OBVISION_VERSION_MAJOR 0)
 SET(OBVISION_VERSION_MINOR 1)
 
+add_compile_options(-std=c++17)
+
 INCLUDE_DIRECTORIES(..
 					/usr/include/eigen3)
+
+find_package(PCL 1.7 REQUIRED)
+include_directories(${PCL_INCLUDE_DIRS})
+link_directories(${PCL_LIBRARY_DIRS})
+add_definitions(${PCL_DEFINITIONS})
 
 add_library(obvision STATIC
 	registration/icp/assign/PairAssignment.cpp
@@ -51,6 +58,9 @@ add_library(obvision STATIC
 	reconstruct/space/SensorPolar3D.cpp
 	reconstruct/space/SensorProjective3D.cpp
 	reconstruct/space/SensorPolar3D.cpp
+	reconstruct/space/SensorVelodyne3D.cpp
+	#reconstruct/space/SensorPolar3DBase.cpp
+    reconstruct/space/SensorPolar2DWith3DPose.cpp
 	reconstruct/space/TsdSpace.cpp
 	reconstruct/space/TsdSpaceComponent.cpp
 	reconstruct/space/TsdSpacePartition.cpp
@@ -64,6 +74,10 @@ add_library(obvision STATIC
 	planning/AStarNode.cpp
 	ransac/RansacPrimitives.cpp
 	)
+
+target_link_libraries(obvision
+                 ${PCL_LIBRARIES}
+                 )
 
 ####################
 ##### Packaging ####

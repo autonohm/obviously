@@ -8,6 +8,8 @@
 namespace obvious
 {
 
+typedef std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f> > stdVecEig3f;
+
 enum AXSPARMODE
 {
 	X_AXS,
@@ -43,8 +45,8 @@ public:
 	 * @param rgb
 	 * @param size
 	 */
-	virtual void calcCoordsFromCurrentPose(TsdSpace* space, Sensor* sensor, double* coords, double* normals, unsigned char* rgb, unsigned int* size);
-
+	virtual void calcCoordsFromCurrentPose(TsdSpace* space, Sensor* sensor, double* coords, double* normals, unsigned char* rgb, unsigned int* size, const unsigned int subs = 1);
+	virtual void callCoordsFromCurrentPose(TsdSpace* space, const Eigen::Vector3f& pos, const stdVecEig3f& rays, stdVecEig3f* const coords, Eigen::Vector3f* const normal);
 	/**
 	 *
 	 * @param space
@@ -77,6 +79,8 @@ public:
 private:
 
   bool rayCastFromSensorPose(TsdSpace* space, obfloat pos[3], obfloat ray[3], obfloat coordinates[3], obfloat normal[3], unsigned char rgb[3], obfloat* depth);
+
+  bool rayCastDummy(TsdSpace* space, const Eigen::Vector3f& pos, const Eigen::Vector3f& ray, Eigen::Vector3f* const coords, const float length = 10.0);
 
   obfloat _xmin;
   obfloat _ymin;

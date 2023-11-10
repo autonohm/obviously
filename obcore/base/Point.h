@@ -36,6 +36,16 @@ struct Pixel
 
 struct Point
 {
+//  Point(const Point& point):
+//    x(point.x),
+//    y(point.y),
+//    z(point.z){}
+//  void operator+=(const Point& point)
+//  {
+//    x += point.x;
+//    y += point.y;
+//    z += point.z;
+//  }
     obfloat x;
     obfloat y;
     obfloat z;
